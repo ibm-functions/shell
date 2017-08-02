@@ -1,6 +1,6 @@
 # OpenWhisk Shell
 
-Welcome to the OpenWhisk shell. To get started, download the [one of the binary releases](https://github.com/serverless-research/openwhisk-shell/releases).
+Welcome to the OpenWhisk shell. To get started, download [one of the binary releases](https://github.com/serverless-research/openwhisk-shell/releases) for macOS, Windows or GNU/Linux.
 
 ## Exploring the Shell
 
