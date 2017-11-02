@@ -1,17 +1,16 @@
 {
-  "name": "wskng-activation-viz-plugins",
+  "name": "activation-visualizations",
   "version": "1.0.0",
   "description": "",
   "main": "plugin.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@github.ibm.com:nickm/wskng-activation-viz-plugins.git"
+  "author": {
+    "name": "Nick Mitchell",
+    "email": "nickm@us.ibm.com"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "dexie": "^2.0.0-beta.11"
   }
