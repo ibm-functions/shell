@@ -22,14 +22,19 @@ export API_HOST=$APIHOST
 export KEY_FROM_LAYER=true
 export PATH=./node_modules/.bin:$PATH
 
-redis-server > /dev/null &
-REDIS_PID=$!
+if [ -z "$REDIS_URL" ]; then
+    # do we need to start redis ourselves?
+    redis-server > /dev/null &
+    REDIS_PID=$!
+fi
 
 # trap ctrl-c and call ctrl_c()
 trap finished INT
 
 function finished() {
-    kill ${REDIS_PID} >& /dev/null
+    if [ -n "$REDIS_PID" ]; then
+        kill ${REDIS_PID} >& /dev/null
+    fi
 }
 
 if [ -z "$REDIS_URL" ]; then

@@ -16,13 +16,13 @@ addons:
         - xvfb
         - google-chrome-stable
         - libnotify-cil-dev
-        - redis-server
 
 env:
   global:
     - DISPLAY=":99.0"
     - KEY_FROM_LAYER=true
     - DO_NOT_SET_WSKPROPS=true
+    - REDIS_URL=redis://192.168.99.100:6379   # we'll pick up openwhisk's redis
     - WINDOW_WIDTH=1400
     - WINDOW_HEIGHT=1050
     - NO_DEBUGGER_BREAKPOINTS=true
