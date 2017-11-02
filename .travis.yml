@@ -22,7 +22,7 @@ env:
     - DISPLAY=":99.0"
     - KEY_FROM_LAYER=true
     - DO_NOT_SET_WSKPROPS=true
-    - REDIS_URL=redis://192.168.99.100:6379   # we'll pick up openwhisk's redis
+    - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
     - WINDOW_WIDTH=1400
     - WINDOW_HEIGHT=1050
     - NO_DEBUGGER_BREAKPOINTS=true
@@ -33,6 +33,7 @@ env:
 install:
     - echo "API_HOST=foo" > ~/.wskprops
     - echo "AUTH=bar" >>  ~/.wskprops
+    - npm install -g codecov istanbul &
     - (cd dist && npm install; cd ../app && npm install) &
     - (cd tests && npm install) &
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &
