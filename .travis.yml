@@ -36,8 +36,8 @@ install:
     - (cd dist && npm install; cd ../app && npm install) &
     - (cd tests && npm install) &
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &
-    - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
     - wait
+    - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
 
 script: (cd tests && ./bin/runLocal.sh)
 
