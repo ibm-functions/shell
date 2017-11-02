@@ -4,7 +4,7 @@
   "description": "OpenWhisk Shell plugins",
   "main": "index.js",
   "scripts": {
-    "postinstall": "for i in `find . ! -path . -maxdepth 1 -type d`; do if [ -f $i/package.json ]; then (cd $i && npm install); fi; done",
+    "postinstall": "for i in modules/*; do if [ -f $i/package.json ]; then (cd $i && npm install); fi; done",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
