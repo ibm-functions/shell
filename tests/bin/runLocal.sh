@@ -59,7 +59,7 @@ for i in tests/passes/$LAYER; do
     LAYER=$LAYER ./bin/runTest.sh 2>&1 | tee logs/$LAYER.out
 
     if [ $? != 0 ]; then
-        exit $?
+        exit 1
     fi
 done
 
