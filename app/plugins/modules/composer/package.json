@@ -1,0 +1,19 @@
+{
+  "name": "wskng-composer-plugins",
+  "version": "1.0.0",
+  "description": "OpenWhisk Shell plugins for the OpenWhisk Composer",
+  "main": "plugin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.ibm.com:cloudprogrammingtechnologies/wskng-composer-plugins.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^1.7.0",
+    "@ibm-functions/composer": "~0.1.1"
+  }
+}

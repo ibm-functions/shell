@@ -1,0 +1,5 @@
+*~
+dist
+*.log
+node_modules
+wskng.iml

@@ -1,0 +1,15 @@
+{
+    "db_type": "redis",
+    "maps": [],
+    "name": "bmix-dal-yp-uuuuu",
+    "uri_cli": "redis-cli -h sl-us-south-1-portal.6.dblayer.com -p yyyy -a xxxx",
+    "deployment_id": "zzzzzz",
+    "uri": "redis://admin:xxxxxx@sl-us-south-1-portal.6.dblayer.com:yyyy",
+    "misc": {
+        "direct_readonly": [],
+        "cli_readonly": [],
+        "ssh_cli": [
+            "redis-cli -p 6379 -a xxxxx"
+        ]
+    }
+}

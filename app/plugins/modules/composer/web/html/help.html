@@ -1,0 +1,111 @@
+<html>
+  <body>
+    <header class="sidecar-header">
+      <div class="sidecar-header-name">
+        <div class="sidecar-header-name-content">
+          <div class="entity-name">Composer Help</div>
+        </div>
+      </div>
+    </header>
+
+    <div class='composer-help-content'>
+
+      <!-- intro paragraph -->      
+      <p class='composer-help-intro'>
+        <strong>Composer</strong> is an IBM Cloud Functions
+        programming model for composing individual functions into
+        larger applications. Compositions, informally named
+        <strong>apps</strong>, run in the cloud using
+        <strong>automatically managed</strong> compute and memory
+        resources. Composer is an extension of the
+        function-as-a-service computing model, and enables stateful
+        computation, control flow, and rich patterns of data flow.
+      </p>
+
+      <p class='composer-help-intro'>
+        Composer requires storage to manage state. We can provision
+        storage for you, via the
+        <strong class="clickable clickable-blatant"
+              onclick="repl.partial('app init # set up composer state management', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+          app init</strong> command.  If you would rather start by exploring the programming model and tooling, take a look at the
+        <strong class="clickable clickable-blatant"
+              onclick="repl.partial('app preview @demos/if.js # or use your own source', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+          preview</strong> command. Below, you can explore the full command structure.
+      </p>
+
+      <div class='composer-help-body'>
+        <panel class='composer-help-commands composer-help-body-panel'>
+          <titlebox class='composer-help-body-panel-title' onclick='const p=this.parentNode.parentNode; if (p.hasAttribute("data-show")) p.removeAttribute("data-show"); else p.setAttribute("data-show", "left")'>
+            <icon class='composer-help-body-panel-title-icon' style='font-size:7rem'>
+              >
+            </icon>
+            <div class='composer-help-body-panel-title-text'>
+              Learn about Commands
+            </div>
+          </titlebox>
+
+          <div class='composer-help-body-panel-content'>
+            <ul class='hexGrid'>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('app init  # set up composer state management', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+                    <h1>app init</h1>
+                    <p>Intialize state management</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('app preview @demos/if.js  # or use your own source', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+                    <h1>app preview</h1>
+                    <p>Prototype a composition, with visualization help</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('app create if @demos/if.js  # or use your own source', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+                    <h1>app create</h1>
+                    <p>Deploy a composition</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('app invoke if  # make sure to app create first!', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+                    <h1>app invoke</h1>
+                    <p>Invoke a composition</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('session list  # list recent app invocations')">
+                    <h1>session list</h1>
+                    <p>List recent app invocations</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('session get <session_id>  # show result of app invocations', { pip: { container: '#composer-help', returnTo: 'Help' } })">
+                    <h1>session get</h1>
+                    <p>Fetch the result of a session</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('session kill <session_id>  # kill a live session')">
+                    <h1>session kill</h1>
+                    <p>Kill a live session</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="#" onclick="repl.partial('session purge <session_id>  # remove state from prior session')">
+                    <h1>session purge</h1>
+                    <p>Purge the state for a completed session</p>
+              </a></div></li>
+            </ul>
+          </div>
+        </panel>
+
+        <panel class='composer-help-tutorials composer-help-body-panel'>
+          <titlebox class='composer-help-body-panel-title' onclick='const p=this.parentNode.parentNode; if (p.hasAttribute("data-show")) p.removeAttribute("data-show"); else p.setAttribute("data-show", "right")'>
+            <icon class='composer-help-body-panel-title-icon'>
+              &#x2630;
+            </icon>
+            <div class='composer-help-body-panel-title-text'>
+              Explore the Tutorials
+            </div>
+          </titlebox>
+
+          <div class='composer-help-body-panel-content'>
+            <ul class='hexGrid'>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="https://youtu.be/fyRyCIh2AGs" target="_blank">
+                    <h1>Iterative Composition</h1>
+                    <p>Iterative construction of an app from a terminal</p>
+              </a></div></li>
+              <li class="hex"><div class="hexIn"><a class="hexLink" href="https://youtu.be/a4hJaPY2YO4" target="_blank">
+                    <h1>Session Visualization</h1>
+                    <p>Deploying and invoking an app, and visualizing execution flow</p>
+              </a></div></li>
+            </ul>
+          </div>
+        </panel>
+      </div>
+    </div>
+  </body>
+</html>
