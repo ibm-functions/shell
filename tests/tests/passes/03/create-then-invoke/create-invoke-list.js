@@ -49,7 +49,11 @@ describe('Create an action with implicit entity type, then invoke it, then list 
 
     // list tests
     ui.aliases.list.forEach(cmd => {
-	it(`should find the new action with "$ ${cmd}"`, () => cli.do(`$ ${cmd}`, this.app).then(cli.expectOKWith('foo')))
-	it(`should find the new action with "activation ${cmd}"`, () => cli.do(`activation ${cmd}`, this.app).then(cli.expectOKWith('foo')))
+	it(`should find the new action with "$ ${cmd}"`, () => this.app.client.waitUntil(() => {
+            return cli.do(`$ ${cmd}`, this.app).then(cli.expectOKWith('foo'))
+        }))
+	it(`should find the new action with "activation ${cmd}"`, () => this.app.client.waitUntil(() => {
+            return cli.do(`activation ${cmd}`, this.app).then(cli.expectOKWith('foo'))
+        }))
     })
 })
