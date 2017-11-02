@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 if [ -z "$WHISKDIR" ]; then
-   WHISKDIR=~/openwhisk
+    SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+    ROOTDIR="$SCRIPTDIR/../.."
+    WHISKDIR="$ROOTDIR/../openwhisk"
 fi
 
 if [ ! -d "$WHISKDIR" ]; then
