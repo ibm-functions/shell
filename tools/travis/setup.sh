@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-# install node and npm
-sudo apt-get -y install nodejs npm
+SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+HOMEDIR="$SCRIPTDIR/../../../"
 
-cd $HOME
+# install node and npm
+#sudo apt-get -y install nodejs npm
+
+cd $HOMEDIR
 
 # shallow clone OpenWhisk repo.
 git clone --depth 1 https://github.com/apache/incubator-openwhisk.git openwhisk
