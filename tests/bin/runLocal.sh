@@ -50,13 +50,16 @@ rm logs/* 2> /dev/null
 
 LAYER=${1-"*"}
 
+# the | tee should fail if runTest fails
+set -o pipefail
+
 for i in tests/passes/$LAYER; do
     LAYER=`basename $i`
     echo $LAYER
     LAYER=$LAYER ./bin/runTest.sh 2>&1 | tee logs/$LAYER.out
 
     if [ $? != 0 ]; then
-        exit 1
+        exit $?
     fi
 done
 
