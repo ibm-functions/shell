@@ -33,3 +33,4 @@ APIHOST=$(cat $WHISKDIR/whisk.properties | grep edge.host= | sed s/edge\.host=//
 #key=$(cat $WHISKDIR/ansible/files/auth.guest)
 
 echo "APIHOST=$APIHOST" > ~/.wskprops
+
