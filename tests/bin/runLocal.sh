@@ -31,9 +31,9 @@ fi
 # trap ctrl-c and call ctrl_c()
 trap finished INT
 
-function finished() {
+function finished {
     if [ -n "$REDIS_PID" ]; then
-        kill ${REDIS_PID} >& /dev/null
+        kill ${REDIS_PID}
     fi
 }
 
