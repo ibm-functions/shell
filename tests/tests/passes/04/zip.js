@@ -129,7 +129,7 @@ function main(args) {
         "memory": 256,
         "logs": 10
     },
-    "namespace": "${process.env.TEST_ORG}_${process.env.TEST_SPACE}"
+    "namespace": "${ui.expectedNamespace()}"
        }`))
            .catch(common.oops(this)))
     }
@@ -199,9 +199,9 @@ function main(args) {
     // zip action WITH npm install
     //     first we delete the node_modules subdirectory using the del npm
     //
-    it('should create a zip action with npm install via let', () => del(['../demos/create/zip-action/src/node_modules/**'], { force: true }) // force otherwise del complains "outside working dir"
-       .then(() => assert.ok(!fs.existsSync('../demos/create/zip-action/src/node_modules')))
-       .then(() => cli.do(`let ${actionName18}.zip = ../demos/create/zip-action/src`, this.app))
+    it('should create a zip action with npm install via let', () => del(['data/zip-action/src/node_modules/**'], { force: true }) // force otherwise del complains "outside working dir"
+       .then(() => assert.ok(!fs.existsSync('data/zip-action/src/node_modules')))
+       .then(() => cli.do(`let ${actionName18}.zip = data/zip-action/src`, this.app))
         .then(cli.expectContext('/wsk/actions', actionName16))
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName18)))
