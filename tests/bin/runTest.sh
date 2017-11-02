@@ -44,5 +44,5 @@ fi
 if [ -z "$TRAVIS" ]; then
     NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
 else
-    NO_USAGE_TRACKING=true istanbul cover mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER --reporter lcovonly -- -R spec && codecov
+    NO_USAGE_TRACKING=true istanbul cover mocha --reporter lcovonly -- -R spec -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER && codecov
 fi
