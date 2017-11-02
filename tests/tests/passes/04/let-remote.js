@@ -55,7 +55,7 @@ describe('Create an action via let from a remote resource', () => {
             .then(content => fs.readFile(remote.local, (err, data) => {
                 if (err) throw err
                 else assert.equal(normalizeHTML(content),
-                                  normalizeHTML(data).replace('nickm_wskng_test', `${process.env.TEST_ORG}_${process.env.TEST_SPACE}`))
+                                  normalizeHTML(data).replace('nickm_wskng_test', ui.expectedNamespace()))
             }))
             .then(() => this.app)
             .then(sidecar.expectOpen)
