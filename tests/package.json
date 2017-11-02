@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "./bin/prepTest.sh && ./bin/runTest.sh $1"
+    "test": "./bin/runLocal.sh"
   },
   "author": "",
   "license": "Apache-2.0",
