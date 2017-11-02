@@ -35,17 +35,14 @@ script: echo "Running Tests!"
 jobs:
   include:
      - stage: init
-       script: (./tools/travis/setup.sh;./tools/travis/build.sh;./tools/travis/init-auth.sh)
-       env: TASK="initialize openwhisk"
+       script: (./tools/travis/setup.sh;./tools/travis/build.sh;./tools/travis/init_auth.sh)
+       env: TASK=init.openwhisk
      - script: (cd app && npm install)
-       env: TASK="app npm install"
+       env: TASK=app.npm.install
      - script: (cd tests && npm install)
-       env: TASK="tests npm install"
+       env: TASK=.tests.npm.install
      - script: (cd dist && npm install)
-       env: TASK="dist npm install"
-
-     - stage: compile
-       script: (cd dist && ./compile.js)
+       env: TASK=dist.npm.install
 
      - stage: test
        script: (cd tests && npm run test)
