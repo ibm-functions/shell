@@ -1,0 +1,172 @@
+/*
+ * Copyright 2017 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const fs = require('fs'),
+      rp = require('request-promise'),
+      path = require('path'),
+      exec = require('child_process').exec
+
+const messages = {
+    error: 'Error checking for updates'
+}
+
+const defaults = {
+    DELAY_ON_START: 10 * 1000,              // wait 10 seconds after the app starts before the first check
+    INTERVAL_IN_MILLIS: 12 * 60 * 60 * 1000 // then check once every 12 hours
+}
+
+/**
+ * The updater impl
+ *
+ */
+class Updater {
+    constructor(initialDelay, updateCheckIntervalInMillis) {
+        setTimeout(checkForUpdatesThenNotifyVisually, initialDelay)                  // check for updates soon after startup
+        setInterval(checkForUpdatesThenNotifyVisually, updateCheckIntervalInMillis)  // then poll infrequently for updates
+    }
+}
+
+/**
+ * Chain an update check with a visual notifier
+ *n
+*/
+const checkForUpdatesThenNotifyVisually = () => checkForUpdatesQuietly().then(notifyOfAvailableUpdatesVisually)
+
+/**
+ * Inform the user of the updater status, via the UI
+ *
+ */
+const notifyOfAvailableUpdatesVisually = changes => {
+    if (changes !== messages.error && changes !== true) {
+        console.log('Updates available')
+
+        const notificationArea = document.querySelector('#notification-area')
+        let notificationWidget = notificationArea.querySelector('.updates-available-widget')
+        if (!notificationWidget) {
+            notificationWidget = document.createElement('div')
+            notificationWidget.className = 'updates-available-widget green-text graphical-clickable'
+            notificationWidget.style.fontSize = '1.75em'
+            notificationWidget.innerText = '\u2B06'
+            notificationWidget.setAttribute('title', 'Updates available, click here to get update')
+            notificationArea.appendChild(notificationWidget)
+
+            // click handler for notification widget
+            notificationWidget.onclick = () => repl.pexec('updater check')
+        }
+    }
+
+    return changes
+}
+
+/**
+ * Wrap the given string in a div
+ *
+ */
+const wrapInDiv = str => {
+    if (typeof str === 'string') {
+        const div = document.createElement('div')
+        div.innerText = str
+        return div
+
+    } else {
+        const pre = document.createElement('pre')
+
+        str.forEach(line => {
+            pre.appendChild(wrapInDiv(line))
+        })
+
+        return pre
+    }
+}
+
+/**
+ * Check for available updates to the tool
+ *
+ */
+const defaultBackupPlans = [ { exec: 'npm',
+                               opts: {
+                                   env: { PATH: `${process.env.PATH}:/usr/local/bin` } // /usr/local/bin might not be on PATH
+                               }
+                             } ]
+const checkForUpdates = (quiet=false, exec='npm', opts={}, backupPlans=defaultBackupPlans) => new Promise((resolve, reject) => {
+    try {
+        const spawn = require('child_process').exec,
+              child = spawn(`${exec} outdated -g @ibm-functions/shell`, opts, (err, stdout, stderr) => {
+
+                  if (err && stdout.length === 0) {
+                      if (backupPlans.length > 0) {
+                          // try one of the backup plans
+                          const plan = backupPlans.pop()
+                          checkForUpdates(quiet, plan.exec, plan.opts, backupPlans).then(resolve, reject)
+
+                      } else {
+                          if (err) {
+                              console.error(err)
+                          }
+                          if (stderr.length > 0) {
+                              console.error(`Updater stderr said: ${stderr}`)
+                          }
+                          if (stdout.length > 0) {
+                              console.log(`Updater stdout said: ${stdout}`)
+                          }
+                          resolve(messages.error)
+                      }
+                  } else if (stdout.length === 0) {
+                      // no updates available
+                      resolve(true)
+                  } else {
+                    // npm5 reports code=1 for "updates available"
+                    // then updates are available; `stdout` will be something
+                    // like this. strip off the last column, and any blank lines
+                    //
+                    //Package               Current   Wanted   Latest  Location
+                    //@ibm-functions/shell  1.3.137  1.3.140  1.3.140
+                    //
+                    const lines = stdout.split(/\r?\n/),
+                          header = lines[0],
+                          Current = header.indexOf('Current'),
+                          Wanted = header.indexOf('Wanted'),
+                          Location = header.indexOf(' Location')
+                    resolve(wrapInDiv(lines
+                                      .filter(_ => _)                             // strip blank lines
+                                      .map(line => line.substring(0, Location)) // strip last column
+                                      .map(line => line.substring(0, Current + 'Current'.length)
+                                           + line.substring(Wanted + 'Wanted'.length)))) // strip Wanted column
+                }
+              })
+    } catch (err) {
+        console.error(err)
+        reject(err)
+    }
+})
+const checkForUpdatesQuietly = () => checkForUpdates(true)
+
+/**
+ * Install the command handlers and background checker
+ *
+ */
+module.exports = (commandTree, require) => {
+    const updater = new Updater(defaults.DELAY_ON_START, defaults.INTERVAL_IN_MILLIS)
+
+    commandTree.listen(`/updater/check`,
+                       () => checkForUpdates(), // intentionally squashing all arguments that might naturally flow in
+                       { docs: 'Check for updates' })
+
+    //commandTree.listen(`/updater/update`, () => updater.doUpdate(), { docs: 'Update to the latest version' })
+
+    return updater
+}
+                      

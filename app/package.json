@@ -1,0 +1,43 @@
+{
+  "name": "@ibm-functions/shell",
+  "productName": "IBM Cloud Functions Shell",
+  "version": "1.3.355",
+  "description": "An Electron-based shell for IBM Cloud Functions",
+  "homepage": "https://github.com/ibm-functions/shell",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "./bin/seticon.sh && cd plugins && npm install && cd ../../dist && npm install && ./compile.js",
+    "test": "cd ../tests && npm run test"
+  },
+  "repository": "https://github.com/ibm-functions/shell",
+  "keywords": [
+    "OpenWhisk",
+    "CLI",
+    "UI",
+    "serverless"
+  ],
+  "author": {
+    "name": "Nick Mitchell",
+    "email": "nickm@us.ibm.com"
+  },
+  "license": "Apache-2.0",
+  "bugs": "https://github.com/ibm-functions/shell",
+  "devDependencies": {
+    "electron": "~1.7.9"
+  },
+  "dependencies": {
+    "electron-about-window": "^1.8.0",
+    "electron-editor-context-menu": "^1.1.1",
+    "minimist": "^1.2.0",
+    "pretty-ms": "^2.1.0",
+    "js-beautify": "1.6.14",
+    "inquirer": "^3.3.0",
+    "jsome": "^2.3.26",
+    "colors": "^1.1.2",
+    "columnify": "^1.5.4"
+  },
+  "optionalDependencies": {
+    "fileicon": "^0.1.8"
+  }
+}

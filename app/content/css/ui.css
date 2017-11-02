@@ -1,0 +1,1275 @@
+* {
+    box-sizing: border-box;
+}
+html, body, .page, .main, .repl, #sidecar {
+    height: 100%;
+    overflow-x: hidden;
+}
+body {
+    margin: 0;
+    overflow: hidden;
+    -webkit-app-region: drag;
+
+    /* variables */
+    --font-monospace: "Fira Mono",Menlo,"DejaVu Sans Mono","Bitstream Vera Sans Mono",Courier,monospace;
+}
+body p, body input, .entity-name, .repl-block {
+    -webkit-app-region: no-drag;
+}
+.page {
+    display: flex;
+    flex-direction: column;
+}
+body a.plain-anchor {
+    color: inherit;
+    text-decoration: none;
+    transition: none;
+}
+body a {
+    transition: color 150ms ease-in-out;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body a:hover:not(.plain-anchor) {
+    cursor: pointer;
+}
+
+/* HEADER */
+.header {
+    flex-basis: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    padding-right: 4em;
+    font-weight: 300;
+    font-size: 1rem;
+    border-bottom: 1px solid;
+    -webkit-font-smoothing: antialiased;  /* chrome, you suck */
+}
+.header .deemphasize {
+    font-size: 55%;
+    letter-spacing: 1px;
+    display: none;
+}
+.header-left-bits, .header-right-bits {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.header-left-bits {
+    flex: 1;
+}
+.header .clickable, .header .clickable:hover {
+    text-decoration: none;
+    transition: none;
+}
+.header .application-icon {
+    transition: transform .8s ease-in-out, opacity 0s linear;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+.header .application-icon {
+    animation: spin 500ms linear 1;
+}
+.header .application-icon:hover {
+    opacity: 1 !important;
+    transform: rotate(360deg);
+    filter: hue-rotate(-40deg);
+    cursor: pointer;
+}
+.header .application-name {
+    font-size: 1.125rem;
+    font-weight: 400;
+}
+.header .application-name .bx--logo__text--bold {
+    font-weight: 700;
+}
+.header .application-name .bx--global-header__title--current-page {
+    font-weight: 400;
+}
+header .header-nav-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.header .header-nav-list li {
+    font-weight: 400;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-left: 1em;
+}
+.header-nav-list li input {
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    text-transform: inherit;
+    font-weight: inherit;
+    padding: 0;
+}
+
+/* MAIN */
+.main {
+    display: flex;
+    height: calc(100% - 40px); /* height of header */
+}
+
+.repl-inner,#sidecar .sidecar-content, #sidecar .custom-content {
+    transition: font-size 50ms ease-in-out;
+}
+.main[data-zoom] .repl-result-prefix {
+    transition: none;
+}
+.main[data-zoom="1"] .repl-inner, .main[data-zoom="1"] #sidecar .sidecar-content, .main[data-zoom="1"] #sidecar .custom-content, .main[data-zoom="1"] #sidecar .sidecar-bottom-stripe {
+    font-size: 100%
+}
+.main[data-zoom="2"] .repl-inner, .main[data-zoom="2"] #sidecar .sidecar-content, .main[data-zoom="2"] #sidecar .custom-content, .main[data-zoom="2"] #sidecar .sidecar-bottom-stripe {
+    font-size: 110%;
+}
+.main[data-zoom="3"] .repl-inner, .main[data-zoom="3"] #sidecar .sidecar-content, .main[data-zoom="3"] #sidecar .custom-content, .main[data-zoom="3"] #sidecar .sidecar-bottom-stripe {
+    font-size: 120%;
+}
+.main[data-zoom="4"] .repl-inner, .main[data-zoom="4"] #sidecar .sidecar-content, .main[data-zoom="4"] #sidecar .custom-content, .main[data-zoom="4"] #sidecar .sidecar-bottom-stripe {
+    font-size: 130%;
+}
+.main[data-zoom="5"] .repl-inner, .main[data-zoom="5"] #sidecar .sidecar-content, .main[data-zoom="5"] #sidecar .custom-content, .main[data-zoom="5"] #sidecar .sidecar-bottom-stripe {
+    font-size: 140%;
+}
+.main[data-zoom="6"] .repl-inner, .main[data-zoom="6"] #sidecar .sidecar-content, .main[data-zoom="6"] #sidecar .custom-content, .main[data-zoom="6"] #sidecar .sidecar-bottom-stripe {
+    font-size: 150%;
+}
+.main[data-zoom="7"] .repl-inner, .main[data-zoom="7"] #sidecar .sidecar-content, .main[data-zoom="7"] #sidecar .custom-content, .main[data-zoom="7"] #sidecar .sidecar-bottom-stripe {
+    font-size: 160%;
+}
+.main[data-zoom="8"] .repl-inner, .main[data-zoom="8"] #sidecar .sidecar-content, .main[data-zoom="8"] #sidecar .custom-content, .main[data-zoom="8"] #sidecar .sidecar-bottom-stripe {
+    font-size: 170%;
+}
+.main[data-zoom="9"] .repl-inner, .main[data-zoom="9"] #sidecar .sidecar-content, .main[data-zoom="9"] #sidecar .custom-content, .main[data-zoom="9"] #sidecar .sidecar-bottom-stripe {
+    font-size: 180%;
+}
+.main[data-zoom="10"] .repl-inner, .main[data-zoom="10"] #sidecar .sidecar-content, .main[data-zoom="10"] #sidecar .custom-content, .main[data-zoom="10"] #sidecar .sidecar-bottom-stripe {
+    font-size: 190%;
+}
+.main[data-zoom="0"] .repl-inner, .main[data-zoom="0"] #sidecar .sidecar-content, .main[data-zoom="0"] #sidecar .custom-content, .main[data-zoom="0"] #sidecar .sidecar-bottom-stripe {
+    font-size: 90%;
+}
+.main[data-zoom="-1"] .repl-inner, .main[data-zoom="-1"] #sidecar .sidecar-content, .main[data-zoom="-1"] #sidecar .custom-content, .main[data-zoom="-1"] #sidecar .sidecar-bottom-stripe {
+    font-size: 80%;
+}
+.main[data-zoom="-2"] .repl-inner, .main[data-zoom="-2"] #sidecar .sidecar-content, .main[data-zoom="-2"] #sidecar .custom-content, .main[data-zoom="-2"] #sidecar .sidecar-bottom-stripe {
+    font-size: 70%;
+}
+
+/* REPL */
+body.still-loading .repl {
+    opacity: 0;
+}
+.repl {
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding-top: 1rem;
+    flex: 4;
+    transition: flex 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+.repl-inner {
+    overflow-y: auto;
+    flex:1;
+}
+.repl.sidecar-visible .repl-block {
+    background: transparent;
+}
+body:not(.subwindow) repl.sidecar-visible {
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+}
+.repl-block {
+    margin: 0em 1.8125em;
+    padding: 0.5em 0;
+    display: flex;
+    flex-direction: column;
+}
+body:not(.subwindow) repl.sidecar-visible .repl-block, body.sidecar-full-screen repl .repl-block {
+    margin-top: 0;
+    border-color: transparent;
+    box-shadow: none;
+    margin: 0 1.5em;
+}
+.repl, .repl input {
+    font-family: var(--font-monospace);
+}
+.repl input, .repl-result pre, .result-vertical .repl-result, .repl-result .oops, .repl-result .ok {
+    font-size: 0.875em;
+}
+.result-table .repl-result, .result-table.repl-result {
+    display: table;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 2px solid;
+    margin-top: 0.75em;
+}
+.result-table-full-width .repl-result, .result-table-full-width .log-lines {
+    width: 100%;
+}
+.repl-result {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.repl-prompt {
+    font-weight: bold;
+    margin-right: 1ex;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+}
+.repl-prompt .repl-selection {
+    font-size: 80%;
+    opacity: 0.6;
+}
+.repl-prompt .repl-selection.has-selection-true {
+    margin-left: 1ex;
+}
+body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-prompt-righty:after, body/*.sidecar-full-screen*/ repl .repl-prompt-righty:after {
+    content: '>';
+}
+body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-prompt-lefty, body/*.sidecar-full-screen*/ repl .repl-prompt-lefty {
+    display: none;
+}
+body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-selection, body/*.sidecar-full-screen*/ repl .repl-context, body/*.sidecar-full-screen*/ repl .repl-selection {
+    /* collapse the context and selection when the sidecar is visible */
+    width: 0;
+    min-width: 0;
+    opacity: 0 !important;
+    margin: 0 !important;
+}
+.repl input {
+    background: transparent;
+    font-size: 0.875em;
+    border: none;
+    flex: 1;
+}
+.repl input:focus {
+    outline: none;
+}
+.repl-block.valid-response .repl-input {
+    opacity: 0.6;
+}
+.repl-block.valid-response .ok-for-list {
+    margin-top: 0.75em;
+    flex-basis: 100%;
+}
+.repl-block.valid-response .ok, .green-text, .dragover .ok-text-on-dragover {
+    opacity: 1 !important;
+}
+.repl-block.valid-response .oops, sidecar.rule-enabled-false .sidecar-header-icon, .repl-block.error .oops, .clickable.oops, .oops .oops-text-on-oops, .red-text {
+    opacity: 1 !important;
+    white-space: pre-wrap;
+}
+.header .clickable.oops {
+    font-weight: 900;
+}
+.repl-block.valid-response .ok, .repl-block.valid-response .oops {
+    padding-top: 0.75ex;
+    font-size: 0.875em;
+}
+.repl-input, .repl-output {
+    display: flex
+}
+.repl-output.result-vertical {
+    flex-direction: column
+}
+.repl-block .whitespace {
+    white-space: pre;
+}
+.repl-block.processing .repl-output, .repl-block.valid-response .repl-output {
+    display: flex;
+}
+.repl-block.processing .repl-output .repl-result {
+    animation: spin 750ms linear infinite;
+}
+.repl-block.processing .repl-output .repl-result:after {
+    content: '|';
+}
+.repl-result pre {
+    /* invocation results */
+    margin: 0;
+}
+.repl-result code {
+    /* more invocation results */
+    /* here, we override the highlight.js theme, when rendering in the repl */
+    background: transparent;
+    color: black;
+}
+.sidecar-visible .repl-result .entity {
+    /* in either one-column mode, or if the sidecar is visible, have list entries occupy a full row */
+    padding-right: 0;
+}
+.entity-rule-status {
+    width: 7em;
+}
+.sidecar-visible .repl-result.one-column .package-prefix {
+    max-width: 35%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.repl-result .entity {
+    display: table-row-group;
+}
+.repl-result .entity:hover {
+    cursor: pointer;
+}
+.entity-attributes {
+    display: table-row;
+    height: 2.5625em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.entity-attributes > span {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 0.4285em;
+}
+.entity .entity-kind {
+    min-width: 7em;
+}
+.repl.sidecar-visible .repl-result .entity-name-group {
+    max-width: 18em;
+}
+.repl-result .entity-name-group {
+    padding-left: 0.75em;
+    max-width: 30em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.entity-name-group .entity-name {
+    font-weight: 500;
+}
+.repl-result .entity.activations .entity-name {
+    margin-left: 2em;
+    order: 2;
+    font-size: 80%;
+    opacity: 0.6;
+    flex: 1;
+}
+.repl-result .activationId {
+    font-weight: 500;
+}
+
+/* two special session activation list decorations */
+.repl-block .repl-result .status {
+    padding-top: 0;
+    padding-left: 1em;
+    order: 5;
+}
+.repl-result .entity.session.activations .entity-name {
+}
+
+.repl-result .activation-duration {
+    width: 3em;
+    text-align: right;
+}
+
+/* grid cells in activation list view */
+.repl-result .entity.activations {
+    margin: 0.25ex;
+}
+.repl-result .activation-viz-plugin {
+    /* activation grid in activation list vie */
+    flex: initial;
+    flex-direction: row;
+    align-items: center;
+    margin-right: 2em;
+}
+.repl-result .activation-viz-plugin .grid {
+    /* activation grid in activation list vie */
+    padding: 0 1ex 0 0;
+}
+.repl-result .activation-viz-plugin .grid .grid-cell {
+    /* activation grid in activation list vie */
+    border: 1px solid rgba(100,100,100,0.35);
+}
+.repl-result .activation-result {
+    /* activation result in activation list view */
+    order: 3;
+    margin-left: 2em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    transition: all 150ms ease-in-out;
+    background: transparent;
+}
+.repl-result .activation-start-time {
+    order: 4;
+    padding-left: 1em;
+}
+.timestamp-same-day {
+    /* keep the width, but make it hidden */
+    opacity: 0;
+}
+.sidecar-visible .repl-result.one-column .activation-result, .sidecar-visible .repl-result.one-column .activation-start-time, .sidecar-visible .entity-rule-definition {
+    /* hide activation result and start time  in activation list view, when sidecar is open */
+    opacity: 0;
+    flex: 0 0 0%;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+
+.repl .list-label {
+    font-size: 70%;
+    opacity: 0.6;
+    margin-right: 1ex;
+}
+.repl-result-prefix, badge {
+    font-weight: 400;
+    font-variant: small-caps;
+    transition: all 150ms ease-in-out;
+    font-size: 0.75rem;
+    border-radius: 0.9375rem;
+    margin: 0.1875rem;
+    padding: 0 0.625rem;
+    height: 1.25rem;
+    line-height: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+}
+sidecar .sidecar-header badge.version {
+    /* badge for action version */
+    font-size: 0.75em;
+}
+badge.clickable:hover {
+    text-decoration: none;
+}
+
+.entity.activations.is-sequence-true .repl-result-prefix {
+    min-width: 5.5em;
+}
+.entity .repl-result-prefix {
+    height: auto;
+    font-size: 0.875em;
+    font-weight: 300;
+    background: transparent;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 2em;
+    min-width: 6em;
+    text-align: right;
+    border-right: 2px solid;
+    border-radius: 0;
+}
+.package-prefix {
+    font-size: 0.75em;
+    opacity: 0.6;
+}
+
+/* sidecar */
+sidecar {
+    flex: 0 0 0%;
+    min-width: 0;
+    transition: all 300ms ease-in-out;
+    border-left: 1px solid;
+    font-weight: 300;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+sidecar.visible {
+    flex: 6;
+    z-index: 1; /* float above the repl */
+    transition-duration: 600ms; /* a bit slower coming out */
+}
+.sidecar-full-screen sidecar {
+    border-left: none;
+}
+.sidecar-full-screen .repl.sidecar-visible {
+    flex: 0 0 0;
+    min-width: 0;
+}
+
+/* sidecar bottom stripe */
+#sidecar .sidecar-bottom-stripe {
+    padding: 0 1em;
+    flex-basis: 3em;
+    display: flex;
+    align-items: center;
+    font-size: 0.875em;
+    z-index: 5;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits, #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits .sidecar-bottom-stripe-button-container {
+    /* button container in sidecar bottom stripe */
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits {
+    /* back button container in sidecar bottom stripe */
+    flex: 0 0 0%;
+    min-width: 0;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits.has-back-button {
+    flex: initial;
+    margin-right: 1em;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-close {
+    text-align: right;
+}
+#sidecar .sidecar-bottom-stripe-close-icon {
+    letter-spacing: -1ex;
+    opacity: 0.6;
+    transition: all 150ms ease-in-out;
+}
+body.os-win32 #sidecar .sidecar-bottom-stripe-close-icon {
+    /* dunno why windows is weird here */
+    letter-spacing: 0px;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-as-button) {
+    /* for bottom mode-switching buttons, capitalize the text; for actual buttons, keep the capitalization as it was given */
+    text-transform: capitalize;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button {
+    padding: 2px 0; /* makes room for border-bottom */
+    border-bottom: 2px solid transparent; /* will change color on hover */
+    transition: all 150ms ease-in-out;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(:first-child) {
+    margin-left: 1em;
+}
+#sidecar .sidecar-header .limits {
+    /* don't show limits in header for now */
+    display: none;
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
+    cursor: pointer;
+    opacity: 1;
+}
+#sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, #sidecar .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, #sidecar .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
+    /* on hover, squeeze the >> a bit closer together */
+    letter-spacing: -1.25ex;
+}
+body.os-win32 #sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
+    letter-spacing: -1px; /* windows is different here */
+}
+#sidecar .sidecar-bottom-stripe-button.sidecar-bottom-stripe-back-button {
+    /* back button in sidecar bottom stripe */
+    border-right: 1px dotted hsla(240, 2%, 90%, 0.5);
+    padding-right: 1em;
+    opacity: 0.6;
+    transition: all 150ms ease-in-out;
+}
+#sidecar .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits:not(.has-back-button) {
+    display: none;
+}
+#sidecar .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits.has-back-button .sidecar-bottom-stripe-back-inner-bits {
+    margin-left: 2ex;
+}
+
+/* custom content */
+body.no-sidecar-header .sidecar-header, #sidecar.no-sidecar-header .sidecar-header, sidecar.custom-content .sidecar-content, sidecar:not(.custom-content) .custom-content, sidecar.custom-content .sidecar-header-secondary-content .limits, sidecar:not(.custom-content) .custom-header-content {
+    /* custom content rules */
+    display: none;
+}
+sidecar .custom-content {
+    display: flex;
+    flex: 1;
+}
+sidecar .sidecar-header {
+    display: flex;
+    border-bottom: 1px solid;
+    flex-basis: 9rem;
+}
+sidecar .header-right-bits {
+    flex-direction: column;
+    justify-content: center;
+    margin: 1em 1em 1ex 1em
+}
+.sidecar-header .kind {
+    font-variant: small-caps;
+    flex: 1;
+    margin-top: 1ex;
+}
+.sidecar-header .action-content .kind {
+    font-size: 0.875rem;
+    font-variant: normal;
+    font-weight: 300;
+    font-family: inherit;
+    margin: 0;
+}
+.header-right-bits .action-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: flex-end;
+    justify-content: center;
+}
+.sidecar-header .activation-duration, .sidecar-header .kind, .sidecar-header .activation-estimated-cost-container1 {
+    font-family: Roboto, sans-serif;
+}
+.sidecar-header .activation-duration, .sidecar-header .kind {
+    font-weight: bold;
+    font-size: 2.5em;
+}
+sidecar .sidecar-header-text {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 0.5ex;
+}
+sidecar .sidecar-header-icon {
+    font-size: 2em;
+    height: 4.5rem;
+    width: 4.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+}
+sidecar .sidecar-header-icon-wrapper {
+    width: 4em;
+    margin-right: 0.25em;
+}
+sidecar .header-left-bits {
+    align-items: stretch;
+}
+sidecar .sidecar-header-icon {
+    transform: rotate(-90deg);
+    transform-origin: center;
+    width: 100%;
+    height: 100%;
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+    pointer-events: none; /* with text rotation, this element bumps into neighbors, otherwise obfuscating mouse events */
+}
+sidecar .sidecar-header-name {
+    flex: 1;
+    font-weight: 400;
+    font-size: 2.5625rem;
+    display: flex;
+    align-items: center;
+    margin: 1rem 0 0;
+}
+sidecar .sidecar-header .entity-name-line {
+    display: flex;
+    align-items: center;
+}
+sidecar .sidecar-header .badges {
+    margin-left: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-end;
+}
+sidecar .sidecar-header badge {
+    /* badges next to the entity name */
+}
+sidecar .sidecar-header-name-content {
+    overflow: hidden;
+}
+sidecar .sidecar-header-name-content .entity-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
+sidecar .sidecar-header-name-content > span {
+    display: block;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+sidecar .sidecar-header-name .package-prefix {
+    font-size: 1rem;
+    max-width: none;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.25rem;
+    opacity: 1;
+}
+sidecar.entity-is-activations .sidecar-header-name .activation-id {
+    font-family: var(--font-monospace);
+    font-size: 75%;
+    opacity: 0.6;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 150ms ease-in-out;
+}
+sidecar.entity-is-activations .sidecar-header-name .package-prefix {
+    /* don't display package name for activations? hmm */
+    display: none;
+}
+sidecar.entity-is-activations .sidecar-header-name  .sidecar-header-name-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+sidecar .sidecar-header-secondary-content {
+    font-size: 0.875rem;
+    opacity: 0.75;
+    margin: 1ex 0;
+}
+sidecar .sidecar-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+sidecar .sidecar-content > div, sidecar .sidecar-content .activation-content > pre {
+    padding: 1.5em 1em;
+    -webkit-app-region: no-drag;
+}
+sidecar .sidecar-content .hook-for-third-party-content.no-content {
+    display: none;
+}
+sidecar .sidecar-content .activation-content  {
+    padding: 0;
+    -webkit-app-region: drag;
+}
+sidecar .sidecar-content .activation-content, sidecar .sidecar-content .hook-for-third-party-content  {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.entity-web-export-url:not(.has-url) {
+    display: none;
+}
+sidecar .activation-status {
+    color: white;
+    font-size: 2.5rem;
+    border-radius: 50%;
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 0.5ex;
+}
+sidecar pre {
+    /* no margin for action source code */
+    margin: 0;
+}
+sidecar:not(.entity-is-actions) .action-content {
+    display: none;
+}
+sidecar:not(.entity-is-activations) .activation-content {
+    display: none;
+}
+sidecar:not(.entity-is-packages) .package-content {
+    display: none;
+}
+sidecar.entity-is-packages:not(entity-is-package-binding) .package-binding-signifier {
+    display: none;
+}
+sidecar:not(.entity-is-rules) .rule-content {
+    display: none;
+}
+sidecar:not(.entity-is-triggers) .trigger-content {
+    display: none;
+}
+sidecar.entity-is-actions:not(.entity-is-sequence) .action-source, sidecar .activation-result, code.hljs {
+    font-family: var(--font-monospace);
+    font-weight: 400;
+    font-size: 90%;
+    white-space: pre-wrap;
+    background: transparent;
+}
+.package-content-count {
+    font-weight: bold;
+}
+
+.rule-components {
+    display: flex;
+    justify-content: center;
+}
+sidecar:not(.entity-is-sequence) .sequence-components {
+    display: none;
+}
+.sequence-components {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.sequence-component {
+    border: 3px solid;
+    margin: 1em;
+    height: 5em;
+    width: 5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+    position: relative;
+    transition: all 150ms ease-in-out;
+}
+.sequence-component:before {
+    content: " ";
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    border: 3px solid rgba(0,0,0,0.075);
+}
+.sequence-component:hover:before {
+    border-color: rgba(0,0,0,0.2);
+}
+.sequence-component.trigger-node {
+    border-radius: 0
+}
+.sequence-component.trigger-node:before {
+    border-radius: 0;
+}
+.sequence-component:hover {
+    cursor: pointer;
+    height: 11.25em; /* 25% larger */
+    width: 20em;     /* 25% larger */
+}
+.sequence-component-inner .emphasize {
+    font-size: 1.4375rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.sequence-component-inner .deemphasize {
+    opacity: 1;
+    margin: 1ex;
+}
+.sequence-component {
+    height: 9em;
+    width: 16em;
+}
+.sequence-component:not(:last-child):after {
+    /* edge */
+    content: '';
+    border: 1px solid #333;
+    outline: 1px solid #999;
+    position: absolute;
+    height: 2em;
+    top: calc(100% + 4px);
+    left: 50%;
+}
+.horizontal-canvas .sequence-component:not(:last-child):after {
+    height: 0px;
+    width: calc(2em - 2px);
+    top: 50%;
+    left: calc(100% + 3px);
+}
+.sequence-component .sequence-component-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*white-space: nowrap;*/
+    font-family: Roboto,sans-serif;
+    font-variant: small-caps;
+    font-weight: 400;
+    word-break: break-all;
+}
+
+/* sidecar cost */
+sidecar.no-limits-data .activation-estimated-cost-container {
+    display: none;
+}
+
+/* generic */
+.deemphasize {
+    font-weight: 300;
+    font-size: 0.75em;
+    opacity: 0.6;
+    vertical-align: middle;
+}
+.deemphasize.deemphasize-partial {
+    opacity: 1;
+}
+.deemphasize.left-pad {
+    margin-left: 1em;
+}
+.emphasize {
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+.count-with-label[data-is-plural=false] .label-plural, .count-with-label[data-is-plural=true] .label-singular {
+    display: none;
+}
+.clickable {
+    transition: color 150ms ease-in-out;
+}
+.clickable-blatant {
+    text-decoration: underline;
+}
+.clickable:hover, .entity.actions:hover .entity-name {
+    cursor: pointer;
+    text-decoration: underline;
+}
+.graphical-clickable {
+    transition: all 150ms ease-in-out;
+}
+.graphical-clickable:hover {
+    cursor: pointer;
+}
+.template {
+    display: none;
+}
+.toggle-visibility-on-hover .visible-on-hover {
+    transition: opacity 500ms ease-in-out;
+    font-size: 70%;
+    font-weight: 900;
+    opacity: 0;
+}
+.toggle-visibility-on-hover:hover .visible-on-hover {
+    opacity: 0.5;
+}
+
+/* highlight.js tweaks */
+.hljs {
+    padding: 0;
+}
+
+/* help */
+.help-options {
+    display: table;
+}
+.help-option {
+    display: table-row;
+    transition: all 150ms ease-in-out;
+}
+.help-option > div {
+    display: table-cell;
+    padding: 0.5ex 1ex;
+    white-space: normal;
+}
+.help-option-left-column {
+    font-weight: bold; /* make the command name bold */
+    text-align: right;
+    transition: all 150ms ease-in-out;
+    border-left: 3px solid transparent;
+    width: 10em
+}
+.help-option-interior-node-designation {
+    /* any designation that this command is a "context-changing" command, as opposed to a leaf-node command that actually does something */
+    font-weight: normal;
+    opacity: 0.6;
+}
+.help-option .help-option-synonyms-column {
+    padding-right: 1.5em;
+    width: 10em;
+    transition: all 150ms ease-in-out;
+}
+.sidecar-visible .help-option .help-option-synonyms-column {
+    /* with the sidecar visible, there isn't room for the synonyms column */
+    width: 0;
+}
+.sidecar-visible .help-option .help-option-synonym {
+    color: transparent;
+    width: 0;
+    padding: 0;
+}
+.help-option .help-option-synonym {
+    transition: all 150ms ease-in-out;
+}
+.help-option-synonyms-list {
+    display: flex;
+    align-items: center;
+    font-size: 80%;
+    opacity: 0.6; /* fira mono has no 300 font-weight specimen */
+}
+.help-option-synonym:not(:last-child) {
+    padding-right: 1ex;
+}
+.help-option-synonym:not(:last-child):after {
+    content: ','
+}
+
+/* activation logs */
+.log-lines {
+    display: table;
+    border-collapse: collapse;
+}
+.log-lines-message-for-activations {
+    font-size: 1rem;
+    padding-bottom: 1em;
+}
+.log-lines .log-line {
+    /* every row in the log table */
+    display: table-row;
+    height: 2.5625em;
+}
+.log-lines .log-line .log-field {
+    /* every field in the log table */
+    display: table-cell;
+    padding: 0 0.4285em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.repl:not(.sidecar-visible) .log-lines .log-line .log-field:last-child {
+    padding-left: 4em;
+}
+.log-lines .log-line .log-field.activationId {
+    font-weight: 500;
+}
+.log-lines .log-line .log-field.activationId:not(.full-width) {
+    max-width: 10em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.repl.sidecar-visible .log-lines .log-line .log-field.activationId:not(.full-width) {
+    /* further squish the activation id when the sidecar is visible */
+    max-width: 8em;
+}
+.repl.sidecar-visible .log-lines .log-line .log-line-bar-field, .repl.sidecar-visible .log-lines .log-line .log-field.start-time-field {
+    /* hide bar chart when the sidecar is visible */
+    max-width: 0;
+    padding: 0;
+    opacity: 0 !important;
+    width: 0;
+    border: none;
+}
+.log-lines .log-line .log-field-right-align {
+    text-align: right;
+}
+.log-lines .log-line .log-line-bar-field {
+    position: relative;
+    width: 100%;
+}
+.repl .log-lines .log-line .log-line-bar-field {
+    /* add a left-right border to the timeline bars, but only for the repl side, not the sidecar Trace view */
+    border: 1px dotted  rgba(0,0,0,0.075);
+    border-top: none;
+    border-bottom: none;
+}
+.log-lines .log-field.entity-name {
+    max-width: 20em;
+}
+.log-lines .log-line .log-line-bar {
+    top: 25%;
+    min-width: 2px;
+    height: 1em;
+    position: absolute;
+    transition: all 180ms ease-in-out;
+}
+.log-lines .log-line:hover .log-line-bar {
+    filter: brightness(1.25);
+    z-index: 10; /* tooltip layering */
+}
+.log-lines .log-line.log-line-root .log-line-bar {
+    border: 1px solid;
+}
+.log-lines .log-line .log-field.log-date {
+    /* the date part of log lines */
+    font-size: 80%;
+    opacity: 0.6;
+    max-width: 12em;
+    white-space: pre-wrap;
+}
+.log-lines .log-line .log-message {
+    /* the message part of log lines */
+    font-size: 90%;
+    white-space: pre-wrap;
+    border-left: 5px solid;
+}
+
+/* notification area */
+#notification-area {
+    display: flex;
+    align-items: center;
+}
+#notification-area > div {
+    margin-left: 0.5ex;
+}
+#notification-area a:not(:hover) {
+    color: inherit;
+}
+
+/* spin animation */
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+
+
+body.subwindow .repl-block {
+    background-color: transparent;
+}
+body.subwindow .repl-inner {
+    margin-top: 2em;
+}
+
+/* subwindow */
+body.subwindow .repl {
+    -webkit-app-region: drag;
+}
+
+/* we use titleBarStyle:hidden/hiddenInset on mac; this makes room for the window close/min/max buttons */
+body.os-darwin:not(.fullscreen) .header {
+    padding-left: 5em;
+}
+
+body .header .application-icon {
+    position: absolute;
+    top: 0.4em;
+    right: 0.5em;
+    width: 1.8em;
+    height: 1.8em;
+    margin: 0;
+    z-index: 20;
+}
+body.subwindow.still-loading .header .application-icon {
+    transition: all 150ms ease-in-out;
+    transition-delay: 1750ms;
+}
+body.subwindow .header {
+    margin: 0;
+}
+body.subwindow .header .header-left-bits .deemphasize {
+    display: none;
+}
+body.subwindow .header .header-right-bits li:not(#notification-area) {
+    display: none;
+}
+body.subwindow .header .header-right-bits {
+    font-size: 2.5vw;
+}
+body.subwindow .header .header-right-bits .toggle-visibility-on-hover {
+    height: initial;
+}
+body.subwindow .header .header-right-bits .toggle-visibility-on-hover .visible-on-hover {
+    display: none;
+}
+body.subwindow.sidecar-full-screen sidecar/*.custom-content*/ .sidecar-header-icon-wrapper, #sidecar.no-icon .sidecar-header-icon-wrapper {
+    width: 1em;
+}
+body.subwindow.sidecar-full-screen sidecar/*.custom-content*/ .sidecar-header-icon-wrapper .sidecar-header-icon, #sidecar.no-icon .sidecar-header-icon-wrapper .sidecar-header-icon {
+    display: none;
+}
+.subwindow sidecar .sidecar-header .header-right-bits .activation-viz-plugin.grid-header-key table {
+    border-spacing: 0;
+}
+body.subwindow sidecar.entity-is-actions:not(.entity-is-sequence) .action-source, sidecar .activation-result {
+    padding: inherit;
+}
+body.subwindow.sidecar-full-screen sidecar .sidecar-header .entity-name-line {
+    flex-wrap: wrap;
+}
+body.subwindow.sidecar-full-screen sidecar .sidecar-header .header-right-bits {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+body.subwindow.sidecar-full-screen sidecar .sidecar-header .action-content #version {
+    min-height: 20px;
+}
+body.subwindow.sidecar-full-screen #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-close {
+    /* hide the close button in the sidecar bottom stripe when in sidecar-full-screen mode */
+    display: none;
+}
+
+/* pulse animation for repl.partial */
+input.repl-partial {
+    animation: alert-pulse 500ms 2;
+    animation-direction: alternate
+}
+@keyframes alert-pulse {
+  0% {
+      color: inherit;
+  }
+  100% {
+      color: rgb(227, 26, 28);
+      transform: scale(1.02);
+  }
+}
+
+/* restart needed warning */
+body:not(.oops-total-catastrophe) #restart-needed-warning {
+    display: none;
+    opacity: 0;
+}
+#restart-needed-warning {
+    transition: all 300ms ease-in-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+#restart-needed-warning .restart-needed-warning-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 3rem;
+    padding: 2em;
+}
+body.oops-total-catastrophe #restart-needed-warning {
+    opacity: 0.95;
+}
+
+/* tooltips */
+[data-balloon]:hover {
+    cursor: pointer;
+}
+[data-balloon]:after {
+    width: 13em;
+    white-space: normal !important;
+    text-align: center;
+}
+
+/* wskflow qtip rules */
+#qtip {
+    transition: opacity 150ms ease-in-out;
+    transition-delay: 100ms;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+}
+#qtip.visible {
+    opacity: 1;
+}
+break {
+    flex-basis: 100%;
+}
+#wskflowSVG .node rect.atom {
+    /* wskflow node effect */
+    transition: all 150ms ease-in-out;
+}
+#wskflowSVG path {
+    /* path effects */
+    transition: all 150ms ease-in-out;
+}
+#wskflowSVG path.hover {
+    stroke-width: 2;
+}
+#wskflowSVG path.true-branch.hover {
+    marker-end: url(#trueEnd);
+}
+#wskflowSVG path.false-branch.hover {
+    marker-end: url(#falseEnd);
+}
+#wskflowSVG path.forwarding-edge.hover {
+    marker-end: url(#forwardingEnd);
+}

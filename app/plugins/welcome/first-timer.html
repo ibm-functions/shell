@@ -1,0 +1,134 @@
+<html>
+  <style>
+    .content {
+       font-weight: 300;
+       width: 100%;
+       height: 100%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       flex-direction: column;
+       color: hsla(210, 94%, 97%, 1);
+    }
+    h1 {
+       font-size: 3.5em;
+    }
+    .options {
+       display: flex;
+       flex-wrap: wrap;
+       margin-top: 2em;
+       width: 80%;
+    }
+    .options .option:first-child {
+       flex: 2;
+    }
+    .options p {
+       font-size: 125%;
+    }
+    .options .option p:nth-child(3) {
+       color: #5AAAFA;
+    }
+    .options a {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       margin-top: 2em;
+    }
+    .options .icon {
+       font-size: 9em;
+       line-height: 1em;
+       transition: all 300ms ease-in-out;
+       filter: grayscale(0.7)
+    }
+    .options .hovery:hover .icon {
+       filter: grayscale(0)
+    }
+    .options .option {
+       flex: 1;
+    }
+    .options a {
+       text-decoration: none;
+       color: inherit;
+    }
+    .options .label {
+       font-size: 1.5em;
+    }
+
+    video {
+       width: 35em;
+       height: auto;
+       margin-left: 8em;
+    }
+    code {
+       color: #008571;
+    }
+    .opt-in {
+       display: flex;
+       flex-wrap: wrap;
+       align-items: center;
+    }
+    .opt-in-choice {
+       transition: all 300ms ease-in-out;
+       filter: grayscale(0.5);
+       background: #325C80;
+       padding: 1ex 1em;
+       font-size: 1.25em;
+    }
+    .opt-in-choice:hover {
+       cursor: pointer;
+       filter: grayscale(0);
+    }
+    .opt-in-choice:last-child {
+       margin: 1ex;
+    }
+  </style>
+
+  <body>
+    <div class='content'>
+      <h1>Welcome to the OpenWhisk Shell</h1>
+
+      <div class='options'>
+        <!--<video controls>
+          <source src='https://ibm.box.com/shared/static/at4jpaes8f44j9hjtwlw7tl5d6zdrzni.mp4' type='video/mp4'>
+        </video>-->
+        <div class='option'>
+          <p>
+            The OpenWhisk Shell is a <strong>research
+            prototype</strong>, aiming to raise the abstraction level
+            of commands, and enrich the valuable CLI experience with
+            graphics where it really helps. Though a prototype, it is
+            robust, and currently backed by over 600 tests.
+
+          <p>
+            In order to help us assess the tool, we need your help!
+            For a period of time, we need to collect usage
+            information. Specifically, we will count the commands you
+            execute, but <strong>not</strong> the arguments used for
+            those commands. For example, we will know that you created
+            an action via the <code>let</code> command, but not the
+            name of the action, nor its body.
+          </p>
+
+          <p>
+            Do you agree to this level of tracking?
+          </p>
+
+          <div class='opt-in'>
+            <div class='opt-in-choice' onclick='repl.pexec("firsttimer opt-in")'>
+              I Agree
+            </div>
+            <div class='opt-in-choice' onclick='repl.pexec("firsttimer opt-out")'>
+              Nope
+            </div>
+          </div>
+        </div>
+        <div class='option'>
+            <a class='hovery' target='_blank' href='https://openwhisk.ng.bluemix.net/api/v1/web/nickm_wskng_demos/public/index.html'>
+              <div class='icon'>&#x1f4da;</div>
+              <div class='label'>Learn More</div>
+            </a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

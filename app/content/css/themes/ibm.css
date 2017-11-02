@@ -1,0 +1,282 @@
+::selection {
+    /*
+     * hack to avoid these messages from showing up in the terminal: Couldn't set selectedTextBackgroundColor from default ()
+     * see: https://github.com/electron/electron/issues/4420
+     */
+    background: rgba(70, 188, 223, 0.35);
+}
+
+/* color variables */
+body {
+    --color-tag-beta-fill: #dfe3e6;
+    --color-tag-beta-text: #394b54;
+    --color-tag-ibm-fill: #c0e6ff;
+    --color-tag-ibm-text: #325c80;
+    --color-stripe-01: #152935;
+    --color-stripe-02: #0f212e;
+    --color-text-01: #152934;
+    --color-text-02: #5a6872;
+    --color-support-01: #e71d32;
+    --color-support-02: #5aa700;
+    --color-support-04: #5aaafa;
+    --color-brand-01: #3d70b2;
+    --color-brand-02: #5596e6;
+    --color-ui-01: #fff;
+    --color-ui-02: #f5f7fa;
+    --color-ui-03: #f0f3f6;
+    --color-ui-04: #dfe3e6;
+    --color-ui-05: #8c9ba5;
+
+    --font-sans-serif: "IBM Helvetica", sans-serif;
+}
+
+body {
+    font-family: var(--font-sans-serif);
+    background: var(--color-ui-01);
+    color: var(--color-text-01);
+}
+
+body a {
+    color: var(--color-brand-01);
+}
+body a:hover:not(.plain-anchor) {
+    color: var(--color-support-04);
+}
+
+.header {
+    background: var(--color-stripe-01);
+    color: var(--color-ui-01);
+    border-bottom-color: var(--color-ui-05);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);;
+}
+.header .application-icon {
+    background-image: url('../../icons/svg/blue-dolphin.svg');
+}
+.header .application-name .bx--global-header__title--current-page {
+    color: var(--color-support-04);
+}
+
+.repl-block.valid-response .ok, .green-text, .dragover .ok-text-on-dragover {
+    color: var(--color-support-02);
+}
+
+.repl-block.valid-response .oops, sidecar.rule-enabled-false .sidecar-header-icon, .repl-block.error .oops, .clickable.oops, .oops .oops-text-on-oops, .red-text {
+    color: var(--color-support-01);
+}
+
+sidecar.activation-success-false .sidecar-header-icon, span[data-extra-decoration="application error"] {
+    color: rgba(227, 26, 28, 0.8);
+}
+
+.repl-block.processing .repl-input input {
+    color: hsla(194, 71%, 40%, 1);
+}
+
+.repl-result-prefix, badge {
+    background-color: hsl(203, 43%, 15%);
+    color: rgba(255,255,255,0.8);
+    font-family: var(--font-sans-serif);
+}
+
+.repl-result .entity:nth-child(2n+1) td, .repl-result .entity:nth-child(2n+1) .entity-attributes {
+    /* table row striping */
+    background:var(--color-ui-03);
+}
+
+sidecar {
+    background:var(--color-ui-03);
+    border-left-color: var(--color-ui-04);
+}
+
+sidecar .sidecar-header {
+    border-bottom-color: var(--color-ui-04);
+    background: var(--color-ui-02);
+}
+
+sidecar .sidecar-header badge {
+    background-color: var(--color-tag-beta-fill);
+    color: var(--color-tag-beta-text);
+}
+
+sidecar .sidecar-header badge.version {
+    /* badge for action version */
+    background-color: var(--color-tag-ibm-fill);
+    color: var(--color-tag-ibm-text);
+}
+
+badge.clickable:hover {
+    background: hsl(203, 43%, 25%);
+    text-decoration: none;
+    var(--color-ui-01);
+}
+
+.result-table .repl-result, .result-table.repl-result {
+    border-color: var(--color-ui-04);
+}
+
+.entity.actions.app .repl-result-prefix {
+    color: hsla(275, 41%, 32%, 1);
+}
+.entity.activations.is-sequence-true .repl-result-prefix {
+    color: hsla(12, 45%, 45%, 1);
+}
+.entity .repl-result-prefix {
+    color: var(--color-text-01);
+    border-right-color: var(--color-ui-04);
+}
+.entity.actions.sequence .repl-result-prefix {
+    color: hsla(265, 87%, 26%, 1);
+}
+.entity.packages .repl-result-prefix {
+    color: hsla(275, 21%, 22%, 1)
+}
+
+/* sidecar bottom stripe */
+#sidecar .sidecar-bottom-stripe {
+    color: hsla(240, 2%, 90%, 1);
+    background: var(--color-stripe-02);
+    box-shadow: 0 -1px 3px rgba(0,0,0,0.25);
+}
+
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.sidecar-bottom-stripe-button-active {
+    border-bottom-color: var(--color-brand-02);
+}
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
+    color: var(--color-brand-02);
+}
+
+sidecar .header-right-bits {
+    color: hsla(201, 22%, 10%, 1);
+}
+
+sidecar .sidecar-header-icon {
+    color: var(--color-brand-02);
+}
+
+sidecar .sidecar-header-name .package-prefix {
+    color: var(--color-text-02);
+}
+
+.sequence-component {
+    background-color: var(--color-ui-05);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.header .clickable:hover {
+    color: var(--color-support-04);
+}
+.clickable:hover, .entity.actions:hover .entity-name {
+    color: var(--color-brand-01);
+}
+
+.graphical-clickable:hover {
+    filter: brightness(1.25);
+}
+
+.help-option:hover {
+    color: #3E6550;
+}
+
+.help-option:hover .help-option-left-column {
+    border-left-color: rgba(62, 101, 80, 0.2);
+}
+
+.log-lines .log-line .log-line-bar.is-success-true {
+    background: var(--color-support-02);
+}
+.log-lines .log-line .log-line-bar.is-success-false {
+    background: var(--color-support-01);
+}
+.log-lines .log-line.log-line-root .log-line-bar {
+    background: #f3f3f3;
+    border-color: rgba(0,0,0,0.5);
+}
+.log-lines .log-line .log-line-bar.log-line-bar-conductor {
+    background: #666;
+}
+.log-lines .log-line .log-message {
+    border-left-color: black;
+}
+.log-lines-message-for-activations {
+    font-family: var(--font-sans-serif);
+}
+.log-lines .log-line.logged-to-stderr .log-message {
+    /* special display for messages of error log lines */
+    color: hsla(12, 78%, 25%, 1);
+    border-color: hsl(12, 78%, 45%);
+}
+
+body.subwindow .repl-block {
+    background-color: transparent;
+}
+body.subwindow sidecar {
+    background: var(--color-ui-01);
+}
+
+#restart-needed-warning {
+    background-color: var(--color-stripe-01);
+    var(--color-ui-01);
+}
+
+.page [data-balloon]:after {
+    font-family: var(--font-sans-serif);
+}
+
+#wskflowSVG .node.leaf rect {
+    stroke: var(--color-text-01) !important;
+}
+#wskflowSVG .node.leaf rect {
+    stroke: var(--color-text-01) !important;
+}
+#wskflowSVG .node[data-deployed="deployed"] rect {
+    fill: hsla(210, 94%, 67%, 1) !important;
+}
+#wskflowSVG .node[data-deployed="deployed"] rect:hover {
+    fill: hsla(210, 94%, 57%, 1) !important;
+}
+#wskflowSVG .node[data-deployed="not-deployed"] rect {
+    fill: var(--color-ui-04) !important;
+}
+
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: normal;
+    font-weight: 300;
+    src: url('../../fonts/helvetica-neue-light.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: italic;
+    font-weight: 300;
+    src: url('../../fonts/helvetica-neue-light-italic.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../../fonts/helvetica-neue-roman.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: italic;
+    font-weight: 400;
+    src: url('../../fonts/helvetica-neue-roman-italic.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../../fonts/helvetica-neue-bold.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: 'IBM Helvetica';
+    font-style: italic;
+    font-weight: 700;
+    src: url('../../fonts/helvetica-neue-bold-italic.woff2') format('woff2')
+}
