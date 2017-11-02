@@ -41,6 +41,8 @@ if [ -n "$LAYER" ]; then
 fi
 
 # --bail means we fail fast
-#NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
-
-NO_USAGE_TRACKING=true istanbul cover mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER --reporter lcovonly -- -R spec && codecov
+if [ -z "$TRAVIS" ]; then
+    NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+else
+    NO_USAGE_TRACKING=true istanbul cover mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER --reporter lcovonly -- -R spec && codecov
+fi
