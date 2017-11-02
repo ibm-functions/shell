@@ -12,9 +12,14 @@ if [ ! -d "$WHISKDIR" ]; then
 fi
 
 export WHISKDIR
+echo "Found WHISKDIR=$WHISKDIR"
 
 DIR=$HOME/.openwhisk-shell/keys
 mkdir -p $DIR
+
+echo "Made key dir=$DIR"
+
+cd $SCRIPTDIR
 
 ./wskadmin user delete user01  2> /dev/null
 ./wskadmin user delete user02  2> /dev/null
