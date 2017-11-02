@@ -26,12 +26,11 @@ describe('Namespaces list', () => {
     before(common.before(this))
     after(common.after(this))
 
-    const ns1 = `${process.env.TEST_ORG}_${process.env.TEST_SPACE}`
-
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
     // implicit entity type
     ui.aliases.list.forEach(cmd => {
-        it(`should list namespaces with "namespaces ${cmd}"`, () => cli.do(`namespaces ${cmd}`, this.app).then(cli.expectOKWithOnly(ns1)))
+        it(`should list namespaces with "namespaces ${cmd}"`, () => cli.do(`namespaces ${cmd}`, this.app)
+           .then(cli.expectOKWithOnly(ui.expectedNamespace())))
     })
 })

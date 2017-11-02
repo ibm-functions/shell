@@ -41,8 +41,6 @@ describe('Clear the console', () => {
         .then(actualContext => assert.ok(actualContext.indexOf(expected) >= 0))
         .catch(common.oops(this)))
 
-    const ns1 = `${process.env.TEST_ORG}_${process.env.TEST_SPACE}`
-
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
     // get something on the screen
