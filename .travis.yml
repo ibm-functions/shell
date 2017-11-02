@@ -40,8 +40,8 @@ jobs:
          - ./tools/travis/init_auth.sh
        env: TASK=init.openwhisk
      - script:
-         - cat "API_HOST=foo" > ~/.wskprops
-         - cat "AUTH=bar" >>  ~/.wskprops
+         - echo "API_HOST=foo" > ~/.wskprops
+         - echo "AUTH=bar" >>  ~/.wskprops
          - (cd dist && npm install)
          - (cd app && npm install)
        env: TASK=dist.and.app.npm.install
