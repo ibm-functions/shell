@@ -1,9 +1,9 @@
 # International Business Machines, Inc. (IBM)
 ### Individual Contributor License Agreement ("Agreement")
 
-https://github.com/ibm-functions/composer/
+https://github.com/ibm-functions/shell
 
-Thank you for your interest in the Composer project ("the Project").
+Thank you for your interest in the Shell project ("the Project").
 
 In order to clarify the intellectual property license granted with Contributions from any person or entity, IBM must have a Contributor License Agreement ("CLA") on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of IBM and its customers; it does not change your rights to use your own Contributions for any other purpose.
 

@@ -1,4 +1,4 @@
-# Contributing to Composer
+# Contributing to Shell
 
 We welcome contributions, but request you follow these guidelines.
 
