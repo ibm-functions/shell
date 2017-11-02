@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ibm-functions/composer": "~0.1.1",
     "chokidar": "^1.7.0",
-    "@ibm-functions/composer": "~0.1.1"
+    "redis": "^2.8.0"
   }
 }
