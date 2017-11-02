@@ -2,8 +2,10 @@ language: node_js
 dist: trusty
 sudo: false
 node_js: 6
+
 services:
   - docker
+
 addons:
   apt:
      sources:
@@ -14,9 +16,6 @@ addons:
         - xvfb
         - google-chrome-stable
         - libnotify-cil-dev
-
-install:
-  - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
 
 env:
   global:
@@ -35,29 +34,48 @@ script: echo "Running Tests!"
 jobs:
   include:
      - stage: init
-       script: (./tools/travis/setup.sh;./tools/travis/build.sh;./tools/travis/init_auth.sh)
+       script:
+         - ./tools/travis/setup.sh
+         - ./tools/travis/build.sh
+         - ./tools/travis/init_auth.sh
        env: TASK=init.openwhisk
-     - script: (cd app && npm install)
-       env: TASK=app.npm.install
+     - script:
+         - (cd dist && npm install)
+         - (cd app && npm install)
+       env: TASK=dist.and.app.npm.install
      - script: (cd tests && npm install)
-       env: TASK=.tests.npm.install
-     - script: (cd dist && npm install)
-       env: TASK=dist.npm.install
+       env: TASK=tests.npm.install
 
      - stage: test
-       script: (cd tests && npm run test)
+       script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=01
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=02
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=03
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=04
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=05
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=06
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=07
-     - script: (cd tests && npm run test)
+     - script:
+         - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+         - (cd tests && npm run test)
        env: LAYER=08
