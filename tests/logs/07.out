@@ -1,0 +1,333 @@
+
+[0m[0m
+[0m  Create a composer while[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (134ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (1004ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (836ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (878ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (812ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (863ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (804ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (861ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (799ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (792ms)[0m
+  [32m  ✓[0m[90m should create a composer while with condition1 and task1[0m[31m (1022ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond1_do_task1 with x=3[0m[31m (1427ms)[0m
+  [32m  ✓[0m[90m should create a composer while with condition2 and task1[0m[31m (841ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond2_do_task1 with undefined=undefined[0m[31m (1834ms)[0m
+  [32m  ✓[0m[90m should create a composer while, no "do", with condition3 and task1[0m[31m (802ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond3_do_task1 with undefined=undefined[0m[31m (1837ms)[0m
+  [32m  ✓[0m[90m should create a composer while with let, condition2 and task1[0m[31m (880ms)[0m
+  [32m  ✓[0m[90m should invoke the composition loopy with undefined=undefined[0m[31m (1809ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence with echo->task1[0m[31m (847ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1311ms)[0m
+  [32m  ✓[0m[90m should create a composer while with let, condition2 and ${seqName1}[0m[31m (841ms)[0m
+  [32m  ✓[0m[90m should invoke the composition loopy with x=3[0m[31m (1971ms)[0m
+
+[0m  app init --reset[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (127ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1322ms)[0m
+  [32m  ✓[0m[90m should show valid app configuration[0m[31m (756ms)[0m
+
+[0m  Bottom bar back button functionality[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (121ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1323ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (1125ms)[0m
+  [32m  ✓[0m[90m should click on the first node[0m[31m (828ms)[0m
+  [32m  ✓[0m[90m should click on the second node[0m[31m (296ms)[0m
+  [32m  ✓[0m[90m should open grid, click on some cell, and come back[0m[31m (1621ms)[0m
+  [32m  ✓[0m[90m should open grid, click on bottom-bar-back-button-test-36c903a2-c135-4618-8dac-890e0c40fbd2, and come back, then bottom-bar-back-button-test-9a78a044-8649-4c18-83b0-e5b4df558ada, and come back[0m[31m (1548ms)[0m
+
+[0m  try using "shell" to open the graphical shell, when already in the graphical shell[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (127ms)[0m
+  [32m  ✓[0m[90m should fail when executing "shell"[0m[31m (241ms)[0m
+
+[0m  app create error handling and app create --dry-run[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (127ms)[0m
+  [32m  ✓[0m[90m should reject unknown option --mojo[0m[31m (605ms)[0m
+  [32m  ✓[0m[90m should reject unknown option --mojo[0m[31m (255ms)[0m
+  [32m  ✓[0m[90m should reject unknown option -m[0m[31m (245ms)[0m
+  [32m  ✓[0m[90m should reject unknown option -m[0m[31m (244ms)[0m
+  [32m  ✓[0m[90m should fail to initialize composer, due to bogus option[0m[31m (220ms)[0m
+  [32m  ✓[0m[90m should dry-run check data/composer-source/if.js with -n[0m[31m (778ms)[0m
+  [32m  ✓[0m[90m should dry-run check data/composer-source/if.js with --dry-run[0m[31m (780ms)[0m
+  [32m  ✓[0m[90m should dry-run check with expected error data/composer-source-expect-errors/error1.js --dry-run[0m[31m (300ms)[0m
+  [32m  ✓[0m[90m should dry-run check with expected error data/composer-source-expect-errors/nofsm.js --dry-run[0m[31m (441ms)[0m
+  [32m  ✓[0m[90m should dry-run check with expected error data/composer-source-expect-errors/t2s.js --dry-run[0m[31m (311ms)[0m
+  [32m  ✓[0m[90m should dry-run check with expected error data/composer-source-expect-errors/if-bad.js --dry-run[0m[31m (299ms)[0m
+  [32m  ✓[0m[90m should fail properly with ENOENT[0m[31m (723ms)[0m
+  [32m  ✓[0m[90m should fail properly with ENOENT[0m[31m (258ms)[0m
+  [32m  ✓[0m[90m should fail properly with ENOENT[0m[31m (235ms)[0m
+
+[0m  app create and sessions[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (136ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (884ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (820ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (805ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (801ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (884ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (790ms)[0m
+  [32m  ✓[0m[90m should initialize composer[0m[31m (844ms)[0m
+  [32m  ✓[0m[90m should throw a usage message for incomplete app create[0m[31m (226ms)[0m
+  [32m  ✓[0m[90m should throw a usage message for incomplete app create v2[0m[31m (212ms)[0m
+  [32m  ✓[0m[90m should throw a usage message for incomplete app create v3[0m[31m (239ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (992ms)[0m
+  [32m  ✓[0m[90m should create a packaged composer sequence[0m[31m (953ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence via app update[0m[31m (830ms)[0m
+  [32m  ✓[0m[90m should create another composer sequence, via letc[0m[31m (829ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list" nLive=0 nDone=0[0m[31m (747ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list --skip 0" nLive=0 nDone=0[0m[31m (757ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list --skip 0" nLive=0 nDone=0[0m[31m (754ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list" nLive=0 nDone=0[0m[31m (751ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sess list" nLive=0 nDone=0[0m[31m (814ms)[0m
+  [32m  ✓[0m[90m should list sessions via "ses list" nLive=0 nDone=0[0m[31m (731ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "app config"[0m[31m (757ms)[0m
+  [32m  ✓[0m[90m should get regular action foo1[0m[31m (807ms)[0m
+  [32m  ✓[0m[90m should get the composer sequence via "app get"[0m[31m (998ms)[0m
+  [32m  ✓[0m[90m should get the composer sequence via "action get"[0m[31m (855ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "app props"[0m[31m (753ms)[0m
+  [32m  ✓[0m[90m should get regular action foo1[0m[31m (856ms)[0m
+  [32m  ✓[0m[90m should throw a usage message for incomplete app get[0m[31m (214ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "wsk app config"[0m[31m (763ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1341ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list" nLive=0 nDone=1[0m[31m (761ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session ls" nLive=0 nDone=1[0m[31m (794ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list --skip 1" nLive=0 nDone=0[0m[31m (758ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sess list" nLive=0 nDone=1[0m[31m (743ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1881ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list" nLive=0 nDone=2[0m[31m (744ms)[0m
+  [32m  ✓[0m[90m should list sessions via "ses ls" nLive=0 nDone=2[0m[31m (740ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list --skip 1" nLive=0 nDone=1[0m[31m (803ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list --skip 2" nLive=0 nDone=0[0m[31m (371ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sess list" nLive=0 nDone=2[0m[31m (739ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1843ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list" nLive=0 nDone=3[0m[31m (738ms)[0m
+  [32m  ✓[0m[90m should list sessions via "sessions list --skip 1" nLive=0 nDone=2[0m[31m (760ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "app properties"[0m[31m (815ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "wsk app properties"[0m[31m (785ms)[0m
+  [32m  ✓[0m[90m should show app configuration via "wsk app props"[0m[31m (772ms)[0m
+  [32m  ✓[0m[90m should async seq3[0m[31m (20958ms)[0m
+  [32m  ✓[0m[90m should list sessions via "session list" nLive=0 nDone=4[0m[31m (805ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source comments.js[0m[31m (953ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer1.js[0m[31m (942ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer1b.js[0m[31m (1017ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer1c.js[0m[31m (927ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer1d.js[0m[31m (924ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer1e.js[0m[31m (924ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer2.js[0m[31m (935ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer3.js[0m[31m (970ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer4.js[0m[31m (923ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer5.js[0m[31m (965ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source composer6.js[0m[31m (933ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source demo-retain.js[0m[31m (935ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source demo.js[0m[31m (924ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source if-with-weird-semicolons.js[0m[31m (1032ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source if.js[0m[31m (921ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source retry-5-times.js[0m[31m (942ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source seq-with-comments.js[0m[31m (988ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source seq-with-comments2.js[0m[31m (977ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source seq.js[0m[31m (929ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source sms-translate-demo-with-comments.js[0m[31m (1018ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source sms-translate-demo.js[0m[31m (994ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source sms-translate.js[0m[31m (940ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source t2s.js[0m[31m (926ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source travis2slack.js[0m[31m (1002ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source try.js[0m[31m (919ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence from source while-seq.js[0m[31m (938ms)[0m
+
+[0m  Use the app delete command to delete an invokeable composition[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (178ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1321ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (1172ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1888ms)[0m
+  [32m  ✓[0m[90m should get ${seqName1} via app get[0m[31m (812ms)[0m
+  [32m  ✓[0m[90m should list ${seqName1} via app ls[0m[31m (811ms)[0m
+  [32m  ✓[0m[90m should list the package binding[0m[31m (930ms)[0m
+  [32m  ✓[0m[90m should delete a composer sequence[0m[31m (754ms)[0m
+  [32m  ✓[0m[90m should list nothing via wsk app ls[0m[31m (683ms)[0m
+  [32m  ✓[0m[90m should fail to get the package binding[0m[31m (731ms)[0m
+
+[0m  Create a composer if[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (127ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (916ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (823ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (835ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (810ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (833ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (795ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (843ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (793ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (812ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (858ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (826ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (796ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (863ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (806ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (830ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (797ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (796ms)[0m
+  [32m  ✓[0m[90m should create a composer if with cond1 and yes[0m[31m (1062ms)[0m
+  [32m  ✓[0m[90m should invoke the composition if_cond1_then_yes with ignored=undefined[0m[31m (1440ms)[0m
+  [32m  ✓[0m[90m should create a composer if without the "then" syntax[0m[31m (865ms)[0m
+  [32m  ✓[0m[90m should invoke the composition if_cond2_then_yesyes with x=3[0m[31m (1389ms)[0m
+  [32m  ✓[0m[90m should create a composer if/then/else[0m[31m (820ms)[0m
+  [32m  ✓[0m[90m should invoke the composition if_cond3_then_yes_else_no with ignored=undefined[0m[31m (1382ms)[0m
+  [32m  ✓[0m[90m should create a composer if/then/else without the "then" or "else" syntax[0m[31m (809ms)[0m
+  [32m  ✓[0m[90m should invoke the composition if_cond4_then_yes_else_no with ignored=undefined[0m[31m (1878ms)[0m
+  [32m  ✓[0m[90m should create a composer if with let iffy1[0m[31m (855ms)[0m
+  [32m  ✓[0m[90m should invoke the composition iffy1 with ignored=undefined[0m[31m (1335ms)[0m
+
+[0m  killing and purging composer invocations[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (124ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (967ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (824ms)[0m
+  [32m  ✓[0m[90m should print usage with session kill 3[0m[31m (360ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (794ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (1038ms)[0m
+Issued async for app init cleanse, got activationId f4b86fc5d98e47eeb86fc5d98e77ee60
+Now issuing app init --auto --cleanse, expecting success; sessionId=18fb5100055a45c5bb5100055a45c5cf
+  [32m  ✓[0m[90m should async, then app init --url --cleanse, and expect failure in kill[0m[31m (2815ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (6314ms)[0m
+  [32m  ✓[0m[90m should async the composition seq1 with x=3[0m[31m (977ms)[0m
+Issued async for session kill, got activationId a84b6063611049228b60636110792293
+Now issuing session kill bb68d5ddc064490aa8d5ddc064690a49, expecting success
+Now issuing session kill bb68d5ddc064490aa8d5ddc064690a49, expecting error
+  [32m  ✓[0m[90m should async, then session kill, the app seq1 with x=3[0m[31m (7786ms)[0m
+Issued async for session purge, got activationId 007086866de64f45b086866de6cf4568
+Now issuing session purge fca9a38c6a3447a2a9a38c6a3417a255, expecting success
+Now issuing session purge fca9a38c6a3447a2a9a38c6a3417a255, expecting error
+  [32m  ✓[0m[90m should async, then session purge, the app seq1 with x=3[0m[31m (2786ms)[0m
+
+[0m  Use the app list command to list the invokeable compositions[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (122ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1307ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (1098ms)[0m
+  [32m  ✓[0m[90m should list ${seqName1} via app ls[0m[31m (853ms)[0m
+  [32m  ✓[0m[90m should create a second composer sequence[0m[31m (825ms)[0m
+  [32m  ✓[0m[90m should list ${seqName1} via app list[0m[31m (827ms)[0m
+  [32m  ✓[0m[90m should list ${seqName1} via wsk app list[0m[31m (834ms)[0m
+
+[0m  kill composer invocation[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (123ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1315ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence[0m[31m (1163ms)[0m
+Issued async, got activationId 6fe624d5a3b6433ca624d5a3b6f33c54
+Now issuing app result
+Now issuing app result
+  [32m  ✓[0m[90m should async, then kill, the composition seq1 with x=3[0m[31m (3395ms)[0m
+
+[0m  Create a composer sequence[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (126ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1392ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence seq1 with anonymous functions[0m[31m (1150ms)[0m
+  [32m  ✓[0m[90m should switch to annotations mode[0m[31m (903ms)[0m
+  [32m  ✓[0m[90m should invoke the composer sequence seq1 with n=3[0m[31m (831ms)[0m
+  [32m  ✓[0m[90m should create a nested composer sequence seq2 with anonymous functions[0m[31m (837ms)[0m
+  [32m  ✓[0m[90m should switch to annotations mode[0m[31m (809ms)[0m
+  [32m  ✓[0m[90m should invoke the composer sequence seq2 with nn=33[0m[31m (1321ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (800ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (797ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (798ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (872ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence seq3 with named functions[0m[31m (827ms)[0m
+  [32m  ✓[0m[90m should switch to annotations mode[0m[31m (797ms)[0m
+  [32m  ✓[0m[90m should invoke the composer sequence seq3 with nnn=333[0m[31m (1823ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (798ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (798ms)[0m
+  [32m  ✓[0m[90m should create a nested composer sequence seq4 with named functions[0m[31m (843ms)[0m
+  [32m  ✓[0m[90m should switch to annotations mode[0m[31m (816ms)[0m
+  [32m  ✓[0m[90m should invoke the composer sequence seq4 with nnnn=3333[0m[31m (1327ms)[0m
+
+[0m  session get --last and --last-failed[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (133ms)[0m
+  [32m  ✓[0m[90m should initialize composer[0m[31m (1325ms)[0m
+  [32m  ✓[0m[90m create sequence that invokes without error[0m[31m (1182ms)[0m
+  [32m  ✓[0m[90m should invoke seq1[0m[31m (1889ms)[0m
+  [32m  ✓[0m[90m create sequence that invokes WITH ERROR[0m[31m (855ms)[0m
+  [32m  ✓[0m[90m should show seq1 with session get --last[0m[31m (800ms)[0m
+  [32m  ✓[0m[90m create another sequence that invokes without error[0m[31m (826ms)[0m
+  [32m  ✓[0m[90m should invoke seq3[0m[31m (1310ms)[0m
+  [32m  ✓[0m[90m should show seq1 with session get --last seq1[0m[31m (813ms)[0m
+  [32m  ✓[0m[90m should show seq3 with session get --last[0m[31m (893ms)[0m
+  [32m  ✓[0m[90m should invoke seq2[0m[31m (1832ms)[0m
+  [32m  ✓[0m[90m should show seq1 with session get --last seq1[0m[31m (821ms)[0m
+  [32m  ✓[0m[90m should show seq2 with session get --last-failed[0m[31m (823ms)[0m
+  [32m  ✓[0m[90m should invoke seq3[0m[31m (1320ms)[0m
+  [32m  ✓[0m[90m should show seq2 with session get --last-failed[0m[31m (828ms)[0m
+
+[0m  Create a composer try-catch[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (120ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (958ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (819ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (828ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (805ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (782ms)[0m
+  [32m  ✓[0m[90m should create a composer try[0m[31m (1112ms)[0m
+  [32m  ✓[0m[90m should invoke the composition foo1 with x=3[0m[31m (1912ms)[0m
+  [32m  ✓[0m[90m should invoke the composition foo1 with x=-3[0m[31m (1308ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence with echo->foo1[0m[31m (821ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1399ms)[0m
+  [32m  ✓[0m[90m should create a composer try with nested composer sequence[0m[31m (819ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (807ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=-3[0m[31m (1308ms)[0m
+
+[0m  confirm that app update preserves annotations and parameters[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (124ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1314ms)[0m
+  [32m  ✓[0m[90m should create an app[0m[31m (1178ms)[0m
+  [32m  ✓[0m[90m should webbify the app[0m[31m (927ms)[0m
+  [32m  ✓[0m[90m should update an app[0m[31m (857ms)[0m
+
+[0m  show the composer visualization with no wskauth[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (77ms)[0m
+  [32m  ✓[0m[90m show visualization via app preview from FSM file @demos/hello.js[0m[31m (1740ms)[0m
+  [32m  ✓[0m[90m show visualization via app preview from FSM file if.js[0m[31m (1272ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/while-seq.js[0m[31m (1000ms)[0m
+
+[0m  show the composer visualization without creating openwhisk assets[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (124ms)[0m
+  [32m  ✓[0m[90m show visualization via preview from FSM file data/fsm.json[0m[31m (1617ms)[0m
+  [32m  ✓[0m[90m show visualization via app viz from FSM file data/fsm.json[0m[31m (1025ms)[0m
+  [32m  ✓[0m[90m show visualization via app preview from FSM file data/fsm.json[0m[31m (945ms)[0m
+  [32m  ✓[0m[90m show visualization via wsk app viz from FSM file data/fsm.json[0m[31m (984ms)[0m
+  [32m  ✓[0m[90m show visualization via wsk app preview from FSM file data/fsm.json[0m[31m (959ms)[0m
+  [32m  ✓[0m[90m show raw FSM from FSM file data/fsm.json[0m[31m (840ms)[0m
+  [32m  ✓[0m[90m show raw FSM from FSM file data/fsm.json[0m[31m (830ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/composer1.js[0m[31m (1018ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/composer2.js[0m[31m (1008ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/composer3.js[0m[31m (1115ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/composer4.js[0m[31m (1001ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/composer5.js[0m[31m (1006ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/seq.js[0m[31m (1074ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/if.js[0m[31m (1176ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/while-seq.js[0m[31m (1263ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/demo.js[0m[31m (1218ms)[0m
+  [32m  ✓[0m[90m show visualization from javascript source data/composer-source/demo-retain.js[0m[31m (1022ms)[0m
+
+[0m  Create a composer while[0m
+  [32m  ✓[0m[90m should have an active repl[0m[31m (124ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (910ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (820ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (868ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (807ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (853ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (800ms)[0m
+  [32m  ✓[0m[90m should create an action via let[0m[31m (855ms)[0m
+  [32m  ✓[0m[90m should switch to parameters mode[0m[31m (808ms)[0m
+  [32m  ✓[0m[90m should app init --reset --url redis://9.80.90.175:6379[0m[31m (1386ms)[0m
+  [32m  ✓[0m[90m should create a composer while with condition1 and task1[0m[31m (1333ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond1_do_task1 with x=3[0m[31m (3892ms)[0m
+  [32m  ✓[0m[90m should create a composer while with condition2 and task1[0m[31m (853ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond2_do_task1 with undefined=undefined[0m[31m (2839ms)[0m
+  [32m  ✓[0m[90m should create a composer while, no "do", with condition3 and task1[0m[31m (1315ms)[0m
+  [32m  ✓[0m[90m should invoke the composition while_cond3_do_task1 with undefined=undefined[0m[31m (2326ms)[0m
+  [32m  ✓[0m[90m should create a composer while with let, condition2 and task1[0m[31m (843ms)[0m
+  [32m  ✓[0m[90m should invoke the composition loopy with undefined=undefined[0m[31m (1813ms)[0m
+  [32m  ✓[0m[90m should create a composer sequence with echo->task1[0m[31m (930ms)[0m
+  [32m  ✓[0m[90m should invoke the composition seq1 with x=3[0m[31m (1814ms)[0m
+  [32m  ✓[0m[90m should create a composer while with let, condition2 and ${seqName1}[0m[31m (839ms)[0m
+  [32m  ✓[0m[90m should invoke the composition loopy with x=3[0m[31m (1823ms)[0m
+
+
+[92m [0m[32m 281 passing[0m[90m (6m)[0m
+

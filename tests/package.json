@@ -1,0 +1,23 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "./bin/prepTest.sh && ./bin/runTest.sh $1"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "expand-home-dir": "0.0.3",
+    "is-url": "^1.2.2",
+    "mocha": "^3.4.2",
+    "openwhisk": "git://github.com/starpit/openwhisk-client-js.git#add_client_timeout",
+    "promise-retry": "^1.1.1",
+    "properties-parser": "^0.3.1",
+    "spectron": "^3.7.1"
+  },
+  "dependencies": {
+    "del": "^3.0.0"
+  }
+}

@@ -1,0 +1,62 @@
+language: node_js
+dist: trusty
+sudo: false
+node_js: 6
+services:
+  - docker
+addons:
+  apt:
+     sources:
+        - google-chrome
+     packages:
+        - dbus
+        - dbus-x11
+        - xvfb
+        - google-chrome-stable
+        - libnotify-cil-dev
+
+install:
+  - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
+
+env:
+  global:
+    - DISPLAY=":99.0"
+    - KEY_FROM_LAYER=true
+    - DO_NOT_SET_WSKPROPS=true
+    - WINDOW_WIDTH=1400
+    - WINDOW_HEIGHT=1050
+    - NO_DEBUGGER_BREAKPOINTS=true
+    - NO_NOTIFICATIONS=true
+    - NO_FIRST_TIMER=true
+    - UV_THREADPOOL_SIZE=64
+
+script: echo "Running Tests!"
+
+jobs:
+  include:
+     - stage: init
+       script: (./tools/travis/setup.sh;./tools/travis/build.sh)
+     - script: (cd app && npm install)
+     - script: (cd tests && npm install)
+     - script: (cd dist && npm install)
+
+     - stage: compile
+       script: (cd dist && ./compile.js)
+
+     - stage: test
+       script: (cd tests && npm run test)
+       env: LAYER=01
+     - script: (cd tests && npm run test)
+       env: LAYER=02
+     - script: (cd tests && npm run test)
+       env: LAYER=03
+     - script: (cd tests && npm run test)
+       env: LAYER=04
+     - script: (cd tests && npm run test)
+       env: LAYER=05
+     - script: (cd tests && npm run test)
+       env: LAYER=06
+     - script: (cd tests && npm run test)
+       env: LAYER=07
+     - script: (cd tests && npm run test)
+       env: LAYER=08

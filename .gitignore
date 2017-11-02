@@ -1,0 +1,9 @@
+*~
+dist/build
+dist/plugins
+*.log
+node_modules
+wskng.iml
+app/.version
+app/content/**/*.js.map
+app/plugins/.pre-scanned
