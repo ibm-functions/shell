@@ -33,7 +33,7 @@ env:
 install:
     - echo "API_HOST=foo" > ~/.wskprops
     - echo "AUTH=bar" >>  ~/.wskprops
-    - npm install -g codecov istanbul &
+#    - npm install -g codecov istanbul &
     - (cd dist && npm install; cd ../app && npm install) &
     - (cd tests && npm install) &
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &
