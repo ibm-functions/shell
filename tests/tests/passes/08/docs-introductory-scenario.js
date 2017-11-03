@@ -706,7 +706,7 @@ describe('Intro demo scenario', function() {
     }
 
     // open grid view to app `grid appName`
-    {
+    /*{
         inputs.forEach( ({appName,actions=[]}) => {
             const cmd = `grid ${appName}`,
                   cmd2 = `grid ${appName} -a`,
@@ -731,5 +731,5 @@ describe('Intro demo scenario', function() {
                .then(() => this.app.client.waitForExist(gridForAction(appName)))
                .catch(common.oops(this)))
         })
-    }
+    }*/
 })
