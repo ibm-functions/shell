@@ -37,6 +37,18 @@ const cacheIt = wsk => ({ package, message }) => {
     manager = require('@ibm-functions/composer/manager')(wsk.auth.getSubjectId(),
                                                          package.parameters.find(({key})=>key==='$config').value.redis)
 
+    // when the window is closed, let's uncache this, and close our redis connection
+    eventBus.on('/window/reload', () => {
+        try {
+            console.log('Uncaching manager')
+            manager.quit()
+            initDone = false
+            manager = false
+        } catch (err) {
+            console.error(err)
+        }
+    })
+
     // localStorage.setItem(lsKey, JSON.stringify(package))
 
     return { package, manager, message }
