@@ -1,0 +1,24 @@
+{
+  "name": "wskflow",
+  "version": "0.0.1",
+  "description": "Visualizations for Composer apps",
+  "main": "plugin.js",
+  "scripts": {
+    "test": "cd ../tests && npm run test"
+  },
+  "keywords": [
+    "OpenWhisk",
+    "wskng",
+    "komposer",
+    "flow",
+    "wskflow"
+  ],
+  "author": "Kerry Chang",
+  "license": "Apache-2.0",
+  "devDependencies": {},
+  "dependencies": {
+    "d3": "^3.5.17",
+    "elkjs": "0.0.2",
+    "jquery": "^3.2.1"
+  }
+}
