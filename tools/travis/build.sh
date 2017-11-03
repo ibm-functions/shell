@@ -15,13 +15,14 @@ grep -vE 'controller1|invoker1' hosts.bak > hosts
 # Install OpenWhisk
 cd $WHISKDIR/ansible
 
+# note that we increase the quotas on invocations per minute and concurrent invocations (per namespace)
 ANSIBLE_CMD="ansible-playbook -i environments/local -e docker_image_prefix=openwhisk -e limit_invocations_per_minute=600 -e limit_invocations_concurrent=100"
 
 $ANSIBLE_CMD setup.yml
 $ANSIBLE_CMD prereq.yml
 $ANSIBLE_CMD couchdb.yml
 $ANSIBLE_CMD initdb.yml
-#$ANSIBLE_CMD apigateway.yml
+#$ANSIBLE_CMD apigateway.yml  # <-- intentionally disabled, as Shell does not yet support this
 
 cd $WHISKDIR
 ./gradlew  -PdockerImagePrefix=openwhisk
