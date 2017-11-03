@@ -10,7 +10,7 @@ WHISKDIR="$ROOTDIR/../openwhisk"
 # Install OpenWhisk
 cd $WHISKDIR/ansible
 
-ANSIBLE_CMD="ansible-playbook -i environments/local -e docker_image_prefix=openwhisk "
+ANSIBLE_CMD="ansible-playbook -i environments/local -e docker_image_prefix=openwhisk -e limit_invocations_per_minute=600 -e limit_invocations_concurrent 100"
 
 $ANSIBLE_CMD setup.yml
 $ANSIBLE_CMD prereq.yml
