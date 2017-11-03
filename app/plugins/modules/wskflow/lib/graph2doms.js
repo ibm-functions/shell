@@ -1,19 +1,3 @@
-/*
- * Copyright 2017 IBM Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 const d3 = require('d3'),
 	//klay = require('./lib/klayjs-d3.js'),
 	$ = require('jquery'),
@@ -80,17 +64,7 @@ const wfColorAct = {
 // need to fix center
 function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 
-	
-	let kgraph, initScale, initTransX, initTransY;
-
-	if(width == undefined)
-		width = $(window).width();
-	if(height == undefined){
-		// customize default width for whisk shell 
-		height = $(window).height();
-	}
-
-	var zoom = d3.behavior.zoom()
+	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
 
 	$("#wskflowContainer").remove();
@@ -102,7 +76,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"align-items": "center",
 		"flex": "1",
 		"font-family": "Roboto",
-		//'font-weight': 400,
 		"position": "relative",
 		"-webkit-app-region": "no-drag",
 		"width": "100%",
@@ -110,23 +83,27 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	});
 
 	
-	var ssvg = d3.select("#wskflowContainer")
+	let ssvg = d3.select("#wskflowContainer")
 	    .append("svg")
 	    .attr("id", "wskflowSVG")	   
-	    //.style("min-width", "40em")
-	    //.style("min-height", "40em")
-	    .style("flex", "1")
-	    //.attr("viewBox", `0 0 ${width} ${height}`)
-        //.attr("preserveAspectRatio", "xMidYMid meet")
-        .call(zoom)
-        .on("dblclick.zoom", null);
+	    .style("width", "100%")
+	    .style("height", "100%")
+	    .style("flex", "1");
 
+	let container = ssvg.append('g')		
+        .call(zoom)
+        .on("dblclick.zoom", null);        
    
-	var svg = ssvg
+    container.append('rect')
+    	.attr('width', width)
+    	.attr('height', height)
+    	.style('fill', 'none')
+    	.style("pointer-events", "all");
+
+	let svg = container
 		.append("g")
 	    .attr("id", "wskflowMainG");
-
-
+	    
 	// define an arrow head
 	svg.append("svg:defs")
 	     .append("svg:marker")
@@ -218,21 +195,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		.append("svg:path")
 		.attr("d", "M0,-10L15,0L0,10");
 
-
-	/*svg.append("svg:defs")
-	     .append("svg:marker")
-	      .attr("id", "greenEnd")
-	      .attr("viewBox", "0 -5 10 10")
-	      .attr("refX", 10)
-	      .attr("refY", 0)
-	      .attr("markerWidth", 3)        // marker settings
-	      .attr("markerHeight", 5)
-	      .attr("orient", "auto")
-	      .style("fill", wfColorAct.normal)
-	      .style("stroke-opacity", 0.6)  // arrowhead color
-	     .append("svg:path")
-	      .attr("d", "M0,-5L10,0L0,5");*/
-
 	svg.append("svg:defs")
 	     .append("svg:g")
 	      .attr("id", "retryIconNormal")	      
@@ -242,6 +204,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	      .attr("d", "M852.8,558.8c0,194.5-158.2,352.8-352.8,352.8c-194.5,0-352.8-158.3-352.8-352.8c0-190.8,152.4-346.7,341.8-352.5v117.4l176.4-156.9L489,10v118C256.3,133.8,68.8,324.8,68.8,558.8C68.8,796.6,262.2,990,500,990c237.8,0,431.2-193.4,431.2-431.2H852.8z");
 	
 	$("#wskflowContainer").append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
+
+
 	if(visited){
 		$("#wskflowContainer").append("<div id='actList' style='position: absolute; display:none; background-color: rgba(0, 0, 0, 0.8); color: white; font-size: 0.75em; padding: 1ex; width:225px; right: 5px; top: 5px;'></div>");		
 	}
@@ -270,7 +234,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	})
 
 	
-	// group
 	var root = svg.append("g");
 
 	elk.layout(JSONgraph,
@@ -285,18 +248,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			}				
 		})
    		.then(data => {
-   			
-   			kgraph = data;			
 
-   			// ------------------------------------------
-   			// new 0926 - new approach to do inital scailing and translating
-   			$("#wskflowSVG").css("width", "100%").css("height", "100%");
+			// scale to fit but no zooming in more than 2
+			let initScale = Math.min(width/data.width, height/data.height, 2);
 
+			// initial translate - only X, y stays at 0
+			let initTransX = Math.max(width/2 - data.width*initScale/2, 0);		
+			let initTransY = 0; 
 
-			
-			$("#wskflowMainG").css("transform-origin", "50% 50%")
+			container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);
 
-			//ssvg.attr("viewBox", `0 0 ${data.width} ${data.height}`)
+			console.log(`[wskflow] svg canvas width=${width}, height=${height}`);
+			console.log(`[wskflow] initial scaling and translate: matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY}`);
+
 
 		    let getNodes = function(graph) {
 		        var queue = [graph],
@@ -1144,19 +1108,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		// #3 update positions of all elements
 		let trans = 0;
 		// node positions
-		nodeData.transition().call(endall, function() { trans++; if(trans == 3) addInteractivity(); })
+		nodeData.transition().call(endall, function() { trans++; if(trans == 3) graphDoneCallback(); })
 		.attr("transform", function(d) {
 			return "translate(" + (d.x || 0) + " " + (d.y || 0) + ")";
 		});
 		// node sizes
 		nodeData.select(".atom")
-		.transition().call(endall, function() { trans++; if(trans == 3) addInteractivity(); })
+		.transition().call(endall, function() { trans++; if(trans == 3) graphDoneCallback(); })
 		.attr("width", function(d) { return d.width; })
 		.attr("height", function(d) { return d.height; });
 		
 
 		// edge routes
-		linkData.transition().call(endall, function() { trans++; if(trans == 3) addInteractivity(); })
+		linkData.transition().call(endall, function() { trans++; if(trans == 3) graphDoneCallback(); })
 		.attr("d", function(d) {
 			var path = "";
 			if (d.sourcePoint && d.targetPoint) {
@@ -1262,61 +1226,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				}
 			}						
 		});
-		
-
-
 	}
 
 
-	function addInteractivity(){	
-
-   			
-		width = $(containerId).width();
-		height = $(containerId).height();	
-		if(width == 0 || height == 0){
-			//width = $(window).width()-$(".sidecar-visible").width();
-			if ($(document.body).is('.sidecar-full-screen')) {
-                width = $(window).width();
-            } 
-            else {
-            	width = $(window).width()-$("#main-repl").width();
-            }                
-			height = $(".main").height()-40-$(".sidecar-header").height();
-			
-
-			console.log("[wskflow] set up width & height manually");
-
-			if(width == 0 || height == 0){
-				// if width and height is still 0.... :(
-				 width = $(window).width(); height = $(window).height();
-				console.log("[wskflow] set up width & height to the size of the window");
-			}
-
-			$("#wskflowSVG").css("width", width).css("height", height);
-
-		}     
-
-
-		console.log(`[wskflow] svg canvas width=${width}, height=${height}`);
-
-		// scale to fit but no zooming in more than 2
-		initScale = Math.min(width/kgraph.width, height/kgraph.height, 2);
-
-		// initial translate - only X, y stays at 0
-		initTransX = Math.max(width/2 - kgraph.width*initScale/2, 0);
-		initTransY = 0; 
-
-		console.log(`[wskflow] initial scaling ${initScale}`);
-
-		svg.attr("transform", zoomToFit());
-		$("#wskflowContainer").css("display", "flex");
-		//$(window).unbind("resize", resizeHandler).resize(resizeHandler);
+	function graphDoneCallback(){	
+		// show graph 
+   		$("#wskflowContainer").css("display", "flex");
  	} 		
 
 
  	// handle redraw and resetting layout. from https://github.com/OpenKieler/klayjs-d3/blob/master/examples/interactive/index.js
 	function redraw() {
-            svg.attr("transform", zoomToFit(d3.event.translate, d3.event.scale))
+		$("#qtip").removeClass("visible")
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 	}		
 
 	// check if transition is complete. from https://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
@@ -1329,14 +1251,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	        .each("end", function() { if (!--n) callback.apply(this, arguments); }); 
 	 }	
 
-
-    function zoomToFit(userTranslate=[0,0], userScale=1){
-    	// hide qtip when moving    	
-		$("#qtip").removeClass("visible")
-    	// this will do a transform-scale-transform
-    	return `matrix(${initScale*userScale}, 0, 0, ${initScale*userScale}, ${initTransX+userTranslate[0]}, ${initTransY+userTranslate[1]})` 
-
-    }
 		 
 }
 
