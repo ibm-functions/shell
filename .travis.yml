@@ -41,5 +41,5 @@ install:
     - cat ~/.wskprops
     - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
 
-script: (cd tests && npm run test)
+script: (cd tests && ./bin/runLocal.sh)
 
