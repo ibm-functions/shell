@@ -1,8 +1,11 @@
+# the shell is a nodejs app
 language: node_js
-dist: trusty
-sudo: false
 node_js: 8
 
+dist: trusty
+
+# docker, for openwhisk
+sudo: required
 services:
   - docker
 
