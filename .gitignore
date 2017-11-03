@@ -7,3 +7,5 @@ wskng.iml
 app/.version
 app/content/**/*.js.map
 app/plugins/.pre-scanned
+.openwhisk-shell
+dump.rdb
