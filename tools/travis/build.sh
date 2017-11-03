@@ -22,7 +22,7 @@ $ANSIBLE_CMD setup.yml
 $ANSIBLE_CMD prereq.yml
 $ANSIBLE_CMD couchdb.yml
 $ANSIBLE_CMD initdb.yml
-#$ANSIBLE_CMD apigateway.yml  # <-- intentionally disabled, as Shell does not yet support this
+$ANSIBLE_CMD apigateway.yml  # not needed directly, but it comes with redis, which we need
 
 cd $WHISKDIR
 ./gradlew  -PdockerImagePrefix=openwhisk
