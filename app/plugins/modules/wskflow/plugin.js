@@ -19,7 +19,8 @@ module.exports = (commandTree, prequire) => {
     return {
         // [required] fsm: composer-generated JSON. container: DOM selector 
         // [optional] w & h: canvas width and height. data: activation data
-        visualize: (passedFsm, container, w, h, activations) => {             
+        visualize: (passedFsm, container, w, h, activations) => {
+            console.log('[wskflow] plugin called');        
             console.log('[wskflow] fsm passed: ', passedFsm);
 
             const fsm2graph = require('./lib/fsm2graph.js');                    
@@ -54,7 +55,7 @@ module.exports = (commandTree, prequire) => {
                 // showing runtime activations
                 console.log('[wskflow] activations: ', activations);
                 //fsm2graph(fsm, container, w, h, data.wskflowData.slice(0, data.wskflowData.length-1));   
-                fsm2graph(fsm, container, w, h, activations);   
+                //fsm2graph(fsm, container, w, h, activations);   
             }
             else{       
                 // showing the control flow
@@ -69,7 +70,7 @@ module.exports = (commandTree, prequire) => {
                         action2State[fsm.States[n].Action].push(n);
                     }
                 });
-                fsm2graph(fsm, container, w, h);
+                //fsm2graph(fsm, container, w, h);
 
                 Promise.all(getPromises.map(p => p.catch(e => e)))
                     .then(result => {                        
@@ -101,7 +102,19 @@ module.exports = (commandTree, prequire) => {
                        //fsm2graph(fsm, container, w, h);
                     });        
             }
-                    
+
+           
+            let width, height;
+            if($('body').hasClass('sidecar-full-screen')){   
+                width = $(window).width()-2;               
+            }
+            else{   // not full screen
+                width = $(window).width()*0.6-2;                 
+            }
+            height = $('#sidecar').height()-$('.sidecar-header').height()-$('.sidecar-bottom-stripe').height()-2;
+
+            fsm2graph(fsm, container, width, height, activations); 
+           
             return true;
         }
     }
