@@ -433,7 +433,7 @@ describe('Intro demo scenario', function() {
            // visit code tab
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="source"]'))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
-           .then(code => assert.equal(code.replace(/\s+/g,''), src(appName2).replace(/\s+/g,'')))           
+           .then(code => assert.equal(code.replace(/\s+/g,''), src(appName2).replace(/\s+/g,'')))
 
            .catch(common.oops(this)))
     }
@@ -467,7 +467,7 @@ describe('Intro demo scenario', function() {
            .catch(common.oops(this)))
     }
 
-    //  app invoke if
+    // app invoke if
     {
         const { appName:appName2, expectedStructa:expectedStruct2a } = inputs[1]
         const cmd = `app invoke ${appName2}`
