@@ -16,10 +16,10 @@ $ANSIBLE_CMD setup.yml
 $ANSIBLE_CMD prereq.yml
 $ANSIBLE_CMD couchdb.yml
 $ANSIBLE_CMD initdb.yml
-$ANSIBLE_CMD apigateway.yml
+#$ANSIBLE_CMD apigateway.yml
 
 cd $WHISKDIR
- ./gradlew  -PdockerImagePrefix=openwhisk
+./gradlew  -PdockerImagePrefix=openwhisk
 cd $WHISKDIR/ansible
 
 $ANSIBLE_CMD wipe.yml
