@@ -20,7 +20,7 @@ ANSIBLE_CMD="ansible-playbook -i environments/local -e docker_image_prefix=openw
 
 $ANSIBLE_CMD setup.yml
 $ANSIBLE_CMD prereq.yml
-(cd $ROOTDIR && docker build -t shell-test .) &  # initialize test docker image
+(cd $ROOTDIR/test/docker && ./build.sh)          # initialize test docker base image in parallel with openwhisk setup
 $ANSIBLE_CMD couchdb.yml
 $ANSIBLE_CMD initdb.yml
 $ANSIBLE_CMD apigateway.yml  # not needed directly, but it comes with redis, which we need
