@@ -55,7 +55,7 @@ for i in $WHICH; do
     DISPLAY=$(( 90 + $idx ))
     PORT=$((9515 + $idx ))
 
-    docker rm "${NAME}" >& /dev/null
+    docker rm "${NAME}" 2> /dev/null
 
     echo -n "Starting layer=${LAYER} name=${NAME} DISPLAY=${DISPLAY} containerId="
 
