@@ -22,15 +22,15 @@ echo "Made key dir=$DIR"
 
 cd $SCRIPTDIR
 
-./wskadmin user delete user01  2> /dev/null
-./wskadmin user delete user02  2> /dev/null
-./wskadmin user delete user03  2> /dev/null
-./wskadmin user delete user04  2> /dev/null
-./wskadmin user delete user04b 2> /dev/null
-./wskadmin user delete user05  2> /dev/null
-./wskadmin user delete user06  2> /dev/null
-./wskadmin user delete user07  2> /dev/null
-./wskadmin user delete user08  2> /dev/null
+./wskadmin user delete user01  | grep -v "Failed to delete subject"
+./wskadmin user delete user02  | grep -v "Failed to delete subject"
+./wskadmin user delete user03  | grep -v "Failed to delete subject"
+./wskadmin user delete user04  | grep -v "Failed to delete subject"
+./wskadmin user delete user04b | grep -v "Failed to delete subject"
+./wskadmin user delete user05  | grep -v "Failed to delete subject"
+./wskadmin user delete user06  | grep -v "Failed to delete subject"
+./wskadmin user delete user07  | grep -v "Failed to delete subject"
+./wskadmin user delete user08  | grep -v "Failed to delete subject"
 
 ./wskadmin user create user01 -ns ns01 > $DIR/01    2> /dev/null
 ./wskadmin user create user02 -ns ns02 > $DIR/02    2> /dev/null
