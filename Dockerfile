@@ -6,7 +6,6 @@ WORKDIR /tests
 ADD .openwhisk-shell /.openwhisk-shell
 
 ADD dist /dist
-RUN cd /dist && npm install
 
 # some fake bits needed by compile.js
 RUN echo "API_HOST=foo" > ~/.wskprops
