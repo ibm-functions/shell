@@ -8,9 +8,9 @@ ROOTDIR="$SCRIPTDIR/../.."
 WHISKDIR="$ROOTDIR/../openwhisk"
 
 # disable controller1 and invoker1
-cd $WHISKDIR/ansible/environments/local/
-cp hosts hosts.bak
-grep -vE 'controller1|invoker1' hosts.bak > hosts
+#cd $WHISKDIR/ansible/environments/local/
+#cp hosts hosts.bak
+#grep -vE 'controller1|invoker1' hosts.bak > hosts
 
 # Install OpenWhisk
 cd $WHISKDIR/ansible
