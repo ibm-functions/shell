@@ -46,4 +46,5 @@ if [ -n "$LAYER" ]; then
 fi
 
 # --bail means we fail fast
+export RUNNING_SHELL_TEST=true
 NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
