@@ -42,9 +42,10 @@ else
     echo "Using this redis: ${REDIS_URL}"
 fi
 
+# which tests to run; the default is every test
 WHICH=${@-tests/passes/*}
 
-idx=0
+idx=0   # <-- we'll need to assign each container its own CHROMEDRIVER_PORT
 for i in $WHICH; do
     LAYER=`basename $i`
     NAME="shell-test-${LAYER}"
@@ -54,7 +55,7 @@ for i in $WHICH; do
     DISPLAY=$(( 90 + $idx ))
     PORT=$((9515 + $idx ))
 
-    docker rm "${NAME}" 2> /dev/null
+    docker rm "${NAME}" >& /dev/null
 
     echo -n "Starting layer=${LAYER} name=${NAME} DISPLAY=${DISPLAY} containerId="
 
@@ -63,7 +64,7 @@ for i in $WHICH; do
     docker run \
            --name "${NAME}" \
            -d \
-           -e UV_THREADPOOL_SIZE=64 \
+           -e UV_THREADPOOL_SIZE=128 \
            -e CHROMEDRIVER_PORT=$PORT \
            -e DISPLAY=":$DISPLAY" \
            -e NO_NOTIFICATIONS=true \
