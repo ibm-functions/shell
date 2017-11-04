@@ -26,10 +26,14 @@
 #    NOTE: If you go this route, do not repeat a layer, e.g. attempt
 #          to run layer 08 twice in parallel. This is not (yet) supported.
 #
+# Final note: This script assumes that the shell-test image has already been built.
+#             Note how .travis.yml does this with a docker build command in install:
+#
 
 SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-cd "$SCRIPTDIR"
+ROOTDIR="$SCRIPTDIR/../../"
 
+cd "$SCRIPTDIR"
 START_TIME=$SECONDS               # remember when we started, so that we can report elapsed time
 
 if [ "$#" -ne 0 ]; then

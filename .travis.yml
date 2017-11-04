@@ -34,15 +34,9 @@ env:
     - UV_THREADPOOL_SIZE=64
 
 install:
-    - echo "API_HOST=foo" > ~/.wskprops
-    - echo "AUTH=bar" >>  ~/.wskprops
-#    - npm install -g codecov istanbul &
-    - (cd dist && npm install; cd ../app && npm install) &
-    - (cd tests && npm install) &
-    - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &
+    - docker build -t shell-test . &                                                     # initialize test docker image
+    - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk
     - wait
-    - cat ~/.wskprops
-    - Xvfb :99 -screen 0 1400x1050x24 > /dev/null 2>&1 &
 
 script: (cd tests && npm run test)
 
