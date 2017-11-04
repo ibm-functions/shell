@@ -280,7 +280,7 @@ describe('Intro demo scenario', function() {
     }
 
     // app init --cleanse
-    {
+    const cleanseRedis = () => {
         const cmd = `app init --cleanse --url ${sharedURL}`
         it(cmd, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
@@ -288,7 +288,7 @@ describe('Intro demo scenario', function() {
     }
 
     // session list, expect empty
-    {
+    const expectNoSessions = () => {
         // expect 0 live and 0 done, since we just did an app init --cleanse
         const cmd = 'session list',
               nLive = 0,
@@ -298,6 +298,9 @@ describe('Intro demo scenario', function() {
                 .catch(common.oops(this))
         })
     }
+
+    cleanseRedis()
+    expectNoSessions()
 
     // app create
     {
@@ -338,7 +341,7 @@ describe('Intro demo scenario', function() {
     }
 
     // app invoke hello -p name composer
-    {
+    const invokeHello = () => {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
         const cmd = `app invoke ${appName1} -p name composer`
         it(cmd, () => cli.do(cmd, this.app)
@@ -350,7 +353,13 @@ describe('Intro demo scenario', function() {
            .catch(common.oops(this)))
     }
 
-    // session list
+    // cleanse redis after the invoke, and double-check we have no sessions
+    invokeHello()
+    cleanseRedis()
+    expectNoSessions()
+
+    // invoke hello again, and expect the session list to show just it
+    invokeHello()
     {
         // expect 1 done session, and that the done list contain appName1
         const { appName:appName1 } = inputs[0]
