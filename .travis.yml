@@ -40,6 +40,7 @@ install:
     - (cd tests && npm install) &                                                        # tests npm install
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk and test docker
     - wait
+    - rm .dockerignore
     - cp tools/travis/Dockerfile .
     - docker build -t shell-test .                                                       # initialize test docker image
 
