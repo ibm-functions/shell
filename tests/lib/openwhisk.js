@@ -64,7 +64,9 @@ exports.cleanAll = auth => {
 		      .catch(logThen(tryDelete)).catch(logThen(tryDelete)).catch(logThen(tryDelete)).catch(logThen(tryDelete))
 	  }))
 
-    const list = type => ow[type].list({limit: 200}).map(e => { e.type = type; return e; })
+    const list = type => {
+        return ow[type].list({limit: 200}).then(list => list.map(e => { e.type = type; return e; }))
+    }
 
     const deleteAllUntilDone = type => entities => {
 	// console.log(`cleanAll::deleteAllUntilDone ${type} ${entities.length}`)
