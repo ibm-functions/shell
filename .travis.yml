@@ -34,8 +34,14 @@ env:
     - UV_THREADPOOL_SIZE=64
 
 install:
-    - ./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh  # initialize openwhisk and test docker
-    - docker build -t shell-test .                                                   # initialize test docker image
+    - echo "API_HOST=foo" > ~/.wskprops                                                  # dist/compile.sh needs something here
+    - echo "AUTH=bar" >>  ~/.wskprops                                                    # ibid
+    - (cd app && npm install) &                                                          # app npm install
+    - (cd tests && npm install) &                                                        # tests npm install
+    - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk and test docker
+    - wait
+    - cp tools/travis/Dockerfile .
+    - docker build -t shell-test .                                                       # initialize test docker image
 
 script: (cd tests && npm run test)
 
