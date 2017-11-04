@@ -690,10 +690,11 @@ const parseOptions = (argv_full, type) => {
 const owOpts = (options = {}, execOptions = {}) => {
     if (isLinux) {
 	// options.forever = true
-	options.timeout = 5000
+	//options.timeout = 5000
+        options.useRetry = true
     }
 
-    if (!process.env.TEST_ORG) {
+    if (!process.env.TEST_SPACE && !process.env.TRAVIS) {
         // install a User-Agent header, except when running tests
         options['User-Agent'] = 'IBM Cloud Functions Shell'
     }
