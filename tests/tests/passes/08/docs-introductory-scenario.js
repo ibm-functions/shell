@@ -241,7 +241,7 @@ const composer = {
                   })
                   .then(() => {
                       if (nDone > 0) {
-                          return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name`)
+                          return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name .clickable`)
                               .then(done => !util.isArray(done) ? [done] : done)      // make sure we have an array
                               .then(done => {                                         // validate expect, which is a subset of the expected done list
                                   return Promise.all(expect.map(e => assert.ok(done.find(d => d === e)))) // is each expected in the done list?
