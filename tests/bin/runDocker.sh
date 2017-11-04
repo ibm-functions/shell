@@ -58,10 +58,12 @@ for i in $WHICH; do
 
     echo -n "Starting layer=${LAYER} name=${NAME} DISPLAY=$DISPLAY containerId="
 
+    # i don't know if the UV_THREADPOOL_SIZE helps, but it might help
+    # the linux socket hangup issues? [NMM 20171103]
     docker run \
            --name "${NAME}" \
            -d \
-           --net=host \
+           -e UV_THREADPOOL_SIZE=64 \
            -e CHROMEDRIVER_PORT=$PORT \
            -e KEY_FROM_LAYER=true \
            -e DISPLAY=":$DISPLAY" \
@@ -81,7 +83,7 @@ for i in $WHICH; do
     EXITCODE=`docker wait "${NAME}"`
     kill $TAIL 2> /dev/null
 
-    if [ $EXITCODE != 0 ]; then
+    if [ "$EXITCODE" != "0" ]; then
         exit 1
     fi
 
