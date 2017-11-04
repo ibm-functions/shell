@@ -1,37 +1,13 @@
-# the shell is a nodejs app
 language: node_js
 node_js: 8
-
 dist: trusty
 
-# docker, for openwhisk
-sudo: required
 services:
   - docker
 
-#addons:
-#  apt:
-#     sources:
-#        - google-chrome
-#     packages:
-#        - dbus
-#        - dbus-x11
-#        - xvfb
-#        - google-chrome-stable
-#        - libnotify-cil-dev
-
 env:
   global:
-    - DISPLAY=":99.0"
-    - KEY_FROM_LAYER=true
-    - DO_NOT_SET_WSKPROPS=true
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
-    - WINDOW_WIDTH=1400
-    - WINDOW_HEIGHT=1050
-    - NO_DEBUGGER_BREAKPOINTS=true
-    - NO_NOTIFICATIONS=true
-    - NO_FIRST_TIMER=true
-    - UV_THREADPOOL_SIZE=64
 
 install:
     - echo "API_HOST=foo" > ~/.wskprops                                                  # dist/compile.sh needs something here

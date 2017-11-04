@@ -65,8 +65,12 @@ for i in $WHICH; do
            -d \
            -e UV_THREADPOOL_SIZE=64 \
            -e CHROMEDRIVER_PORT=$PORT \
-           -e KEY_FROM_LAYER=true \
            -e DISPLAY=":$DISPLAY" \
+           -e NO_NOTIFICATIONS=true \
+           -e NO_DEBUGGER_BREAKPOINTS=true \
+           -e WINDOW_WIDTH=1400 \
+           -e WINDOW_HEIGHT=1050 \
+           -e KEY_FROM_LAYER=true \
            -e LAYER=$LAYER \
            -e REDIS_URL=$REDIS_URL \
            -e API_HOST=$API_HOST \
