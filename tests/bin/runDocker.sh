@@ -56,7 +56,7 @@ for i in $WHICH; do
 
     docker rm "${NAME}" 2> /dev/null
 
-    echo -n "Starting layer=${LAYER} name=${NAME} DISPLAY=$DISPLAY containerId="
+    echo -n "Starting layer=${LAYER} name=${NAME} DISPLAY=${DISPLAY} containerId="
 
     # i don't know if the UV_THREADPOOL_SIZE helps, but it might help
     # the linux socket hangup issues? [NMM 20171103]
