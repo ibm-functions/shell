@@ -33,7 +33,9 @@ env:
     - NO_FIRST_TIMER=true
     - UV_THREADPOOL_SIZE=64
 
-install: ./tools/travis/install.sh
+install:
+    - docker build -t shell-test .                                                     # initialize test docker image
+    - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh)  # initialize openwhisk
 
 script: (cd tests && npm run test)
 
