@@ -78,7 +78,7 @@ const await = (wsk, cmd, projection) => (_a, _b, _c, modules, _1, _2, argvNoOpti
         if (iter > 100) {
             reject('Timeout waiting for composer application to finish')
         } else {
-            manager.get(sessionId, timeout)
+            manager.get(sessionId, timeout, true)
                 .then(result => manager.trace(sessionId)
                       .then( ({trace}) => ({result, trace})))
                 .then(({result, trace}) => {
