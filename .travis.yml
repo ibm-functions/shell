@@ -9,16 +9,16 @@ sudo: required
 services:
   - docker
 
-addons:
-  apt:
-     sources:
-        - google-chrome
-     packages:
-        - dbus
-        - dbus-x11
-        - xvfb
-        - google-chrome-stable
-        - libnotify-cil-dev
+#addons:
+#  apt:
+#     sources:
+#        - google-chrome
+#     packages:
+#        - dbus
+#        - dbus-x11
+#        - xvfb
+#        - google-chrome-stable
+#        - libnotify-cil-dev
 
 env:
   global:
