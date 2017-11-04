@@ -250,8 +250,13 @@ const composer = {
                               .then(done => {
                                   // validate nDone
                                   if (done.length !== nDone) {
-                                      console.log(done)
-                                      assert.equal(done.length, nDone)
+                                      return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .activationId .clickable`)
+                                          .then(activationIds => {
+                                              // we have a fatal error, but first let's log some bits
+                                              console.error(done)
+                                              console.error(activationIds)
+                                              assert.equal(done.length, nDone)
+                                          })
                                   }
                               })
                       }
