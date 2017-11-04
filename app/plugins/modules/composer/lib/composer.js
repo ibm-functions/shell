@@ -34,8 +34,19 @@ const constants = {
 let initDone, manager
 const cacheIt = wsk => ({ package, message }) => {
     initDone = package
-    manager = require('@ibm-functions/composer/manager')(wsk.auth.getSubjectId(),
-                                                         package.parameters.find(({key})=>key==='$config').value.redis)
+
+    const initManager = () => {
+        manager = require('@ibm-functions/composer/manager')(wsk.auth.getSubjectId(),
+                                                             package.parameters.find(({key})=>key==='$config').value.redis,
+                                                             redisOpts(err => { console.error(err) }))
+
+        return manager.list().catch(err => {
+            console.error('Retrying redis connection')
+            console.error(err.toString())
+            console.error(err.code)
+            return initManager()
+        })
+    }
 
     // when the window is closed, let's uncache this, and close our redis connection
     eventBus.on('/window/reload', () => {
@@ -51,7 +62,8 @@ const cacheIt = wsk => ({ package, message }) => {
 
     // localStorage.setItem(lsKey, JSON.stringify(package))
 
-    return { package, manager, message }
+    return initManager()
+        .then(() => ({ package, manager, message }))
 }
 
 /**
@@ -63,44 +75,47 @@ const slowInit = package => ({
     message: messages.slowInit
 })
 
+const redisOpts = handleError => ({
+    connect_timeout: 5000,
+    retry_strategy: options => {
+        if (options.error && options.error.code === 'ECONNREFUSED') {
+            // the redis host is unreachable, don't try again
+            handleError(options.error)
+        }
+        if (options.total_retry_time > 1000 * 60) {
+            // End reconnecting after a specific timeout and flush all commands
+            // with a individual error
+            handleError('retry time exceeded')
+        }
+        if (options.attempt > 30) {
+            // End reconnecting with built in error
+            handleError('retry count exceeded')
+        }
+        
+        // otherwise, reconnect after some time interval...
+        return Math.min(options.attempt * 100, 3000);
+    }
+})
+
 /**
  * Wait till the redis service is pingable, then pass through the given res
  *
  */
 const waitTillUp = (redisURI, options={}, package) => new Promise((resolve, reject) => {
-    if (options.noping) {
+    if (options.noping || options.url) {
+        // don't ping if requested not to, or if the user specified a
+        // direct URL; in the latter case, we assume that redis is
+        // already up
         return resolve({package})
     }
 
     try {
         console.log('composer::waitTillUp')
 
-        // print dots to the console, if we're in headless mode
-        let dots
-        try {
-            if (process.stdout && ''.yellow) {
-                //process.stdout.write('Waiting for redis'.yellow)
-                //dots = setInterval(() => process.stdout.write('.'.yellow), 2000)
-            }
-        } catch (err) {
-            console.error(err)
-        }
-
         let client, alreadySaidDone
         const handleError = err => {
             try {
                 client.quit()
-
-                try {
-                    // we were printing dots to the console, if we're in headless mode, clear that
-                    if (!alreadySaidDone && dots && ''.green) {
-                        console.log(' [Done]'.green) // terminal newline
-                        clearInterval(dots)
-                        alreadySaidDone = true
-                    }
-                } catch (err) {
-                    console.error(err)
-                }
 
                 if (err) {
                     console.error(err)
@@ -114,30 +129,11 @@ const waitTillUp = (redisURI, options={}, package) => new Promise((resolve, reje
             }
         }
 
-        client = redis.createClient(redisURI,{
-            connect_timeout: 5000,
-            retry_strategy: options => {
-                if (options.error && options.error.code === 'ECONNREFUSED') {
-                    // End reconnecting on a specific error and flush all commands with
-                    // a individual error
-                    handleError(options.error)
-                }
-                if (options.total_retry_time > 1000 * 60) {
-                    // End reconnecting after a specific timeout and flush all commands
-                    // with a individual error
-                    handleError('retry time exceeded')
-                }
-                if (options.attempt > 30) {
-                    // End reconnecting with built in error
-                    handleError('retry count exceeded')
-                }
-                // reconnect after
-                return Math.min(options.attempt * 100, 3000);
-            }
-        })
+        client = redis.createClient(redisURI, redisOpts(handleError))
 
         client.on('error', handleError)
         client.ping(handleError)
+        client.quit()
 
     } catch (err) {
         console.error(err)
