@@ -39,7 +39,7 @@ START_TIME=$SECONDS               # remember when we started, so that we can rep
 if [ "$#" -ne 0 ]; then
     ./runDocker.sh $@
 else
-    ./runDocker.sh 01 02 08 05 06     # these layers are shorter
+    ./runDocker.sh 08 01 02 05 06     # these layers are shorter
     if [ $? != 0 ]; then exit 1; fi   # oops?
 
     ./runDocker.sh 03 04 07           # these layers are longer
