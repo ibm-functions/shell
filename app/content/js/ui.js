@@ -443,8 +443,13 @@ const ui = (function() {
     }
     
     self.oops = (block, nextBlock) => err => {
-        const message = self.oopsMessage(err)
-        console.error(`${message} ${err} ${err && err.stack}`, err)
+        const message = self.oopsMessage(err),
+              errString = err && err.toString()
+
+        if (!errString || (errString.indexOf('HTTP 404') < 0 && errString.indexOf('HTTP 409') < 0)) {
+            // don't scream about 404s and 409s
+            console.error(`${message} ${err} ${err && err.stack}`, err)
+        }
 
         if (!block) return // we're not attached to a prompt right now
 
