@@ -5,6 +5,11 @@ dist: trusty
 services:
   - docker
 
+addons:
+  apt:
+    packages:
+      - bash
+
 env:
   global:
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
