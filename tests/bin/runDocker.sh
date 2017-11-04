@@ -84,6 +84,8 @@ for i in $WHICH; do
     kill $TAIL 2> /dev/null
 
     if [ "$EXITCODE" != "0" ]; then
+        echo "Fatal layer=${LAYER} exitCode=$EXITCODE"
+        docker logs "${NAME}"
         exit 1
     fi
 
