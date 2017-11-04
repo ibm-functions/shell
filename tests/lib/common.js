@@ -44,6 +44,9 @@ exports.before = (ctx, {fuzz}={}) => function() {
         waitTimeout: process.env.TIMEOUT || 60000,
 	args: [ appMain ]
     }
+    if (process.env.CHROMEDRIVER_PORT) {
+        opts.port = process.env.CHROMEDRIVER_PORT
+    }
     if (process.env.WSKNG_NODE_DEBUG) {
 	// pass WSKNG_DEBUG on to NODE_DEBUG for the application
 	opts.env.NODE_DEBUG = process.env.WSKNG_NODE_DEBUG

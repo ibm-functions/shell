@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
+SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+ROOTDIR="$SCRIPTDIR/../.."
+
 if [ -z "$WHISKDIR" ]; then
-    SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-    ROOTDIR="$SCRIPTDIR/../.."
     WHISKDIR="$ROOTDIR/../openwhisk"
 fi
 
@@ -14,7 +15,7 @@ fi
 export WHISKDIR
 echo "Found WHISKDIR=$WHISKDIR"
 
-DIR=$HOME/.openwhisk-shell/keys
+DIR=$ROOTDIR/.openwhisk-shell/keys
 mkdir -p $DIR
 
 echo "Made key dir=$DIR"

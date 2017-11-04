@@ -16,11 +16,28 @@
 
 #!/usr/bin/env bash
 
-. ~/.wskprops
+# the | tee should fail if runTest fails
+set -o pipefail
 
-export API_HOST=$APIHOST
+if [ -z "$API_HOST" ]; then
+    . ~/.wskprops
+    export API_HOST=$APIHOST
+fi
+
+if [ ! -f ~/.wskprops ]; then
+    echo "APIHOST=$API_HOST" > ~/.wskprops
+    echo "INSECURE_SSL=true" >> ~/.wskprops
+fi
+
 export KEY_FROM_LAYER=true
 export PATH=./node_modules/.bin:$PATH
+
+if [ -z "$REDIS_URL" ]; then
+    REDIS_IP=`netstat -rn | awk '$NF=="lo0" && $3=="UGSc" { print substr($1, 1, index($1, "/") - 1)}'`
+    if [ $? == 0 ]; then
+        export REDIS_URL="redis://${REDIS_IP}:6379"
+    fi
+fi
 
 if [ -z "$REDIS_URL" ]; then
     # do we need to start redis ourselves?
@@ -33,14 +50,9 @@ trap finished INT
 
 function finished {
     if [ -n "$REDIS_PID" ]; then
-        kill ${REDIS_PID}
+        kill ${REDIS_PID} 2> /dev/null
     fi
 }
-
-if [ -z "$REDIS_URL" ]; then
-    REDIS_IP=`netstat -rn | awk '$NF=="lo0" && $3=="UGSc" { print substr($1, 1, index($1, "/") - 1)}'`
-    export REDIS_URL="redis://${REDIS_IP}:6379"
-fi
 
 if [ ! -d logs ]; then
     mkdir logs
@@ -48,14 +60,14 @@ fi
 
 rm logs/* 2> /dev/null
 
-LAYER=${1-"*"}
+if [ -z "${LAYER}" ]; then
+    LAYER=${1-"*"}
+fi
 
-# the | tee should fail if runTest fails
-set -o pipefail
-
+idx=1
 for i in tests/passes/$LAYER; do
     LAYER=`basename $i`
-    echo $LAYER
+    # echo $LAYER
     LAYER=$LAYER ./bin/runTest.sh 2>&1 | tee logs/$LAYER.out
 
     if [ $? != 0 ]; then

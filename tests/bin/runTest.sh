@@ -16,17 +16,22 @@
 
 #!/usr/bin/env bash
 
+SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+ROOTDIR="$SCRIPTDIR/../.."
+
 if [ -n "$LAYER" ]; then
     # user asked to run tests in just one specified layer, e.g. "07"
 
-    if [ -n "KEY_FROM_LAYER" ]; then
+    if [ -n "$KEY_FROM_LAYER" ]; then
         # user asked to pick up a previously configured auth key
-        DIR=$HOME/.openwhisk-shell/keys
+        DIR=$ROOTDIR/.openwhisk-shell/keys
 
-        export __OW_API_KEY=`cat $DIR/${LAYER}`
         export AUTH=`cat $DIR/${LAYER}`
+        export __OW_API_KEY="$AUTH"
         export TEST_ORG=""
         export TEST_SPACE="ns${LAYER}"
+
+        echo "Key from layer $TEST_SPACE"
 
         if [ -f "$DIR/${LAYER}b" ]; then
             # some layers need a second auth and namespace
