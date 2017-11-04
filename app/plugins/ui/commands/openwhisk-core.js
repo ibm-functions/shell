@@ -690,8 +690,7 @@ const parseOptions = (argv_full, type) => {
 const owOpts = (options = {}, execOptions = {}) => {
     if (isLinux) {
 	// options.forever = true
-	//options.timeout = 5000
-        options.useRetry = true
+	options.timeout = 5000
     }
 
     if (!process.env.TEST_SPACE && !process.env.TRAVIS) {
