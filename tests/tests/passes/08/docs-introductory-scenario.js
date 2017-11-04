@@ -233,16 +233,27 @@ const composer = {
         return cli.do(cmd, app)
 	    .then(cli.expectOKWithCustom({ passthrough: true }))
             .then(N => app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.live`)
-                  .then(list => assert.equal(list.value.length, nLive))
+                  .then(list => {
+                      if (list.value.length !== nLive) {
+                          console.log(list.value)
+                          assert.equal(list.value.length, nLive)
+                      }
+                  })
                   .then(() => {
                       if (nDone > 0) {
                           return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name`)
                               .then(done => !util.isArray(done) ? [done] : done)      // make sure we have an array
                               .then(done => {                                         // validate expect, which is a subset of the expected done list
-                                  return Promise.all(expect.map(e => assert.ok(done.find(d => d == e)))) // is each expected in the done list?
+                                  return Promise.all(expect.map(e => assert.ok(done.find(d => d === e)))) // is each expected in the done list?
                                       .then(() => done) // passthrough
                               })
-                              .then(done => assert.equal(done.length, nDone))         // validate nDone
+                              .then(done => {
+                                  // validate nDone
+                                  if (done.length !== nDone) {
+                                      console.log(done)
+                                      assert.equal(done.length, nDone)
+                                  }
+                              })
                       }
                   })
                   .then(() => N)) // allow further composition using N, the command index
