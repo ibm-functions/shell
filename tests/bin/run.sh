@@ -34,18 +34,14 @@ SCRIPTDIR=$(cd $(dirname "$0") && pwd)
 ROOTDIR="$SCRIPTDIR/../../"
 
 cd "$SCRIPTDIR"
-START_TIME=$SECONDS               # remember when we started, so that we can report elapsed time
+#START_TIME=$SECONDS               # remember when we started, so that we can report elapsed time
 
 if [ "$#" -ne 0 ]; then
     ./runDocker.sh $@
 else
-    ./runDocker.sh 08 01 02 05        # these layers are shorter
-    if [ $? != 0 ]; then exit 1; fi   # oops?
-
-    ./runDocker.sh 03 04 07           # these layers are longer
-    if [ $? != 0 ]; then exit 1; fi   # oops?
+    ./runDocker.sh 07 08 01 02 03 04 05        # these layers are shorter
 fi
 
 # finally, report elapsed time
-ELAPSED_TIME=$(($SECONDS - $START_TIME))
-echo "Tests completed successfully in $(($ELAPSED_TIME/60)) min $(($ELAPSED_TIME%60)) sec"
+#ELAPSED_TIME=$(($SECONDS - $START_TIME))
+#echo "Tests completed successfully in $(($ELAPSED_TIME/60)) min $(($ELAPSED_TIME%60)) sec"
