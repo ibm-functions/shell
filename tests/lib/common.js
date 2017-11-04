@@ -66,6 +66,12 @@ exports.before = (ctx, {fuzz}={}) => function() {
 exports.after = (ctx, f) => () => {
     if (f) f()
 
+    ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => {
+        if (log.level === 'SEVERE') {
+            console.log(`${log.source} ${log.level} ${log.message}`)
+        }
+    }))
+
     if (ctx.app && ctx.app.isRunning()) {
 	return ctx.app.stop()
     }
