@@ -52,17 +52,17 @@ install:
 
 jobs:
   include:
-    - stage: layer 01
-      script: (cd tests && ./bin/runLocal.sh 01)
-    - stage: layer 08
-      script: (cd tests && ./bin/runLocal.sh 08)
-    - stage: layer 07
-      script: (cd tests && ./bin/runLocal.sh 07)
-    - stage: layer 02
-      script: (cd tests && ./bin/runLocal.sh 02)
-    - stage: layer 03
-      script: (cd tests && ./bin/runLocal.sh 03)
-    - stage: layer 04
-      script: (cd tests && ./bin/runLocal.sh 04)
-    - stage: layer 05
-      script: (cd tests && ./bin/runLocal.sh 05)
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=01
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=08
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=07
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=02
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=03
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=04
+    - script: (cd tests && ./bin/runLocal.sh)
+      env: LAYER=05
