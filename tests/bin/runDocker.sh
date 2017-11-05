@@ -66,7 +66,7 @@ for i in $WHICH; do
            -d \
            -e UV_THREADPOOL_SIZE=128 \
            -e CHROMEDRIVER_PORT=$PORT \
-           -e DBUS_SESSION_BUS_ADDRESS=/dev/null \
+           -e DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket \
            -e DISPLAY=":$DISPLAY" \
            -e NO_NOTIFICATIONS=true \
            -e NO_DEBUGGER_BREAKPOINTS=true \
