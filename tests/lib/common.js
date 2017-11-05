@@ -84,8 +84,13 @@ exports.after = (ctx, f) => () => {
 exports.oops = ctx => err => {
     console.log(err)
 
-    ctx.app.client.getMainProcessLogs().then(logs => logs.forEach(log => console.log(`   MAIN ${log}`)))
-    ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => console.log(`   RENDER ${log.source} ${log.level} ${log.message}`)))
+    ctx.app.client.getMainProcessLogs().then(logs => logs.forEach(log => {
+        if (log.indexOf('INFO:CONSOLE') < 0) {
+            // don't log console messages, as these will show up in getRenderProcessLogs
+            console.log(`MAIN ${log}`)
+        }
+    }))
+    ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => console.log(`RENDER ${log.source} ${log.level} ${log.message}`)))
     
     ctx.app.client.getText(ui.selectors.OOPS)
 	.then(anyErrors => {
