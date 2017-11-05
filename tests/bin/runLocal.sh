@@ -60,12 +60,11 @@ fi
 
 rm logs/* 2> /dev/null
 
-if [ -z "${LAYER}" ]; then
-    LAYER=${1-"*"}
-fi
+# which tests to run; the default is every test
+WHICH=${@-tests/passes/*}
 
 idx=1
-for i in tests/passes/$LAYER; do
+for i in $WHICH; do
     LAYER=`basename $i`
     # echo $LAYER
     LAYER=$LAYER ./bin/runTest.sh 2>&1 | tee logs/$LAYER.out
