@@ -29,7 +29,7 @@ const common = require('../../../lib/common'),
       actionName2 = 'foo2',
       actionName3 = 'foo3'
 
-describe('Invoke -q (quiet invoke)', () => {
+describe('Invoke -q (quiet invoke)', function() {
     before(common.before(this))
     after(common.after(this))
 

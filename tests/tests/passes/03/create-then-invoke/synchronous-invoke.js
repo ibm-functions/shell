@@ -28,7 +28,7 @@ const common = require('../../../../lib/common'),
       actionName2 = 'foo2',
       packageName = 'ppp'
 
-describe('Test synchronous action invocation', () => {
+describe('Test synchronous action invocation', function() {
     before(common.before(this))
     after(common.after(this))
 

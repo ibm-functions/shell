@@ -26,7 +26,7 @@ const fs = require('fs'),
       content = fs.readFileSync(file).toString(),
       actionName1 = 'foo'
 
-describe('Invoke an action with a binary-formatted parameter', () => {
+describe('Invoke an action with a binary-formatted parameter', function() {
     before(common.before(this))
     after(common.after(this))
 

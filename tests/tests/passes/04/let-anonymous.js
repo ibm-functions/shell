@@ -32,7 +32,7 @@ const fs = require('fs'),
       seqName2 = 's2',
       packageName1 = 'ppp1'
 
-describe('Create anonymous actions via let', () => {
+describe('Create anonymous actions via let', function() {
     before(common.before(this))
     after(common.after(this))
 

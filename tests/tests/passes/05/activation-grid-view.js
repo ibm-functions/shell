@@ -29,7 +29,7 @@ const uuid = require('uuid').v4,
       N = 1, // number of activation batches to fetch
       randomGarbage = `activation-grid-garbage-${uuid()}` // some unique name
 
-describe('Activation grid visualization', () => {
+describe('Activation grid visualization', function() {
     // disabled until the bluewhisk views finish updating 20170927
     return;
 

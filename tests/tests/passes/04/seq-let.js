@@ -28,7 +28,7 @@ const common = require('../../../lib/common'),
       seqName5 = 'seq5',
       actionNames = ['a', 'b', 'c']
 
-describe('Create a sequence via let', () => {
+describe('Create a sequence via let', function() {
     before(common.before(this))
     after(common.after(this))
 

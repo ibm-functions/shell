@@ -25,7 +25,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Create a sequence, then list it', () => {
+describe('Create a sequence, then list it', function() {
     before(common.before(this))
     after(common.after(this))
 

@@ -26,7 +26,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Create actions, switch to parameters view, then add parameters', () => {
+describe('Create actions, switch to parameters view, then add parameters', function() {
     before(common.before(this))
     after(common.after(this))
 

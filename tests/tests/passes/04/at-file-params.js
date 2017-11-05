@@ -31,7 +31,7 @@ const common = require('../../../lib/common'),
       actionName3 = 'foo3',
       seqName = 'sss'
 
-describe('@file params and annotations', () => {
+describe('@file params and annotations', function() {
     before(common.before(this))
     after(common.after(this))
 

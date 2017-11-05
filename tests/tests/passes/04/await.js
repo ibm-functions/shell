@@ -28,7 +28,7 @@ const common = require('../../../lib/common'),
       actionName = 'long'
 
 
-describe('Invoke asynchronously and await', () => {
+describe('Invoke asynchronously and await', function() {
     before(common.before(this))
     after(common.after(this))
 

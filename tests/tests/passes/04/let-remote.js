@@ -43,7 +43,7 @@ const fs = require('fs'),
       packageName2 = 'ppp2',
       packageName3 = 'ppp3'
 
-describe('Create an action via let from a remote resource', () => {
+describe('Create an action via let from a remote resource', function() {
     before(common.before(this))
     after(common.after(this))
 

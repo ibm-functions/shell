@@ -38,7 +38,7 @@ const filter = (L, f) => {
     return filtered
 }
 
-describe('List root-most activations with $$', () => {
+describe('List root-most activations with $$', function() {
     // disabled until the bluewhisk views finish updating 20170927    
     return
 

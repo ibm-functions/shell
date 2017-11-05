@@ -31,7 +31,7 @@ const common = require('../../../lib/common'),
       actionNameInPackage = `${packageName}/${actionName}`
       ruleName = `on_${triggerName}_do_${actionNameInPackage.replace(/\//g, '_')}`
 
-describe('List all entities', () => {
+describe('List all entities', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

@@ -23,7 +23,7 @@ const common = require('../../../../lib/common'),
       sidecar = ui.sidecar,
       triggerName = 'ppp'
 
-describe('Add parameters to triggers', () => {
+describe('Add parameters to triggers', function() {
     before(common.before(this))
     after(common.after(this))
 

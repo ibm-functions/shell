@@ -27,7 +27,7 @@ const common = require('../../../lib/common'),
       packageName = 'ppp',
       seqName = 'sss'
 
-describe('Cancel via Ctrl+C', () => {
+describe('Cancel via Ctrl+C', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

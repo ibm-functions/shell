@@ -35,7 +35,7 @@ const fs = require('fs'),
       packageName1 = 'ppp'
       packageName2 = 'ppp fun'
 
-describe('Create an action via let with spaces', () => {
+describe('Create an action via let with spaces', function() {
     before(common.before(this))
     after(common.after(this))
 

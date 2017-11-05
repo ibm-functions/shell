@@ -267,7 +267,7 @@ const composer = {
 
 describe('Intro demo scenario', function() {
     before(common.before(this))
-    after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
+    after(common.after(this))
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 

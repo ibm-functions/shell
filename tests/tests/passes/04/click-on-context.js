@@ -20,7 +20,7 @@ const common = require('../../../lib/common'),
       assert = require('assert'),
       cli = ui.cli
 
-describe('Test fancier command resolutions', () => {
+describe('Test fancier command resolutions', function() {
     // test disabled
     return
 

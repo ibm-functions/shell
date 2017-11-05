@@ -24,7 +24,7 @@ const common = require('../../../../lib/common'),
       actionName = 'foo',
       packageName = 'ppp'
 
-describe('Add parameters to packages', () => {
+describe('Add parameters to packages', function() {
     before(common.before(this))
     after(common.after(this))
 

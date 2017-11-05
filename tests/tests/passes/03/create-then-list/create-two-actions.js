@@ -25,7 +25,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Create two actions with implicit entity type, then list them', () => {
+describe('Create two actions with implicit entity type, then list them', function() {
     before(common.before(this))
     after(common.after(this))
 

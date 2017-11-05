@@ -35,7 +35,7 @@ const uuid = require('uuid/v4'),
       cell1 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .grid:first-child .grid-cell:first-child`,
       cell2 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .grid:first-child .grid-cell:last-child`
 
-describe('Bottom bar back button functionality', () => {
+describe('Bottom bar back button functionality', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

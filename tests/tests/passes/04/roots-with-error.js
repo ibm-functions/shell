@@ -38,7 +38,7 @@ const filter = (L, f) => {
     return filtered
 }
 
-describe('List root-most non-erroring activations with $$!', () => {
+describe('List root-most non-erroring activations with $$!', function() {
     before(common.before(this))
     after(common.after(this))
 

@@ -30,7 +30,7 @@ const expectConsoleToBeClear = app => {
     })
 }
 
-describe('Clear the console', () => {
+describe('Clear the console', function() {
     before(common.before(this))
     after(common.after(this))
 

@@ -25,7 +25,7 @@ const common = require('../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Click on action part of activation sidecar', () => {
+describe('Click on action part of activation sidecar', function() {
     before(common.before(this))
     after(common.after(this))
 

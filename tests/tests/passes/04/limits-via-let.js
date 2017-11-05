@@ -35,7 +35,7 @@ const common = require('../../../lib/common'),
       actionName8 = 'foo8',
       actionName9 = 'foo9'
 
-describe('Create an action with limits, using let', () => {
+describe('Create an action with limits, using let', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

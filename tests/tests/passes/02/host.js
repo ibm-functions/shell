@@ -26,7 +26,7 @@ const common = require('../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('host tests', () => {
+describe('host tests', function() {
     before(common.before(this))
     after(common.after(this))
 

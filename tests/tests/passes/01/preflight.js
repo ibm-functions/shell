@@ -28,7 +28,7 @@ const common = require('../../../lib/common'),
       triggerName2 = 'ttt2',
       ruleName = `on_${triggerName}_do_${actionName}`
 
-describe('Preflight blockers', () => {
+describe('Preflight blockers', function() {
     before(common.before(this))
     after(common.after(this))
 

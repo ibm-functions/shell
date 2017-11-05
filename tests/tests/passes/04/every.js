@@ -33,7 +33,7 @@ const common = require('../../../lib/common'),
 /** Turn an list of strings into a map */
 const toMap = L => L.reduce((M, elt) => { M[elt] = true; return M }, {})
 
-describe('Create a rule using every', () => {
+describe('Create a rule using every', function() {
     // alarms tests disabled
     return
 

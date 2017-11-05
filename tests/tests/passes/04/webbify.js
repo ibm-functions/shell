@@ -30,7 +30,7 @@ const common = require('../../../lib/common'),
       actionName6 = 'foo6',
       packageName = 'ppp'
 
-describe('Webbify actions', () => {
+describe('Webbify actions', function() {
     before(common.before(this))
     after(common.after(this))
 

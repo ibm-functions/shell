@@ -22,7 +22,7 @@ const common = require('../../../../lib/common'),
       ui = require('../../../../lib/ui'),
       cli = ui.cli
 
-describe('Namespaces list', () => {
+describe('Namespaces list', function() {
     before(common.before(this))
     after(common.after(this))
 

@@ -22,7 +22,7 @@ const common = require('../../../lib/common'),
       assert = require('assert'),
       expectedVersion = require(path.join(__dirname, '../../../../app/package.json')).version
 
-describe('Version command', () => {
+describe('Version command', function() {
     before(common.before(this))
     after(common.after(this))
 

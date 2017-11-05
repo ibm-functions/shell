@@ -33,7 +33,7 @@ const common = require('../../../lib/common'),
       packageName1 = 'ppp'
       packageName2 = 'ppp.fun'
 
-describe('Create an action via let with dots', () => {
+describe('Create an action via let with dots', function() {
     before(common.before(this))
     after(common.after(this))
 

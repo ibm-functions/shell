@@ -56,7 +56,7 @@ const fs = require('fs'),
       packageName3 = 'ppp3',
       packageName4 = 'ppp.ppp'
 
-describe('Create an action via let', () => {
+describe('Create an action via let', function() {
     before(common.before(this))
     after(common.after(this))
 

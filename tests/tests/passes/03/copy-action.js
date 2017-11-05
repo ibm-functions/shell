@@ -29,7 +29,7 @@ const common = require('../../../lib/common'),
       actionName2 = 'foo2',
       actionName3 = 'foo3'
 
-describe('Copy actions using the wsk syntax', () => {
+describe('Copy actions using the wsk syntax', function() {
     before(common.before(this))
     after(common.after(this))
 

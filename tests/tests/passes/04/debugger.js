@@ -28,7 +28,7 @@ const common = require('../../../lib/common'),
       ruleName = `on_${triggerName}_do_${actionName}`
 
 if (false)
-describe('Debugger', () => {
+describe('Debugger', function() {
     before(common.before(this))
     after(common.after(this))
 

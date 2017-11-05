@@ -29,7 +29,7 @@ const expectConsoleToBeClear = app => {
         .then(elements => assert.equal(elements.value.length, 1))
 }
 
-describe('Help', () => {
+describe('Help', function() {
     return
     before(common.before(this))
     after(common.after(this))

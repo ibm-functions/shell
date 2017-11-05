@@ -35,7 +35,7 @@ const appends = ['append', 'then', '+=', '->' ],
 /** Turn an list of strings into a map */
 const toMap = L => L.reduce((M, elt) => { M[elt] = true; return M }, {})
 
-describe('Append to a sequence', () => {
+describe('Append to a sequence', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

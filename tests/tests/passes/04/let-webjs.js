@@ -30,7 +30,7 @@ const fs = require('fs'),
 
       actionName = 'foo'
 
-describe('Create a javascript web action via let', () => {
+describe('Create a javascript web action via let', function() {
     before(common.before(this))
     after(common.after(this))
 

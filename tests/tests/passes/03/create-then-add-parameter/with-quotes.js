@@ -26,7 +26,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Create actions, add parameters with quotes', () => {
+describe('Create actions, add parameters with quotes', function() {
     before(common.before(this))
     after(common.after(this))
 

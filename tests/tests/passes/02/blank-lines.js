@@ -31,7 +31,7 @@ const expectConsoleToBeClear = app => {
         .then(elements => assert.equal(elements.value.length, 1))
 }
 
-describe('Comments and blank line handling', () => {
+describe('Comments and blank line handling', function() {
     before(common.before(this))
     after(common.after(this))
 

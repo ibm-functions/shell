@@ -31,7 +31,7 @@ const fs = require('fs'),
       actionName16c = 'foo16c',
       actionName18 = 'foo18'
 
-describe('Create zip actions', () => {
+describe('Create zip actions', function() {
     before(common.before(this))
     after(common.after(this))
 

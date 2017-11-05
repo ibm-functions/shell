@@ -62,7 +62,7 @@ const openTableExpectCountOf = (expectedCount, expectedErrorRate, cmd) => {
 }
 exports.openTableExpectCountOf = openTableExpectCountOf
 
-describe('Activation table visualization', () => {
+describe('Activation table visualization', function() {
     // disabled until the bluewhisk views finish updating 20170927
     return;
 

@@ -24,7 +24,7 @@ const common = require('../../../lib/common'),
       subset = ['foo', 'foo2'],
       actions = subset.concat(['goo'])
 
-describe('Delete using rm with wildcards', () => {
+describe('Delete using rm with wildcards', function() {
     before(common.before(this))
     after(common.after(this), () => cli.do(`wsk rule rm ${ruleName}`))
 

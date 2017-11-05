@@ -31,16 +31,16 @@ const selectors ={
 }
 selectors.PROMPT = `${selectors.PROMPT_BLOCK} input`
 
-const openWindow = app => app.client.getWindowCount()
-      .then(count => assert.equal(count, 1))                       // Verify that one window is open
-      .then(() => this.app.browserWindow.isVisible())              // Check if the window is visible
-      .then(isVisible => assert.equal(isVisible, true))            // Verify the window is visible
-      .then(() => app.client.getTitle())                           // Get the window's title
-      .then(title => assert.equal(title, APP_TITLE))               // Verify the window's title
-
-describe('Basic Functionality', () => {
+describe('Basic Functionality', function() {
     before(common.before(this))
     after(common.after(this))
+
+    const openWindow = app => app.client.getWindowCount()
+          .then(count => assert.equal(count, 1))                       // Verify that one window is open
+          .then(() => this.app.browserWindow.isVisible())              // Check if the window is visible
+          .then(isVisible => assert.equal(isVisible, true))            // Verify the window is visible
+          .then(() => app.client.getTitle())                           // Get the window's title
+          .then(title => assert.equal(title, APP_TITLE))               // Verify the window's title
 
     it('shows an initial window', () => openWindow(this.app))
 

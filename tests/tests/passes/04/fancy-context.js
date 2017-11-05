@@ -27,7 +27,7 @@ const common = require('../../../lib/common'),
       packageName = 'ppp',
       triggerName = 'ttt'
 
-describe('Test fancier command resolutions', () => {
+describe('Test fancier command resolutions', function() {
     before(common.before(this))
     after(common.after(this))
 

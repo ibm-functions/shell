@@ -32,7 +32,7 @@ const args = {
     package: ''
 }
 
-describe('Create with explicit entity type, then list', () => {
+describe('Create with explicit entity type, then list', function() {
     before(common.before(this))
     after(common.after(this))
 

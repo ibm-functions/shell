@@ -23,7 +23,7 @@ const common = require('../../../lib/common'),
       sidecar = ui.sidecar,
       actionName = 'foo'
 
-describe('Check error handling for invoking a non-existant action', () => {
+describe('Check error handling for invoking a non-existant action', function() {
     before(common.before(this))
     after(common.after(this))
 

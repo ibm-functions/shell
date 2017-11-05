@@ -22,7 +22,7 @@ const common = require('../../../../lib/common'),
       ui = require('../../../../lib/ui'),
       cli = ui.cli
 
-describe('List entities with a clean slate', () => {
+describe('List entities with a clean slate', function() {
     before(common.before(this))
     after(common.after(this))
 

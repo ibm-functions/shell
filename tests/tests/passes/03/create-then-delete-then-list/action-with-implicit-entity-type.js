@@ -25,7 +25,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Create an action, list it, delete it, then list nothing (implicit entity type)', () => {
+describe('Create an action, list it, delete it, then list nothing (implicit entity type)', function() {
     before(common.before(this))
     after(common.after(this))
 

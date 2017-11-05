@@ -28,7 +28,7 @@ const common = require('../../../lib/common'),
       triggerName = 'ttt',
       ruleName = `on_${triggerName}_do_${actionName}`
 
-describe('Click on current selection part of repl prompt', () => {
+describe('Click on current selection part of repl prompt', function() {
     // test disabled
     return
 

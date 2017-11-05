@@ -30,7 +30,7 @@ const common = require('../../../lib/common'),
       actionName7 = 'foo7',
       actionName8 = 'foo8'
 
-describe('Execute commands via paste', () => {
+describe('Execute commands via paste', function() {
     before(common.before(this))
     after(common.after(this))
 

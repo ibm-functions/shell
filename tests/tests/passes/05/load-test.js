@@ -25,7 +25,7 @@ const common = require('../../../lib/common'),
       triggerName = 'ttt'
 
 
-describe('Load tester', () => {
+describe('Load tester', function() {
     before(common.before(this))
     after(common.after(this))
 

@@ -24,7 +24,7 @@ const common = require('../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('History commands', () => {
+describe('History commands', function() {
     before(common.before(this))
     after(common.after(this))
 

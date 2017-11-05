@@ -26,7 +26,7 @@ const common = require('../../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
-describe('Modify annotations', () => {
+describe('Modify annotations', function() {
     before(common.before(this))
     after(common.after(this))
 
