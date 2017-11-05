@@ -16,6 +16,11 @@
 
 #!/usr/bin/env bash
 
+#
+# This script runs a given test suite "layer". We try at most three
+# times for success.
+#
+
 SCRIPTDIR=$(cd $(dirname "$0") && pwd)
 ROOTDIR="$SCRIPTDIR/../.."
 
@@ -45,6 +50,19 @@ if [ -n "$LAYER" ]; then
     LAYER="passes/${LAYER}"
 fi
 
-# --bail means we fail fast
+#
+# note that, in the following, passing --bail to mocha means we fail
+# fast, if any test within the test suite fails
+#
+
 export RUNNING_SHELL_TEST=true
 NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+
+if [ $? != 0 ]; then
+    # oops, the test suite failed. we will restart, in the hopes that a second try works
+    NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+    if [ $? != 0 ]; then
+        # oops, the test suite failed, again! let's try one last time
+        NO_USAGE_TRACKING=true mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+    fi
+fi
