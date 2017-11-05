@@ -1,4 +1,5 @@
 FROM shell-test-base
+#FROM starpit/ibm-functions-shell-base
 
 WORKDIR /tests
 
@@ -19,5 +20,8 @@ RUN rm ~/.wskprops
 
 ADD tests /tests
 RUN cd /tests && npm install
+
+# fold in the latest chromedriver; this file is part of the base image see tests/docker/build.sh,Dockerfile
+RUN mv /chromedriver /tests/node_modules/electron-chromedriver/bin
 
 CMD ./bin/runWithXvfb.sh

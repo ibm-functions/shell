@@ -61,7 +61,18 @@ fi
 rm logs/* 2> /dev/null
 
 # which tests to run; the default is every test
-WHICH=${@-tests/passes/*}
+if [ -n "$LAYER" ]; then
+    # a single layer, specified by env var
+    WHICH=tests/passes/$LAYER
+elif [ "$#" -ne 0 ]; then
+    # one or more layers, specified on command line
+    for i in $@; do
+        WHICH=" $WHICH tests/passes/$i"
+    done
+else
+    # all layers
+    WHICH=tests/passes/*
+fi
 
 idx=1
 for i in $WHICH; do
