@@ -79,7 +79,7 @@ exports.after = (ctx, f) => () => {
             && log.message.indexOf('ENOENT') < 0       // we probably caused file not found errors
             && log.message.indexOf('UsageError') < 0   // we probably caused repl usage errors
             && log.message.indexOf('Usage:') < 0       // we probably caused repl usage errors
-            && log.message.indexOf('Unepxected option') < 0   // we probably caused command misuse
+            && log.message.indexOf('Unexpected option') < 0   // we probably caused command misuse
            ) {
             console.log(`${log.source} ${log.level} ${log.message}`)
         }
