@@ -689,7 +689,7 @@ const parseOptions = (argv_full, type) => {
 
 const agent = new (require('https').Agent)({ keepAlive: true, keepAliveMsecs: process.env.RUNNING_SHELL_TEST ? 20000 : 1000 })
 const owOpts = (options = {}, execOptions = {}) => {
-    if (isLinux || true) {
+    if (isLinux) {
 	// options.forever = true
 	options.timeout = 5000
         options.agent = agent
