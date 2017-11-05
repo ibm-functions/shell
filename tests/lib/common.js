@@ -44,6 +44,7 @@ exports.before = (ctx, {fuzz}={}) => {
     const opts = {
 	path: electron,
 	env,
+        chromeDriverArgs: [ '--no-sandbox' ],
         waitTimeout: process.env.TIMEOUT || 60000,
 	args: [ appMain ]
     }
