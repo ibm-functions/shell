@@ -95,38 +95,53 @@ describe('app create and sessions', function() {
         .catch(common.oops(this)))
 
     /** sessions */
-    const doGetSessions = (cmd, nLive, nDone) => this.app.client.waitUntil(() => {
+    const doGetSessions = (cmd, nLive, nDone) => {
         const once = iter => cli.do(cmd, this.app)
 	    .then(cli.expectOKWithCustom({ passthrough: true }))
             .then(N => this.app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-status="live"]`)
                   .then(list => {
                       if (list.value.length !== nLive) {
                           console.error('live does not match ' + list.value.length + ' != ' + nLive)
-                          return false
+                          if (list.value.length < nLive) {
+                              // we'll retry
+                              return false
+                          } else {
+                              // if actual live > expected live, then fail fast
+                              assert.equal(list.value.length, nLive)
+                          }
                       } else {
+                          // actual live === expected live, good!
                           return true
                       }
                   })
                   .then(liveGood => this.app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-status="done"]`)
                         .then(list => {
-                            if (list.value.length !== nDone) {
+                            if (!liveGood || list.value.length < nDone) {
+                                if (iter < 3) {
+                                    // let's retry
+                                    setTimeout(() => once(iter + 1), 5000)
+                                } else {
+                                    // fail fast
+                                    assert.ok(liveGood)
+                                    assert.equal(list.value.length, nDone)
+                                }
+                            } else if (list.value.length !== nDone) {
                                 console.error('done does not match ' + list.value.length + ' != ' + nDone)
-                                return false
+                                if (list.value.length < nDone && iter < 3) {
+                                    // then let's retry
+                                    setTimeout(() => once(iter + 1), 5000)
+                                } else {
+                                    // fail fast
+                                    assert.equal(list.value.length, nDone)
+                                }
                             } else {
+                                // then both match
                                 return true
                             }
-                        })
-                        .then(doneGood => liveGood && doneGood)))
-              .catch(err => {
-                  if (iter < 10) {
-                      setTimeout(() => once(iter + 1), 5000)
-                  } else {
-                      throw new Error('Error waiting for live and done match')
-                  }
-              });
+                        })))
 
         return once(0).catch(common.oops(this));
-    })
+    }
 
     const getSessions = (cmd, nLive, nDone) => it(`should list sessions via "${cmd}" nLive=${nLive} nDone=${nDone}`, () => doGetSessions(cmd, nLive, nDone))
 
