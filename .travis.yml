@@ -53,7 +53,7 @@ install:
 jobs:
   include:
     - script: (cd tests && ./bin/runLocal.sh 01 08 02 05)
-      env: EXECUTING=01:05
+      env: EXECUTING=01:08:02:05
     - script: (cd tests && ./bin/runLocal.sh 07)
       env: EXECUTING=07
     - script: (cd tests && ./bin/runLocal.sh 02 03)
