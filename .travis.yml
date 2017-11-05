@@ -25,5 +25,6 @@ install:
     - cp tools/travis/Dockerfile .
     - docker build -t shell-test .                                                       # initialize test docker image
 
-script: (cd tests && npm run test)
+#script: (cd tests && npm run test)
+script: (cd tests && ./bin/runLocal.sh 01 08 07 02 03 04 05)
 
