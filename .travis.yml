@@ -24,6 +24,7 @@ addons:
 
 env:
   global:
+    - API_HOST=172.17.0.1
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
     - UV_THREADPOOL_SIZE=128
     - NO_NOTIFICATIONS=true
@@ -31,7 +32,7 @@ env:
     - WINDOW_WIDTH=1400
     - WINDOW_HEIGHT=1050
     - KEY_FROM_LAYER=true
-    - API_HOST=172.17.0.1
+    - DISPLAY=:99
 
 install:
     - echo "API_HOST=foo" > ~/.wskprops                                                  # dist/compile.sh needs something here
@@ -40,6 +41,8 @@ install:
     - (cd tests && npm install) &                                                        # tests npm install
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk and test docker
     - wait
+    - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &
+    - sleep 5
 #    - rm .dockerignore
 #    - cp tools/travis/Dockerfile .
 #    - docker build -t shell-test .                                                       # initialize test docker image
