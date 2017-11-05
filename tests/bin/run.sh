@@ -44,7 +44,7 @@ else
     ./runDocker.sh 08 01 02 05        # these layers are shorter
     if [ $? != 0 ]; then exit 1; fi   # oops?
 
-    ./runDocker.sh 03 04 07           # these layers are longer
+    ./runDocker.sh 07 03 04           # these layers are longer
     if [ $? != 0 ]; then exit 1; fi   # oops?
 fi
 
