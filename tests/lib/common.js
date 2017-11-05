@@ -32,7 +32,10 @@ exports.rp = opts => {
  *   fuzz lets us blank out certain portions of the world
  *
  */
-exports.before = (ctx, {fuzz}={}) => function() {
+exports.before = (ctx, {fuzz}={}) => {
+    ctx.retries(10)
+
+    return function() {
     const env = {}
     if (fuzz) {
         env.___IBM_FSH_FUZZ = JSON.stringify(fuzz)
@@ -57,6 +60,7 @@ exports.before = (ctx, {fuzz}={}) => function() {
         .then(() => ctx.app.start())                                                         // this will launch electron
         .then(() => ctx.title && ctx.app.browserWindow.setTitle(ctx.title))                  // set the window title to the name of the current test
         .then(() => ctx.app.client.localStorage('DELETE'))                                   // clean out local storage
+    }
 }
 
 /**
