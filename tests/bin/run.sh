@@ -39,7 +39,13 @@ cd "$SCRIPTDIR"
 if [ "$#" -ne 0 ]; then
     ./runDocker.sh $@
 else
-    ./runDocker.sh 08 07 01 02 03 04 05        # these layers are shorter
+    #./runDocker.sh 08 07 01 02 03 04 05        # these layers are shorter
+
+    ./runDocker.sh 08 01 02 05        # these layers are shorter
+    if [ $? != 0 ]; then exit 1; fi   # oops?
+
+    ./runDocker.sh 03 04 07           # these layers are longer
+    if [ $? != 0 ]; then exit 1; fi   # oops?
 fi
 
 # finally, report elapsed time
