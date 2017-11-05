@@ -9,10 +9,29 @@ addons:
   apt:
     packages:
       - bash
+      - git
+      - dbus
+      - dbus-x11
+      - xvfb
+      - make
+      - g++
+      - libnss3
+      - libasound2
+      - libgconf-2-4
+      - libxtst6
+      - libxss1
+      - libgtk2.0-0
 
 env:
   global:
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
+    - UV_THREADPOOL_SIZE=128
+    - NO_NOTIFICATIONS=true
+    - NO_DEBUGGER_BREAKPOINTS=true
+    - WINDOW_WIDTH=1400
+    - WINDOW_HEIGHT=1050
+    - KEY_FROM_LAYER=true
+    - API_HOST=172.17.0.1
 
 install:
     - echo "API_HOST=foo" > ~/.wskprops                                                  # dist/compile.sh needs something here
