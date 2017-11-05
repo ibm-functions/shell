@@ -70,8 +70,15 @@ exports.before = (ctx, {fuzz}={}) => {
 exports.after = (ctx, f) => () => {
     if (f) f()
 
+    // when we're done with a test suite, look for any important
+    // SEVERE errors in the chrome console logs. try to ignore
+    // intentional failures as much as possible!
     ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => {
-        if (log.level === 'SEVERE') {
+        if (log.level === 'SEVERE'                     // only console.error messages
+            && log.message.indexOf('ENOENT') < 0       // we probably caused file not found errors
+            && log.message.indexOf('UsageError') < 0   // we probably caused repl usage errors
+            && log.message.indexOf('Unepxected option') < 0   // we probably caused command misuse
+           ) {
             console.log(`${log.source} ${log.level} ${log.message}`)
         }
     }))
