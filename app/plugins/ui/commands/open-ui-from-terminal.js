@@ -25,7 +25,7 @@ module.exports = (commandTree, prequire) => {
     /** command handler */
     const doIt = cmd => (_1, _2, _a, _3, fullCommand, execOptions, args, options) => {
         if (!ui.headless && (!execOptions || !execOptions.causedByHeadless)) {
-            throw new Error(`This command is intended for use from the CLI, to launch this graphical Shell.
+            throw new Error(`Usage: This command is intended for use from the CLI, to launch this graphical Shell.
 You are already here. Welcome!`)
         }
 

@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      expectedError = `This command is intended for use from the CLI, to launch this graphical Shell.
+      expectedError = `Usage: This command is intended for use from the CLI, to launch this graphical Shell.
 You are already here. Welcome!`
       
 describe('try using "shell" to open the graphical shell, when already in the graphical shell', function() {
