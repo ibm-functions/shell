@@ -1,6 +1,7 @@
 [![Travis](https://travis-ci.org/ibm-functions/shell.svg?branch=master)](https://travis-ci.org/ibm-functions/shell)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Join Slack](https://img.shields.io/badge/join-slack-9B69A0.svg)](http://slack.openwhisk.org/)
+[![HitCount](http://hits.dwyl.io/ibm-functions/shell.svg)](http://hits.dwyl.io/ibm-functions/shell)
 
 # IBM Cloud Functions Shell
 
