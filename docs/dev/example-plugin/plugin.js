@@ -15,7 +15,7 @@
  */
 
 module.exports = (commandTree, prequire) => {
-    commandTree.subtree('/sample', { docs: 'Sample wskng plugins' })
+    commandTree.subtree('/sample', { docs: 'Sample Shell plugins' })
 
     require('./lib/say-hello')(commandTree, prequire)
     require('./lib/open-sidecar')(commandTree, prequire)
