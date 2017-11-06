@@ -1,10 +1,13 @@
 # Lay of the Land
 
+   - [About Electron](#about-electron)
    - [Theming](#theming)
    - [Shell Core](#shell-core)
    - [Shell Plugins](plugins.md)
    - [Tests](tests.md)
-   
+
+## About Electron
+
 Electron applications consist of two processes: the *renderer*, which
 is Chromium, and the *main* process, which runs a v8 JavaScript
 engine. The Shell bootstraps itself from `app/main.js`. If running in
