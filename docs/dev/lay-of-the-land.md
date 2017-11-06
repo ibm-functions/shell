@@ -18,7 +18,7 @@ Here is a list of the most important main-process source:
 
   - `app/main.js`, `app/headless.js`, `app/menu.js`, `app/store.js`,
     `app/tray.js` (the last is currently unused, but can support
-    e.g. a MacOS upper-right menu)
+    e.g. an upper-right menu on macOS, or a Windows tray menu).
 
 The renderer process will load the top-level page content, located in
 `app/index.html`. The rest of the logic is broken into three primary

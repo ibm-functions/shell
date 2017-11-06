@@ -1,23 +1,23 @@
 # Shell Development
 
-   - [Quick Start Guide](#quick-start-guide)
-   - [Setting up a Local Openwhisk](#setting-up-a-local-openwhisk)
-   - [Lay of the land](lay-of-the-land.md) describes the structure and
-     layout of the code.
-   - [Running Local Tests](local-testing.md) shows how to run the test
-     suite locally.
-
 The Shell is an [Electron](https://electron.atom.io/)
 application. Electron is a framework for developing rich client
 applications, using browser technologies. Electron applications are
 cross-platform, at least to the extent that the framework has builds
 for Windows, macOS, and Linux.
 
+   - [Quick Start Guide](#quick-start-guide)
+   - [Setting up a Local OpenWhisk](#setting-up-a-local-openwhisk)
+   - [Lay of the land](lay-of-the-land.md) describes the structure and
+     layout of the code.
+   - [Running Local Tests](local-testing.md) shows how to run the test
+     suite locally.
+
 ## Quick Start Guide
 
-Developing aganst a local OpenWhisk is highly recommended. This is not
-a strict requirement, for code editing. To run local tests, however, a
-local OpenWhisk is required. Once you have configured your
+Developing against a local OpenWhisk is highly recommended. This is
+not a strict requirement, for code editing. To run local tests,
+however, a local OpenWhisk is required. Once you have configured your
 `~/.wskprops` to point to your desired OpenWhisk service, you can
 begin Shell development:
 
