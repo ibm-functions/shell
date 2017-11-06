@@ -11,3 +11,4 @@ Welcome to a new development experience for IBM Cloud Functions.
 - [Installation](docs/npm.md)
 - Tutorials (TODO)
 - [Using the shell for serverless compositions](https://github.com/ibm-functions/composer/blob/master/docs/README.md#tour-of-the-programming-shell)
+- Contributions are welcome. Please join in [developing and extending the Shell code](docs/dev/README.md).
