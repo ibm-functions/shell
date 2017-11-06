@@ -3,8 +3,9 @@
 The Shell commands are implemented via plugins. This repository
 includes a suite of plugins, located in the `app/plugins/` directory.
 
-   - [Example Plugin](example-plugin/)
+   - [Sample Plugin](sample-plugin/)
    - [Code Layout](#code-layout)
+   - [Activating a New Plugin](#activating-a-new-plugin)
    - [Plugin API](#plugin-api)
    
 If, in the process of development, you add, remove, or otherwise
@@ -20,6 +21,11 @@ Plugins must have two top-level files:
 
 The names of these two files are important. Any other files can be named as you wish.
 
+## Activating a new Plugin
+
+To activate a new plugin, copy or symlink it so that it is placed in
+the `app/plugins/modules` directory. Then, execute `(cd dist &&
+./compile.js)` and reload or relaunch your Shell instance.
 
 ## Plugin API
 
