@@ -6,6 +6,10 @@ includes a suite of plugins, located in the `app/plugins/` directory.
    - [Example Plugin](example-plugin/)
    - [Code Layout](#code-layout)
    - [Plugin API](#plugin-api)
+   
+If, in the process of development, you add, remove, or otherwise
+change the way a command will map to plugins, you **must** re-execute
+`(cd dist && ./compile.js)`, and then reload the renderer process.
 
 ## Code Layout
 

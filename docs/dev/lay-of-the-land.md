@@ -59,7 +59,12 @@ the plugin management subsystem, and the command resolution subsystem.
     requires that plugins be scanned in advance. The scan computes a
     topological dependence DAG over the plugins. This DAG allows for
     plugins to be loaded, quickly, on demand, rather than loading them
-    all at startup time.
+    all at startup time. You will see in `app/package.json`, that `npm
+    install`, after the required node modules have been installed,
+    invokes `dist/compile.js`. If, in the process of development, you
+    add, remove, or otherwise change the way a command will map to
+    plugins, you **must** re-execute `(cd dist && ./compile.js)`, and
+    then reload the renderer process.
   
   - the **command resolver** is implemented in
     `app/content/command-tree.js`. Its job is to map a requested
