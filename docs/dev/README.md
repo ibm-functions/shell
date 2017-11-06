@@ -9,9 +9,9 @@ for Windows, macOS, and Linux.
    - [Quick Start Guide](#quick-start-guide)
    - [Setting up a Local OpenWhisk](#setting-up-a-local-openwhisk)
    - [Lay of the land](lay-of-the-land.md) describes the structure and
-     layout of the code.
+     layout of the code
    - [Running Local Tests](local-testing.md) shows how to run the test
-     suite locally.
+     suite locally
 
 ## Quick Start Guide
 
