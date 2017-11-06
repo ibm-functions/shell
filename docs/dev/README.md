@@ -21,7 +21,7 @@ however, a local OpenWhisk is required. Once you have configured your
 `~/.wskprops` to point to your desired OpenWhisk service, you can
 begin Shell development:
 
-```
+```bash
 $ cd app
 $ npm install
 $ ./bin/fsh shell
@@ -43,9 +43,9 @@ we summarize one reliable way to do so. This recipe requires that you
 have already installed [Vagrant](https://www.vagrantup.com)
 and [VirtualBox](https://www.virtualbox.org/).
 
-```
-git clone --depth=1 https://github.com/apache/incubator-openwhisk.git openwhisk
-cd openwhisk/tools/vagrant
-./hello
-wsk property set --apihost 192.168.33.13 --auth `vagrant ssh -- cat openwhisk/ansible/files/auth.guest`
+```bash
+$ git clone --depth=1 https://github.com/apache/incubator-openwhisk.git openwhisk
+$ cd openwhisk/tools/vagrant
+$ ./hello
+$ wsk property set --apihost 192.168.33.13 --auth `vagrant ssh -- cat openwhisk/ansible/files/auth.guest`
 ```
