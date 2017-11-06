@@ -1,5 +1,7 @@
 # Lay of the Land
 
+This document describes the structure and layout of the source files.
+
    - [About Electron](#about-electron)
    - [Theming](#theming)
    - [Shell Core](#shell-core)
