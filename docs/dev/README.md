@@ -11,7 +11,7 @@ The Shell is an [Electron](https://electron.atom.io/)
 application. Electron is a framework for developing rich client
 applications, using browser technologies. Electron applications are
 cross-platform, at least to the extent that the framework has builds
-for Windows, MacOS, and Linux.
+for Windows, macOS, and Linux.
 
 ## Quick Start Guide
 
@@ -30,7 +30,7 @@ $ ./bin/fsh shell
 If you see the Shell open up, then you are ready to go. For the most
 part, any edits to UI code can be incorporated into that running
 instance by simply reloading the Shell, as you would a browser window;
-e.g. Command+R on MacOS, or Control+R on Windows and Linux. This
+e.g. Command+R on macOS, or Control+R on Windows and Linux. This
 allows you to quickly edit and debug changes, without slow rebuild and
 restart steps.
 
