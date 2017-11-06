@@ -55,7 +55,11 @@ the plugin management subsystem, and the command resolution subsystem.
    
   - the **plugin manager** is implemented in
     `app/content/plugins.js`. Its job is to scan for plugins, and load
-    them upon request. In order to 
+    them upon request. In order to offer fast load times, the Shell
+    requires that plugins be scanned in advance. The scan computes a
+    topological dependence DAG over the plugins. This DAG allows for
+    plugins to be loaded, quickly, on demand, rather than loading them
+    all at startup time.
   
   - the **command resolver** is implemented in
     `app/content/command-tree.js`. Its job is to map a requested
