@@ -17,6 +17,7 @@
           "data/*.js",
           "tests/**/*.js",
           "coverage/**",
+          "!**/node_modules/@ibm-functions/**",
           "**/node_modules/**"
       ]
   },
