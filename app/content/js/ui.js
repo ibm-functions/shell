@@ -1444,22 +1444,6 @@ const ui = (function() {
         })
 
         //
-        // write out test coverage data
-        //
-        eventBus.on('/window/reload', () => {
-            console.error('!!!!!!!!!!!!!!!!!!!')
-            try {
-                if (typeof __coverage__ !== 'undefined') {
-                    const nyc = new require('nyc')()
-                    nyc.createTempDirectory()
-                    nyc.writeCoverageFile()
-                }
-            } catch (err) {
-                console.error(err)
-            }
-        })
-
-        //
         // see if we were passed an argv to execute on load
         //
         eventBus.on('/init/done', () => {
