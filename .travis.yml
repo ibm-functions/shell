@@ -37,8 +37,7 @@ env:
 install:
     - echo "API_HOST=foo" > ~/.wskprops                                                  # dist/compile.sh needs something here
     - echo "AUTH=bar" >>  ~/.wskprops                                                    # ibid
-    - (cd app && npm install) &                                                          # app npm install
-    - (cd tests && npm install) &                                                        # tests npm install
+    - (cd app && npm install && cd ../tests && npm install) &                            # app and tests npm install
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk and test docker
     - wait
     - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &
