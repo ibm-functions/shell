@@ -85,4 +85,21 @@ for i in $WHICH; do
     fi
 done
 
+# finally, if the tests were successful, report on code coverage
+if [ $? == 0 ]; then
+    if [ -d .nyc_output ]; then
+        if [ -n "$TRAVIS" ]; then
+            # codecov wants a certain output format
+            nyc report --reporter=text-lcov > coverage.lcov && codecov
+        else
+            # otherwise, print something a bit more user-friendly;
+            # nyc's default reporter seems reasonable
+            nyc report
+        fi
+
+        # make sure we don't fail the tests with bugs in this here postscript
+        exit 0
+    fi
+fi
+
 finished
