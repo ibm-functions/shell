@@ -24,8 +24,9 @@ process.on('uncaughtException', err => {
 })
 
 let argStart = 1
-if (process.argv[1] === '.') {
-    // then we're running in dev mode, where the app is started with "electron ."
+if (process.env.DEVMODE) {
+    // then we're running in dev mode, where the app is started with
+    // an extra argument, e.g. "electron ."
     argStart = 2
 }
 
