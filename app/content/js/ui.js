@@ -1440,8 +1440,15 @@ const ui = (function() {
         addContextClickMenu()
 
         window.onbeforeunload = () => {
+            eventBus.emit('/window/reload')
+        }
+
+        //
+        // write out test coverage data
+        //
+        eventBus.on('/window.reload', () => {
             try {
-                if (process && process.env.RUNNING_SHELL_TEST) {
+                if (typeof __coverage__ !== undefined) {
                     const nyc = (new require('nyc'))
                     nyc.createTempDirectory()
                     nyc.writeCoverageFile()
@@ -1449,9 +1456,7 @@ const ui = (function() {
             } catch (err) {
                 console.error(err)
             }
-
-            eventBus.emit('/window/reload')
-        }
+        })
 
         //
         // see if we were passed an argv to execute on load
