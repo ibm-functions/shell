@@ -221,6 +221,17 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
 // Some APIs can only be used after this event occurs.
 app.on('ready', createWindow)
 
+if (process.env.RUNNING_SHELL_TEST) {
+    app.on('before-quit', function() {
+        const config = { tempDirectory: require('path').join(__dirname, '../tests/.nyc_output') },
+              nyc = new (require('nyc'))(config)      // create the nyc instance
+        nyc.createTempDirectory()                     // in case we are the first to the line
+        nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
+
+        mainWindow.webContents.send('/coverage/dump', config)
+    })
+}
+
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
   // On OS X it is common for applications and their menu bar
