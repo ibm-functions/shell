@@ -90,6 +90,7 @@ if [ $? == 0 ]; then
     if [ -d .nyc_output ]; then
         if [ -n "$TRAVIS" ]; then
             # codecov wants a certain output format
+            ls .nyc_output
             nyc report --reporter=text-lcov > coverage.lcov && codecov
         else
             # otherwise, print something a bit more user-friendly;

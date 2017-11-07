@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "instrument": "git diff-index HEAD | grep 'app/' && echo 'uncommitted changes, aborting' || (nyc instrument ../app ../app && git checkout ../app/demos)",
+    "_instrument": "nyc instrument ../app ../app && git checkout ../app/demos",
+    "instrument": "git diff-index HEAD | grep 'app/' && echo 'uncommitted changes, aborting' || npm run _instrument",
     "deinstrument": "git checkout ../app",
     "test": "cd test && ./bin/runLocal.sh"
   },
