@@ -16,4 +16,7 @@
 # limitations under the License.
 #
 
-exec ./node_modules/.bin/electron . --fsh-headless $@
+# directory of script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+exec ${DIR}/../node_modules/.bin/electron ${DIR}/.. --fsh-headless $@
