@@ -1446,7 +1446,7 @@ const ui = (function() {
         //
         // write out test coverage data
         //
-        eventBus.on('/window.reload', () => {
+        eventBus.on('/window/reload', () => {
             try {
                 if (typeof __coverage__ !== undefined) {
                     const nyc = (new require('nyc'))
