@@ -91,7 +91,7 @@ if [ $? == 0 ]; then
         # always print something user-friendly to the console
         # nyc's default reporter seems pretty reasonable for this
         ls .nyc_output
-        (cd .nyc_output && ls | head -1 | xargs cat) # cat one of the files
+        (cd .nyc_output && ls -l | sort -k5 -n -r | head -1 | awk '{print $NF}' | xargs head -c 1000) # print a bit of the biggest file
         nyc report
 
         if [ -n "$TRAVIS" ]; then
