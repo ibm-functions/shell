@@ -91,6 +91,7 @@ if [ $? == 0 ]; then
         # always print something user-friendly to the console
         # nyc's default reporter seems pretty reasonable for this
         ls .nyc_output
+        (cd .nyc_output && ls | head -1 | xargs cat) # cat one of the files
         nyc report
 
         if [ -n "$TRAVIS" ]; then
