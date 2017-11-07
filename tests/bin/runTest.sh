@@ -55,14 +55,16 @@ fi
 # fast, if any test within the test suite fails
 #
 
+NYC="${SCRIPTDIR}/../node_modules/.bin/nyc"
+
 export RUNNING_SHELL_TEST=true
-NO_USAGE_TRACKING=true nyc -silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+NO_USAGE_TRACKING=true "$NYC" -silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
 
 if [ $? != 0 ]; then
     # oops, the test suite failed. we will restart, in the hopes that a second try works
-    NO_USAGE_TRACKING=true nyc --silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+    NO_USAGE_TRACKING=true "$NYC" --silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
     if [ $? != 0 ]; then
         # oops, the test suite failed, again! let's try one last time
-        NO_USAGE_TRACKING=true nyc --silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
+        NO_USAGE_TRACKING=true "$NYC" --silent mocha -c --bail --recursive --timeout ${TIMEOUT-60000} tests/$LAYER
     fi
 fi
