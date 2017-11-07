@@ -4,22 +4,24 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "_instrument": "mv ../app/demos .. && nyc instrument ../app ../app && mv ../demos ../app/demos",
+    "_instrument": "mv ../app/demos .. && nyc instrument ../app ../app && mv ../demos ../app/demos && nyc instrument ../app/plugins/modules/composer/node_modules/@ibm-functions  ../app/plugins/modules/composer/node_modules/@ibm-functions",
     "instrument": "git diff-index HEAD | grep 'app/' && echo 'uncommitted changes, aborting' || npm run _instrument",
-    "deinstrument": "git checkout ../app",
+    "deinstrument": "git checkout ../app && (cd ../app/plugins/modules/composer && rm -rf node_modules && npm install)",
     "test": "cd test && ./bin/runLocal.sh"
   },
   "author": "",
   "license": "Apache-2.0",
   "nyc": {
-      "exclude": [
-          "tests/lib/*.js",
-          "data/*.js",
-          "tests/**/*.js",
-          "coverage/**",
-          "!**/node_modules/@ibm-functions/**",
-          "**/node_modules/**"
-      ]
+    "exclude": [
+      "tests/lib/*.js",
+      "data/*.js",
+      "tests/**/*.js",
+      "coverage/**",
+      "**/node_modules/**"
+    ],
+    "include": [
+      "app/plugins/modules/node_modules/@ibm-functions/**/*.js"
+    ]
   },
   "devDependencies": {
     "expand-home-dir": "0.0.3",
@@ -35,6 +37,5 @@
     "nyc": "^11.3.0",
     "spectron": "^3.7.1"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
