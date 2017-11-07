@@ -1439,23 +1439,24 @@ const ui = (function() {
         disableDragAndDrop()
         addContextClickMenu()
 
-        window.onbeforeunload = () => {
+        window.addEventListener('beforeunload', evt => {
+            eventBus.emit('/window/reload')
+        })
+
+        //
+        // write out test coverage data
+        //
+        eventBus.on('/window/reload', () => {
+            console.error('!!!!!!!!!!!!!!!!!!!')
             try {
-                if (typeof __coverage__ !== undefined) {
-                    const nyc = (new require('nyc'))
+                if (typeof __coverage__ !== 'undefined') {
+                    const nyc = new require('nyc')()
                     nyc.createTempDirectory()
                     nyc.writeCoverageFile()
                 }
             } catch (err) {
                 console.error(err)
             }
-            eventBus.emit('/window/reload')
-        }
-
-        //
-        // write out test coverage data
-        //
-        eventBus.on('/window/reload', () => {
         })
 
         //
