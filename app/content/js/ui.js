@@ -1440,13 +1440,6 @@ const ui = (function() {
         addContextClickMenu()
 
         window.onbeforeunload = () => {
-            eventBus.emit('/window/reload')
-        }
-
-        //
-        // write out test coverage data
-        //
-        eventBus.on('/window/reload', () => {
             try {
                 if (typeof __coverage__ !== undefined) {
                     const nyc = (new require('nyc'))
@@ -1456,6 +1449,13 @@ const ui = (function() {
             } catch (err) {
                 console.error(err)
             }
+            eventBus.emit('/window/reload')
+        }
+
+        //
+        // write out test coverage data
+        //
+        eventBus.on('/window/reload', () => {
         })
 
         //
