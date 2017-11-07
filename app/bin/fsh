@@ -16,4 +16,12 @@
 # limitations under the License.
 #
 
-exec ./node_modules/.bin/electron . --fsh-headless $@
+# directory of script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOTDIR="$DIR/.."
+
+# indicate that we're in dev mode; this is used e.g. in headless.js to
+# determine which argv to ignore
+export DEVMODE=true
+
+exec "$ROOTDIR/node_modules/.bin/electron" "$ROOTDIR" --fsh-headless $@
