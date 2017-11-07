@@ -13,6 +13,7 @@
   "nyc": {
       "exclude": [
           "lib/*.js",
+          "data/**/*.js",
           "tests/**/*.js"
       ]
   },
