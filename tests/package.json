@@ -13,8 +13,8 @@
   "license": "Apache-2.0",
   "nyc": {
       "exclude": [
-          "lib/*.js",
-          "data/**/*.js",
+          "tests/lib/*.js",
+          "data/*.js",
           "tests/**/*.js",
           "coverage/**",
           "**/node_modules/**"
