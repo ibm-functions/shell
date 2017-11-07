@@ -42,7 +42,7 @@ install:
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &  # initialize openwhisk and test docker
     - wait
     - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &
-    - cd tests && npm run instrument
+    - (cd tests && npm run instrument)
     - sleep 5
 #    - rm .dockerignore
 #    - cp tools/travis/Dockerfile .
