@@ -71,6 +71,18 @@ exports.before = (ctx, {fuzz}={}) => {
 exports.after = (ctx, f) => () => {
     if (f) f()
 
+    //
+    // write out test coverage data from the renderer process
+    //
+    ctx.app.client.execute(() => {
+        if (typeof __coverage__ !== 'undefined') {
+            const nyc = new (require('nyc'))()
+            nyc._tempDirectory = '../tests/.nyc_output' // point nyc to the test subdir's stash
+            nyc.createTempDirectory()                   // in case we are the first to the line
+            nyc.writeCoverageFile()                     // write out the coverage data from the renderer code
+        }
+    })
+
     // when we're done with a test suite, look for any important
     // SEVERE errors in the chrome console logs. try to ignore
     // intentional failures as much as possible!
