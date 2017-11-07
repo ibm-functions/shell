@@ -88,14 +88,14 @@ done
 # finally, if the tests were successful, report on code coverage
 if [ $? == 0 ]; then
     if [ -d .nyc_output ]; then
+        # always print something user-friendly to the console
+        # nyc's default reporter seems pretty reasonable for this
+        ls .nyc_output
+        nyc report
+
         if [ -n "$TRAVIS" ]; then
-            # codecov wants a certain output format
-            ls .nyc_output
+            # if in travis, link with codecov, which wants a certain output format
             nyc report --reporter=text-lcov > coverage.lcov && codecov
-        else
-            # otherwise, print something a bit more user-friendly;
-            # nyc's default reporter seems reasonable
-            nyc report
         fi
 
         # make sure we don't fail the tests with bugs in this here postscript
