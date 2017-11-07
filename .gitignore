@@ -1,4 +1,5 @@
 *~
+#*
 dist/build
 dist/plugins
 *.log
@@ -9,3 +10,4 @@ app/content/**/*.js.map
 app/plugins/.pre-scanned
 .openwhisk-shell
 dump.rdb
+openwhisk
