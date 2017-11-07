@@ -1440,6 +1440,16 @@ const ui = (function() {
         addContextClickMenu()
 
         window.onbeforeunload = () => {
+            try {
+                if (process && process.env.RUNNING_SHELL_TEST) {
+                    const nyc = (new require('nyc'))
+                    nyc.createTempDirectory()
+                    nyc.writeCoverageFile()
+                }
+            } catch (err) {
+                console.error(err)
+            }
+
             eventBus.emit('/window/reload')
         }
 
