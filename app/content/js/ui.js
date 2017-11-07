@@ -271,6 +271,15 @@ const ui = (function() {
     self.startsWithVowel = startsWithVowel
 
     /**
+     * Request to write out coverage data
+     *
+     */
+    ipcRenderer.on('/coverage/dump', config => {
+        const nyc = new (require('nyc'))(config)      // create the nyc instance
+        nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
+    })
+    
+    /**
      * Send a synchronous message to the main process
      *
      */

@@ -74,15 +74,15 @@ exports.after = (ctx, f) => () => {
     //
     // write out test coverage data from the renderer process
     //
-    const nyc = new (require('nyc'))(),
+    /*const nyc = new (require('nyc'))(),
           tempDirectory = require('path').resolve(nyc._tempDirectory)
-    const C = ctx.app.client.executeAsync((tempDirectory, done) => {
-        const config = { tempDirectory }              // the nyc config
-        nyc = new (require('nyc'))(config)            // create the nyc instance
+    nyc.createTempDirectory()
+    const C = ctx.app.client.execute(tempDirectory => {
+        const config = { tempDirectory },             // the nyc config
+              nyc = new (require('nyc'))(config)      // create the nyc instance
         nyc.createTempDirectory()                     // in case we are the first to the line
-        nyc.writeCoverageFile()                       // write out the coverage data from the renderer code
-        done(tempDirectory)
-    }, tempDirectory)
+        nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
+    }, tempDirectory)*/
 
     // when we're done with a test suite, look for any important
     // SEVERE errors in the chrome console logs. try to ignore
