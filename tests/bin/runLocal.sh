@@ -29,7 +29,7 @@ if [ ! -f ~/.wskprops ]; then
     echo "INSECURE_SSL=true" >> ~/.wskprops
 fi
 
-export KEY_FROM_LAYER=true
+export KEY_FROM_LAYER=${KEY_FROM_LAYER-true}
 export PATH=./node_modules/.bin:$PATH
 
 if [ -z "$REDIS_URL" ]; then
