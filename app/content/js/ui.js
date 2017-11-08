@@ -1428,7 +1428,8 @@ const ui = (function() {
         sidecarVisibility = plugins.require('/views/sidecar/visibility')
         isAnonymousLet = plugins.require('/openwhisk-extensions/actions/let-core').isAnonymousLet
         plugins.require('/ui/commands/tab-completion')
-        setTimeout(() => plugins.require('wskng-usage-tracking'))
+
+        eventBus.emit('/window/init')
 
         /** listen for the escape key */
         /*if (!sidecarOnly)*/ {
