@@ -1427,7 +1427,8 @@ const ui = (function() {
         history = plugins.require('/ui/commands/history')
         sidecarVisibility = plugins.require('/views/sidecar/visibility')
         isAnonymousLet = plugins.require('/openwhisk-extensions/actions/let-core').isAnonymousLet
-        plugins.require('/ui/commands/tab-completion')
+        //plugins.require('/ui/commands/tab-completion')
+        plugins.require('/admin/preloader')
 
         eventBus.emit('/window/init')
 
