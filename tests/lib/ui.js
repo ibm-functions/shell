@@ -267,6 +267,7 @@ exports.sidecar.expectRule = A => exports.sidecar.expectSequence(A, selectors.SI
 exports.expectStruct = struct1 => string => {
     try {
         assert.ok(sameStruct(struct1, JSON.parse(string)))
+        return true
     } catch (err) {
         console.error('Error comparing structs for actual value= ' + string)
         throw err
@@ -275,6 +276,7 @@ exports.expectStruct = struct1 => string => {
 exports.expectSubset = struct1 => string => {
     try {
         assert.ok(sameStruct(struct1, JSON.parse(string), true))
+        return true
     } catch (err) {
         console.error('Error comparing subset for actual value= ' + string)
         throw err
