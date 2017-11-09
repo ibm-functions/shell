@@ -348,8 +348,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName1))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct1))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct1))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -430,8 +432,10 @@ describe('Intro demo scenario', function() {
               .then(cli.expectOK)
               .then(sidecar.expectOpen)
               .then(sidecar.expectShowing(appName1))
-              .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-              .then(ui.expectStruct(expectedStruct1))
+              .then(app => app.client.waitUntil(() => {
+                  return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                      .then(ui.expectStruct(expectedStruct1))
+              }))
               .catch(common.oops(this));
 
         it(testName, () => composer.getSessions(this.app, nLive, nDone, { cmd, validator })
@@ -500,8 +504,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName2))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct2a))
+           .then(app => app.client.waitUntil(() => {
+                   return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct2a))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -513,8 +519,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName2))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct2b))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct2b))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -622,8 +630,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName3))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct3a))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct3a))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -635,8 +645,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName3))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct3b))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct3b))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -649,8 +661,10 @@ describe('Intro demo scenario', function() {
             .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName3))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct3b))
+           .then(app => app.client.waitUntil(() => {
+                   return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct3b))
+           }))
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="visualization"]'))
            .then(() => this.app)
            .then(graph.hasNodes({tasks: 2, total: 4/*, deployed: 2*/}))
@@ -682,8 +696,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName4))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct4a))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct4a))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -695,8 +711,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName4))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct4b))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct4b))
+           }))
            .catch(common.oops(this)))
     }
 
@@ -725,8 +743,10 @@ describe('Intro demo scenario', function() {
 	    .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName5))
-           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
-           .then(ui.expectStruct(expectedStruct5a))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct5a))
+           }))
            .catch(common.oops(this)))
     }
 
