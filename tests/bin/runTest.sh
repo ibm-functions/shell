@@ -27,7 +27,7 @@ ROOTDIR="$SCRIPTDIR/../.."
 if [ -n "$LAYER" ]; then
     # user asked to run tests in just one specified layer, e.g. "07"
 
-    if [ -n "$KEY_FROM_LAYER" ]; then
+    if [ "$KEY_FROM_LAYER" == "true" ]; then
         # user asked to pick up a previously configured auth key
         DIR=$ROOTDIR/.openwhisk-shell/keys
 
