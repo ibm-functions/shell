@@ -553,7 +553,9 @@ exports.proxy = plugin => ({
     find: route => {
         const cmd = match(route.split('/').slice(1), true)
         if (!cmd || cmd.route !== route || (resolver && resolver.isOverridden(cmd.route))) {
-            resolver.resolve(route)
+            if (resolver) {
+                resolver.resolve(route)
+            }
             return match(route.split('/').slice(1), true)
         } else {
             return cmd
