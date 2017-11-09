@@ -264,8 +264,22 @@ exports.sidecar = {
 exports.sidecar.expectRule = A => exports.sidecar.expectSequence(A, selectors.SIDECAR_RULE_CANVAS_NODES)
 
 /** is the given struct2 the same as the given struct2 (given as a string) */
-exports.expectStruct = struct1 => string => assert.ok(sameStruct(struct1, JSON.parse(string)))
-exports.expectSubset = struct1 => string => assert.ok(sameStruct(struct1, JSON.parse(string), true))
+exports.expectStruct = struct1 => string => {
+    try {
+        assert.ok(sameStruct(struct1, JSON.parse(string)))
+    } catch (err) {
+        console.error('Error comparing structs for actual value= ' + string)
+        throw err
+    }
+}
+exports.expectSubset = struct1 => string => {
+    try {
+        assert.ok(sameStruct(struct1, JSON.parse(string), true))
+    } catch (err) {
+        console.error('Error comparing subset for actual value= ' + string)
+        throw err
+    }
+}
 
 /** is the given actual array the same as the given expected array? */
 exports.expectArray = expected => actual => {
