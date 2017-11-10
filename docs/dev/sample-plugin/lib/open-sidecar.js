@@ -41,6 +41,7 @@ const openSidecar = (_a, _b, fullArgv, _1, rawCommandString, _2, argvWithoutOpti
         .then(action => {
             action.demo = { sampleField: 'This is a sample sidecar mode' }     // here we add a field
             return ui.showEntity(action, {show: 'demo'})                       // and open the sidecar, specifying that our new field should be shown
+        })
 }
 
 /**
