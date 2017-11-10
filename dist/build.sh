@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
+#
+# input params: choose a platform to build for (default: all)
+# and choose a name for the app (default: IBM Cloud Functions Shell)
+#
 PLATFORM=${1-all}
+APP_NAME="${APP_NAME-IBM Cloud Functions Shell}"
+
 VERSION=`git rev-parse master`
 BUILDDIR=build
-APP_NAME="IBM Cloud Functions Shell"
 
 # openwhisk icons
 #ICON_MAC=../assets/icons/icns/OpenWhisk-512x512.icns
