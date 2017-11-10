@@ -73,23 +73,38 @@ const scanForModules = dir => {
     try {
         const plugins = {}
 
-        //const modules = require(path.join(dir, 'package.json')).dependencies
-        const moduleDir = path.join(dir, 'modules'),
-              modules = fs.readdirSync(moduleDir)
-
-        modules.forEach(module => {
-            const pluginPath = path.join(moduleDir, module, 'plugin.js')
-            if (fs.existsSync(pluginPath)) {
-                plugins[module] = pluginPath
-            } else {
-                const backupPluginPath = path.join(moduleDir, module, 'plugin', 'plugin.js')
-                if (fs.existsSync(backupPluginPath)) {
-                    plugins[module] = backupPluginPath
+        const doScan = ({modules, moduleDir}) => {
+            modules.forEach(module => {
+                const pluginPath = path.join(moduleDir, module, 'plugin.js')
+                if (fs.existsSync(pluginPath)) {
+                    console.log(`Found module ${path.basename(module)}`)
+                    plugins[module] = pluginPath
                 } else {
-                    //console.error('Skipping plugin, because it does not have a plugin.js', module)
+                    const backupPluginPath = path.join(moduleDir, module, 'plugin', 'plugin.js')
+                    if (fs.existsSync(backupPluginPath)) {
+                        console.log(`Found module ${path.basename(module)}`)
+                        plugins[module] = backupPluginPath
+                    } else {
+                        //console.error('Skipping plugin, because it does not have a plugin.js', module)
+                    }
                 }
+            })
+        }
+
+        // scan the app/plugins/modules directory
+        const moduleDir = path.join(dir, 'modules')
+        doScan({ modules: fs.readdirSync(moduleDir), moduleDir })
+
+        // scan any modules in package.json
+        const packageJsonDeps = require(path.join(dir, 'package.json')).dependencies,
+              packageJsonDepsArray = []
+        for (let module in packageJsonDeps) {
+            if (module.startsWith('shell-')) {
+                packageJsonDepsArray.push(module)
+                
             }
-        })
+        }
+        doScan({ modules: packageJsonDepsArray, moduleDir: path.join(dir, 'node_modules') })
 
         return plugins
     } catch (e) {
