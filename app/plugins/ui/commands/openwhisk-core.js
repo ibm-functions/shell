@@ -88,13 +88,15 @@ const noImplicitName = {
     list: true
 }
 
-const ignoreCerts = apiHost => apiHost.indexOf('localhost') >= 0 || apiHost.startsWith('192.') || apiHost.startsWith('172.') || process.env.IGNORE_CERTS || wskprops.INSECURE_SSL
-
 // these values may change, if the user elects to do so
 let localStorageKey = 'wsk.apihost',
+    localStorageKeyIgnoreCerts = 'wsk.apihost.ignoreCerts',
     apiHost = process.env.__OW_API_HOST || wskprops.APIHOST || localStorage.getItem(localStorageKey) || 'https://openwhisk.ng.bluemix.net',
     auth = process.env.__OW_API_KEY || wskprops.AUTH,
     ow
+
+let userRequestedIgnoreCerts = localStorage.getItem(localStorageKeyIgnoreCerts) !== undefined
+let ignoreCerts = apiHost => userRequestedIgnoreCerts || apiHost.indexOf('localhost') >= 0 || apiHost.startsWith('192.') || apiHost.startsWith('172.') || process.env.IGNORE_CERTS || wskprops.INSECURE_SSL
 
 /** these are the module's exported functions */
 let self = {}
@@ -964,7 +966,7 @@ module.exports = (commandTree, prequire) => {
 
         apiHost: {
             get: () => Promise.resolve(apiHost),
-            set: new_host => {
+            set: (new_host, { ignoreCerts=false }={}) => {
                 const url = require('url').parse(new_host)
                 if (!url.protocol) {
                     if (new_host.indexOf('localhost') >= 0 || new_host.indexOf('192.168') >= 0) {
@@ -974,7 +976,9 @@ module.exports = (commandTree, prequire) => {
                     }
                 }
                 apiHost = new_host                               // global variable
+                userRequestedIgnoreCerts = ignoreCerts
                 localStorage.setItem(localStorageKey, new_host)  // remember the choice in localStorage
+                localStorage.setItem(localStorageKeyIgnoreCerts, userRequestedIgnoreCerts)
                 initOW()                                         // re-initialize the openwhisk npm
                 console.log(`wsk::apiHost::set ${apiHost}`)
                 return Promise.resolve(new_host)

@@ -356,7 +356,7 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
     white-space: nowrap;
     text-overflow: ellipsis;
 }
-.entity-name-group .entity-name {
+.entity-name-group .entity-name, .result-table .bold {
     font-weight: 500;
 }
 .repl-result .entity.activations .entity-name {
@@ -472,8 +472,10 @@ badge.clickable:hover {
     margin-right: 2em;
     min-width: 6em;
     text-align: right;
-    border-right: 2px solid;
     border-radius: 0;
+}
+.entity .repl-result-prefix, .entity .border-right {
+    border-right: 2px solid;
 }
 .package-prefix {
     font-size: 0.75em;

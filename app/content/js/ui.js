@@ -129,7 +129,11 @@ const namespace = (function() {
     const store = (namespace, auth) => {
         return read().then(model => {
             //console.log(`ui::store ${namespace} ${auth} ${JSON.stringify(model._full)}`)
-            model._full[model._host][namespace] = auth
+            let hostModel = model._full[model._host]
+            if (!hostModel) {
+                hostModel = model._full[model._host] = {}
+            }
+            hostModel[namespace] = auth
             //console.log(`ui::store2 ${namespace} ${auth} ${JSON.stringify(model._full)}`)
             write(model)
 
@@ -1542,6 +1546,21 @@ const ui = (function() {
     }
     self.inject = inject
     self.injectCSS = file => inject('text/css', 'stylesheet', 'css', file)
+
+    /**
+     * Inject a script
+     *
+     */
+    self.injectScript = url => {
+        const type = 'script'
+        const id = `injected-${type}-${url}`
+        if (!document.getElementById(id)) {
+            var link = document.createElement('script')
+            link.id = id
+            link.src = url
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+    }
 
     /**
      * Inject HTML stored in the given local file
