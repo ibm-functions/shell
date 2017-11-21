@@ -202,6 +202,7 @@ module.exports = (commandTree, require) => {
                        (_1, _2, _a, _3, _4, _5, argv_without_options, options) => {
                            const argv = slice(argv_without_options, 'set')
                            let host = argv[0] || options.host // the new apihost to use
+                           let ignoreCerts = options.ignoreCerts || options.insecureSSL || options.insecure
                            if (!host || options.help) {
                                throw new Error('Usage: host set <hostname>')
                            }
@@ -220,12 +221,17 @@ module.exports = (commandTree, require) => {
                            } else if (host === 'docker-machine' || host === 'dm' || host === 'mac' || host === 'darwin' || host === 'macos') {
                                // local docker-machine host (this is usually macOS)
                                host = 'http://192.168.99.100:10001'
+                               ignoreCerts = true
                            } else if (host === 'local') {
                                // local docker host
                                host = 'http://172.17.0.1:10001'
+                               ignoreCerts = true
                            }
 
-                           return wsk.apiHost.set(host).then(namespace.setApiHost).then(notifyOfHostChange(host)).then(() => namespace.list().then(auths => {
+                           return wsk.apiHost.set(host, { ignoreCerts })
+                               .then(namespace.setApiHost)
+                               .then(notifyOfHostChange(host))
+                               .then(() => namespace.list().then(auths => {
                                //
                                // after switching hosts, we'll need to get a new AUTH key. either:
                                //

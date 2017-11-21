@@ -112,6 +112,7 @@ badge.clickable:hover {
 
 .result-table .repl-result, .result-table.repl-result {
     border-color: var(--color-ui-04);
+    background: var(--color-ui-01);
 }
 
 .entity.actions.app .repl-result-prefix {
@@ -120,7 +121,7 @@ badge.clickable:hover {
 .entity.activations.is-sequence-true .repl-result-prefix {
     color: hsla(12, 45%, 45%, 1);
 }
-.entity .repl-result-prefix {
+.entity .repl-result-prefix, .entity .border-right {
     color: var(--color-text-01);
     border-right-color: var(--color-ui-04);
 }

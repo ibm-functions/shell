@@ -25,7 +25,7 @@ const css = {
 }
 exports.css = css
 
-const addModeButton = (bottomStripe, {mode, label, command, direct, defaultMode, actAsButton}, entity, show) => {
+const addModeButton = (bottomStripe, {mode, label, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
     // create the button dom, and attach it
     const button = document.createElement('div')
 
@@ -64,7 +64,7 @@ const addModeButton = (bottomStripe, {mode, label, command, direct, defaultMode,
 
             // execute the command
             if (command) {
-                repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo: false, noHistory: true })
+                repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo, noHistory })
             } else {
                 const view = direct(entity)
                 if (view.then) {
