@@ -96,15 +96,18 @@ const scanForModules = dir => {
         doScan({ modules: fs.readdirSync(moduleDir), moduleDir })
 
         // scan any modules in package.json
-        const packageJsonDeps = require(path.join(dir, 'package.json')).dependencies,
-              packageJsonDepsArray = []
-        for (let module in packageJsonDeps) {
-            if (module.startsWith('shell-')) {
-                packageJsonDepsArray.push(module)
-                
+        const packageJsonPath = path.join(dir, 'package.json')
+        if (fs.existsSync(packageJsonPath)) {
+            const packageJsonDeps = require(packageJsonPath).dependencies,
+                  packageJsonDepsArray = []
+            for (let module in packageJsonDeps) {
+                if (module.startsWith('shell-')) {
+                    packageJsonDepsArray.push(module)
+                    
+                }
             }
+            doScan({ modules: packageJsonDepsArray, moduleDir: path.join(dir, 'node_modules') })
         }
-        doScan({ modules: packageJsonDepsArray, moduleDir: path.join(dir, 'node_modules') })
 
         return plugins
     } catch (e) {
@@ -235,11 +238,12 @@ const resolve = (opts, pluginPaths, iter) => {
  * Look for plugins by scanning the local filesystem
  *
  */
-const resolveFromLocalFilesystem = opts => {
+const resolveFromLocalFilesystem = (opts={}) => {
     debug('resolveFromLocalFilesystem')
 
-    // first, we enumerate the plugins
-    const internalPlugins = scanForPlugins(pluginRoot)
+    // first, we enumerate the plugins; don't scan internal plugins if given a root dir
+    // if we *are* given a root dir, we only want to scan that dir
+    const internalPlugins = opts.externalOnly ? {} : scanForPlugins(pluginRoot)
         .reduce((M, pluginPath) => {
             //
             // - route is the /a/b/c path that consumers will use to require a plugin
@@ -252,7 +256,7 @@ const resolveFromLocalFilesystem = opts => {
             return M
         }, {})
 
-    const externalPlugins = opts && opts.noExternalPlugins ? {} : scanForModules(pluginRoot)
+    const externalPlugins = opts && opts.noExternalPlugins ? {} : scanForModules(opts.pluginRoot || pluginRoot)
 
     const availablePlugins = Object.assign({}, internalPlugins, externalPlugins)
 
@@ -267,55 +271,118 @@ const resolveFromLocalFilesystem = opts => {
 }
 
 /**
- * This is the main routine, that registers the plugins
+ * Load the prescan model, in preparation for loading the shell
  *
  */
-exports.init = opts => {
+exports.init = ({app = require('electron').remote.app}={}) => {
     debug('init')
-    const prescanned = path.join(pluginRoot, '.pre-scanned')
-    debug('prescanned %s', prescanned)
+
+    // first try loading the prescan from the userData directory
+    return loadPrescan(pluginRoot)
+        .then(builtins => loadPrescan(path.join(app.getPath('userData'), 'plugins'))
+              .catch(err => {
+                  debug('no user-installed plugins, due to %s', err)
+                  return {}
+              })
+              .then(unify(builtins))
+              .then(_ => prescan = _) // global variable, ugh
+              .then(makeResolver)
+              .then(commandTree.setPluginResolver))
+}
+
+/**
+ * Load the prescan model, in preparation for loading the shell
+ *
+ */
+const loadPrescan = userDataDir => {
+    const prescanned = path.join(userDataDir, '.pre-scanned')
+    debug('loading prescan %s', prescanned)
 
     return new Promise((resolve, reject) => {
         fs.readFile(prescanned, (err, data) => {
-            debug('read done %s', !!err)
+            debug('read done, any errors in the read? %s', !!err)
 
             if (err) {
                 reject(err)
             } else {
-                prescan = JSON.parse(data.toString())
-                const isResolved = {}
-                const resolver = {
-                    isOverridden: route => prescan.overrides[route],
-                    resolve: (command, {subtree=false}={}) => { // subpath if we are looking for plugins for a subtree, e.g. for cd /auth
-                        let plugin, matchLen
-                        for (let route in prescan.commandToPlugin) {
-                            if (subtree ? route.indexOf(command) === 0 : command.indexOf(route) === 0) {
-                                if (!matchLen || route.length > matchLen) {
-                                    plugin = prescan.commandToPlugin[route]
-                                    matchLen = route.length
-                                }
-                            }
-                        }
-                        if (plugin) {
-                            if (isResolved[plugin]) {
-                                return
-                            }
-                            isResolved[plugin] = true
-                            const prereqs = prescan.topological[plugin]
-                            if (prereqs) {
-                                prereqs.forEach(exports.require)
-                            }
-                            exports.require(plugin)
-                        }
-                    }
-                }
-
-                commandTree.setPluginResolver(resolver)
-                resolve()
+                resolve(JSON.parse(data.toString()))
             }
         })
     })
 }
+
+/**
+ * Unify two prescan models
+ *
+ */
+const unify = m1 => m2 => {
+    debug('unify')
+
+    const { isArray } = require('util')
+    const unified = {}
+
+    for (let key in m1) {
+        const v1 = m1[key],
+              v2 = m2[key]
+
+        unified[key] = v1
+
+        if (v2) {
+            debug('unifying user-installed model for %s', key)
+            if (isArray(v1)) {
+                unified[key] = v1.concat(v2)
+            } else {
+                for (let kk in v2) {
+                    v1[kk] = v2[kk]
+                }
+            }
+        }
+    }
+
+    return unified
+}
+
+/**
+ * Make a plugin resolver from a given prescan model
+ *
+ */
+const makeResolver = prescan => {
+    debug('makeResolver')
+
+    const isResolved = {}
+    const resolver = {
+        isOverridden: route => prescan.overrides[route],
+        resolve: (command, {subtree=false}={}) => { // subpath if we are looking for plugins for a subtree, e.g. for cd /auth
+            let plugin, matchLen
+            for (let route in prescan.commandToPlugin) {
+                if (subtree ? route.indexOf(command) === 0 : command.indexOf(route) === 0) {
+                    if (!matchLen || route.length > matchLen) {
+                        plugin = prescan.commandToPlugin[route]
+                        matchLen = route.length
+                    }
+                }
+            }
+            if (plugin) {
+                if (isResolved[plugin]) {
+                    return
+                }
+                isResolved[plugin] = true
+                const prereqs = prescan.topological[plugin]
+                if (prereqs) {
+                    prereqs.forEach(exports.require)
+                }
+                exports.require(plugin)
+            }
+        }
+    }
+
+    return resolver
+}
+
+/**
+ * Generate a prescan model
+ *
+ */
 exports.scan = opts => {
     debug('scan')
 
@@ -356,7 +423,7 @@ exports.scan = opts => {
  * Assemble the plugins for faster loading
  *
  */
-exports.assemble = () => exports.scan({ quiet: true, assembly: true })
+exports.assemble = opts => exports.scan(Object.assign({ quiet: true, assembly: true }, opts))
 
 /** export the prequire function */
 exports.require = (route, options) => {
