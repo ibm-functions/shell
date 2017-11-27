@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+const debug = require('debug')('compile')
+debug('init')
 
 const fs = require('fs-extra'),
       path = require('path'),
@@ -7,6 +8,8 @@ const fs = require('fs-extra'),
       { exec } = require('child_process'),
       TMP = 'plugins'  // we'll stash the original plugins here
 
+debug('modules loaded')
+
 global.plugins = require(path.join(__dirname, '../app/content/js/plugins'))
 global.localStorage = { getItem: () => '{}' }
 global.eventBus = new events.EventEmitter()
@@ -14,12 +17,14 @@ global.ui = {
     startsWithVowel: () => false
 }
 
+debug('bootstrap done')
+
 /**
  * Write the plugin list to the .pre-scanned file in app/plugins/.pre-scanned
  *
  */
-const writeToFile = modules => new Promise((resolve, reject) => {
-    fs.writeFile(path.join(__dirname, '..', 'app', 'plugins', '.pre-scanned'),
+const writeToFile = (dir, modules) => new Promise((resolve, reject) => {
+    fs.writeFile(path.join(dir, '.pre-scanned'),
                  JSON.stringify(modules, undefined, 4),
                  err => {
                      if (err) reject(err)
@@ -33,6 +38,7 @@ const writeToFile = modules => new Promise((resolve, reject) => {
  */
 const uglify = modules => modules.flat.map(module => new Promise((resolve, reject) => {
     if (!process.env.UGLIFY) resolve()
+    debug('uglify %s', module.path)
 
     const src = path.join(__dirname, '..', 'app', 'plugins', module.path),
           target = src, // we'll copy it aside, and overwrite the original
@@ -69,6 +75,7 @@ const readDirRecursively = dir => path.basename(dir) !== 'helpers' && path.basen
  */
 if (process.argv[2] === 'cleanup') {
     // copy the TMP originals back in place
+    debug('cleanup')
     Promise.all(require('../app/content/js/plugins.js').scanForPlugins(TMP)
         .map(pluginJsFile => {
             const pluginRoot = path.join(__dirname, '..', 'app'),
@@ -82,14 +89,27 @@ if (process.argv[2] === 'cleanup') {
         })
 
 } else {
-    plugins.assemble()
+    // determine the output directory
+    const idx = process.argv.findIndex(_ => _ === '-d'),
+          externalOnly = idx >= 0
+    const rootDir = externalOnly                           // dir points to the final location of .pre-scanned
+          ? process.argv[idx + 1]                          //    save the model to the given directory
+          : path.join(__dirname, '..', 'app')              //    save the model to the built-in directory
+    const pluginRoot = path.join(rootDir, 'plugins')       // pluginRoot points to the root of the modules subdir
+
+    debug('rootDir is %s', rootDir)
+    debug('pluginRoot is %s', pluginRoot)
+    debug('externalOnly is %s', externalOnly)
+
+    return mkdirp(path.join(pluginRoot, 'modules'))
+        .then(() => plugins.assemble({ pluginRoot, externalOnly }))
         .then(modules => Object.assign(modules, {
             flat: modules.flat.map(module => Object.assign(module, {
                 // make the paths relative to the root directory
                 path: path.relative(path.join(__dirname, '..', 'app', 'plugins'), module.path)
             }))
         }))
-        .then(modules => Promise.all([writeToFile(modules), ...uglify(modules)]))
+        .then(modules => Promise.all([writeToFile(pluginRoot, modules), ...uglify(modules)]))
         .then(() => process.exit(0))
         .catch(err => {
             console.error(err)
