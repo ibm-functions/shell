@@ -10,7 +10,7 @@ includes a suite of plugins, located in the `app/plugins/` directory.
    
 If, in the process of development, you add, remove, or otherwise
 change the way a command will map to plugins, you **must** re-execute
-`(cd dist && ./compile.js)`, and then reload the renderer process.
+`(cd dist && node compile.js)`, and then reload the renderer process.
 
 ## Code Layout
 
@@ -25,7 +25,7 @@ The names of these two files are important. Any other files can be named as you 
 
 To activate a new plugin, copy or symlink it so that it is placed in
 the `app/plugins/modules` directory. Then, execute `(cd dist &&
-./compile.js)` and reload or relaunch your Shell instance.
+node compile.js)` and reload or relaunch your Shell instance.
 
 ## Plugin API
 
