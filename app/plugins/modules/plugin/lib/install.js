@@ -26,15 +26,15 @@ const path = require('path'),
  * Format usage message
  *
  */
-const usage = cmd => `Install shell plugin
+const usage = `Install shell plugin
 
 \tplugin install <plugin-name>`
 
-const doInstall = (_a, _b, fullArgv, _1, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('install') + 1)
 
     const name = argvWithoutOptions.shift()
-    if (!name) {
+    if (!name || dashOptions['help']) {
         throw new modules.errors.usage(usage)
     }
 
@@ -53,7 +53,7 @@ const doInstall = (_a, _b, fullArgv, _1, rawCommandString, _2, argvWithoutOption
                 fs.removeSync(pluginHome)
                 return reject(error)
             }
-            
+
             exec(`npm install ${name} --prod --no-save --no-shrinkwrap`, { cwd: pluginHome }, (error, stdout, stderr) => {
                 if (error) {
                     fs.removeSync(pluginHome)
