@@ -25,15 +25,15 @@ const path = require('path'),
  * Format usage message
  *
  */
-const usage = cmd => `Remove installed shell plugin
+const usage = `Remove installed shell plugin
 
 \tplugin remove <plugin-name>`
 
-const doRemove = (_a, _b, fullArgv, _1, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+const doRemove = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('remove') + 1)
 
     const name = argvWithoutOptions.shift()
-    if (!name) {
+    if (!name || dashOptions['help']) {
         throw new modules.errors.usage(usage)
     }
 
