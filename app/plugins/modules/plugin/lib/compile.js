@@ -27,7 +27,7 @@ module.exports = (rootDir, pluginHome) => new Promise((resolve, reject) => {
     debug('precompiling plugins')
 
     // location of the compile.js code
-    const compilejsHome = path.join(__dirname, '..', '..', '..', '..', '..', 'dist')
+    const compilejsHome = path.join(__dirname, '..', '..', '..', '..', 'bin')
 
     exec(`node compile.js -d '${rootDir}'`, { cwd: compilejsHome }, (error, stdout, stderr) => {
         removeSync(pluginHome)
