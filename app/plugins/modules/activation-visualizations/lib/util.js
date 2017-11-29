@@ -65,13 +65,6 @@ const amendWithNamespace = name => {
 }
 
 /**
- * The OpenWhisk name filter accepts only plain names, no package or
- * namespace, no slashes.
- *
- */
-const stripToPlainName = name => name.substring(name.lastIndexOf('/') + 1)
-
-/**
  * Remove trigger and rule activations. These won't have an end
  * attribute. Also, take an optional name filter.
  *
@@ -97,17 +90,39 @@ const extractTasks = ({fsm}) => {
  *
  */
 const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
-    const {appName,name,path,filter,include,exclude,skip=0,batchSize=defaults.batchSize,all} = options
+    const {appName,path,filter,include,exclude,skip=0,batchSize=defaults.batchSize,all} = options
+    let {name=''} = options
 
     // see if the user requested a time range
     const timeRange = require('./time').range(options),
           upto = (timeRange && timeRange.upto) || options.upto,    // either something like --yesterday, or an explicit --upto
           since = (timeRange && timeRange.since) || options.since  // ibid...
 
-    const nameFilter = name ? `--name ${stripToPlainName(name)}` : '',  // the openwhisk filter api only accepts plain names, no packages or namespaces
+    // name queries can only specify package/action or action; let's check for conformance
+    let nameSplit = name.split(/\//)
+    if (nameSplit.length === 4 && nameSplit[0].length === 0) {
+        // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
+        nameSplit = nameSplit.slice(1)
+    }
+    if (nameSplit.length === 3 && nameSplit[0] === namespace.current()) {
+        // the name query is /ns/package/action, where ns is the
+        // current namespace; that's ok, let's just strip the ns part off
+        name = nameSplit.slice(1).join('/')
+    } else if (nameSplit.length >= 3) {
+        // the name query is /ns/package/action, where ns is NOT the
+        // current namespace. boo!
+        throw new Error('Name filters can only specify package/action or action name patterns')
+    }
+
+    const nameFilter = name ? `--name ${name}` : '',
           uptoArg = upto ? ` --upto ${upto}` : '',                      // this is part of the openwhisk API; upto a millis since epoch
           sinceArg = since ? ` --since ${since}` : '',                  // ibid; after a millis since epoch
-          fetch = extraSkip => repl.qexec(`wsk activation list ${nameFilter} --docs --skip ${skip + extraSkip} --limit ${batchSize}${uptoArg}${sinceArg}`)
+          fetch = extraSkip => repl.qexec(`wsk activation list ${nameFilter} --skip ${skip + extraSkip} --limit ${batchSize}${uptoArg}${sinceArg}`)
+          .catch(err => {
+              // log but swallow errors, so that we can show the user something... hopefully, at least one of the fetches succeeds
+              console.error(err)
+              return []
+          })
 
     if (appName) {
         // then the user asked to filter by app tasks
@@ -299,3 +314,10 @@ for (let idx=0; idx<n7000; idx++) bucketRanges.push(range(6000,n7000,idx, 1000))
 exports.latencyBucketRange = bucket => {
     return bucketRanges[bucket]
 }
+
+/**
+ * Is the given activation a successful one?
+ * @see https://github.com/apache/incubator-openwhisk/blob/master/common/scala/src/main/scala/whisk/core/entity/ActivationResult.scala#L58
+ *
+ */
+exports.isSuccess = activation => activation.statusCode === 0

@@ -123,9 +123,12 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 }
             }
 
+            // note: for statusCode === 0
+            //   see https://github.com/apache/incubator-openwhisk/blob/master/common/scala/src/main/scala/whisk/core/entity/ActivationResult.scala#L58
+
             activations.forEach((activation, idx) => {
                 const line = logTable.insertRow(-1),
-                      isSuccess = activation.response && activation.response.success // activation completed w/o error?
+                      isSuccess = activation.statusCode === 0 // see the note: just above
 
                 // row dom
                 line.className = 'log-line entity'

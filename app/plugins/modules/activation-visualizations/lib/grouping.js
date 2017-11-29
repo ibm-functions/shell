@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = require('./util')
+const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = require('./util')
 
 /**
  * Compute statistical properties of a given group of activations
@@ -160,14 +160,13 @@ const addToGroup = (options, totals, splitRequested, splitter) => (groups, activ
         }
 
         // add the activation to the appropriate list
-        const isSuccess = activation.response.success,
-              list = !options.groupBySuccess
+        const list = !options.groupBySuccess
               ? group.activations               // not grouping by success
               : isSuccess ? group.successes     // we are, and the activation was successful
               : group.failures                  // we are, and the activation failed
         list.push(activation)
 
-        if (isSuccess) group.nSuccesses++
+        if (isSuccess(activation)) group.nSuccesses++
         else group.nFailures++
 
         totals.totalCount++

@@ -1,5 +1,5 @@
 {
     "batchSize": 200,
     "N": 2,
-    "maxN": 8
+    "maxN": 32
 }

@@ -20,7 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
-      { titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
+      { isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Activity Grid'
 
@@ -261,7 +261,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
             let idx = 0
             group.activations.forEach(activation => {
-                renderCell(viewName, cells[idx], activation, !activation.response.success)
+                renderCell(viewName, cells[idx], activation, !isSuccess(activation))
                 idx++
             })
         } else {
@@ -283,7 +283,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
                         const cell = makeCellDom()
                         cellContainer.appendChild(cell)
                         cell.classList.add('grid-cell-newly-created')
-                        renderCell(cell, activation, !activation.response.success)
+                        renderCell(cell, activation, !isSuccess(activation))
                     }
                 } catch (e) {
                     console.error(e)
