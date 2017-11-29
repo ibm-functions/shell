@@ -10,7 +10,7 @@ const fs = require('fs-extra'),
 
 debug('modules loaded')
 
-global.plugins = require(path.join(__dirname, '../app/content/js/plugins'))
+global.plugins = require(path.join(__dirname, '../content/js/plugins'))
 global.localStorage = { getItem: () => '{}' }
 global.eventBus = new events.EventEmitter()
 global.ui = {
@@ -40,7 +40,7 @@ const uglify = modules => modules.flat.map(module => new Promise((resolve, rejec
     if (!process.env.UGLIFY) resolve()
     debug('uglify %s', module.path)
 
-    const src = path.join(__dirname, '..', 'app', 'plugins', module.path),
+    const src = path.join(__dirname, '..', 'plugins', module.path),
           target = src, // we'll copy it aside, and overwrite the original
           tmpPath = path.join(TMP, module.path),
           tmpDir = path.join(tmpPath, '..') // we want the name of the enclosing directory
@@ -76,9 +76,9 @@ const readDirRecursively = dir => path.basename(dir) !== 'helpers' && path.basen
 if (process.argv[2] === 'cleanup') {
     // copy the TMP originals back in place
     debug('cleanup')
-    Promise.all(require('../app/content/js/plugins.js').scanForPlugins(TMP)
+    Promise.all(require('../content/js/plugins.js').scanForPlugins(TMP)
         .map(pluginJsFile => {
-            const pluginRoot = path.join(__dirname, '..', 'app'),
+            const pluginRoot = path.join(__dirname, '..'),
                   originalLocation = path.join(pluginRoot, pluginJsFile)
             return fs.copy(pluginJsFile, originalLocation)
         }))
@@ -94,7 +94,7 @@ if (process.argv[2] === 'cleanup') {
           externalOnly = idx >= 0
     const rootDir = externalOnly                           // dir points to the final location of .pre-scanned
           ? process.argv[idx + 1]                          //    save the model to the given directory
-          : path.join(__dirname, '..', 'app')              //    save the model to the built-in directory
+          : path.join(__dirname, '..')                     //    save the model to the built-in directory
     const pluginRoot = path.join(rootDir, 'plugins')       // pluginRoot points to the root of the modules subdir
 
     debug('rootDir is %s', rootDir)
@@ -106,7 +106,7 @@ if (process.argv[2] === 'cleanup') {
         .then(modules => Object.assign(modules, {
             flat: modules.flat.map(module => Object.assign(module, {
                 // make the paths relative to the root directory
-                path: path.relative(path.join(__dirname, '..', 'app', 'plugins'), module.path)
+                path: path.relative(path.join(__dirname, '..', 'plugins'), module.path)
             }))
         }))
         .then(modules => Promise.all([writeToFile(pluginRoot, modules), ...uglify(modules)]))
