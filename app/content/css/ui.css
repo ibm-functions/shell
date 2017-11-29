@@ -733,6 +733,11 @@ sidecar .sidecar-header-secondary-content {
     opacity: 0.75;
     margin: 1ex 0;
 }
+sidecar .sidecar-header-secondary-content .kind-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 sidecar .sidecar-content {
     flex: 1;
     overflow-y: auto;
