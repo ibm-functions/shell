@@ -49,7 +49,8 @@ const show = activation => () => {
     } else {
         // we know of certain that this is a plain activation, and
         // already have it in hand! no need to re-fetch
-        return Promise.resolve(activation).then(ui.showEntity)
+        //return Promise.resolve(activation).then(ui.showEntity)
+        return repl.pexec(`activation get ${activation.activationId}`)
     }
 }
 
