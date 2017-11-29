@@ -616,7 +616,7 @@ const activationModes = (opts={}) => Object.assign(opts, {
 })
 specials.activations = {
     // activations list always gets full docs, and has a default limit of 10, but can be overridden
-    list: (options, argv) => activationModes({ options: Object.assign({}, { limit: 10 }, options, { docs: true }) }),
+    list: (options, argv) => activationModes({ options: Object.assign({}, { limit: 10 }, options, { docs: false }) }),
     get: (options, argv) => activationModes()
 }
 specials.packages = {
