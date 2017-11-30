@@ -117,7 +117,7 @@ const summarizeWhole = groups => {
   */
 const summarizeWhole2 = allActivations => {
     const { nSuccesses, nFailures } = allActivations.reduce((S, activation) => {
-        if (activation.response.success) S.nSuccesses++
+        if (isSuccess(activation)) S.nSuccesses++
         else S.nFailures++
         return S
     }, { nSuccesses: 0, nFailures: 0 })
@@ -137,8 +137,8 @@ const summarizeWhole2 = allActivations => {
  */
 const addToGroup = (options, totals, splitRequested, splitter) => (groups, activation) => {
     const _path = pathOf(activation)
-    const path = options.subgrouping === 'success' ? activation.response.success ? 'success' : 'failure'
-          : options.subgrouping === 'duration' ? activation.response.success ? latencyBucket(activation.end - activation.start) : nLatencyBuckets
+    const path = options.subgrouping === 'success' ? isSuccess(activation) ? 'success' : 'failure'
+          : options.subgrouping === 'duration' ? isSuccess(activation) ? latencyBucket(activation.end - activation.start) : nLatencyBuckets
           : _path,
           {version, groupKey} = !splitRequested ? {groupKey: path} : splitter(activation, path)
 
@@ -160,13 +160,14 @@ const addToGroup = (options, totals, splitRequested, splitter) => (groups, activ
         }
 
         // add the activation to the appropriate list
-        const list = !options.groupBySuccess
+        const success = isSuccess(activation),
+              list = !options.groupBySuccess
               ? group.activations               // not grouping by success
-              : isSuccess ? group.successes     // we are, and the activation was successful
+              : success ? group.successes       // we are, and the activation was successful
               : group.failures                  // we are, and the activation failed
         list.push(activation)
 
-        if (isSuccess(activation)) group.nSuccesses++
+        if (success) group.nSuccesses++
         else group.nFailures++
 
         totals.totalCount++

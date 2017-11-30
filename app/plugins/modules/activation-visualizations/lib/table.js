@@ -131,7 +131,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
         label.className = 'cell-label clickable'
 
         // drill down to grid view; note that the API doesn't support full-path filters, hence --name
-        label.onclick = drilldownWith(viewName, () => repl.pexec(`wsk activation grid ${options.all ? '-a' : ''} --zoom 1 --name "${group.name}" --path "${group.path}" ${splitOptions}`))
+        label.onclick = drilldownWith(viewName, () => repl.pexec(`wsk activation grid ${options.all ? '-a' : ''} --zoom 1 --name "/${group.path}" ${splitOptions}`))
 
         if (options.split) {
             const version = row.insertCell(-1)
