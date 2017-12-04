@@ -46,7 +46,7 @@ function drawNode(id, label, isCompound, properties, w, h){
 
 	// add type == state.Type
 	if(fsmData.States[id] && !isCompound){
-		if(fsmData.States[id].Value){
+		if(fsmData.States[id].Value != undefined){
 			o.Type = "Value";
 		}
 		else{

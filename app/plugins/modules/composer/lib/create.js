@@ -55,12 +55,15 @@ module.exports = (commandTree, prequire) => {
                                      'h', 'help',
                                      'a', 'annotation',
                                      'p', 'parameter', 'P', 'param-file',
-                                     'm', 'memory', 'l', 'logsize', 't', 'timeout' ])
+                                     'm', 'memory', 'l', 'logsize', 't', 'timeout',
+                                     'd', 'debug' ])    
 
+        
         if (!name || !input || options.help) {
             throw new modules.errors.usage(usage(cmd))
 
         } else {
+            
             let fsmPromise // our goal is to acquire an FSM, so that we can create an invokable OpenWhisk wrapper for it
             let type       // metadata to help with understanding how this FSM was created; 
 
@@ -104,8 +107,54 @@ module.exports = (commandTree, prequire) => {
 
             const { kvOptions: { action: { annotations=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action')
 
-            // great, we now have a valid FSM!
-            return fsmPromise.then(fsm => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
+            if(options.debug || options.d){
+                console.log('app create debug mode');
+                return fsmPromise.then(fsm => {
+                    
+                    let count = 0;
+                    let addEcho = name => {
+                        let echoName = 'echo_'+count;
+                        count++;
+                        fsm.States[echoName] = {
+                            Next: name,
+                            Type: 'Task',
+                            Action: '/whisk.system/utils/echo',
+                            Helper: 'echo'
+                        } 
+                        return echoName;
+                    }
+
+                    Object.keys(fsm.States).forEach(name => {
+                        if(name.indexOf('choice') == 0){
+                            [fsm.States[fsm.States[name].Then], fsm.States[fsm.States[name].Else]].forEach(s => {
+                                if(s.Function && s.Helper == undefined){
+                                    s.Next = addEcho(s.Next);
+                                }
+                            });                            
+                        }                        
+                        else if(fsm.States[name].Next){
+                            let nextState = fsm.States[fsm.States[name].Next];                        
+                            if(nextState.Function && nextState.Helper == undefined){
+                                nextState.Next = addEcho(nextState.Next);
+                            }
+
+                            if(name.indexOf('try') == 0 && fsm.States[fsm.States[name].Handler].Function && fsm.States[fsm.States[name].Handler].Helper == undefined){
+                                fsm.States[fsm.States[name].Handler].Next = addEcho(fsm.States[fsm.States[name].Handler].Next);
+                            }
+                        }
+                        
+                    });
+
+                    fsm.Entry = addEcho(fsm.Entry);
+                    return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations });
+                });
+
+
+            }   
+            else{
+                // great, we now have a valid FSM!                    
+                return fsmPromise.then(fsm => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
+            }
         }
     }
 

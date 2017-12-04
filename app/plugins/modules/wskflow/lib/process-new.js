@@ -208,7 +208,7 @@ function annotateNodes(fsm, activations){
 		else if(state.Helper){
 			//if(state.Helper == "retain_1"){
 				// retain_2 is the end of retain. retain_3 is when there's error (handler, but it goes merges to pass)
-			if(state.Helper == ("retain_1") || state.Helper == "retain_2" || state.Helper.indexOf("retry_") == 0){
+			if(state.Helper == "retain_1" || state.Helper == "retain_2" || state.Helper.indexOf("retry_") == 0 || state.Helper == 'echo'){
 				state.display = "ignore";			
 			}
 		}
@@ -219,78 +219,67 @@ function annotateNodes(fsm, activations){
 		activations.sort((a, b) => {
 			return a.start - b.start;
 		});		
-		let lastState;
-		for(var i=0; i<activations.length; i++){
-		//activations.forEach(a => {
-			//console.log(i, activations[i]);
-			//console.log(lastState);
-			let a = activations[i];
-			if(lastState != undefined && fsm.States[lastState]){
-				if(fsm.States[lastState].Action){
-					let n = fsm.States[lastState].Action;
-					if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
-						n = n.substring(n.lastIndexOf("/")+1);
-
-					if(n != a.name){
-						// how'd i know if the composition has changed? action state and activation name no longer match
-						console.log("outdated"); 
-						console.log(fsm);
-						console.log(n, a.name);
-						return false;					
-					}
-				}
-				
-
-				if(fsm.States[lastState].act == undefined)
-					fsm.States[lastState].act = [];
-				fsm.States[lastState].act.push(a);
-
-				lastState = undefined;
-			}			
-			else if(action2State[a.name]){
-				let stateName = action2State[a.name];
-				if(fsm.States[stateName].act == undefined)
-					fsm.States[stateName].act = [];
-				fsm.States[stateName].act.push(a);
-
-				lastState = undefined;
-			}
-			else if(a.name == "conductor"){
-				// conductor - look for logs that contain "function"
-				//console.log(a.logs);
-				for(var index = 0; index < a.logs.length; index++){
-				//a.logs.forEach((log, index) => {
-					log = a.logs[index];
-					if(log.indexOf("Entering function") != -1){
-						// contain function log
-						let stateName = log.substring(log.lastIndexOf(" ")+1);
-						if(fsm.States[stateName] == undefined){
-							// how'd i know if the composition has changed? inline function state no longer exists
-							console.log("outdated"); return false;
-						}
-
-						if(fsm.States[stateName].act == undefined)
-							fsm.States[stateName].act = [];
-						fsm.States[stateName].act.push(a);
-					}
-
-					if(index == a.logs.length-1){
-						// last log
-						if(log.indexOf("Entering action") != -1){
-							// contain function log
-							lastState = log.substring(log.lastIndexOf(" ")+1);					
-						}
-						else{
-							lastState = undefined;
-						}
-					}
-				//});
-				}
-
-			}
-
-		//});
+		
+		let lastState, notDebug = true;
+		let addAct = (name, activation) => {
+			if(fsm.States[name].act == undefined)
+				fsm.States[name].act = [];
+			fsm.States[name].act.push(activation);
 		}
+
+		activations.forEach((a, i) => {
+			if(a.name == 'conductor'){
+				// looking at conductor logs for activations				
+				a.logs.forEach((log, j) => {					
+					if(log.indexOf('Entering function') != -1){
+						// if it's in the debug mode, expect an echo action coming up next
+						lastState = log.substring(log.lastIndexOf(" ")+1);
+						if(notDebug)
+							addAct(lastState, a);
+						else
+							fsm.States[lastState].debug = true;
+					}
+					else if(log.indexOf('Entering echo_') != -1){
+						if(activations.length > i+1){
+							if(lastState && lastState.indexOf('function') == 0){
+								addAct(lastState, activations[i+1]);
+								lastState = undefined;
+							}
+							else if(lastState == undefined){
+								// first one - in the debug mode
+								addAct('Entry', activations[i+1]);
+								notDebug = false;
+								lastState = undefined;
+							}
+						}
+					}
+					else if(log.indexOf('Entering action') != -1){
+						lastState = log.substring(log.lastIndexOf(" ")+1);						
+						if(fsm.States[lastState].Action){
+							let n = fsm.States[lastState].Action;
+							if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
+								n = n.substring(n.lastIndexOf("/")+1);
+
+							if(activations.length > i+1){
+								if(n == activations[i+1].name){
+									addAct(lastState, activations[i+1]);
+									lastState = undefined;
+								}
+								else{
+									console.log("outdated"); 
+									console.log(fsm);
+									console.log(n, a.name);
+									return false;
+								}						
+							}
+						}
+						
+					}					
+				});
+			}			
+						
+		});
+		
 
 		// see if exit state is visited 
 		let exitState = fsm.Exit, lastAct = activations[activations.length-1], isExitSuccess = false;
@@ -306,7 +295,7 @@ function annotateNodes(fsm, activations){
 				isExitSuccess = true;
 			}
 			else if(isFinal){
-				// if it's onlh the final state - previous act must be the action. check if it's succesful 
+				// if it's only the final state - previous act must be the action. check if it's succesful 
 				let lastActionAct = activations[activations.length-2];
 				let lastActionName = fsm.States[exitState].Action;
 				if(lastActionName){
@@ -324,8 +313,7 @@ function annotateNodes(fsm, activations){
 			fsm.States["Exit"].act = [];
 			fsm.States["Exit"].act.push(lastAct);
 		}
-
-
+		
 		return fsm;
 	}
 	// new - for undeployed actions
