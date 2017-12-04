@@ -482,9 +482,13 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				})		
 				.style("cursor", function(d){
 					if(visited[d.id]){
-						if(d.Type == "Task" && fsm.States[d.id].Function == undefined){
+						//if(d.Type == "Task" && fsm.States[d.id].Function == undefined){
+						if(fsm.States[d.id] && fsm.States[d.id].act && (
+							d.Type == 'Exit' || d.Type == 'Entry' || 
+							(d.Type == 'Task' && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug)))
+						)){
 							return "pointer";
-						}
+						}						
 						else{
 							return "normal";
 						}
@@ -493,7 +497,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				.on("mouseover", function(d, i){
 					let qtipText = "";
 					
-					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block" && fsm.States[d.id].Function == undefined){					
+					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block"){					
 						if($(this).attr("failed")){
 							$(this).css("fill", wfColorAct.failedHovered);
 						}
@@ -501,7 +505,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$(this).css("fill", wfColorAct.activeHovered);
 						}
 						
-						if(d.Type == "Task" && fsm.States[d.id].Action){							
+						if(d.Type == "Task" && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug))){
 							let act = fsm.States[d.id].act;
 							// first, describe # activations if # > 1
 							if(act.length>1)
@@ -539,33 +543,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							});	
 
 						}
-						else if(d.Type == "Exit"){
+						else if(d.Type == "Exit" || d.Type == 'Entry'){
 							let act = fsm.States[d.id].act[0];
 							let start = new Date(act.start), timeString = (start.getMonth()+1)+"/"+start.getDate()+" ";		
 							timeString += start.toLocaleTimeString(undefined, { hour12: false });
-							qtipText += "<div style='padding-bottom:2px'>Exit <span style='color:"+wfColorAct.active+"'>"+timeString+"</span></div>"
-							qtipText += "Final output: <break></break>";
 							let result = JSON.stringify(act.response.result)								
 							if(result.length > 40)
 								result = result.substring(0, 40) + "... ";
-							qtipText += result;
+
+							qtipText += `<div style='padding-bottom:2px'>${d.Type} <span style='color:${wfColorAct.active}'>${timeString}</span></div>${result}`							
+							
 						}
 
-					}
-					else{
-
-					}
-										
-
-					if(d.properties && d.properties.choice){
-						/*if(qtipText.length != 0)
-								qtipText += "<break></break>"
-						qtipText += "<span style='color: orange;'>yes</span> / <span style='color: #DC7633;'>no</span>?";						
-						*/
-						// also highlight the edges
-						//$(".link[source='"+(d.id+"_ptrue")+"']").css("stroke", wfColor.reOrCon.trueBranch).css("stroke-width", 2);
-						//$(".link[source='"+(d.id+"_pfalse")+"']").css("stroke", wfColor.reOrCon.falseBranch).css("stroke-width", 2);
-					}				
+					}									
 
 					if(qtipText.length != 0){
 						$("#qtipContent").html(qtipText);
@@ -597,7 +587,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					}
 					
 				}).on("mouseout", function(d, i){
-					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block" && fsm.States[d.id].Function == undefined){
+					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block"){
 						if($(this).attr("failed")){
 							$(this).css("fill", wfColorAct.failed);			
 						}
@@ -608,23 +598,33 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					}
 					else{
 
-					}
+					}					
 					
-					//$(".link").not(".forwardingLink").css("stroke", "grey");
 					$(".link").removeClass("hover");
 					$("#qtip").removeClass("visible");
-					//$("use").attr("xlink:href", "#retryIconNormal").attr("href", "#retryIconNormal");
 					
 				}).on("click", function(d, i){
-					if(fsm.States[d.id] && fsm.States[d.id].act && fsm.States[d.id].Function == undefined && d.Type != "Exit"){
+					if(fsm.States[d.id] && fsm.States[d.id].act){
 						if($("#actList").css("display") != "block"){
 							$("#listClose").click();
 						}
 
-
-
-						//if(d.Type == "Task" || d.Type == "Exit"){
-						if(d.Type == "Task"){
+						if(d.Type == "Exit" || d.Type == 'Entry'){
+							let id = fsm.States[d.Type].act[0].activationId;
+							//console.log(fsm.States[d.id].act[0]);
+							ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
+	                                    d3.event.currentTarget.parentNode, // highlight this node
+	                                    $("#wskflowContainer")[0],
+	                                    'App Visualization'          // container to pip
+	                                    )(d3.event)
+							/*ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+	                                    d3.event.currentTarget.parentNode, // highlight this node
+	                                    $("#wskflowContainer")[0],
+	                                    'App Visualization'          // container to pip
+	                                    )(d3.event)               // pass along the raw dom event							
+	                        */
+						}
+						else if(d.Type == "Task" && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug))){
 							if($(this).attr("failed")){
 								$(this).css("fill", wfColorAct.failed);
 							}
@@ -633,22 +633,12 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							}
 							
 							$("#qtip").removeClass("visible");
-
-							/*if(d.Type == "Exit"){
-								//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
-								let id = fsm.States["Exit"].act[0].activationId;
-								ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
-		                                    d3.event.currentTarget.parentNode, // highlight this node
-		                                    $("#wskflowContainer")[0],
-		                                    'App Visualization'          // container to pip
-		                                    )(d3.event)               // pass along the raw dom event							
-
-							}*/
-							// in the new design, Exit is not clickable
+							
 							if(fsm.States[d.id].act.length == 1){
 								//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
-								let id = fsm.States[d.id].act[0].activationId;
-								ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+								//let id = fsm.States[d.id].act[0].activationId;
+
+								ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
 		                                    d3.event.currentTarget.parentNode, // highlight this node
 		                                    $("#wskflowContainer")[0],
 		                                    'App Visualization'          // container to pip		                                 
@@ -660,7 +650,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 								actListContent += `<div>${d.label}<break</break>${act.length} activations, ordered by start time: </div>`; 
 								actListContent += "<ol style='padding-left: 15px;'>";
 								let date;
-								act.forEach(a => {										
+								act.forEach((a, i) => {										
 									// first part: time
 									let start = new Date(a.start), timeString = "", lis = "";		
 									if(date == undefined || date != (start.getMonth()+1)+"/"+start.getDate()){
@@ -680,7 +670,9 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 										c = wfColorAct.active;
 									else
 										c = wfColorAct.failed;
-									lis += "<span class='actItem' style='color:"+c+"; text-decoration:underline; cursor: pointer;' aid='"+a.activationId+"'>"+timeString+"</span> ("+duration+unit+")<break></break>";
+
+									lis += `<span class='actItem' style='color:${c}; text-decoration:underline; cursor: pointer;' aid='${a.activationId}' index=${i}>${timeString}</span> (${duration+unit})<break></break>`;
+									
 									let result = JSON.stringify(a.response.result);							
 									if(result.length > 40)
 										result = result.substring(0, 40) + "... ";
@@ -702,9 +694,10 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 									$(this).css("text-decoration", "underline");
 								}).click(function(e){
 									//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
-									let id = $(this).attr("aid");
+									let id = $(this).attr("aid"), index = $(this).attr('index');
 
-									ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+									ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[index]),
 			                                    $(this).parent()[0], // highlight this node
 			                                    $("#wskflowContainer")[0],
 			                                    'App Visualization'          // container to pip			                                    
