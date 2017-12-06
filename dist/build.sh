@@ -33,7 +33,7 @@ function init {
     fi
 
     # assemble plugins
-    UGLIFY=true node compile.js
+    UGLIFY=true ./compile.js
 
     # minify the css
     cp ../app/content/css/ui.css /tmp
@@ -50,7 +50,7 @@ function cleanup {
 
     cp /tmp/ui.css ../app/content/css/ui.css
 
-    UGLIFY=true node compile.js cleanup
+    UGLIFY=true ./compile.js cleanup
 }
 
 function win32 {

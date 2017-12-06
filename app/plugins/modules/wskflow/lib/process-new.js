@@ -229,6 +229,7 @@ function annotateNodes(fsm, activations){
 
 		activations.forEach((a, i) => {
 			if(a.name == 'conductor'){
+
 				// special case for first conductor: if log-input, first state will be an echo
 				if(i==0 && fsm.States.Entry.Next && fsm.States.Entry.Next.indexOf('echo_') != -1 && i+1<activations.length && activations[i+1].name == 'echo'){
 					addAct('Entry', activations[i+1]);
@@ -303,7 +304,7 @@ function annotateNodes(fsm, activations){
 						}					
 					});
 				}
-				
+
 			}			
 						
 		});

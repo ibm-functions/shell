@@ -170,7 +170,6 @@ module.exports = (commandTree, prequire) => {
                     return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations });
                 });
 
-
             }   
             else{                
                 let index = annotations.findIndex(element => element.key == 'log');

@@ -66,11 +66,18 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                         return reject(error)
                     }
 
-                    // recompile the plugin model
-                    compile(rootDir, pluginHome)
-                        .then(() => fs.removeSync(pluginHome))
-                        .then(() => resolve(success('installed')))
-                        .catch(reject)
+                    fs.rename(path.join(pluginHome, 'node_modules'), path.join(moduleDir, name, 'node_modules'), err => {
+                        if (error) {
+                            fs.removeSync(pluginHome)
+                            return reject(error)
+                        }
+
+                        // recompile the plugin model
+                        compile(rootDir, true)
+                            .then(() => fs.removeSync(pluginHome))
+                            .then(() => resolve(success('installed')))
+                            .catch(reject)
+                    })
                 })
             })
         })
