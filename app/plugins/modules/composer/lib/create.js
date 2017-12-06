@@ -35,7 +35,9 @@ Required parameters:
 
 Options:
 \t-n|--dry-run   check the given input for validity, do not deploy it
-\t-d|--debug     capture initial input and inline function output with additional echo actions. App will run slower.
+\t--log-input    log initial input with an echo action. App may run slower 
+\t--log-inline   log inline function output with echo actions. App may run slower
+\t-l|--log-all   log initial input and inline function output. App may run slower
 `
 
 /**
@@ -57,8 +59,8 @@ module.exports = (commandTree, prequire) => {
                                      'h', 'help',
                                      'a', 'annotation',
                                      'p', 'parameter', 'P', 'param-file',
-                                     'm', 'memory', 'l', 'logsize', 't', 'timeout',
-                                     'd', 'debug' ])    
+                                     'm', 'memory', 'l', 'logsize', 't', 'timeout',                                     
+                                     'log-all', 'log-input', 'log-inline' ])    
 
         
         if (!name || !input || options.help) {
@@ -107,10 +109,23 @@ module.exports = (commandTree, prequire) => {
                 throw new Error(messages.unknownInput)
             }
 
-            const { kvOptions: { action: { annotations=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action')
+            const { kvOptions: { action: { annotations=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');
 
-            if(options.debug || options.d){
-                console.log('app create debug mode');
+            if(options['log-input'] || options['log-inline'] || options['log-all']){
+                console.log('app create logging');                
+                //let index = annotations.findIndex(element => element.key == 'log'), logType;
+                let logType;
+                if((options['log-input'] && options['log-inline']) || options['log-all'])
+                    logType = 'all';
+                else if(options['log-input'])
+                    logType = 'input';
+                else
+                    logType = 'inline';
+                
+                //if(index == -1) annotations.push({key: 'log', value: logType});
+                //else annotations[index] = {key: 'log', value: logType};
+                annotations.push({key: 'log', value: logType})
+
                 return fsmPromise.then(fsm => {
                     
                     let count = 0;
@@ -126,34 +141,42 @@ module.exports = (commandTree, prequire) => {
                         return echoName;
                     }
 
-                    Object.keys(fsm.States).forEach(name => {
-                        if(name.indexOf('choice') == 0){
-                            [fsm.States[fsm.States[name].Then], fsm.States[fsm.States[name].Else]].forEach(s => {
-                                if(s.Function && s.Helper == undefined){
-                                    s.Next = addEcho(s.Next);
+                    if(logType == 'all' || logType == 'inline'){
+                        Object.keys(fsm.States).forEach(name => {
+                            if(name.indexOf('choice') == 0){
+                                [fsm.States[fsm.States[name].Then], fsm.States[fsm.States[name].Else]].forEach(s => {
+                                    if(s.Function && s.Helper == undefined){
+                                        s.Next = addEcho(s.Next);
+                                    }
+                                });                            
+                            }                        
+                            else if(fsm.States[name].Next){
+                                let nextState = fsm.States[fsm.States[name].Next];                        
+                                if(nextState.Function && nextState.Helper == undefined){
+                                    nextState.Next = addEcho(nextState.Next);
                                 }
-                            });                            
-                        }                        
-                        else if(fsm.States[name].Next){
-                            let nextState = fsm.States[fsm.States[name].Next];                        
-                            if(nextState.Function && nextState.Helper == undefined){
-                                nextState.Next = addEcho(nextState.Next);
-                            }
 
-                            if(name.indexOf('try') == 0 && fsm.States[fsm.States[name].Handler].Function && fsm.States[fsm.States[name].Handler].Helper == undefined){
-                                fsm.States[fsm.States[name].Handler].Next = addEcho(fsm.States[fsm.States[name].Handler].Next);
+                                if(name.indexOf('try') == 0 && fsm.States[fsm.States[name].Handler].Function && fsm.States[fsm.States[name].Handler].Helper == undefined){
+                                    fsm.States[fsm.States[name].Handler].Next = addEcho(fsm.States[fsm.States[name].Handler].Next);
+                                }
                             }
-                        }
-                        
-                    });
+                            
+                        });
+                    }
 
-                    fsm.Entry = addEcho(fsm.Entry);
+                    if(logType == 'all' || logType == 'input')
+                        fsm.Entry = addEcho(fsm.Entry);
+
                     return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations });
                 });
 
 
             }   
-            else{
+            else{                
+                let index = annotations.findIndex(element => element.key == 'log');
+                if(index != -1) annotations.splice(index, 1);
+                else annotations.push({key: 'log', value: false});
+                //console.log('app create no logging', index, annotations);
                 // great, we now have a valid FSM!                    
                 return fsmPromise.then(fsm => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
             }

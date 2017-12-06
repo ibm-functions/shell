@@ -229,53 +229,81 @@ function annotateNodes(fsm, activations){
 
 		activations.forEach((a, i) => {
 			if(a.name == 'conductor'){
-				// looking at conductor logs for activations				
-				a.logs.forEach((log, j) => {					
-					if(log.indexOf('Entering function') != -1){
-						// if it's in the debug mode, expect an echo action coming up next
-						lastState = log.substring(log.lastIndexOf(" ")+1);
-						if(notDebug)
-							addAct(lastState, a);
-						else
-							fsm.States[lastState].debug = true;
-					}
-					else if(log.indexOf('Entering echo_') != -1){
-						if(activations.length > i+1){
-							if(lastState && lastState.indexOf('function') == 0){
-								addAct(lastState, activations[i+1]);
-								lastState = undefined;
+				// special case for first conductor: if log-input, first state will be an echo
+				if(i==0 && fsm.States.Entry.Next && fsm.States.Entry.Next.indexOf('echo_') != -1 && i+1<activations.length && activations[i+1].name == 'echo'){
+					addAct('Entry', activations[i+1]);
+				}
+				else{
+					// looking at conductor logs for activations				
+					a.logs.forEach((log, j) => {					
+						if(log.indexOf('Entering function') != -1){
+							// in logging mode, next state will be an echo state, next activation will be the echo activation
+							// if next is echo, put echo act in the function state's act. 
+							// otherwise, put the conductor's act in the function state's act. 
+							let state = log.substring(log.lastIndexOf(" ")+1);
+							if(fsm.States[state].Next && fsm.States[state].Next.indexOf('echo_') != -1 && i+1<activations.length && activations[i+1].name == 'echo'){
+								addAct(state, activations[i+1]);
+								fsm.States[state].debug = true;
 							}
-							else if(lastState == undefined){
-								// first one - in the debug mode
-								addAct('Entry', activations[i+1]);
-								notDebug = false;
-								lastState = undefined;
-							}
-						}
-					}
-					else if(log.indexOf('Entering action') != -1){
-						lastState = log.substring(log.lastIndexOf(" ")+1);						
-						if(fsm.States[lastState].Action){
-							let n = fsm.States[lastState].Action;
-							if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
-								n = n.substring(n.lastIndexOf("/")+1);
+							else
+								addAct(state, a);
 
+							/*lastState = log.substring(log.lastIndexOf(" ")+1);
+							if(notDebug)
+								addAct(lastState, a);
+							else
+								fsm.States[lastState].debug = true;*/
+						}
+						/*else if(log.indexOf('Entering echo_') != -1){
 							if(activations.length > i+1){
-								if(n == activations[i+1].name){
+								if(lastState && lastState.indexOf('function') == 0){
 									addAct(lastState, activations[i+1]);
 									lastState = undefined;
 								}
-								else{
-									console.log("outdated"); 
-									console.log(fsm);
-									console.log(n, a.name);
-									return false;
-								}						
+								else if(lastState == undefined){
+									// first one - in the debug mode
+									addAct('Entry', activations[i+1]);
+									notDebug = false;
+									lastState = undefined;
+								}
 							}
-						}
-						
-					}					
-				});
+						}*/
+						else if(log.indexOf('Entering action') != -1){
+							let state = log.substring(log.lastIndexOf(" ")+1);
+							if(fsm.States[state].Action){
+								let n = fsm.States[state].Action;
+								if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
+									n = n.substring(n.lastIndexOf("/")+1);
+								if(i+1<activations.length && activations[i+1].name == n)
+									addAct(state, activations[i+1]);	
+								else
+									console.log(state, i, activations);						
+							}
+
+							/*lastState = log.substring(log.lastIndexOf(" ")+1);						
+							if(fsm.States[lastState].Action){
+								let n = fsm.States[lastState].Action;
+								if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
+									n = n.substring(n.lastIndexOf("/")+1);
+
+								if(activations.length > i+1){
+									if(n == activations[i+1].name){
+										addAct(lastState, activations[i+1]);
+										lastState = undefined;
+									}
+									else{
+										console.log("outdated"); 
+										console.log(fsm);
+										console.log(n, a.name);
+										return false;
+									}						
+								}
+							}*/
+							
+						}					
+					});
+				}
+				
 			}			
 						
 		});
