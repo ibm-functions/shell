@@ -33,8 +33,12 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
     const { app } = require('electron').remote
     const pluginHome = path.join(app.getPath('userData'), 'plugins', 'modules')
 
-    const dirs = fs.readdirSync(pluginHome)
-    return dirs.join('\n')
+    if (fs.pathExistsSync(pluginHome)) {
+        const dirs = fs.readdirSync(pluginHome)
+        if (dirs.length > 0)
+            return dirs.join('\n')
+    }
+    return 'no plugin installed.'
 }
 
 module.exports = (commandTree, prequire) => {

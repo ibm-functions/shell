@@ -17,7 +17,7 @@
 const debug = require('debug')('plugins')
 
 const path = require('path'),
-      { removeSync } = require('fs-extra'),
+      { remove } = require('fs-extra'),
       { success } = require('./util'),
       compile = require('./compile')
 
@@ -44,9 +44,9 @@ const doRemove = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOp
 
     debug(`remove plugin ${name} in ${pluginHome}`)
 
-    removeSync(pluginHome)
 
-    return compile(rootDir, pluginHome)
+    return remove(pluginHome)
+        .then(() => compile(rootDir, true))
         .then(() => success('removed'))
 }
 
