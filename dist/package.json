@@ -11,8 +11,7 @@
   "devDependencies": {
     "electron-installer-dmg": "^0.2.1",
     "electron-packager": "^8.7.2",
-    "minifier": "^0.8.1",
-    "uglify-es": "^3.1.0"
+    "minifier": "^0.8.1"
   },
   "dependencies": {}
 }
