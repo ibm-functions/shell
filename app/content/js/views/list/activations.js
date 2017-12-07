@@ -36,7 +36,9 @@ const fetch = activationIds => Promise.all(activationIds.map(_ => {
  *
  */
 const show = activation => () => {
-    if (activation.logs && activation.logs.length === 1) {
+    if (activation.logs && activation.logs.length === 1 && activation.logs[0].match(/^[0-9a-f]{32}$/)) {
+        // if log size == 1 and the log matches activation id regex 
+
         // optimistically assume this is a session. the sesion get
         // code will fall back to an activation get, if not
         const sessionId = activation.logs[0]
@@ -126,10 +128,12 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
 
             // note: for statusCode === 0
             //   see https://github.com/apache/incubator-openwhisk/blob/master/common/scala/src/main/scala/whisk/core/entity/ActivationResult.scala#L58
-
-            activations.forEach((activation, idx) => {
+            let echo = -1;
+            activations.forEach((activation, idx) => {                
                 const line = logTable.insertRow(-1),
-                      isSuccess = activation.statusCode === 0 // see the note: just above
+                      //isSuccess = activation.statusCode === 0 // see the note: just above
+                      isSuccess = activation.statusCode === 0 || (activation.response && activation.response.success);
+                      //if statusCode is undefined, check activation.response for success/fail info
 
                 // row dom
                 line.className = 'log-line entity'
@@ -146,7 +150,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 if (noCrop) id.classList.add('full-width')
                 clicky.innerText = activation.originalActivationId || activation.activationId
                 id.setAttribute('data-activation-id', id.innerText)
-                clicky.onclick = pip(show(activation))
+                clicky.onclick = pip(show(activation))                
 
                 // column 2: name cell
                 const name = line.insertCell(-1),
@@ -155,19 +159,34 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 nameClick.className = 'clickable'
                 nameClick.innerText = activation.name
                 name.appendChild(nameClick)
-                if (activation.name === 'conductor') {
+                if (activation.name === 'conductor' && activation.logs) {     
                     if (activation.logs.find(_ => _.indexOf('Entering action_') >= 0)) {
                         nameClick.innerText = 'entering next task'
-                    } else if (activation.logs[0].indexOf('Entering function_') >= 0) {
-                        nameClick.innerText = 'executing inline function'
-                    } else if (activation.logs[0].indexOf('Entering choice_') >= 0) {
+                    } else if(activation.logs.findIndex(log => log.indexOf('Entering echo_') >= 0) == 0){
+                        nameClick.innerText = 'entering next task'
+                    } else if (activation.logs.find(_ => _.indexOf('Entering function_') >= 0)) {                        
+                        nameClick.innerText = 'executing inline function'                        
+                    } else if (activation.logs.findIndex(log => log.indexOf('Entering choice_') >= 0) == 0) {
                         nameClick.innerText = 'executing if condition'
-                    } else if (activation.logs[0].indexOf('Entering final') >= 0) {
+                    } else if (activation.logs.find(_ => _.indexOf('Entering final') >= 0)) {
                         nameClick.innerText = 'finishing up'
                     } else {
                         console.error(activation.logs)
                     }
+                    
+                    echo = activation.logs.findIndex(log => log.indexOf('Entering echo_')>=0);
+                    
                 }
+                else if(activation.name === 'echo' && echo != -1){
+                    if(echo == 0)
+                        nameClick.innerText = 'echo to log input'
+                    else
+                        nameClick.innerText = 'echo to log function output'
+                }
+                else{
+                    echo = -1;
+                }
+
 
                 // command to be executed when clicking on the entity name cell
                 const path = activation.annotations && activation.annotations.find(({key}) => key === 'path'),
