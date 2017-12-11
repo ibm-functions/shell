@@ -63,8 +63,10 @@ module.exports = (commandTree, prequire) => {
                 let getPromises = [], actionName = [], action2State = {};
                 Object.keys(fsm.States).forEach(n => {                  
                     if(fsm.States[n].Type == "Task" && fsm.States[n].Action){
-                        getPromises.push(repl.qexec("wsk action get "+fsm.States[n].Action));
+                        
                         actionName.push(fsm.States[n].Action);
+                        getPromises.push(repl.qexec("wsk action get "+fsm.States[n].Action));
+                                                                        
                         if(action2State[fsm.States[n].Action] == undefined)
                             action2State[fsm.States[n].Action] = [];
                         action2State[fsm.States[n].Action].push(n);
@@ -83,10 +85,10 @@ module.exports = (commandTree, prequire) => {
                                 if(action2State[actionName[index]]){                                   
                                     action2State[actionName[index]].forEach(s => {
                                         let t = setInterval(e => {
-                                            if($('#'+action2State[actionName[index]]).length > 0){
+                                            if($('#'+s).length > 0){
                                                 clearInterval(t);
-                                                $('#'+action2State[actionName[index]]).attr('data-deployed', 'not-deployed');
-                                                $('#'+action2State[actionName[index]]).find('rect').css('fill', 'lightgrey');
+                                                $('#'+s).attr('data-deployed', 'not-deployed');
+                                                $('#'+s).find('rect').css('fill', 'lightgrey');
                                             }
                                         }, 20);
                                         //fsm.States[s].undeployed = true;
