@@ -37,7 +37,7 @@ Options:
 \t-n|--dry-run   check the given input for validity, do not deploy it
 \t--log-input    log initial input with an echo action. App may run slower 
 \t--log-inline   log inline function output with echo actions. App may run slower
-\t-l|--log-all   log initial input and inline function output. App may run slower
+\t--log-all      log initial input and inline function output. App may run slower
 `
 
 /**
