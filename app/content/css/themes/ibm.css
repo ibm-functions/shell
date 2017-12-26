@@ -25,7 +25,7 @@ body {
     --color-ui-02: #f5f7fa;
     --color-ui-03: #f0f3f6;
     --color-ui-04: #dfe3e6;
-    --color-ui-05: #8c9ba5;
+    --color-ui-05: #8c9ba5;    
 
     --font-sans-serif: "IBM Helvetica", sans-serif;
 }
@@ -182,10 +182,53 @@ sidecar .sidecar-header-name .package-prefix {
     border-left-color: rgba(62, 101, 80, 0.2);
 }
 
-.log-lines .log-line .log-line-bar.is-success-true {
+.legend-list {    
+    margin-bottom: 5px;
+    font-size:0.75em;
+    text-align: right;
+}
+.legend-trace {
+    padding-top:15px;
+    padding-bottom: 5px;
+    font-size:0.75em;
+    text-align: right;
+}
+.legend-icon {
+    display: inline-block;
+    margin-right: 10px;
+    width: 10px;
+    height: 10px;
+    border: solid 1px black;
+}
+
+.log-lines .log-line .log-line-bar.is-waitTime, .legend-icon.is-waitTime {
+    background: var(--color-ui-05);
+}
+.log-lines .log-line .log-line-bar.is-initTime.is-success-true, .legend-icon.is-initTime {
+    /*background: var(--color-support-04);*/
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-support-02),
+      var(--color-support-02) 2px,
+      #bee195 2px,
+      #bee195 4px
+    );
+}
+.log-lines .log-line .log-line-bar.is-initTime.is-success-false{
+    /*background: var(--color-support-04);*/
+    background: repeating-linear-gradient(
+      to right,
+      var(--color-support-01),
+      var(--color-support-01) 4px,
+      white 4px,
+      white 8px
+    );
+}
+
+.log-lines .log-line .log-line-bar.is-success-true, .legend-icon.is-runTime {
     background: var(--color-support-02);
 }
-.log-lines .log-line .log-line-bar.is-success-false {
+.log-lines .log-line .log-line-bar.is-success-false, .legend-icon.is-success-false {
     background: var(--color-support-01);
 }
 .log-lines .log-line.log-line-root .log-line-bar {
