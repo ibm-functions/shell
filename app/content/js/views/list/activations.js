@@ -22,6 +22,7 @@ const prettyPrintDuration = require('pretty-ms'),
  *
  */
 const fetch = activationIds => Promise.all(activationIds.map(_ => {
+    
     if (typeof _ === 'string') {
         return repl.qexec(`activation get ${_}`).catch(err => {
             console.error(err)
@@ -56,6 +57,14 @@ const show = activation => () => {
     }
 }
 
+const findItemInAnnotations = (name, activation) => {
+    // this function is for finding waitTime of initTime in activation annotations
+    if(activation && activation.annotations && activation.annotations.find((item) => item.key === name))
+        return activation.annotations.find((item) => item.key === name).value;
+    else
+        return 0;   // if no time item, return 0
+}
+
 /**
  * Given a list of activationIds, render a list view and place it in
  * the given container
@@ -72,17 +81,40 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
     ui.injectCSS('https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css', true) // tooltips
 
     const nCols = 5 + (showResult ? 1 : 0)
-    const logTable = document.createElement('table')
+    const logTable = document.createElement('table')    
     logTable.className = 'log-lines'
-    ui.removeAllDomChildren(container)
-    container.appendChild(logTable)
+    ui.removeAllDomChildren(container)   
+    container.appendChild(logTable) 
 
-    if (entity) {
+    const legendHTMLtext = `Queueing Delays <div class='legend-icon is-waitTime'></div> Container Initialization <div class='legend-icon is-initTime'></div> Execution Time <div class='legend-icon is-runTime'></div> Failures <div class='legend-icon is-success-false'></div>`
+
+    if (entity) {   // trace view
         const messageRow = logTable.insertRow(-1),
-              message = messageRow.insertCell(-1)
+              message = messageRow.insertCell(-1),
+              //legend = messageRow.insertCell(-1)
+              legend = logTable.insertRow(-1).insertCell(-1)
         message.className = 'log-lines-message-for-activations'
         message.innerText = `This ${entity.prettyType || entity.type} includes the following activity:`
-        message.setAttribute('colspan', nCols)
+        message.setAttribute('colspan', nCols-1)
+
+        // add a legned 
+        legend.className = 'legend-trace'
+        legend.innerHTML = legendHTMLtext
+        legend.setAttribute('colspan', nCols)
+
+    }
+    else if(activationIds && activationIds.find(item => item.annotations)){
+        // assumption: currently, session activation does not have annotations. if none of the activations in activationIds has annotations, then the cmd is `session list` and we don't show the legend.             
+        // create a legend only for `activation list`. 
+        const legend = document.createElement('div')    
+        legend.className = 'legend-list'
+        legend.innerHTML = legendHTMLtext
+        // insert the legend before logTable 
+        container.insertBefore(legend, logTable)
+        // change container border to none
+        container.style.border = 'none'
+        // move grey border to logTable      
+        logTable.style.border = '2px solid var(--color-ui-04)'
     }
 
     // picture in picture
@@ -94,7 +126,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
     // normalizing the bar dimensions
     const first = activationIds.length - 1,
           last = 0,
-          start = entity ? entity.start : activationIds[first].start,
+          start = entity ? entity.start : activationIds[first].start - findItemInAnnotations('waitTime', activationIds[first]),
           maxEnd = activationIds.reduce((max, activation) => Math.max(max, activation.end||(activation.start+1)), 0), // the last one in the list might not have the highest end
           dur = Math.max(1, entity ? entity.end - entity.start : maxEnd - activationIds[first].start)
 
@@ -106,13 +138,13 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
 
     return fetch(activationIds)
         .then(activations => entity ? [entity, ...activations] : activations) // add entity to the top of the list
-        .then(activations => {
+        .then(activations => {          
             gaps = new Array(activations.length).fill(0)
             if (!entity) {
                 for (let idx = activations.length - 2; idx >= 0; idx--) {
                     const activation = activations[idx],
                           previous = activations[idx + 1],
-                          gap = activation.start - (previous.end || (previous.start + 1))
+                          gap = activation.start - findItemInAnnotations('waitTime', activation) - (previous.end || (previous.start + 1))
                     if (gap > 0) {
                         const ngap = gap / dur
                         if (gap > 10000 || ngap > 0.05) {
@@ -130,10 +162,12 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
             //   see https://github.com/apache/incubator-openwhisk/blob/master/common/scala/src/main/scala/whisk/core/entity/ActivationResult.scala#L58
             let echo = -1;
             activations.forEach((activation, idx) => {                
+
                 const line = logTable.insertRow(-1),
                       //isSuccess = activation.statusCode === 0 // see the note: just above
-                      isSuccess = activation.statusCode === 0 || (activation.response && activation.response.success);
+                      isSuccess = activation.statusCode !== undefined ? activation.statusCode === 0 : (activation.response && activation.response.success);
                       //if statusCode is undefined, check activation.response for success/fail info
+                      //need to avoid isSuccess is set to undefined, as (false || undefined) returns undefined
 
                 // row dom
                 line.className = 'log-line entity'
@@ -204,6 +238,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 if (activation.end) {
                     duration.innerText = prettyPrintDuration(activation.end - activation.start)
                 }
+                else{                    
+                    // for trigger and rule, set duration to be 1ms. If duration is not set, qtip will show 'lasting undefined' 
+                    duration.innerText = prettyPrintDuration(1);
+                }
 
                 // column 4: success cell
                 const success = line.insertCell(-1)
@@ -228,34 +266,77 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 }
 
                 // column 5|6|7: bar chart cell
-                if (showTimeline) {
+                if (showTimeline) {                    
                     const timeline = line.insertCell(-1),
-                          bar = document.createElement('div')
+                          bar = document.createElement('div'),
+                          isRootBar = (entity && idx === 0)
+
                     timeline.appendChild(bar)
-                    timeline.className = 'log-field log-line-bar-field'
+                    timeline.className = 'log-field log-line-bar-field'                    
                     bar.style.position = 'absolute'
                     bar.classList.add('log-line-bar')
-                    if (activation.name === 'conductor') bar.classList.add('log-line-bar-conductor')
+                    //if (activation.name === 'conductor') bar.classList.add('log-line-bar-conductor')
+                    // conductor activations now are in the same color with regular activations
                     bar.classList.add(`is-success-${isSuccess}`)
 
+                    const waitTime = findItemInAnnotations('waitTime', activation), 
+                        initTime = findItemInAnnotations('initTime', activation);
+
                     // bar dimensions
-                    const left = normalize(activation.start, idx),
-                          right = normalize(activation.end || (activation.start + 1), idx), // handle rules and triggers as having dur=1
+                    const left = normalize(activation.start + initTime, idx),
+                          right = normalize(activation.end || (activation.start + initTime + 1), idx), // handle rules and triggers as having dur=1
                           width = right - left
                     bar.style.left = (100 * left) + '%'
                     bar.style.width = (100 * width) + '%'
-
                     bar.onclick = pip(show(activation))
-                    bar.setAttribute('data-balloon', `Activation of ${name.innerText}, lasting ${duration.innerText}`)
+                    bar.setAttribute('data-balloon', `Execution time, lasting ${duration.innerText}`)
                     bar.setAttribute('data-balloon-pos', 'right')
+
+                    if(initTime > 0 && !isRootBar){                        
+                        const initTimeBar = document.createElement('div'), l = normalize(activation.start, idx),
+                        w = normalize(activation.start + initTime, idx) - l;
+                        timeline.appendChild(initTimeBar);
+                        initTimeBar.style.left = (100 * l)+'%';
+                        initTimeBar.style.width = (100 * w)+'%';
+                        initTimeBar.style.position = 'absolute';
+                        initTimeBar.classList.add('log-line-bar');
+                        initTimeBar.classList.add('is-initTime');
+                        // activation can fail at init time - if that's the case, initTime === duration 
+                        if(initTime == activation.duration)
+                            initTimeBar.classList.add(`is-success-false`)
+                        else
+                            initTimeBar.classList.add(`is-success-true`)
+
+                        initTimeBar.onclick = pip(show(activation))
+                        initTimeBar.setAttribute('data-balloon', `Init time, lasting ${prettyPrintDuration(initTime)}`)
+                        initTimeBar.setAttribute('data-balloon-pos', 'right')
+
+                        bar.setAttribute('data-balloon', `Execution time, lasting ${prettyPrintDuration(activation.duration - initTime)}`)
+
+                    }
+                    if(waitTime > 0 && !isRootBar){
+                        const waitTimeBar = document.createElement('div'), 
+                        l = normalize(activation.start - waitTime, idx),
+                        w = normalize(activation.start, idx) - l;
+                        timeline.appendChild(waitTimeBar);
+                        waitTimeBar.style.left = (100 * l)+'%';
+                        waitTimeBar.style.width = (100 * w)+'%';
+                        waitTimeBar.style.position = 'absolute';
+                        waitTimeBar.classList.add('log-line-bar');
+                        waitTimeBar.classList.add('is-waitTime');
+                        waitTimeBar.onclick = pip(show(activation));
+                        waitTimeBar.setAttribute('data-balloon', `Queueing time, lasting ${prettyPrintDuration(waitTime)}`);
+                        waitTimeBar.setAttribute('data-balloon-pos', 'right');
+                        
+                    }                                    
                 }
                 
                 // column n: start cell
                 if (showStart) {
                     const start = line.insertCell(-1),
                           previous = activations[idx - 1],
-                          previousStart = previous && previous.start,
-                          time = ui.prettyPrintTime(activation.start, 'short', previousStart)
+                          previousStart = previous && (previous.start - findItemInAnnotations('waitTime', previous)),
+                          time = ui.prettyPrintTime(activation.start - findItemInAnnotations('waitTime', activation), 'short', previousStart)
                     start.className = 'deemphasize log-field log-field-right-align start-time-field'
                     if (typeof time === 'string') {
                         start.innerText = time
