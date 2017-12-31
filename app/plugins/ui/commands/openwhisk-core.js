@@ -611,6 +611,7 @@ const activationModes = (opts={}) => Object.assign(opts, {
     modes: entity => [ { mode: 'result', defaultMode: true, command: () => 'wsk activation result' }, //activation => ui.showEntity(entity, { show: 'result' }) }
                        { mode: 'logs', label: entity.prettyType == 'sequence' ? 'trace' : 'logs',
                          command: () => 'wsk activation logs' },
+                       { mode: 'annotations', command: () => 'annotations' },
                        { mode: 'raw', command: () => 'raw' }
                      ]
 })
