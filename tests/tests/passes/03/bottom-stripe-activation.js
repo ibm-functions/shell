@@ -50,6 +50,14 @@ describe('Sidecar bottom stripe interactions for activations', function() {
            })
            .catch(common.oops(this)))
 
+        it(`should show annotations for ${name} by clicking on bottom stripe`, () => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('annotations'))
+           .then(() => this.app)
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing(name))
+           .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`))
+           .then(ui.expectSubset({path: `${ui.expectedNamespace()}/${name}`}))
+           .catch(common.oops(this)))
+
         // click on annotations mode button
         it(`should show result for ${name} by clicking on bottom stripe`, () => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('result'))
            .then(() => this.app)
