@@ -149,7 +149,7 @@ const drawGrid = (options, header, modes) => activations => {
     return {
         type: 'custom',
         content,
-        modes: modes('grid')
+        modes: modes('grid', options)
     }
 }
 

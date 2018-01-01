@@ -177,7 +177,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
     return {
         type: 'custom',
         content,
-        modes: modes('table')
+        modes: modes('table', options)
     }
 }
 
