@@ -102,16 +102,12 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
     let nameSplit = name.split(/\//)
     if (nameSplit.length === 4 && nameSplit[0].length === 0) {
         // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
-        nameSplit = nameSplit.slice(1)
-    }
-    if (nameSplit.length === 3 && nameSplit[0] === namespace.current()) {
-        // the name query is /ns/package/action, where ns is the
-        // current namespace; that's ok, let's just strip the ns part off
-        name = nameSplit.slice(1).join('/')
-    } else if (nameSplit.length >= 3) {
-        // the name query is /ns/package/action, where ns is NOT the
-        // current namespace. boo!
-        throw new Error('Name filters can only specify package/action or action name patterns')
+        // the backend doesn't yet support namespace filters, so strip that off, too
+        nameSplit = nameSplit.slice(2)
+    } else if (nameSplit.length === 3 && name.charAt(0) === '/') {
+        // the name query is /ns/action, where ns is the current
+        // namespace; as above, we need to strip off ns
+        name = nameSplit[2]
     }
 
     const nameFilter = name ? `--name ${name}` : '',

@@ -225,7 +225,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 // command to be executed when clicking on the entity name cell
                 const path = activation.annotations && activation.annotations.find(({key}) => key === 'path'),
                       gridCommand = activation.sessionId
-                      ? `grid "${activation.name}"`
+                      ? `grid "${activation.name}"` // for apps, the activation.name field is the app name
                       : !path ? `grid --name /${activation.namespace}/${activation.name}`   // triggers, at least, have no path annotation
                       : `grid --name "/${path.value}"`
 
