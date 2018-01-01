@@ -182,25 +182,6 @@ sidecar .sidecar-header-name .package-prefix {
     border-left-color: rgba(62, 101, 80, 0.2);
 }
 
-.legend-list {    
-    margin-bottom: 5px;
-    font-size:0.75em;
-    text-align: right;
-}
-.legend-trace {
-    padding-top:15px;
-    padding-bottom: 5px;
-    font-size:0.75em;
-    text-align: right;
-}
-.legend-icon {
-    display: inline-block;
-    margin-right: 10px;
-    width: 10px;
-    height: 10px;
-    border: solid 1px black;
-}
-
 .log-lines .log-line .log-line-bar.is-waitTime, .legend-icon.is-waitTime {
     background: var(--color-ui-05);
 }

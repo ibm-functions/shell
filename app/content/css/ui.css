@@ -1102,6 +1102,32 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     border-left: 5px solid;
 }
 
+/* legend for activation/trace list */
+.legend-list {    
+    margin-bottom: 5px;
+    font-size:0.75em;
+    text-align: right;
+    transition: height 300ms ease-in-out;
+}
+.repl.sidecar-visible .legend-list {
+    /* don't show legend when the sidecar is open. see issue #138 */
+    opacity: 0;
+    height: 0;
+}
+.legend-trace {
+    padding-top:15px;
+    padding-bottom: 5px;
+    font-size:0.75em;
+    text-align: right;
+}
+.legend-icon {
+    display: inline-block;
+    margin-right: 10px;
+    width: 10px;
+    height: 10px;
+    border: solid 1px black;
+}
+
 /* notification area */
 #notification-area {
     display: flex;
