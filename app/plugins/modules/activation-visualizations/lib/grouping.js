@@ -146,7 +146,9 @@ const addToGroup = (options, totals, splitRequested, splitter) => (groups, activ
         // we were asked to filter by groupKey
         return groups
     }
-    if (options.all || options.name || (!(_path.match && _path.match(isUUIDPattern)) && !activation.cause)) {
+
+    // commenting out the bizarre filter. see shell issue #120
+    if (true/*options.all || options.name || (!(_path.match && _path.match(isUUIDPattern)) && !activation.cause)*/) {
         let group = groups[groupKey]
         if (!group) {
             group = groups[groupKey] = { name: activation.name, nSuccesses: 0, nFailures: 0, path, groupKey, version }
@@ -226,12 +228,13 @@ exports.groupByAction = (activations, options) => {
  *
  */
 exports.groupByTimeBucket = (activations, options) => {
-    if (!options.all) {
+    // commenting out the bizarre filter. see shell issue #120
+    /*if (!options.all) {
         activations = activations.filter(activation => {
             const path = pathOf(activation)
             return !(path.match && path.match(isUUIDPattern)) && !activation.cause
         })
-    }
+    }*/
 
     // first, sort the activations by increasing start time, to help
     // with bucketing
