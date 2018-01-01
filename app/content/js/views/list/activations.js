@@ -95,7 +95,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
               legend = logTable.insertRow(-1).insertCell(-1)
         message.className = 'log-lines-message-for-activations'
         message.innerText = `This ${entity.prettyType || entity.type} includes the following activity:`
-        message.setAttribute('colspan', nCols-1)
+        message.setAttribute('colspan', nCols)
 
         // add a legned 
         legend.className = 'legend-trace'
