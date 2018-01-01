@@ -623,9 +623,6 @@ sidecar .header-right-bits {
     align-items: flex-end;
     justify-content: center;
 }
-.sidecar-header .activation-duration, .sidecar-header .kind, .sidecar-header .activation-estimated-cost-container1 {
-    font-family: Roboto, sans-serif;
-}
 .sidecar-header .activation-duration, .sidecar-header .kind {
     font-weight: bold;
     font-size: 2.5em;
@@ -891,7 +888,6 @@ sidecar:not(.entity-is-sequence) .sequence-components {
     overflow: hidden;
     text-overflow: ellipsis;
     /*white-space: nowrap;*/
-    font-family: Roboto,sans-serif;
     font-variant: small-caps;
     font-weight: 400;
     word-break: break-all;
