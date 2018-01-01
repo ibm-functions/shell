@@ -1032,6 +1032,7 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    opacity: 1; /* see issue #132 */
 }
 .repl:not(.sidecar-visible) .log-lines .log-line .log-field:last-child {
     padding-left: 4em;
