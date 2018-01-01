@@ -68,7 +68,7 @@ const drawTimeline = (options, header, modes) => activations => {
     return {
         type: 'custom',
         content,
-        modes: modes('timeline')
+        modes: modes('timeline', options)
     }
 }
 

@@ -15,13 +15,43 @@
  */
 
 /**
- * View modes
+ * Turn an options struct into a cli string
+ *
+ * @param options is the command line options struct given by the
+ * user.
  *
  */
-const mode = mode => ({
+const toString = options => {
+    let str = ''
+    for (let key in options) {
+        // underscore comes from minimist
+        if (key !== '_' && options[key] !== undefined) {
+            const dash = key.length === 1 ? '-' : '--',
+                  value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
+            str = `${str} ${dash}${key}${value}`
+        }
+    }
+
+    return str
+}
+
+/**
+ * Create a view mode.
+ *
+ * @param mode the name of the view mode, a string
+ * @param options is the command line options struct given by the
+ * user.
+ *
+ */
+const mode = mode => options => ({
     mode,
-    direct: entity => entity && entity.name ? repl.qexec(`${mode} --name ${entity.name}`) : repl.qexec(mode)
+    direct: entity => repl.qexec(`${mode} ${toString(Object.assign({}, { name: entity && entity.name }, options))}`)
 })
+
+/**
+ * The view modes. Change this whenever a new view mode is added to the tool.
+ *
+ */
 const modes = [
     mode('table'),
     mode('timeline'),
@@ -29,10 +59,11 @@ const modes = [
 ]
 
 /**
- * Return a view mode model, crafted for the given default mode
+ * Return a view mode model, crafted for the given default mode, and
+ * any command line options the user might have passed in.
  *
  */
-exports.modes = defaultMode => modes.map(_ => {
+exports.modes = (defaultMode, options) => modes.map(_ => _(options)).map(_ => {
     if (_.mode === defaultMode) {
         return Object.assign({defaultMode: true}, _)
     } else {
