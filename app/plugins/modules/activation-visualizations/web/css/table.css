@@ -27,7 +27,6 @@
     cursor: pointer;
     border-bottom: 2px solid #666;
     text-align: right;
-    font-family: Roboto, sans-serif;
 }
 
 .activation-viz-plugin .data-table th .cell-inner {
@@ -91,7 +90,6 @@
 }
 .activation-viz-plugin .data-table td.cell-numeric,.activation-viz-plugin .data-table td.cell-version {
     font-size: 80%;
-    font-family: Roboto, sans-serif;
 }
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
     width: 4.25rem;
@@ -318,7 +316,6 @@
 .activation-viz-plugin.grid-header-key {
     font-size: 80%;
     padding: 0;
-    font-family: Roboto;
 }
 .activation-viz-plugin.grid-header-key .grid {
     flex-direction: row;
