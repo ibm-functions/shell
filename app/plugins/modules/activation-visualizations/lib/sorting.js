@@ -24,7 +24,7 @@ exports.stringSorter = id => ({ id, field: group => group[id], compare: (a,b) =>
 exports.versionSorter = exports.stringSorter('version') // note how, in grouping.js, the SemVer class supports a string-compatible localeCompare method
 
 /** sort by an element of statistical data */
-exports.statDataSorter = n => ({ id: n, field: group => group.statData.n[n], compare: (a,b) => b-a, extraCss: 'cell-numeric' })
+exports.statDataSorter = (n,field='n') => ({ id: n, field: group => group.statData[field][n], compare: (a,b) => b-a, extraCss: 'cell-numeric' })
 
 /** generic sorter for numerical attributes */
 exports.numericalSorter = (id, sortDir=+1) => ({ id, field: group => group[id], compare: (a,b) => sortDir*(b-a), extraCss: 'cell-numeric' })

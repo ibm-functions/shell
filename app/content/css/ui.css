@@ -1303,3 +1303,9 @@ break {
 #wskflowSVG path.forwarding-edge.hover {
     marker-end: url(#forwardingEnd);
 }
+
+/* help widget */
+.help-widget {
+    padding-left: 0.5ex;
+    font-size: 0.875em;
+}

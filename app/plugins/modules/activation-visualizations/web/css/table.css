@@ -94,6 +94,9 @@
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
     width: 4.25rem;
 }
+.activation-viz-plugin .data-table .cell-numeric.cell-extra-wide {
+    width: 5.25rem;
+}
 
 .activation-viz-plugin .data-table .cell-stat, .activation-viz-plugin .grid .grid-cell-occupied {
     border: 1px solid rgba(0,0,0,0.05);

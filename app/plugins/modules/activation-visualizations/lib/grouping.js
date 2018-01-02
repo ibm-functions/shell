@@ -14,26 +14,95 @@
  * limitations under the License.
  */
 
-const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = require('./util')
+const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = require('./util'),
+      prettyPrintDuration = require('pretty-ms')
+
+/**
+ * Create a table of rows
+ *
+ */
+const tableOf = rows => {
+    const table = document.createElement('div')
+    rows.forEach(({content, title}={}) => {
+        if (content) {
+            const row = document.createElement('span')
+            row.classList.add('graphical-clickable')
+            row.style.paddingLeft = '0.5ex'
+            table.appendChild(row)
+            row.innerText = content
+            row.title = title
+        }
+    })
+    return table
+}
+
+/**
+ * Render an explanation of an increase in latency
+ *
+ */
+const maybe = (reason, shorthand, disparity, cover) => {
+    if (cover > 0.01) {
+        const pretty = prettyPrintDuration(disparity)
+        return {
+            content: `${shorthand}+${pretty}`,
+            title: `${reason} increased by ${pretty}`
+        }
+    }
+}
 
 /**
  * Compute statistical properties of a given group of activations
  *
  */
 const summarizePerformance = activations => {
-    const durations = activations.map(_ => _.end - _.start)
-    durations.sort((a,b) => a - b)
+    const summaries = activations.map(_ => {
+        const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
+              initAnno = _.annotations.find(({key}) => key === 'initTime'),
+              duration = _.end - _.start,              
+              wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
+              init = initAnno ? initAnno.value : 0   // and this is "Container Initialization"
 
-    const min = durations[0],
-          max = durations[durations.length - 1]
+        return { duration, wait, init }
+    })
+    summaries.sort((a,b) => a.duration - b.duration)
+
+    const min = summaries[0].duration,
+          max = summaries[summaries.length - 1].duration,
+          idx25 = ~~(summaries.length * 0.25),
+          idx95 = ~~(summaries.length * 0.95),
+          nFast = idx25 + 1,
+          nSlow = summaries.length - idx95,
+          waitAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {wait}) => total + wait, 0) / nFast,
+          waitAvgForSlowest = summaries.slice(idx95).reduce((total, {wait}) => total + wait, 0) / nSlow,
+          initAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {init}) => total + init, 0) / nFast,
+          initAvgForSlowest = summaries.slice(idx95).reduce((total, {init}) => total + init, 0) / nSlow,
+          durAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration}) => total + duration, 0) / nFast,
+          durAvgForSlowest = summaries.slice(idx95).reduce((total, {duration}) => total + duration, 0) / nSlow,
+          totalAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nFast,
+          totalAvgForSlowest = summaries.slice(idx95).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nSlow
+
+    const disparity = totalAvgForSlowest - totalAvgForFastest,
+          durDisparity = durAvgForSlowest - durAvgForFastest,
+          waitDisparity = waitAvgForSlowest - waitAvgForFastest,
+          initDisparity = initAvgForSlowest - initAvgForFastest,
+          durDisparityCover = durDisparity / disparity,
+          waitDisparityCover = waitDisparity / disparity,
+          initDisparityCover = initDisparity / disparity,
+          why = disparity === 0
+          ? document.createTextNode('')
+          : tableOf([maybe('Execution Time', 'E', durDisparity, durDisparityCover, ''),
+                     maybe('Queueing Delays', 'Q', waitDisparity, waitDisparityCover),
+                     maybe('Container Initialization', 'I', initDisparity, initDisparityCover)])
 
     return { min, max,
+             durDisparityCover, waitDisparityCover, initDisparityCover, why,
              n: {
-                 25: durations[~~(durations.length * 0.25)],
-                 50: durations[~~(durations.length * 0.50)],
-                 90: durations[~~(durations.length * 0.90)],
-                 95: durations[~~(durations.length * 0.95)],
-                 99: durations[~~(durations.length * 0.99)]
+                 disparity,
+                 //25: summaries[idx25].duration,
+                 50: summaries[~~(summaries.length * 0.50)].duration,
+                 90: summaries[~~(summaries.length * 0.90)].duration,
+                 //95: summaries[idx95].duration,
+                 99: summaries[~~(summaries.length * 0.99)].duration
              }
            }
 }
