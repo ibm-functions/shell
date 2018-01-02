@@ -16,7 +16,7 @@
 
 const prettyPrintDuration = require('pretty-ms'),
       { drilldownWith } = require('./drilldown'),
-      { sort, nameSorter, versionSorter, statDataSorter, numericalSorter, defaultSorter } = require('./sorting'),
+      { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter, defaultSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
       { titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util')
 
@@ -69,7 +69,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
     tableScrollContainer.className = 'data-table-scroll-container'
 
     const theadRow = tableHeader.createTHead()
-    const addHeaderCell = (labelText, sortByThisColumn) => {
+    const addHeaderCell = (labelText, sortByThisColumn, title) => {
         const cell = document.createElement('th'),
               inner = document.createElement('div'),
               label = document.createElement('div'),
@@ -89,6 +89,16 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
         inner.appendChild(sortArrow)
         sortArrow.className = 'sortArrow'
 
+        if (title) {
+            // caller asked us to render a help widget
+            const help = document.createElement('span')
+            inner.appendChild(help)
+            help.innerText = '(?)'
+            help.classList.add('help-widget')
+            help.title = title
+            cell.classList.add('cell-extra-wide')
+        }
+
         cell.onclick = () => {
             const newDir = sorter.id === sortByThisColumn.id ? -sortDir : undefined // undefined will let us pick up the default value
             _drawTable(options, header, modes, content, groupData, sortByThisColumn, newDir)
@@ -98,13 +108,15 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
     }
     const {inner:nameHeaderCell} = addHeaderCell('action', nameSorter)
     if (options.split) addHeaderCell('version', versionSorter)
-    addHeaderCell('25%', statDataSorter(25))
+    //addHeaderCell('25%', statDataSorter(25))
     addHeaderCell('50%', statDataSorter(50))
     addHeaderCell('90%', statDataSorter(90))
-    addHeaderCell('95%', statDataSorter(95))
+    //addHeaderCell('95%', statDataSorter(95))
     addHeaderCell('99%', statDataSorter(99))
     addHeaderCell('count', numericalSorter('count'))
     addHeaderCell('errors', numericalSorter('errorRate'))
+    addHeaderCell('spread', statDataSorter('disparity'), 'How much worse are the slowest than the fastest invocations?')
+    addHeaderCell('reasons for spread', stringSorter('why'))
 
     // add row count to the name header cell
     const rowCount = groups.length,
@@ -150,13 +162,13 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
             cell.setAttribute('data-value', value)
         }
 
-        const addStat = n => {
+        const addStat = (n, prefix='') => {
             const cell = row.insertCell(-1),
                   value = group.statData.n[n],
                   extraCss = `cell-stat-${n} latency-${latencyBucket(value)}`
 
             try {
-                cell.innerText = prettyPrintDuration(value)
+                cell.innerText = `${prefix}${prettyPrintDuration(value)}`
             } catch (e) {
                 console.error(group)
                 console.error(e)
@@ -164,14 +176,20 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
             }
             cell.className = `cell-stat cell-numeric ${extraCss}`
             cell.setAttribute('data-value', value)
+            return cell
         }
 
-        for (let n in group.statData.n) {
-            addStat(n)
-        }
+        addStat(50)
+        addStat(90)
+        addStat(99)
 
         addNumericCell('count')
         addNumericCell('errorRate', true, value => value === 0 ? '\u2014' : `${(100 * value).toFixed(1)}%`)
+        addStat('disparity', '+').classList.add('cell-extra-wide')
+
+        const why = row.insertCell(-1)
+        why.classList.add('cell-label')
+        why.appendChild(group.statData.why)
     })
 
     return {
