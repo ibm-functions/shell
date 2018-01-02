@@ -246,12 +246,19 @@ const addRecentItem = file => {
      const doIt = cmd => (_1, _2, fullArgv, _3, _4, execOptions, _5, _options) => new Promise((resolve, reject) => {
          const options = Object.assign({}, execOptions, _options, minimist(fullArgv, { boolean: [ 'fsm', 'select' ], alias: { f: 'fsm', s: 'select' } })),
                args = options._,
-               idx = args.indexOf(cmd)
+               idx = args.indexOf(cmd),
+               inputFile = args[idx + 1]
+
+         if (options.help || (!options.select && !inputFile)) {
+             // either the user asked for help, or we weren't asked to
+             // render the file selector, or we weren't given a file
+             // to render
+             return reject(usage(cmd))
+         }
+
          let input = ui.findFile(args[idx + 1])
 
-         if (options.help) {
-             reject(usage(cmd))
-         } else  if (options.select || !input) {
+         if (options.select || !input) {
              // render the file selector
              return renderSelect().then(resolve, reject)
          }

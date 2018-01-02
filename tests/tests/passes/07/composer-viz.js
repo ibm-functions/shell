@@ -66,6 +66,11 @@ describe('show the composer visualization without creating openwhisk assets', fu
            .catch(common.oops(this)))
     })
 
+    /** test: app preview on its own should show usage */
+    it(`should show usage for "app preview"`, () => cli.do('app preview', this.app)
+       .then(cli.expectError(0, 'Usage: app preview </path/to/file.[js|json]>'))
+       .catch(common.oops(this)))
+
     /** test: load an FSM, but show the raw fsm */
     it(`show raw FSM from FSM file ${fsm.path}`, () => cli.do(`app viz --fsm ${fsm.path}`, this.app)
       .then(cli.expectOK)
