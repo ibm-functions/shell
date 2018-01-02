@@ -655,7 +655,7 @@ sidecar .sidecar-header-icon {
     transform-origin: center;
     width: 100%;
     height: 100%;
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 400;
     letter-spacing: 1px;
     pointer-events: none; /* with text rotation, this element bumps into neighbors, otherwise obfuscating mouse events */
