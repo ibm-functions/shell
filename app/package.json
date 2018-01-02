@@ -24,7 +24,7 @@
   "license": "Apache-2.0",
   "bugs": "https://github.com/ibm-functions/shell",
   "devDependencies": {
-    "electron": "~1.7.9",
+    "electron": "~1.7.10",
     "nyc": "^11.3.0"
   },
   "dependencies": {
