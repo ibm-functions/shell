@@ -66,6 +66,10 @@ const summarizePerformance = activations => {
     })
     summaries.sort((a,b) => a.duration - b.duration)
 
+    if (summaries.length === 0) {
+        return
+    }
+
     const min = summaries[0].duration,
           max = summaries[summaries.length - 1].duration,
           idx25 = ~~(summaries.length * 0.25),
