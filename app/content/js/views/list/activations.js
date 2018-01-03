@@ -80,42 +80,36 @@ exports.render = opts => {
 const _render = ({entity, activationIds, container, noCrop=false, noPip=false, showResult=false, showStart=false, showTimeline=true}) => {
     ui.injectCSS('https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css', true) // tooltips
 
-    const nCols = 5 + (showResult ? 1 : 0)
-    const logTable = document.createElement('table')    
-    logTable.className = 'log-lines'
     ui.removeAllDomChildren(container)   
-    container.appendChild(logTable) 
 
-    const legendHTMLtext = `Queueing Delays <div class='legend-icon is-waitTime'></div> Container Initialization <div class='legend-icon is-initTime'></div> Execution Time <div class='legend-icon is-runTime'></div> Failures <div class='legend-icon is-success-false'></div>`
+    const legendHTMLtext = `<div class='legend-stripe'><div class='legend-entry' data-legend-type='queueing-delays' data-balloon='The time this activation waited for free execution resources' data-balloon-pos='left'>Queueing Delays<div class='legend-icon is-waitTime'></div></div><div class='legend-entry' data-legend-type='container-initialization' data-balloon='The "cold start time", i.e. time spent initializing a container' data-balloon-pos='left'>Container Initialization<div class='legend-icon is-initTime'></div></div><div class='legend-entry' data-legend-type='execution-time' data-balloon='The time this activation spent executing your code' data-balloon-pos='left'>Execution Time<div class='legend-icon is-runTime'></div></div><div class='legend-entry' data-legend-type='failures' data-balloon='The activation failed to complete' data-balloon-pos='left'>Failures<div class='legend-icon is-success-false'></div></div></div>`
 
+    const legend = document.createElement('div'),
+          logTable = document.createElement('table'),
+          balloonPos = entity ? 'left' : 'right'
     if (entity) {   // trace view
-        const messageRow = logTable.insertRow(-1),
-              message = messageRow.insertCell(-1),
-              //legend = messageRow.insertCell(-1)
-              legend = logTable.insertRow(-1).insertCell(-1)
-        message.className = 'log-lines-message-for-activations'
-        message.innerText = `This ${entity.prettyType || entity.type} includes the following activity:`
-        message.setAttribute('colspan', nCols)
+        container.appendChild(legend)
 
         // add a legned 
         legend.className = 'legend-trace'
         legend.innerHTML = legendHTMLtext
-        legend.setAttribute('colspan', nCols)
-
     }
     else if(activationIds && activationIds.find(item => item.annotations)){
         // assumption: currently, session activation does not have annotations. if none of the activations in activationIds has annotations, then the cmd is `session list` and we don't show the legend.             
         // create a legend only for `activation list`. 
-        const legend = document.createElement('div')    
-        legend.className = 'legend-list'
+        legend.className = 'legend-trace legend-list'
         legend.innerHTML = legendHTMLtext
         // insert the legend before logTable 
-        container.insertBefore(legend, logTable)
+        container.appendChild(legend)
         // change container border to none
         container.style.border = 'none'
         // move grey border to logTable      
         logTable.style.border = '2px solid var(--color-ui-04)'
     }
+
+    const nCols = 5 + (showResult ? 1 : 0)
+    logTable.className = 'log-lines'
+    container.appendChild(logTable) 
 
     // picture in picture
     const pip = cmd => noPip
@@ -271,7 +265,6 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                           bar = document.createElement('div'),
                           isRootBar = (entity && idx === 0)
 
-                    timeline.appendChild(bar)
                     timeline.className = 'log-field log-line-bar-field'                    
                     bar.style.position = 'absolute'
                     bar.classList.add('log-line-bar')
@@ -289,8 +282,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     bar.style.left = (100 * left) + '%'
                     bar.style.width = (100 * width) + '%'
                     bar.onclick = pip(show(activation))
-                    bar.setAttribute('data-balloon', `Execution time, lasting ${duration.innerText}`)
-                    bar.setAttribute('data-balloon-pos', 'right')
+                    bar.setAttribute('data-balloon', duration.innerText)
+                    bar.setAttribute('data-balloon-pos', balloonPos)
+                    bar.onmouseover = () => legend.setAttribute('data-hover-type', 'execution-time')
+                    bar.onmouseout = () => legend.removeAttribute('data-hover-type')
 
                     if(initTime > 0 && !isRootBar){                        
                         const initTimeBar = document.createElement('div'), l = normalize(activation.start, idx),
@@ -301,6 +296,8 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         initTimeBar.style.position = 'absolute';
                         initTimeBar.classList.add('log-line-bar');
                         initTimeBar.classList.add('is-initTime');
+                        initTimeBar.onmouseover = () => legend.setAttribute('data-hover-type', 'container-initialization')
+                        initTimeBar.onmouseout = () => legend.removeAttribute('data-hover-type')
                         // activation can fail at init time - if that's the case, initTime === duration 
                         if(initTime == activation.duration)
                             initTimeBar.classList.add(`is-success-false`)
@@ -308,10 +305,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                             initTimeBar.classList.add(`is-success-true`)
 
                         initTimeBar.onclick = pip(show(activation))
-                        initTimeBar.setAttribute('data-balloon', `Init time, lasting ${prettyPrintDuration(initTime)}`)
-                        initTimeBar.setAttribute('data-balloon-pos', 'right')
+                        initTimeBar.setAttribute('data-balloon', prettyPrintDuration(initTime))
+                        initTimeBar.setAttribute('data-balloon-pos', balloonPos)
 
-                        bar.setAttribute('data-balloon', `Execution time, lasting ${prettyPrintDuration(activation.duration - initTime)}`)
+                        bar.setAttribute('data-balloon', prettyPrintDuration(activation.duration - initTime))
 
                     }
                     if(waitTime > 0 && !isRootBar){
@@ -325,10 +322,14 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         waitTimeBar.classList.add('log-line-bar');
                         waitTimeBar.classList.add('is-waitTime');
                         waitTimeBar.onclick = pip(show(activation));
-                        waitTimeBar.setAttribute('data-balloon', `Queueing time, lasting ${prettyPrintDuration(waitTime)}`);
-                        waitTimeBar.setAttribute('data-balloon-pos', 'right');
-                        
-                    }                                    
+                        waitTimeBar.setAttribute('data-balloon', prettyPrintDuration(waitTime))
+                        waitTimeBar.setAttribute('data-balloon-pos', balloonPos);
+                        waitTimeBar.onmouseover = () => legend.setAttribute('data-hover-type', 'queueing-delays')
+                        waitTimeBar.onmouseout = () => legend.removeAttribute('data-hover-type')
+                    }
+
+                    // add this at the end, so the balloon hovers stack correctly
+                    timeline.appendChild(bar)
                 }
                 
                 // column n: start cell
