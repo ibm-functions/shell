@@ -18,7 +18,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { drilldownWith } = require('./drilldown'),
       { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter, defaultSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
-      { titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util')
+      { optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Activity Table'
 
@@ -51,7 +51,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
           tableScrollContainer = document.createElement('div'),
           table = document.createElement('table'),
           ns = namespace.current(),
-          nsPattern = new RegExp(`${ns}/`)
+          nsPattern = new RegExp(`/${ns}/`)
 
     // clean the container
     ui.removeAllDomChildren(content)
@@ -142,8 +142,9 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
         label.innerText = labelText
         label.className = 'cell-label clickable'
 
-        // drill down to grid view; note that the API doesn't support full-path filters, hence --name
-        label.onclick = drilldownWith(viewName, () => repl.pexec(`wsk activation grid ${options.all ? '-a' : ''} --zoom 1 --name "/${group.path}" ${splitOptions}`))
+        // drill down to grid view; note how we pass through a --name
+        // query, to filter based on the clicked-upon row
+        label.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}" ${splitOptions}`))
 
         if (options.split) {
             const version = row.insertCell(-1)
