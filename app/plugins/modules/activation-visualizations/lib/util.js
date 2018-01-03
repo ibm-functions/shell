@@ -103,7 +103,7 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
     if (nameSplit.length === 4 && nameSplit[0].length === 0) {
         // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
         // the backend doesn't yet support namespace filters, so strip that off, too
-        nameSplit = nameSplit.slice(2)
+        name = nameSplit.slice(2).join('/')
     } else if (nameSplit.length === 3 && name.charAt(0) === '/') {
         // the name query is /ns/action, where ns is the current
         // namespace; as above, we need to strip off ns
