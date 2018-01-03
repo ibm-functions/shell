@@ -20,7 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
-      { isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
+      { optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Activity Grid'
 
@@ -181,7 +181,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
     sortActivations(groups, startTimeSorter, +1)
 
     const ns = namespace.current(),
-          nsPattern = new RegExp(`${ns}/`),
+          nsPattern = new RegExp(`/${ns}/`),
           gridGrid = redraw ? content.querySelector(`.${css.gridGrid}`) : document.createElement('div'),
           totalCount = groupData.totalCount,
           zoomLevel = options.zoom || smartZoom(totalCount),
@@ -198,9 +198,9 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
     if (groups.length === 1 && !options.fixedHeader && !options.appName) {
         const group = groups[0],
               pathComponents = group.path.split('/'),
-              packageName = pathComponents.length === 3 ? pathComponents[1] : ''
+              packageName = pathComponents.length === 4 ? pathComponents[2] : ''
 
-        const onclick = drilldownWith(viewName, () => repl.pexec(`action get "/${group.path}"`))
+        const onclick = drilldownWith(viewName, () => repl.pexec(`action get "${group.path}"`))
         ui.addNameToSidecarHeader(sidecar, group.name, packageName, onclick)
 
         drawLegend(rightHeader, group)
@@ -235,7 +235,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             gridLabel.className = 'grid-label clickable'
             gridLabel.innerText = labelText
             gridDom.appendChild(gridLabel)
-            gridLabel.onclick = drilldownWith(viewName, () => repl.pexec(`wsk activation grid --zoom 1 --name "${group.name}" --path "${group.path}"`))
+            gridLabel.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`))
         }
 
         // render the grid

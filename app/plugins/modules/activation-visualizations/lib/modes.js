@@ -14,26 +14,7 @@
  * limitations under the License.
  */
 
-/**
- * Turn an options struct into a cli string
- *
- * @param options is the command line options struct given by the
- * user.
- *
- */
-const toString = options => {
-    let str = ''
-    for (let key in options) {
-        // underscore comes from minimist
-        if (key !== '_' && options[key] !== undefined) {
-            const dash = key.length === 1 ? '-' : '--',
-                  value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
-            str = `${str} ${dash}${key}${value}`
-        }
-    }
-
-    return str
-}
+const { optionsToString } = require('./util')
 
 /**
  * Create a view mode.
@@ -45,7 +26,7 @@ const toString = options => {
  */
 const mode = mode => options => ({
     mode,
-    direct: entity => repl.qexec(`${mode} ${toString(Object.assign({}, { name: entity && entity.name }, options))}`)
+    direct: entity => repl.qexec(`${mode} ${optionsToString(Object.assign({}, { name: entity && entity.name }, options))}`)
 })
 
 /**

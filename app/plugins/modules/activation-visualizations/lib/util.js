@@ -32,7 +32,7 @@ exports.titleWhenNothingSelected = 'Recent Activity'
 const flatten = arrays => [].concat.apply([], arrays)
 
 /** return the path attribute of the given activation */
-const pathOf = activation => activation.annotations.find(({key}) => key === 'path').value
+const pathOf = activation => `/${activation.annotations.find(({key}) => key === 'path').value}`
 exports.pathOf = pathOf
 
 /** make a filter by name */
@@ -100,6 +100,7 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
 
     // name queries can only specify package/action or action; let's check for conformance
     let nameSplit = name.split(/\//)
+    console.error(name, nameSplit)
     if (nameSplit.length === 4 && nameSplit[0].length === 0) {
         // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
         // the backend doesn't yet support namespace filters, so strip that off, too
@@ -317,3 +318,24 @@ exports.latencyBucketRange = bucket => {
  *
  */
 exports.isSuccess = activation => activation.statusCode === 0
+
+/**
+ * Turn an options struct into a cli string
+ *
+ * @param options is the command line options struct given by the
+ * user.
+ *
+ */
+exports.optionsToString = options => {
+    let str = ''
+    for (let key in options) {
+        // underscore comes from minimist
+        if (key !== '_' && options[key] !== undefined) {
+            const dash = key.length === 1 ? '-' : '--',
+                  value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
+            str = `${str} ${dash}${key}${value}`
+        }
+    }
+
+    return str
+}
