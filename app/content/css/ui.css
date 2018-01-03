@@ -1073,7 +1073,7 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 .log-lines .log-line .log-line-bar {
     top: 25%;
     min-width: 2px;
-    height: 1em;
+    height: 1.25em;
     position: absolute;
     transition: all 180ms ease-in-out;
 }
@@ -1099,30 +1099,69 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 
 /* legend for activation/trace list */
-.legend-list {    
-    margin-bottom: 5px;
-    font-size:0.75em;
+.legend-list, .legend-trace {
     text-align: right;
-    transition: height 300ms ease-in-out;
+    font-family: var(--font-sans-serif);
+}
+.legend-list {    
+    padding-bottom: 0.75em;
+    transition: height 300ms ease-in-out, width 300ms ease-in-out;
 }
 .repl.sidecar-visible .legend-list {
     /* don't show legend when the sidecar is open. see issue #138 */
     opacity: 0;
     height: 0;
+    width: 0;
 }
 .legend-trace {
-    padding-top:15px;
-    padding-bottom: 5px;
-    font-size:0.75em;
-    text-align: right;
+    padding-bottom: 0.75em;
+}
+.legend-stripe, .legend-entry {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.legend-stripe {
+    font-size: 0.75em;
 }
 .legend-icon {
     display: inline-block;
-    margin-right: 10px;
-    width: 10px;
-    height: 10px;
-    border: solid 1px black;
+    width: 11em;
+    height: 0.875em;
 }
+.legend-entry {
+    flex-direction: column;
+    align-items: flex-end;
+}
+.legend-entry:not(:last-child) {
+    margin-right: 2em;
+}
+.legend-trace[data-hover-type='execution-time'] .legend-entry[data-legend-type='execution-time'] {
+    opacity: 1;
+}
+.legend-trace[data-hover-type='container-initialization'] .legend-entry[data-legend-type='container-initialization'] {
+    opacity: 1;
+}
+.legend-trace[data-hover-type='queueing-delays'] .legend-entry[data-legend-type='queueing-delays'] {
+    opacity: 1;
+}
+.legend-trace[data-hover-type='failures'] .legend-entry[data-legend-type='failures'] {
+    opacity: 1;
+}
+.legend-trace[data-hover-type] .legend-entry {
+    /* legend entries that don't match the current hover type get more opaque */
+    opacity: 0.3;
+}
+.legend-entry {
+    transition: all 600ms ease-in-out;
+}
+.legend-list:hover .legend-entry, .legend-trace:hover .legend-entry{
+    opacity: 1;
+}
+.log-line-bar[data-balloon]:after {
+    width: auto;
+}
+
 
 /* notification area */
 #notification-area {
