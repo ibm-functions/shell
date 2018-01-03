@@ -33,7 +33,8 @@ if (process.env.DEVMODE) {
 const events = require('events'),
       colors = require('colors'),
       verbose = process.argv.find(_ => _ === '-v'),
-      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v'),
+      rawOutput = process.argv.find(_ => _ === '--raw-output'), // don't try to pretty-print the JSON; c.f. jq's --raw-output
+      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v' && arg != '--raw-output'),
       grequire = module => require(`./content/js/${module}`),
       Store = require('./store'),
       log = console.log,
@@ -222,10 +223,15 @@ const prettyDom = (dom, logger=log, stream=process.stdout, color='reset') => {
 }
 
 /**
- * Pretty print an object as JSON
+ * Pretty print an object as JSON. If the user asked for --raw-output,
+ * only use the more primitive JSON.stringify. Otherwise, use the
+ * `jsome` npm to do some fancier rendering. Once jsome issue #12 is
+ * resolved, we can consider relying on its raw-output support. The
+ * main issue here is that jsome does not quote the keys.
+ * @see https://github.com/Javascipt/Jsome/issues/12
  *
  */
-const prettyJSON = msg => require('jsome')(msg)
+const prettyJSON = (msg, logger=log) => rawOutput ? logger(JSON.stringify(msg, undefined, 4)) : require('jsome')(msg)
 
 /**
  * Turn an entity into a row, because this entity came as part of an
@@ -257,7 +263,7 @@ rowify.live = rowify.session // same formatter...
 const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') => {
     if (verbose) {
         // user asked for verbose output
-        return prettyJSON(msg)
+        return prettyJSON(msg, logger)
     }
 
     if (msg && !graphicalShellIsOpen) {
@@ -324,11 +330,11 @@ const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') =
                     delete msg.version
                     delete msg.entity
                     if (msg.activatonId && msg.sessionid) delete msg.activationId // don't display both
-                    prettyJSON(msg)
+                    prettyJSON(msg, logger)
 
                 } else {
                     // otherwise, print it as generic JSON
-                    require('jsome')(msg)
+                    prettyJSON(msg, logger)
                 }
 
             } else if (typeof msg === 'string') {
