@@ -52,7 +52,10 @@ module.exports = () => {
         searchInput.focus();
         if(result.matches == 1){        // there's always going to one matched text from the searchInput
             searchFoundText.innerText = 'no matches';
-        }        
+        }
+        else if(result.matches == 2){ 
+            searchFoundText.innerText = '1 match';
+        }     
         else{
             searchFoundText.innerText = (result.matches-1)+' matches';
         }
