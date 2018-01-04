@@ -194,6 +194,7 @@ sidecar .sidecar-header-name .package-prefix {
       #bee195 2px,
       #bee195 4px
     );
+    filter: grayscale(0.25) saturate(0.75);
 }
 .log-lines .log-line .log-line-bar.is-initTime.is-success-false{
     /*background: var(--color-support-04);*/
