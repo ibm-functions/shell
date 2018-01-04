@@ -40,6 +40,19 @@ describe('Change shell directory via lcd', function() {
        .then(sidecar.expectShowing('long'))
        .catch(common.oops(this)))
 
+    it('should execute lcd - to change to previous dir', () => cli.do(`lcd -`, this.app)
+        .then(cli.expectJustOK))
+
+    // now we should be able to change back to data and re-do the action create
+    it('should execute lcd data', () => cli.do(`lcd data`, this.app)
+        .then(cli.expectJustOK))
+
+    it('should create an action in the data directory', () => cli.do(`action create long2 long.js`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('long2'))
+       .catch(common.oops(this)))
+
     it('should execute lcd without arguments', () => cli.do(`lcd`, this.app)
         .then(cli.expectJustOK))
 })
