@@ -1086,8 +1086,10 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     transition: all 180ms ease-in-out;
 }
 .log-lines .log-line:hover .log-line-bar {
-    filter: brightness(1.25);
     z-index: 10; /* tooltip layering */
+}
+.log-lines .log-line .log-line-bar:hover {
+    filter: brightness(1.2) !important;
 }
 .log-lines .log-line.log-line-root .log-line-bar {
     border: 1px solid;

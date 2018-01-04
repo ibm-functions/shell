@@ -263,46 +263,54 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 }
 
                 // column 5|6|7: bar chart cell
-                if (showTimeline) {                    
+                if (showTimeline) {
                     const timeline = line.insertCell(-1),
-                          bar = document.createElement('div'),
-                          isRootBar = (entity && idx === 0)
+                          isRootBar = (entity && idx === 0) // for sequence traces, show the sequence bar a bit differently
 
-                    timeline.className = 'log-field log-line-bar-field'                    
+                    timeline.className = 'log-field log-line-bar-field'
+
+                    // queueing delays and container initialization time
+                    const waitTime = findItemInAnnotations('waitTime', activation) || 0,
+                        initTime = findItemInAnnotations('initTime', activation) || 0
+
+                    // execution time bar
+                    const bar = document.createElement('div')
                     bar.style.position = 'absolute'
                     bar.classList.add('log-line-bar')
-                    //if (activation.name === 'conductor') bar.classList.add('log-line-bar-conductor')
-                    // conductor activations now are in the same color with regular activations
                     bar.classList.add(`is-success-${isSuccess}`)
-
-                    const waitTime = findItemInAnnotations('waitTime', activation), 
-                        initTime = findItemInAnnotations('initTime', activation);
-
-                    // bar dimensions
                     const left = normalize(activation.start + initTime, idx),
                           right = normalize(activation.end || (activation.start + initTime + 1), idx), // handle rules and triggers as having dur=1
                           width = right - left
                     bar.style.left = (100 * left) + '%'
                     bar.style.width = (100 * width) + '%'
                     bar.onclick = pip(show(activation))
-                    bar.setAttribute('data-balloon', duration.innerText)
+                    bar.setAttribute('data-balloon', prettyPrintDuration(activation.end - activation.start - initTime))
                     bar.setAttribute('data-balloon-pos', balloonPos)
                     bar.onmouseover = () => legend.setAttribute('data-hover-type', 'execution-time')
                     bar.onmouseout = () => legend.removeAttribute('data-hover-type')
 
-                    if(initTime > 0 && !isRootBar){                        
-                        const initTimeBar = document.createElement('div'), l = normalize(activation.start, idx),
-                        w = normalize(activation.start + initTime, idx) - l;
+                    // add this first (and we'll continue to do so in
+                    // reverse order), so the balloon hovers stack
+                    // correctly; see shell issue #168
+                    timeline.appendChild(bar)
+
+                    // container initialization bar
+                    if (initTime > 0 && !isRootBar) {
+                        const initTimeBar = document.createElement('div'),
+                              l = normalize(activation.start, idx),
+                              w = normalize(activation.start + initTime, idx) - l
+
                         timeline.appendChild(initTimeBar);
-                        initTimeBar.style.left = (100 * l)+'%';
-                        initTimeBar.style.width = (100 * w)+'%';
+                        initTimeBar.style.left = (100 * l) + '%';
+                        initTimeBar.style.width = (100 * w) + '%';
                         initTimeBar.style.position = 'absolute';
                         initTimeBar.classList.add('log-line-bar');
                         initTimeBar.classList.add('is-initTime');
                         initTimeBar.onmouseover = () => legend.setAttribute('data-hover-type', 'container-initialization')
                         initTimeBar.onmouseout = () => legend.removeAttribute('data-hover-type')
+
                         // activation can fail at init time - if that's the case, initTime === duration 
-                        if(initTime == activation.duration)
+                        if (initTime === activation.duration)
                             initTimeBar.classList.add(`is-success-false`)
                         else
                             initTimeBar.classList.add(`is-success-true`)
@@ -310,14 +318,14 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         initTimeBar.onclick = pip(show(activation))
                         initTimeBar.setAttribute('data-balloon', prettyPrintDuration(initTime))
                         initTimeBar.setAttribute('data-balloon-pos', balloonPos)
-
-                        bar.setAttribute('data-balloon', prettyPrintDuration(activation.duration - initTime))
-
                     }
-                    if(waitTime > 0 && !isRootBar){
+
+                    // queueing delays bar
+                    if (waitTime > 0 && !isRootBar) {
                         const waitTimeBar = document.createElement('div'), 
-                        l = normalize(activation.start - waitTime, idx),
-                        w = normalize(activation.start, idx) - l;
+                              l = normalize(activation.start - waitTime, idx),
+                              w = normalize(activation.start, idx) - l
+
                         timeline.appendChild(waitTimeBar);
                         waitTimeBar.style.left = (100 * l)+'%';
                         waitTimeBar.style.width = (100 * w)+'%';
@@ -330,9 +338,6 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         waitTimeBar.onmouseover = () => legend.setAttribute('data-hover-type', 'queueing-delays')
                         waitTimeBar.onmouseout = () => legend.removeAttribute('data-hover-type')
                     }
-
-                    // add this at the end, so the balloon hovers stack correctly
-                    timeline.appendChild(bar)
                 }
                 
                 // column n: start cell
