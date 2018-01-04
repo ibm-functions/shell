@@ -1,5 +1,6 @@
 {
     "preload": [
-        "/ui/commands/tab-completion"
+        "/ui/commands/tab-completion",
+        "/ui/commands/text-search"
     ]
 }
