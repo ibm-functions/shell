@@ -535,14 +535,22 @@ sidecar.visible {
 #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-close {
     text-align: right;
 }
-#sidecar .sidecar-bottom-stripe-close-icon {
-    letter-spacing: -1ex;
-    opacity: 0.6;
-    transition: all 150ms ease-in-out;
+#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-maximize {
+    display: flex;
+
+    /* so that the "hidden" maximize button (see opacity:0,width:0 just below)
+       doesn't occlude the close button */
+    overflow: hidden;
 }
-body.os-win32 #sidecar .sidecar-bottom-stripe-close-icon {
-    /* dunno why windows is weird here */
-    letter-spacing: 0px;
+.maximize-button-label, .unmaximize-button-label {
+    transition: opacity 300ms ease-in-out;
+    display: inline-block;
+}
+body.sidecar-full-screen #sidecar .sidecar-bottom-stripe-maximize .maximize-button-label, body:not(.sidecar-full-screen) #sidecar .sidecar-bottom-stripe-maximize .unmaximize-button-label {
+    transition: opacity 0ms ease-in-out;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-as-button) {
     /* for bottom mode-switching buttons, capitalize the text; for actual buttons, keep the capitalization as it was given */

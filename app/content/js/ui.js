@@ -584,11 +584,19 @@ const ui = (function() {
     }
 
     /**
-     * convenience routine for UI elements wishing to toggle sidecar visibility
+     * Convenience routine for UI elements wishing to toggle sidecar visibility
      *
      */
     self.toggleSidecar = () => {
         sidecarVisibility.toggle()
+    }
+
+    /**
+     * Convencience routine for UI elements wishing to maximize or restore the split screen sidecar
+     *
+     */
+    self.toggleSidecarMaximization = () => {
+        sidecarVisibility.toggleMaximization()
     }
 
     /**

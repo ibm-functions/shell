@@ -68,6 +68,7 @@ module.exports = commandTree => {
         isVisible: isVisible,
         hide: hide,
         show: show,
+        toggleMaximization: () => document.body.classList.toggle('sidecar-full-screen'),
         toggle: () => isVisible() ? hide() : show()
     }
 }
