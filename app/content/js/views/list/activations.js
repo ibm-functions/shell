@@ -142,8 +142,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                           previous = activations[idx + 1],
                           gap = activation.start - findItemInAnnotations('waitTime', activation) - (previous.end || (previous.start + 1))
                     if (gap > 0) {
-                        const ngap = gap / dur
-                        console.error(gap, ngap)
+                        const ngap = gap / residualDur
                         if (gap > 10000 || ngap > 0.05) {
                             tgap += gap
                             residualDur -= gap
