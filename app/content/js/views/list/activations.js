@@ -338,14 +338,16 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 // column n: start cell
                 if (showStart) {
                     const start = line.insertCell(-1),
+                          startInner = document.createElement('span'),
                           previous = activations[idx - 1],
                           previousStart = previous && (previous.start - findItemInAnnotations('waitTime', previous)),
                           time = ui.prettyPrintTime(activation.start - findItemInAnnotations('waitTime', activation), 'short', previousStart)
                     start.className = 'deemphasize log-field log-field-right-align start-time-field'
+                    start.appendChild(startInner)
                     if (typeof time === 'string') {
-                        start.innerText = time
+                        startInner.innerText = time
                     } else {
-                        start.appendChild(time)
+                        startInner.appendChild(time)
                     }
                 }
             })

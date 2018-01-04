@@ -13,7 +13,7 @@ body {
     /* variables */
     --font-monospace: "Fira Mono",Menlo,"DejaVu Sans Mono","Bitstream Vera Sans Mono",Courier,monospace;
 }
-body p, body input, .entity-name, .repl-block {
+body p, body input, .entity-name, .repl-input, .repl-output span {
     -webkit-app-region: no-drag;
 }
 .page {
@@ -1038,8 +1038,8 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     text-overflow: ellipsis;
     opacity: 1; /* see issue #132 */
 }
-.repl:not(.sidecar-visible) .log-lines .log-line .log-field:last-child {
-    padding-left: 4em;
+.repl:not(.sidecar-visible) .log-lines .log-line .log-field:last-child > span {
+    padding-left: 2em;
 }
 .log-lines .log-line .log-field.activationId {
     font-weight: 500;
