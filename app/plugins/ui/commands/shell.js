@@ -32,25 +32,45 @@ const doShell = (argv, options) => new Promise((resolve, reject) => {
     const cmd = argv[1]
     if (shell[cmd]) {
         const args = argv.slice(2)
+
+        // remember OLDPWD, so that `lcd -` works (shell issue #78)
+        if (process.env.OLDPWD === undefined) {
+            process.env.OLDPWD = ''
+        }
+        const OLDPWD = shell.pwd() // remember it for when we're done
+        if (cmd === 'cd' && args[0] === '-') {
+            // special case for "lcd -"
+            args[0] = process.env.OLDPWD
+        }
+
         if (!args.find(arg => arg.charAt(0) === '-')) {
             // shelljs doesn't like dash args
             // otherwise, shelljs has a built-in handler for this
 
             console.log(`shell.internal: ${cmd}`)
-        
+
             const output = shell[cmd](args)
             if (cmd === 'cd') {
+                // special case: if the user asked to change working
+                // directory, respond with the new working directory
+                process.env.OLDPWD = OLDPWD
                 resolve(shell.pwd().toString())
             } else {
+                // otherwise, respond with the output of the command
                 resolve(output ? output.toString() : true)
             }
         }
     }
 
-    // else exec to the OS
+    //
+    // otherwise, we use exec to implement the shell command; here, we
+    // cross our fingers that the platform implements the requested
+    // command
+    //
+    
     const cmdLine = argv.slice(1).join(' ')
     console.log(`shell.exec: ${cmdLine}`)
-    const proc = shell.exec(cmdLine, {async: true, silent: true})
+    const proc = shell.exec(cmdLine, {async: true, silent: true, env: process.env})
 
     // accumulate doms from the output of the subcommand
     const parentNode = document.createElement('div')
