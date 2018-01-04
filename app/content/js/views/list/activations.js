@@ -135,14 +135,18 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
         .then(activations => {          
             gaps = new Array(activations.length).fill(0)
             if (!entity) {
+                let residualDur = dur // after subtracing out gaps
+
                 for (let idx = activations.length - 2; idx >= 0; idx--) {
                     const activation = activations[idx],
                           previous = activations[idx + 1],
                           gap = activation.start - findItemInAnnotations('waitTime', activation) - (previous.end || (previous.start + 1))
                     if (gap > 0) {
                         const ngap = gap / dur
+                        console.error(gap, ngap)
                         if (gap > 10000 || ngap > 0.05) {
                             tgap += gap
+                            residualDur -= gap
 
                             for (let ii = idx; ii >= 0; ii--) {
                                 gaps[ii] = gaps[ii] + gap
