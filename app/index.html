@@ -167,7 +167,10 @@
             </div> <!-- back button -->
             <div class='sidecar-bottom-stripe-mode-bits sidecar-bottom-stripe-button-container'></div> <!-- mode switch buttons -->
           </div>
-          <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-maximize' onclick="ui.toggleSidecarMaximization()"> <!-- close button -->
+          <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-maximize' onclick="repl.pexec('screenshot sidecar')"> <!-- screenshot button -->
+            Screenshot
+          </div>
+          <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-maximize' onclick="ui.toggleSidecarMaximization()"> <!-- maximize button -->
             <span class='maximize-button-label'>Maximize</span>
             <span class='unmaximize-button-label'>Restore Split Screen</span>
           </div>

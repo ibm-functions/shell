@@ -197,6 +197,36 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
     // set up ipc from renderer
     //
     const { ipcMain } = electron
+
+    //
+    // take a screenshot; note that this has to be done in the main
+    // process, due to the way clipboard.writeImage is implemented on
+    // Linux. on macOS, this could be done entirely in the renderer
+    // process. on Linux, however, the nativeImages aren't
+    // translatable between the renderer and main processes as fluidly
+    // as they are on macOS. oh well! this is why the screenshot
+    // plugin has to pollute main.js
+    //
+    ipcMain.on('capture-page-to-clipboard', (event, contentsId, rect) => {
+	try {
+	    const { clipboard, nativeImage, webContents } = electron
+	    webContents.fromId(contentsId).capturePage(rect, image => {
+		try {
+		    const buf = image.toPng()
+		    clipboard.writeImage(nativeImage.createFromBuffer(buf))
+		    event.sender.send('capture-page-to-clipboard-done', buf)
+		} catch (err) {
+		    console.log(err)
+		    event.sender.send('capture-page-to-clipboard-done')
+		}
+	    })
+	} catch (err) {
+	    console.log(err)
+	    event.sender.send('capture-page-to-clipboard-done')
+	}
+    })
+    // end of screenshot logic
+
     ipcMain.on('synchronous-message', (event, arg) => {
         const message = JSON.parse(arg)
         switch (message.operation) {

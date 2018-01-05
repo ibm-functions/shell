@@ -86,7 +86,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
 
     const legend = document.createElement('div'),
           logTable = document.createElement('table'),
-          balloonPos = entity ? 'left' : 'right'
+          balloonPos = 'right'
     if (entity) {   // trace view
         container.appendChild(legend)
 
