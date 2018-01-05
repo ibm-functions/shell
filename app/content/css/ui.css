@@ -535,6 +535,15 @@ sidecar.visible {
 #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-close {
     text-align: right;
 }
+#sidecar .sidecar-bottom-stripe-close-icon {
+    letter-spacing: -1ex;
+    opacity: 0.6;
+    transition: all 150ms ease-in-out;
+}
+body.os-win32 #sidecar .sidecar-bottom-stripe-close-icon {
+    /* dunno why windows is weird here */
+    letter-spacing: 0px;
+}
 #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-maximize {
     display: flex;
 
@@ -1357,4 +1366,18 @@ break {
 .help-widget {
     padding-left: 0.5ex;
     font-size: 0.875em;
+}
+
+.go-away-able {
+    transition: opacity 1s ease-in-out;
+}
+.go-away {
+    opacity: 0
+}
+.go-away-able .go-away-button {
+    transition: all 150ms ease-in-out;
+}
+.go-away-able .go-away-button:hover {
+    filter: brightness(1.2);
+    cursor: pointer;
 }

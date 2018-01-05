@@ -17,6 +17,7 @@ body {
     --color-text-01: #152934;
     --color-text-02: #5a6872;
     --color-support-01: #e71d32;
+    --color-ok: #5aa700;
     --color-support-02: #5aa700;
     --color-support-04: #5aaafa;
     --color-brand-01: #3d70b2;
@@ -25,7 +26,7 @@ body {
     --color-ui-02: #f5f7fa;
     --color-ui-03: #f0f3f6;
     --color-ui-04: #dfe3e6;
-    --color-ui-05: #8c9ba5;    
+    --color-ui-05: #8c9ba5;
 
     --font-sans-serif: ibm-plex-sans, sans-serif;
 }
