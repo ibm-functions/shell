@@ -18,7 +18,9 @@ const prettyPrintDuration = require('pretty-ms'),
       { drilldownWith } = require('./drilldown'),
       { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter, defaultSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
-      { optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util')
+      { modes } = require('./modes'),
+      { optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
+      emDash = '\u2014'
 
 const viewName = 'Activity Table'
 
@@ -26,7 +28,7 @@ const viewName = 'Activity Table'
  * Visualize the activation data
  *
  */
-const drawTable = (options, header, modes) => activations => {
+const drawTable = (options, header) => activations => {
     const content = document.createElement('div')
     content.className = 'activation-viz-plugin'
 
@@ -34,7 +36,7 @@ const drawTable = (options, header, modes) => activations => {
     const groupData = groupByAction(activations, Object.assign({ groupBySuccess: true }, options))
     displayTimeRange(groupData, header.leftHeader)
 
-    return _drawTable(options, header, modes, content,
+    return _drawTable(options, header, content,
                       groupData,
                       options.split ? versionSorter : defaultSorter // if we were asked to split by version, then sort by name
                      )
@@ -45,7 +47,7 @@ const drawTable = (options, header, modes) => activations => {
  * re-sorting.
  *
  */
-const _drawTable = (options, header, modes, content, groupData, sorter=defaultSorter, sortDir=+1) => {
+const _drawTable = (options, header, content, groupData, sorter=defaultSorter, sortDir=+1) => {
     const { groups } = groupData,
           tableHeader = document.createElement('table'),
           tableScrollContainer = document.createElement('div'),
@@ -101,7 +103,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
 
         cell.onclick = () => {
             const newDir = sorter.id === sortByThisColumn.id ? -sortDir : undefined // undefined will let us pick up the default value
-            _drawTable(options, header, modes, content, groupData, sortByThisColumn, newDir)
+            _drawTable(options, header, content, groupData, sortByThisColumn, newDir)
         }
 
         return { cell, inner }
@@ -185,7 +187,7 @@ const _drawTable = (options, header, modes, content, groupData, sorter=defaultSo
         addStat(99)
 
         addNumericCell('count')
-        addNumericCell('errorRate', true, value => value === 0 ? '\u2014' : `${(100 * value).toFixed(1)}%`)
+        addNumericCell('errorRate', true, value => value === 0 ? emDash : `${(100 * value).toFixed(1)}%`)
         addStat('disparity', '+').classList.add('cell-extra-wide')
 
         const why = row.insertCell(-1)

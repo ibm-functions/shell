@@ -20,6 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
+      { modes } = require('./modes'),
       { optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Activity Grid'
@@ -136,7 +137,7 @@ const colorBy = (strategy, gridGrid=document.querySelector(`.${css.content} .${c
  * Visualize the activation data
  *
  */
-const drawGrid = (options, header, modes) => activations => {
+const drawGrid = (options, header) => activations => {
     const existingContent = document.querySelector(`#sidecar .custom-content .custom-content .${css.content}`),
           content = existingContent || document.createElement('div'),
           redraw = !!existingContent
@@ -299,7 +300,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
  */
 module.exports = (commandTree, require, options) => {
     if (options && options.activations) {
-        const grid = drawGrid(options, prepareHeader(), options.modes)(options.activations)
+        const grid = drawGrid(options, prepareHeader())(options.activations)
         ui.showCustom(grid)
         return
     }

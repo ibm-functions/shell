@@ -16,7 +16,6 @@
 
 const path = require('path'),
       defaults = require('./defaults.json'),
-      { modes } = require('./modes'),
       prettyPrintDuration = require('pretty-ms')
 
 /** we may want to filter out activations with internal names */
@@ -100,7 +99,6 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
 
     // name queries can only specify package/action or action; let's check for conformance
     let nameSplit = name.split(/\//)
-    console.error(name, nameSplit)
     if (nameSplit.length === 4 && nameSplit[0].length === 0) {
         // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
         // the backend doesn't yet support namespace filters, so strip that off, too
@@ -279,7 +277,7 @@ Options:
                 }
                 return data
             })*/
-            .then(draw(options, exports.prepareHeader(isRedraw), modes))
+            .then(draw(options, exports.prepareHeader(isRedraw)))
     }
 
     if (extraOptions && extraOptions.live) {
