@@ -264,7 +264,7 @@ const toArray = (map, options) => {
 
     for (let x in map) {
         const group = groups[groups.push(map[x]) - 1]
-        group.statData = summarizePerformance(group.successes || group.activations)
+        group.statData = summarizePerformance(group.successes && group.successes.length > 0 ? group.successes : group.failures || group.activations)
         group.errorRate = group.nFailures / (group.nSuccesses + group.nFailures)
         if (options.groupBySuccess) {
             group.count = group.successes.length + group.failures.length

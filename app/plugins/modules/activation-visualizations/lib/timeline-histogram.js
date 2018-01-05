@@ -20,6 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { sort, numericalGroupKeySorter:defaultSorter } = require('./sorting'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
+      { modes } = require('./modes'),
       { titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Timeline'
@@ -47,21 +48,21 @@ const defaults = {
  * Open the activity grid for the given activations array
  *
  */
-const showGrid = (activations, modes) => () => {
-    require('./grid')(null,null, { activations, zoom: 1, modes, fixedHeader: true })
+const showGrid = (activations) => () => {
+    require('./grid')(null,null, { activations, zoom: 1, fixedHeader: true })
 }
 
 /**
  * Visualize the activation data
  *
  */
-const drawTimeline = (options, header, modes) => activations => {
+const drawTimeline = (options, header) => activations => {
     const existingContent = document.querySelector(`.custom-content .custom-content .${css.content}`),
           doubleCheck = existingContent && existingContent.querySelector(css.wrapperQS),
           content = (existingContent && doubleCheck) || document.createElement('div')
     content.className = css.content
 
-    _drawTimeline(options, header, modes, content, groupByTimeBucket(activations, Object.assign({ subgrouping: 'duration'/*options.success ? 'success'
+    _drawTimeline(options, header, content, groupByTimeBucket(activations, Object.assign({ subgrouping: 'duration'/*options.success ? 'success'
                                                                                                                     : options.success ? 'success' : defaults.subgrouping*/ },
                                                                                          options)))
 
@@ -166,7 +167,7 @@ const nearestMultiple = (n,m) => ~~(n + (m - n % m))
  * re-sorting.
  *
  */
-const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, modes, content, bucketData, sorter=defaultSorter, sortDir=+1) => {
+const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, content, bucketData, sorter=defaultSorter, sortDir=+1) => {
     const { buckets, summary } = bucketData,
           { numAxisSwaths } = defaults
 
@@ -305,7 +306,7 @@ const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, modes, conte
                             highlightThis.push(columns[idx])
                         }
                         resetDrag()
-                        drilldownWith(viewName, showGrid(activations, modes), highlightThis)(evt)
+                        drilldownWith(viewName, showGrid(activations), highlightThis)(evt)
                     }
                 }
             }
@@ -341,7 +342,7 @@ const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, modes, conte
 
             cell.onclick = event => {
                 resetDrag()
-                drilldownWith(viewName, showGrid(group.activations, modes), cell)(event)
+                drilldownWith(viewName, showGrid(group.activations), cell)(event)
             }
         }
         if (existingColumn) {
