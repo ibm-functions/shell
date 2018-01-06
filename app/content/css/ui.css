@@ -1381,3 +1381,37 @@ break {
     filter: brightness(1.2);
     cursor: pointer;
 }
+
+
+.list-paginator {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    font-family: var(--font-sans-serif);
+    font-weight: 100;
+    font-size: 0.875em;
+    margin-top: 0.75ex;
+}
+.list-paginator .list-paginator-description {
+    margin-right: 1em;
+}
+.list-paginator .list-paginator-button {
+    background: var(--color-ui-03);
+    color: var(--color-text-01);
+    border: 1px solid var(--color-ui-05);
+    transition: all 150ms ease-in-out;
+    padding: 0.5ex 1.5ex;
+    opacity: 0.7;
+}
+.list-paginator .list-paginator-button:first-child {
+    /* avoid a double border in the middle */
+    border-right: none
+}
+.list-paginator .list-paginator-button.list-paginator-button-disabled {
+    opacity: 0.33;
+}
+.list-paginator .list-paginator-button:not(.list-paginator-button-disabled):hover {
+    font-weight: bold;
+    opacity: 1;
+    cursor: pointer;
+}
