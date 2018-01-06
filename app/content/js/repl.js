@@ -164,6 +164,8 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
                 const activationIds = response,
                       container = resultDom
                 require('./views/list/activations').render({activationIds, container,
+                                                            skip: parsedOptions.skip || 0,
+                                                            limit: parsedOptions.limit || activationIds.length,
                                                             noPip: true, showResult: false, showStart: true,
                                                             showTimeline: !parsedOptions || !parsedOptions.simple })
                 if (activationIds.length > 0) {

@@ -22,7 +22,6 @@ const prettyPrintDuration = require('pretty-ms'),
  *
  */
 const fetch = activationIds => Promise.all(activationIds.map(_ => {
-    
     if (typeof _ === 'string') {
         return repl.qexec(`activation get ${_}`).catch(err => {
             console.error(err)
@@ -77,7 +76,7 @@ exports.render = opts => {
         console.error(err)
     }
 }
-const _render = ({entity, activationIds, container, noCrop=false, noPip=false, showResult=false, showStart=false, showTimeline=true}) => {
+const _render = ({entity, activationIds, container, noCrop=false, noPip=false, showResult=false, showStart=false, showTimeline=true, skip, limit}) => {
     ui.injectCSS('https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css', true) // tooltips
 
     ui.removeAllDomChildren(container)   
@@ -356,6 +355,51 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     }
                 }
             })
+
+            // paginator
+            if (!entity) {
+                const paginator = document.createElement('div'),
+                      description = document.createElement('span'),
+                      prev = document.createElement('span'),
+                      next = document.createElement('span')
+            
+                container.appendChild(paginator)
+                paginator.classList.add('list-paginator')
+
+                // description of current page
+                description.className = 'list-paginator-description'
+                paginator.appendChild(description)
+                description.innerText = `Showing ${skip + 1}\u2013${skip+activationIds.length}`
+
+                // forward and back buttons
+                paginator.appendChild(prev)
+                paginator.appendChild(next)
+                prev.innerText = '\uff1c'
+                next.innerText = '\uff1e'
+                prev.className = 'list-paginator-button list-paginator-button-prev'
+                next.className = 'list-paginator-button list-paginator-button-next'
+
+                // pagination click handlers
+                const goto = skip => () => repl.qexec(`wsk activation list --skip ${skip} --limit ${limit}`)
+                      .then(activationIds => {
+                          if (activationIds.length === 0) {
+                              // we're at the end! disable the next button
+                              next.classList.add('list-paginator-button-disabled')
+                              delete next.onclick
+                          } else {
+                              _render({ activationIds, container,
+                                        noCrop, noPip, showResult, showStart, showTimeline, skip, limit })
+                          }
+                      })
+                if (skip === 0) {
+                    // disable the back button when we're on the first page
+                    prev.classList.add('list-paginator-button-disabled')
+                } else {
+                    // otherwise, onclick go back a page
+                    prev.onclick = goto(skip - limit)
+                }
+                next.onclick = goto(skip + limit)
+            } // end of paginator
 
             return true // success
         })
