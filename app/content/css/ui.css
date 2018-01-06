@@ -215,6 +215,9 @@ body:not(.subwindow) repl.sidecar-visible .repl-block, body.sidecar-full-screen 
     border: 2px solid;
     margin-top: 0.75em;
 }
+.result-table-full-width .repl-result {
+    border: none;
+}
 .result-table-full-width .repl-result, .result-table-full-width .log-lines {
     width: 100%;
 }
@@ -1025,6 +1028,9 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 
 /* activation logs */
+.repl-result .log-lines {
+    border: 2px solid var(--color-ui-04);
+}
 .log-lines {
     display: table;
     border-collapse: collapse;

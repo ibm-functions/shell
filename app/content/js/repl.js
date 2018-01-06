@@ -276,8 +276,7 @@ self.init = (prefs={}) => {
         self.setNoAuth()
     }
 
-    // for now,focus the current prompt no matter where the user clicks
-    // disabling this for now. see GHE issue #8
+    // focus the current prompt no matter where the user clicks
     document.body.onmouseup = evt => {
         if (!window.getSelection().toString()) {
             // if there is no selected text, then focus

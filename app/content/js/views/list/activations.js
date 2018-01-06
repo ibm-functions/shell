@@ -100,10 +100,6 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
         legend.innerHTML = legendHTMLtext
         // insert the legend before logTable 
         container.appendChild(legend)
-        // change container border to none
-        container.style.border = 'none'
-        // move grey border to logTable      
-        logTable.style.border = '2px solid var(--color-ui-04)'
     }
 
     const nCols = 5 + (showResult ? 1 : 0)
@@ -400,6 +396,14 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 }
                 next.onclick = goto(skip + limit)
             } // end of paginator
+
+            // try $ ls; $ ls; then paginate. this avoids chrome
+            // scrolling up a bit after the pagination completes. we
+            // did a ui.removeAllDomChildren, so perhaps chrome thinks
+            // that it needs to scorll a bit. this seems like a chrome
+            // bug to me, but the following seems to work around
+            // it. NMM 20180106
+            container.scrollIntoView()
 
             return true // success
         })
