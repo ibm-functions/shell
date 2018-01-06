@@ -434,6 +434,12 @@ const ui = (function() {
         nextBlock.querySelector('input').focus()
         nextBlock.setAttribute('data-input-count', parseInt(currentBlock.getAttribute('data-input-count')) + 1)
 
+        currentBlock.onmouseup = evt => {
+            // for older blocks, squash the "focus the current prompt
+            // no matter where the user clicks" behavior in repl.js
+            evt.stopPropagation()
+        }
+
         repl.setContextUI({
             context: commandTree.currentContext(),
             selection: ui.currentSelection()
