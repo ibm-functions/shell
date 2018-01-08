@@ -162,7 +162,7 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
 
         } else {
             event.preventDefault()
-            require('open')(url)
+            require('opn')(url)
         }
     })
 

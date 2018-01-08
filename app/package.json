@@ -38,6 +38,7 @@
     "js-beautify": "1.6.14",
     "jsome": "^2.3.26",
     "minimist": "^1.2.0",
+    "opn": "^5.1.0",
     "pretty-ms": "^2.1.0"
   },
   "optionalDependencies": {
