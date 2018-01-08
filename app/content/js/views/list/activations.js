@@ -84,9 +84,9 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
     const legendHTMLtext = `<div class='legend-stripe'><div class='legend-entry' data-legend-type='queueing-delays' data-balloon='The time this activation waited for free execution resources' data-balloon-pos='left'>Queueing Delays<div class='legend-icon is-waitTime'></div></div><div class='legend-entry' data-legend-type='container-initialization' data-balloon='The "cold start time", i.e. time spent initializing a container' data-balloon-pos='left'>Container Initialization<div class='legend-icon is-initTime'></div></div><div class='legend-entry' data-legend-type='execution-time' data-balloon='The time this activation spent executing your code' data-balloon-pos='left'>Execution Time<div class='legend-icon is-runTime'></div></div><div class='legend-entry' data-legend-type='failures' data-balloon='The activation failed to complete' data-balloon-pos='left'>Failures<div class='legend-icon is-success-false'></div></div></div>`
 
     const legend = document.createElement('div'),
-          logTable = document.createElement('table'),
-          balloonPos = 'right'
-    if (entity) {   // trace view
+          logTable = document.createElement('table')
+
+    if (entity) {   // if we have an entity, then we are rendering the Trace tab
         container.appendChild(legend)
 
         // add a legned 
@@ -152,16 +152,20 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
 
             // note: for statusCode === 0
             //   see https://github.com/apache/incubator-openwhisk/blob/master/common/scala/src/main/scala/whisk/core/entity/ActivationResult.scala#L58
-            let echo = -1;
-            activations.forEach((activation, idx) => {                
 
-                const line = logTable.insertRow(-1),
-                      //isSuccess = activation.statusCode === 0 // see the note: just above
-                      isSuccess = activation.statusCode !== undefined ? activation.statusCode === 0 : (activation.response && activation.response.success);
-                      //if statusCode is undefined, check activation.response for success/fail info
-                      //need to avoid isSuccess is set to undefined, as (false || undefined) returns undefined
+            let echo = -1;
+            activations.forEach((activation, idx) => {
+                //
+                // in this block, we are rendering a row for one activation
+                //
+
+                // if statusCode is undefined, check activation.response for success/fail info
+                // need to avoid isSuccess is set to undefined, as (false || undefined) returns undefined
+                // and re: statusCode === 0, see the note just above
+                const isSuccess = activation.statusCode !== undefined ? activation.statusCode === 0 : (activation.response && activation.response.success)
 
                 // row dom
+                const line = logTable.insertRow(-1)
                 line.className = 'log-line entity'
                 line.classList.add(activation.sessionId ? 'session' : 'activation')
                 line.setAttribute('data-name', activation.name)
@@ -276,6 +280,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     const left = normalize(activation.start + initTime, idx),
                           right = normalize(activation.end || (activation.start + initTime + 1), idx), // handle rules and triggers as having dur=1
                           width = right - left
+
+                    // on which side should we render the tooltip?
+                    const balloonPos = right > 0.9 ? 'left' : 'right'
+
                     bar.style.left = (100 * left) + '%'
                     bar.style.width = (100 * width) + '%'
                     bar.onclick = pip(show(activation))
@@ -284,18 +292,13 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     bar.onmouseover = () => legend.setAttribute('data-hover-type', 'execution-time')
                     bar.onmouseout = () => legend.removeAttribute('data-hover-type')
 
-                    // add this first (and we'll continue to do so in
-                    // reverse order), so the balloon hovers stack
-                    // correctly; see shell issue #168
-                    timeline.appendChild(bar)
-
                     // container initialization bar
+                    let initTimeBar, waitTimeBar
                     if (initTime > 0 && !isRootBar) {
-                        const initTimeBar = document.createElement('div'),
+                        initTimeBar = document.createElement('div'),
                               l = normalize(activation.start, idx),
                               w = normalize(activation.start + initTime, idx) - l
 
-                        timeline.appendChild(initTimeBar);
                         initTimeBar.style.left = (100 * l) + '%';
                         initTimeBar.style.width = (100 * w) + '%';
                         initTimeBar.style.position = 'absolute';
@@ -317,11 +320,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
 
                     // queueing delays bar
                     if (waitTime > 0 && !isRootBar) {
-                        const waitTimeBar = document.createElement('div'), 
+                        waitTimeBar = document.createElement('div'), 
                               l = normalize(activation.start - waitTime, idx),
                               w = normalize(activation.start, idx) - l
 
-                        timeline.appendChild(waitTimeBar);
                         waitTimeBar.style.left = (100 * l)+'%';
                         waitTimeBar.style.width = (100 * w)+'%';
                         waitTimeBar.style.position = 'absolute';
@@ -333,8 +335,20 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         waitTimeBar.onmouseover = () => legend.setAttribute('data-hover-type', 'queueing-delays')
                         waitTimeBar.onmouseout = () => legend.removeAttribute('data-hover-type')
                     }
-                }
-                
+
+                    // here, we have to be careful to stack the bars in an order so that the tooltips will stack on top
+                    // see shell issue #168
+                    if (balloonPos === 'right') {
+                        timeline.appendChild(bar)
+                        if (initTimeBar) timeline.appendChild(initTimeBar)
+                        if (waitTimeBar) timeline.appendChild(waitTimeBar)
+                    } else {
+                        if (waitTimeBar) timeline.appendChild(waitTimeBar)
+                        if (initTimeBar) timeline.appendChild(initTimeBar)
+                        timeline.appendChild(bar)
+                    }
+                } // now we're done rendering the timeline bars
+
                 // column n: start cell
                 if (showStart) {
                     const start = line.insertCell(-1),
