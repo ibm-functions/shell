@@ -117,7 +117,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
           last = 0,
           start = entity ? entity.start : activationIds[first].start - findItemInAnnotations('waitTime', activationIds[first]),
           maxEnd = activationIds.reduce((max, activation) => Math.max(max, activation.end||(activation.start+1)), 0), // the last one in the list might not have the highest end
-          dur = Math.max(1, entity ? entity.end - entity.start : maxEnd - activationIds[first].start)
+          dur = Math.max(1, entity ? entity.end - entity.start : maxEnd - start)
 
     let tgap = 0, gaps
     const normalize = (value, idx) => {
