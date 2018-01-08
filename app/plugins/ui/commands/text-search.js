@@ -21,19 +21,23 @@
 const app = require('electron');
 module.exports = () => {
     if (typeof document === 'undefined') return // return if no document
-    ui.injectCSS('plugins/ui/commands/text-search.css'); // inject css    
-    // insert html
-    let b = document.createElement('div');
-    b.style.display='none'; b.setAttribute('id', 'search-bar');    
-    b.innerHTML = "<div id='search-container'><input id='search-input' placeholder='enter search term' onfocus='this.select();' onmouseup='return false;'/> <span id='search-found-text'></span></div>";
-    document.getElementsByClassName('page')[0].insertBefore(b, document.getElementsByTagName('main')[0]);
-    
 
-    const searchBar = document.getElementById('search-bar'),
-        searchInput = document.getElementById('search-input'),
+    // inject css
+    ui.injectCSS('plugins/ui/commands/text-search.css');
+
+    // insert html
+    let searchBar = document.createElement('div');
+    searchBar.setAttribute('id', 'search-bar');
+    searchBar.style.opacity = 0 // we need the initial opacity:0 due to injectCSS's asynchronicity
+    searchBar.innerHTML = "<div id='search-container'><input id='search-input' placeholder='enter search term' onfocus='this.select();' onmouseup='return false;'/> <span id='search-found-text' class='no-search-yet'></span></div>";
+    document.getElementsByClassName('page')[0].insertBefore(searchBar, document.getElementsByTagName('main')[0]);
+    
+    // now add the logic
+    const searchInput = document.getElementById('search-input'),
         searchFoundText =  document.getElementById('search-found-text');    
 
     const searchText = value => {
+        searchFoundText.classList.remove('no-search-yet')
         app.remote.getCurrentWebContents().findInPage(value);   // findInPage handles highlighting matched text in page
     }
     const stopSearch = (clear) => {        
@@ -77,7 +81,7 @@ module.exports = () => {
         }
         else if(e.key == 'Escape'){ // esc closes the search tab (when search tab is focus) 
             e.stopPropagation();    // stop event propagating to other dom elements - only affect the search bar
-            searchBar.style.display = 'none';
+            searchBar.classList.remove('visible');
             searchFoundText.innerHTML = '';
             stopSearch(true);         
         }      
@@ -85,8 +89,11 @@ module.exports = () => {
 
     document.getElementsByTagName('body')[0].addEventListener('keydown', function(e){
         if(e.keyCode == 70 && ((e.ctrlKey && process.platform !== 'darwin') || (e.metaKey && process.platform == 'darwin'))){    // ctrl/cmd-f opens search
-            searchBar.style.display = 'block';
-            searchInput.focus();    // searchInpus focused when opened
+            searchBar.classList.add('visible');
+            searchBar.style.opacity = ''                      // see above "we need the initial opacity:0"
+            searchFoundText.innerText = 'hit enter to search' // guide the user a bit
+            searchFoundText.classList.add('no-search-yet')    // to render the hit enter to search text a bit specially
+            searchInput.focus();                              // searchInpus focused when opened
         }        
     });
 
