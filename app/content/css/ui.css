@@ -510,7 +510,7 @@ sidecar.visible {
 }
 
 /* sidecar bottom stripe */
-#sidecar .sidecar-bottom-stripe {
+.sidecar-bottom-stripe {
     padding: 0 1em;
     flex-basis: 3em;
     display: flex;
@@ -564,27 +564,27 @@ body.sidecar-full-screen #sidecar .sidecar-bottom-stripe-maximize .maximize-butt
     width: 0;
     height: 0;
 }
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-as-button) {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-as-button) {
     /* for bottom mode-switching buttons, capitalize the text; for actual buttons, keep the capitalization as it was given */
     text-transform: capitalize;
 }
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button {
     padding: 2px 0; /* makes room for border-bottom */
     border-bottom: 2px solid transparent; /* will change color on hover */
     transition: all 150ms ease-in-out;
 }
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(:first-child) {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(:first-child) {
     margin-left: 1em;
 }
 #sidecar .sidecar-header .limits {
     /* don't show limits in header for now */
     display: none;
 }
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
     cursor: pointer;
     opacity: 1;
 }
-#sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, #sidecar .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, #sidecar .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
+.sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
     /* on hover, squeeze the >> a bit closer together */
     letter-spacing: -1.25ex;
 }
@@ -1375,7 +1375,7 @@ break {
 }
 
 .go-away-able {
-    transition: opacity 1s ease-in-out;
+    transition: opacity 450ms ease-in-out;
 }
 .go-away {
     opacity: 0
