@@ -162,7 +162,8 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 // if statusCode is undefined, check activation.response for success/fail info
                 // need to avoid isSuccess is set to undefined, as (false || undefined) returns undefined
                 // and re: statusCode === 0, see the note just above
-                const isSuccess = activation.statusCode !== undefined ? activation.statusCode === 0 : (activation.response && activation.response.success)
+                const isSuccess = !activation.end ? true // rules and triggers. always successful?
+                      : activation.statusCode !== undefined ? activation.statusCode === 0 : (activation.response && activation.response.success)
 
                 // row dom
                 const line = logTable.insertRow(-1)
@@ -287,7 +288,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     bar.style.left = (100 * left) + '%'
                     bar.style.width = (100 * width) + '%'
                     bar.onclick = pip(show(activation))
-                    bar.setAttribute('data-balloon', prettyPrintDuration(activation.end - activation.start - initTime))
+                    bar.setAttribute('data-balloon', prettyPrintDuration(activation.end ? activation.end - activation.start - initTime : initTime))
                     bar.setAttribute('data-balloon-pos', balloonPos)
                     bar.onmouseover = () => legend.setAttribute('data-hover-type', 'execution-time')
                     bar.onmouseout = () => legend.removeAttribute('data-hover-type')
