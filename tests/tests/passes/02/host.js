@@ -46,4 +46,10 @@ describe('host tests', function() {
 
     it('bogus host from /host context', () => cli.do(`set yyy`, this.app)
 	.then(cli.expectOKWithCustom({selector: '', expect: `Before you can proceed, please provide an OpenWhisk auth key, using auth add <AUTH_KEY>` })))
+
+    // clicking on the host in the upper right prefills some content;
+    // if the user hits return, we want the operation to be cancelled
+    // see shell issue #192
+    it('should auto-cancel when using prefilled content', () => cli.do(`host set <your_api_host>`, this.app)
+       .then(cli.expectError(0, 'Operation cancelled')))
 })
