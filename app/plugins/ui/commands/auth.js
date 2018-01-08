@@ -203,8 +203,14 @@ module.exports = (commandTree, require) => {
                            const argv = slice(argv_without_options, 'set')
                            let host = argv[0] || options.host // the new apihost to use
                            let ignoreCerts = options.ignoreCerts || options.insecureSSL || options.insecure
+
                            if (!host || options.help) {
                                throw new Error('Usage: host set <hostname>')
+                           } else if (host === '<your_api_host>') {
+                               // clicking on the host in the upper right prefills some content;
+                               // if the user hits return, we want the operation to be cancelled
+                               // see shell issue #192
+                               throw new Error('Operation cancelled')
                            }
 
                            //
@@ -212,12 +218,15 @@ module.exports = (commandTree, require) => {
                            // couple of common scenarios. we check for
                            // those here
                            //
-                           if (host === 'bluemix' || host === 'us-south') {
+                           if (host === 'dallas' || host === 'us-south') {
                                // accept a short-hand for the Dallas Bluemix OpenWhisk
                                host = 'https://openwhisk.ng.bluemix.net'
                            } else if (host === 'london' || host === 'eu-gb') {
                                // accept a short-hand for the London Bluemix OpenWhisk
                                host = 'https://openwhisk.eu-gb.bluemix.net'
+                           } else if (host === 'frankfurt' || host === 'eu-de') {
+                               // accept a short-hand for the Frankfurt Bluemix OpenWhisk
+                               host = 'https://openwhisk.eu-de.bluemix.net'
                            } else if (host === 'docker-machine' || host === 'dm' || host === 'mac' || host === 'darwin' || host === 'macos') {
                                // local docker-machine host (this is usually macOS)
                                host = 'http://192.168.99.100:10001'
