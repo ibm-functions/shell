@@ -71,14 +71,15 @@ const reportVersion = (_1, _2, argv) => {
           version = getVersion()
 
     if (!checkForUpdates) {
+        // we were asked only to report the installed version
         return version
     }
 
+    //
+    // otherwise, we were asked to check for updates
+    //
     if (ui.headless) {
         console.log('You are currently on version ' + version.blue)
-    }
-
-    if (ui.headless) {
         process.stdout.write('Checking for updates... '.dim)
     }
 
@@ -93,6 +94,12 @@ const reportVersion = (_1, _2, argv) => {
               }
           } else {
               // then updates are available, so report the updates available message
+              if (ui.headless) {
+                  // above, we left with a process.stdout.write, so
+                  // now we need to clear a newline see shell issue
+                  // #194
+                  console.log('')
+              }
               return updates
           }
       })
