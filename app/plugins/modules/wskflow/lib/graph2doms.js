@@ -91,7 +91,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"flex-direction": "column",
 		"align-items": "center",
 		"flex": "1",
-		"font-family": "Roboto",
+		"font-weight": 400,
 		"position": "relative",
 		"-webkit-app-region": "no-drag",
 		"width": width,
