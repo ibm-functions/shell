@@ -86,50 +86,118 @@ module.exports = (commandTree, prequire) => {
 
 		const img = nativeImage.createFromBuffer(buf),
 		      snapDom = document.createElement('div'),
+                      snapHeader = document.createElement('header'),
+                      snapFooter = document.createElement('div'),
                       snapImg = document.createElement('img'),
+                      message = document.createElement('div'),
                       check = document.createElement('div'),
                       imgSize = img.getSize(),
-                      widthPx = 500,
+                      widthPx = 600,
                       width = `${widthPx}px`,
-                      height = imgSize.height / imgSize.width * widthPx + 'px'
+                      heightPx = imgSize.height / imgSize.width * widthPx,
+                      height = heightPx + 'px'
 	    
 		document.body.appendChild(snapDom)
+		snapDom.appendChild(snapHeader)
 		snapDom.appendChild(snapImg)
+		snapDom.appendChild(snapFooter)
 		snapDom.appendChild(check)
+		snapDom.appendChild(message)
 
 		snapDom.id = 'screenshot-captured'
 		snapDom.classList.add('go-away-able')
 		snapDom.classList.add('go-away') // initially hidden
 		setTimeout(() => snapDom.classList.remove('go-away'), 0)
-		snapDom.style.background = 'rgba(0,0,0,0.5)'
+		snapDom.style.background = 'rgba(0,0,0,0.75)'
 		snapDom.style.position = 'absolute'
 		snapDom.style.width = '100%'
 		snapDom.style.height = '100%'
 		snapDom.style.top = 0
 		snapDom.style.left = 0
 		snapDom.style.display = 'flex'
+		snapDom.style.flexDirection = 'column'
 		snapDom.style.justifyContent = 'center'
 		snapDom.style.alignItems = 'center'
 		snapDom.style.zIndex = 5
 
-		snapImg.setAttribute('src', img.resize({width, height}).toDataURL())
-		snapImg.style.width = width
-		snapImg.style.height = height
+                snapHeader.classList.add('header')
+                snapHeader.style.paddingLeft = '1.5em'
+                snapHeader.style.width = width
+                snapHeader.style.maxWidth = '100%'
+                const headerTitle = document.createElement('div')
+                headerTitle.classList.add('application-name')
+                headerTitle.innerText = 'Screenshot'
+                snapHeader.appendChild(headerTitle)
+
+                snapFooter.classList.add('sidecar-bottom-stripe')
+                snapFooter.style.width = width
+                snapFooter.style.justifyContent = 'flex-end'
+                const closeButton = document.createElement('div')
+                closeButton.innerText = 'Done'
+                closeButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-close'
+                snapFooter.appendChild(closeButton)
+
+                // the image; chrome bug: if we use width and height,
+                // there is a white border that is not defeatible; if
+                // we trick chrome into thinking the image has no
+                // width and height (but fake it with padding), the
+                // border goes away: https://stackoverflow.com/a/14709695
+		snapImg.style.background = `url(${img.resize({width, height}).toDataURL()}) no-repeat center/cover`
+                snapImg.style.maxWidth = '100%'
+                snapImg.style.maxHeight = '100%'
+                snapImg.style.filter = 'blur(1px) grayscale(0.5) contrast(0.5)'
+		snapImg.style.width = '0px'
+		snapImg.style.height = '0px'
+                snapImg.style.padding = `${heightPx/2}px ${widthPx/2}px`
+
+		message.style.position = 'absolute'
+                message.style.fontSize = '1.4375em'
+                message.style.fontWeight = 300
+                message.style.top = 'calc(50% + 3em)'
+                message.innerText = 'Screenshot copied to clipboard'
 
 		check.classList.add('go-away-button')
 		check.style.position = 'absolute'
 		check.innerText = '\u2714'
 		check.style.color = 'var(--color-ok)'
-		check.style.fontSize = '5em'
-		check.onclick = () => {
+		check.style.fontSize = '7em'
+
+                // temporarily disable the repl
+                modules.ui.getCurrentPrompt().readonly = true
+
+                // temporarily override escape
+                const oldHandler = document.onkeyup
+
+                // when we're done, re-enable the things we messed with and hide the snapDom
+                const finish = () => {
+                    document.onkeyup = oldHandler
+                    modules.ui.getCurrentPrompt().readonly = false
                     snapDom.classList.add('go-away')
                     setTimeout(() => document.body.removeChild(snapDom), 1000) // match go-away-able transition-duration; see ui.css
-		}
+                }
 
+                // we'll do a finish when the user hits escape
+                document.onkeyup = evt => {
+                    if (evt.keyCode === modules.ui.keys.ESCAPE) {
+                        finish()
+                    }
+                }
+                
+                // also, if the user clicks on the close button, finish up
+		closeButton.onclick = finish
+
+                // we can no unregister our listener; this is
+                // important as subsequent listener registrations
+                // stack, rather than replace
                 ipcRenderer.removeListener('capture-page-to-clipboard-done', listener)
+
 		resolve('Successfully captured a screenshot to the clipboard')
 	    }
 
+            //
+            // register our listener, and tell the main process to get
+            // started (in that order!)
+            //
 	    ipcRenderer.on('capture-page-to-clipboard-done', listener)
 	    ipcRenderer.send('capture-page-to-clipboard',
 			     remote.getCurrentWebContents().id,

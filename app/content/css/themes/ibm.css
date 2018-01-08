@@ -134,16 +134,16 @@ badge.clickable:hover {
 }
 
 /* sidecar bottom stripe */
-#sidecar .sidecar-bottom-stripe {
+.sidecar-bottom-stripe {
     color: hsla(240, 2%, 90%, 1);
     background: var(--color-stripe-02);
     box-shadow: 0 -1px 3px rgba(0,0,0,0.25);
 }
 
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.sidecar-bottom-stripe-button-active {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button.sidecar-bottom-stripe-button-active {
     border-bottom-color: var(--color-brand-02);
 }
-#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, #sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
     color: var(--color-brand-02);
 }
 
