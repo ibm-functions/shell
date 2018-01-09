@@ -151,9 +151,9 @@ module.exports = (commandTree, prequire) => {
                 snapImg.style.padding = `${heightPx/2}px ${widthPx/2}px`
 
 		message.style.position = 'absolute'
-                message.style.fontSize = '1.4375em'
-                message.style.fontWeight = 300
-                message.style.top = 'calc(50% + 3em)'
+                message.style.fontSize = '2.25em'
+                message.style.fontWeight = 600
+                message.style.top = 'calc(50% + 2em)'
                 message.innerText = 'Screenshot copied to clipboard'
 
 		check.classList.add('go-away-button')
