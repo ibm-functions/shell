@@ -108,7 +108,7 @@ module.exports = (commandTree, prequire) => {
 		snapDom.classList.add('go-away-able')
 		snapDom.classList.add('go-away') // initially hidden
 		setTimeout(() => snapDom.classList.remove('go-away'), 0)
-		snapDom.style.background = 'rgba(0,0,0,0.75)'
+		snapDom.style.background = 'rgba(0,0,0,0.85)'
 		snapDom.style.position = 'absolute'
 		snapDom.style.width = '100%'
 		snapDom.style.height = '100%'
@@ -124,6 +124,7 @@ module.exports = (commandTree, prequire) => {
                 snapHeader.style.paddingLeft = '1.5em'
                 snapHeader.style.width = width
                 snapHeader.style.maxWidth = '100%'
+                snapHeader.style.border = 'none'
                 const headerTitle = document.createElement('div')
                 headerTitle.classList.add('application-name')
                 headerTitle.innerText = 'Screenshot'
