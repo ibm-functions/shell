@@ -264,9 +264,9 @@ exports.sidecar = {
 exports.sidecar.expectRule = A => exports.sidecar.expectSequence(A, selectors.SIDECAR_RULE_CANVAS_NODES)
 
 /** is the given struct2 the same as the given struct2 (given as a string) */
-exports.expectStruct = struct1 => string => {
+exports.expectStruct = (struct1, noParse=false) => string => {
     try {
-        assert.ok(sameStruct(struct1, JSON.parse(string)))
+        assert.ok(sameStruct(struct1, noParse ? string : JSON.parse(string)))
         return true
     } catch (err) {
         console.error('Error comparing structs for actual value= ' + string)

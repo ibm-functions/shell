@@ -980,7 +980,7 @@ const ui = (function() {
      */
     const formatWebActionURL = action => {
         // note that we use json as the default content type
-        const contentType = action.annotations && action.annotations.find(kv => kv.key === 'content-type-extension') || 'json'
+        const contentType = action.annotations && action.annotations.find(kv => kv.key === 'content-type-extension') || { value: 'json' }
         const https = action.apiHost.startsWith('https://') || action.apiHost.startsWith('http://') ? ''
               : action.apiHost === 'localhost' ? 'http://' : 'https://'
         const urlText = `${https}${action.apiHost}/api/v1/web/${action.namespace}/${!action.packageName ? 'default/' : ''}${action.name}.${contentType.value}`
