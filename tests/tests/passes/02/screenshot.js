@@ -33,6 +33,7 @@ const takeScreenshot = function(ctx, which='') {
     return cli.do(`screenshot ${which}`, ctx.app)
         .then(res => ctx.app.client.waitForExist('#screenshot-captured')
               .then(() => ctx.app.client.waitForEnabled('#screenshot-captured .go-away-button'))
+              .then(() => ctx.app.client.click('#screenshot-captured .sidecar-bottom-stripe-save'))
               .then(() => ctx.app.client.click('#screenshot-captured .sidecar-bottom-stripe-close'))
               .then(() => ctx.app.client.waitForExist('#screenshot-captured', 5000, true)) // false meaning better not be visible
               .then(() => res)
