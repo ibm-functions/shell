@@ -28,6 +28,7 @@ const common = require('../../../lib/common'),
       actionName4 = 'foo4',
       actionName5 = 'foo5',
       actionName6 = 'foo6',
+      actionName7 = 'foo7',
       packageName = 'ppp'
 
 describe('Webbify actions', function() {
@@ -119,4 +120,24 @@ describe('Webbify actions', function() {
        .then(() => this.app)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName5)))
+
+    //
+    // not quite webbify, but closely related; web action via action create --web
+    //
+    it('should create a web action via action create --web', () => cli.do(`action create ${actionName7} ./data/foo.js --web`, this.app)
+       // make sure the REPL output has the proper href:
+       .then(cli.expectOKWithCustom({ selector: '.entity-web-export-url' }))
+       .then(selector => this.app.client.getText(selector))
+       .then(href => rp({ uri: href, qs: { name: 'openwhisk' }, json: true, rejectUnauthorized: false }))
+       .then(ui.expectStruct({name: 'Step1 openwhisk'}, true))
+       .then(() => this.app)
+       // make sure the sidecar is open and showing the web accessible badge
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName7))
+       .then(sidecar.expectBadge('web'))
+        // finally, make sure the "web accessible" badge also has the proper href:
+       .then(() => this.app.client.getAttribute(`${ui.selectors.SIDECAR} .badges .entity-web-export-url`, 'href'))
+       .then(href => rp({ uri: href, qs: { name: 'openwhisk' }, json: true, rejectUnauthorized: false }))
+       .then(ui.expectStruct({name: 'Step1 openwhisk'}, true))
+       .catch(common.oops(this)))
 })
