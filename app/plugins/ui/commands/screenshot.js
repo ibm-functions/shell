@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// for future reference, this is how we could write to a file:
-//    remote.require('fs').writeFile('Screenshot.png', img.toPng(), callback...)
-
 /**
  * Usage message
  *
@@ -43,7 +40,8 @@ module.exports = (commandTree, prequire) => {
 
     commandTree.listen('/screenshot', (_1, _2, _3, modules, _5, _6, argv, options) => new Promise((resolve, reject) => {
         try {
-            const { ipcRenderer, nativeImage, remote } = require('electron')
+            const { ipcRenderer, nativeImage, remote } = require('electron'),
+                  { app } = remote
 
             // which dom to snap?
             const which = argv[1] && argv[1].toLowerCase(),
@@ -133,6 +131,24 @@ module.exports = (commandTree, prequire) => {
                 snapFooter.classList.add('sidecar-bottom-stripe')
                 snapFooter.style.width = width
                 snapFooter.style.justifyContent = 'flex-end'
+
+                // save screenshot to disk
+                const saveButton = document.createElement('div'),
+                      ts = new Date(),
+                      filename = `Screen Shot ${ts.toLocaleDateString().replace(/\//g,'-')}-${ts.toLocaleTimeString().replace(/:/g,'-')}.png`,
+                      location = require('path').join(app.getPath('desktop'), filename)
+                saveButton.innerText = 'Save to Disk'
+                saveButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-save'
+                saveButton.onclick = () => {
+                    remote.require('fs').writeFile(location,
+                                                   img.toPng(), () => {
+                                                       console.log(`screenshot saved to ${location}`)
+                                                   })
+                }
+
+                snapFooter.appendChild(saveButton)
+
+                // close popup button
                 const closeButton = document.createElement('div')
                 closeButton.innerText = 'Done'
                 closeButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-close'
