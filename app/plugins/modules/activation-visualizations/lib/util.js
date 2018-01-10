@@ -337,3 +337,27 @@ exports.optionsToString = options => {
 
     return str
 }
+
+/**
+ * Turn a given color transparent
+ *
+ */
+exports.transparent = (color, alpha=0.6) => Color(color).alpha(alpha).rgbString()
+
+/**
+ * Wait for the ChartJS code to be loaded
+ *
+ */
+exports.ready = () => new Promise(resolve => {
+    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js')
+
+    const iter = () => {
+        if (typeof Chart === 'undefined') {
+            setTimeout(iter, 20)
+        } else {
+            resolve()
+        }
+    }
+
+    setTimeout(iter, 20)
+})
