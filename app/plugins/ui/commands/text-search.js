@@ -29,12 +29,22 @@ module.exports = () => {
     let searchBar = document.createElement('div');
     searchBar.setAttribute('id', 'search-bar');
     searchBar.style.opacity = 0 // we need the initial opacity:0 due to injectCSS's asynchronicity
-    searchBar.innerHTML = "<div id='search-container'><input id='search-input' placeholder='enter search term' onfocus='this.select();' onmouseup='return false;'/> <span id='search-found-text' class='no-search-yet'></span></div>";
+    searchBar.innerHTML = "<div id='search-container'><div id='search-input-container'><input id='search-input' placeholder='search term' onfocus='this.select();' onmouseup='return false;'/><span id='search-found-text' class='no-search-yet'></span></div><span id='search-close-button'>&#x274c;</span></div>";
     document.getElementsByClassName('page')[0].insertBefore(searchBar, document.getElementsByTagName('main')[0]);
     
     // now add the logic
     const searchInput = document.getElementById('search-input'),
-        searchFoundText =  document.getElementById('search-found-text');    
+          searchFoundText = document.getElementById('search-found-text')
+
+    /** close the search box and tell chrome to terminate the search highlighting stuff */
+    const closeSearchBox = () => {
+        searchBar.classList.remove('visible');
+        setTimeout(() => searchFoundText.innerHTML = '', 300) // don't do this right away, to avoid the search box contracting before it disappears
+        stopSearch(true);
+    }
+
+    const searchCloseButton = document.getElementById('search-close-button')
+    searchCloseButton.onclick = closeSearchBox
 
     const searchText = value => {
         searchFoundText.classList.remove('no-search-yet')
@@ -81,9 +91,7 @@ module.exports = () => {
         }
         else if(e.key == 'Escape'){ // esc closes the search tab (when search tab is focus) 
             e.stopPropagation();    // stop event propagating to other dom elements - only affect the search bar
-            searchBar.classList.remove('visible');
-            searchFoundText.innerHTML = '';
-            stopSearch(true);         
+            closeSearchBox()
         }      
     });
 

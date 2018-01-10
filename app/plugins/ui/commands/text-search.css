@@ -17,20 +17,48 @@
     padding: 1ex;
     min-width: 270px;
     background: var(--color-stripe-01);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
 }
-#search-input {
+#search-input-container {
+    flex: 1;
+    background: white;
     border: solid 1px rgba(0,0,0,0.5);
     border-radius: 3px;
     padding: 1ex;
     margin-right: 1ex;
+    display: flex;
+    align-items: center;
+}
+#search-input {
+    flex: 1;
+    border: none;
+    font-size: inherit;
 }
 #search-input:focus {
     outline:none;
 }
-#search-found-text {
+#search-found-text, #search-close-button {
     -webkit-font-smoothing: antialiased;
-    color: var(--color-ui-01);
+    color: var(--color-text-02);
+}
+#search-close-button {
+    color: rgba(255,255,255,0.6);
+    border: 1px solid transparent;
+    border-radius: 50%;
+    transition: all 300ms ease-in-out;
+    width: 1.5em;
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1px; /* HACK weird, the x unicode is not exactly horizontally centered; macos electron 1.7.10 NMM 20180109 */
+}
+#search-close-button:hover {
+    background: var(--color-brand-01);
+    cursor: pointer;
+    color: white;
 }
 #search-found-text.no-search-yet {
     opacity: 0.6;

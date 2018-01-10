@@ -29,28 +29,32 @@ describe('Text search', function() {
     const ctrlOrMeta = process.platform == 'darwin' ? '\uE03D' : '\uE009'
 
     it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ctrlOrMeta, 'f'])
-      .then(() => this.app.client.isVisible('#search-bar'))
-      .then(r => assert.ok(r, 'search-bar visible'))
-      .catch(common.oops(this))
-    );
+       .then(() => this.app.client.isVisible('#search-bar'))
+       .then(r => assert.ok(r, 'search-bar visible'))
+       .catch(common.oops(this)))
 
     it('should not close the search bar if pressing esc outside of search input', () => this.app.client.click(ui.selectors.CURRENT_PROMPT_BLOCK)
-      .then(() => this.app.client.keys('\uE00C'))
-      .then(() => this.app.client.isVisible('#search-bar'))
-      .then(r => assert.ok(r, 'assert if search-bar is visible'))
-      .catch(common.oops(this))
-    );
+       .then(() => this.app.client.keys('\uE00C'))
+       .then(() => this.app.client.isVisible('#search-bar'))
+       .then(r => assert.ok(r, 'assert if search-bar is visible'))
+       .catch(common.oops(this)))
 
     it('should focus on search input when search input is pressed', () => this.app.client.click('#search-input')
-      .then(() => this.app.client.hasFocus('#search-input'))
-      .then(r => assert.ok(r, 'assert if search-input is focused'))
-      .catch(common.oops(this))
-    );
+       .then(() => this.app.client.hasFocus('#search-input'))
+       .then(r => assert.ok(r, 'assert if search-input is focused'))
+       .catch(common.oops(this)))
 
     it('should close the search bar if pressing esc in search input', () => this.app.client.setValue('#search-input', '\uE00C')
-      .then(() => this.app.client.isVisible('#search-bar'))
-      .then(r => assert.ok(!r, 'assert if search-bar is not visible'))
-      .catch(common.oops(this))
-    );
+       .then(() => this.app.client.waitForVisible('#search-bar', 2000, false))
+       .catch(common.oops(this)))
 
+    // re-open, so that we can test the close button
+    it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ctrlOrMeta, 'f'])
+       .then(() => this.app.client.isVisible('#search-bar'))
+       .then(r => assert.ok(r, 'search-bar visible'))
+       .catch(common.oops(this)))
+
+    it('should close the search bar if clicking the close button', () => this.app.client.click('#search-close-button')
+       .then(() => this.app.client.waitForVisible('#search-bar', 2000, false))
+       .catch(common.oops(this)))
 })
