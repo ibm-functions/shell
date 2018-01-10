@@ -26,7 +26,7 @@ const usage = cmd => `Initialize and manage the prerequisite services.
 
 Required parameters:
 \t--url      if you have an existing service instance, provide its access URL here; or
-\t--auto     provision one an instance now [EXPERIMENTAL]
+\t--auto     provision an instance now [EXPERIMENTAL]
 
 Options:
 \t--cleanse  wipe out all session records
