@@ -277,6 +277,45 @@ const toArray = (map, options) => {
 }
 
 /**
+ * Cost function for an activation
+ *   TODO factor this out!!!!
+ */
+const costOf = activation => {
+    const limitsAnnotation = activation.annotations.find(({key}) => key === 'limits'),
+          duration = activation.end - activation.start,
+          cost = !limitsAnnotation ? 0 : ((limitsAnnotation.value.memory/1024) * (Math.ceil(duration/100)/10) * 0.000017 * 1000000)
+
+    return ~~(cost * 100)/100
+}
+
+/**
+ * Construct a success versus failure timeline model
+ *
+ */
+const successFailureTimeline = (activations, { nBuckets = 20 }) => {
+    // some parameters of the model
+    const first = activations[activations.length - 1].start,
+          last = activations[0].start,
+          interval = ~~((last - first) / nBuckets),
+          bucketize = timestamp => Math.min(nBuckets - 1, ~~((timestamp - first) / interval))
+
+    // now we construct the model
+    const buckets = activations.reduce((buckets, activation) => {
+        const tally = isSuccess(activation) ? buckets.success : buckets.failure,
+              idx = bucketize(activation.start)
+        tally[idx]++
+        buckets.cost[idx] += costOf(activation)
+        return buckets
+    }, { success: Array(nBuckets).fill(0),
+         failure: Array(nBuckets).fill(0),
+         cost: Array(nBuckets).fill(0),
+         interval, first, last, nBuckets    // pass through the parameters to the view, in case it helps
+       })
+
+    return buckets
+}
+
+/**
  * Group the activations by action, and compute some summary
  * statistics for each group: error rate, count, success versus
  * failure.
@@ -287,10 +326,12 @@ exports.groupByAction = (activations, options) => {
           splitter = splitRequested && (options.split === true ? splitByVersion : splitAroundVersion(options.split))
 
     const totals = { minTime: undefined, maxTime: undefined, totalCount: 0},
+          timeline = successFailureTimeline(activations, options),
           map = activations.reduce(addToGroup(options, totals, splitRequested, splitter), {}),
           groups = toArray(map, options) // turn the map into an array, for easier consumption
 
     return Object.assign(totals, {
+        timeline,
         groups,
         summary: summarizeWhole(groups)   // a "statData" object, for all activations
     })

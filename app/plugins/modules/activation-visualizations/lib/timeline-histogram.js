@@ -16,55 +16,35 @@
 
 const prettyPrintDuration = require('pretty-ms'),
       { drilldownWith } = require('./drilldown'),
-      { groupByTimeBucket } = require('./grouping'),
+      { groupByAction } = require('./grouping'),
       { sort, numericalGroupKeySorter:defaultSorter } = require('./sorting'),
-      { drawLegend } = require('./legend'),
-      { renderCell } = require('./cell'),
       { modes } = require('./modes'),
-      { titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
+      { ready, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Timeline'
-
-const css = {
-    content: 'activation-viz-plugin',
-    wrapper: 'activation-viz-timeline-wrapper with-grids',    // wrapper around the timeline div, to give us a horizontal grid
-    wrapperQS: 'activation-viz-timeline-wrapper',
-    timeline: 'activation-viz-timeline grid-grid with-grids cell-container', // the grid-grid makes renderCell's styling of the cells happy (from the grid view)
-    timelineQS: 'activation-viz-timeline',
-    column: 'activation-viz-timeline-column grid',
-    columnQS: 'activation-viz-timeline-column',
-    cell: 'grid-cell grid-cell-occupied',
-    cellQS: 'grid-cell'
-}
-
-const defaults = {
-    cropAt: 60,       // crop the timeline height at this value, and show a "+N" decoration for values greater
-    numAxisSwaths: 5, // number of ticks on the timeline axes
-    subgrouping: 'duration' // group the timeline buckets into duration buckets; alternatively, 'success' would group by success versus failure
-}
-
-
-/**
- * Open the activity grid for the given activations array
- *
- */
-const showGrid = (activations) => () => {
-    require('./grid')(null,null, { activations, zoom: 1, fixedHeader: true })
-}
 
 /**
  * Visualize the activation data
  *
  */
 const drawTimeline = (options, header) => activations => {
-    const existingContent = document.querySelector(`.custom-content .custom-content .${css.content}`),
-          doubleCheck = existingContent && existingContent.querySelector(css.wrapperQS),
-          content = (existingContent && doubleCheck) || document.createElement('div')
-    content.className = css.content
+    // this needs *only* to contain the chart; see the "basic requirement" link a few lines down
+    const content = document.createElement('div')
+    content.className = 'activation-viz-plugin'
 
-    _drawTimeline(options, header, content, groupByTimeBucket(activations, Object.assign({ subgrouping: 'duration'/*options.success ? 'success'
-                                                                                                                    : options.success ? 'success' : defaults.subgrouping*/ },
-                                                                                         options)))
+    // some bits to enable responsive charts, i.e. auto-adjusting as container resizes
+    content.style.position = 'relative' // basic requirement; see http://www.chartjs.org/docs/latest/general/responsive.html#important-note
+    content.style.width = 0             // ugh, chrome doesn't trigger a resize on shrink; see https://stackoverflow.com/a/7985973
+
+    // header title
+    const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
+    ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
+
+    // add time range to the sidecar header
+    const groupData = groupByAction(activations, Object.assign({ groupBySuccess: true }, options))
+    displayTimeRange(groupData, header.leftHeader)
+
+    ready().then(_drawTimeline({ options, header, content, timelineData: groupData.timeline }))
 
     return {
         type: 'custom',
@@ -74,332 +54,183 @@ const drawTimeline = (options, header) => activations => {
 }
 
 /**
- * Create a div with the given CSS class
+ * Generate a CDF from a PDF
  *
  */
-const div = (container, className, force=false) => {
-    const existingElement = !force && container.querySelector(`.${className}`),
-          element = existingElement || document.createElement('div')
-    if (!existingElement) {
-        container.appendChild(element)
-        element.className = className
-    }
-    return { div: element, preexisting: !!existingElement }
-}
+const accumulate = PDF => PDF.reduce((CDF, density, idx) => {
+    CDF[idx] = ~~(density + (idx === 0 ? 0 : CDF[idx-1]))
+    return CDF
+}, Array(PDF.length).fill(0))
 
 /**
- * Generic routine for adding an axis. The given decorator will be
- * invoked for each segment of the axis:
- *
- *     decorator(segmentContainer, segmentIndex, numSegments)
+ * Prepare the data models
  *
  */
-const addAxis = (wrapper, axisName, decorator) => {
-    const tickClass = 'activation-viz-timeline-axis-interval'
+const prepare = timelineData => {
+    const { success, failure, cost, nBuckets, first, interval} = timelineData,
+          fill = true,     // we want all of the bars to be filled in
+          borderWidth = 0  // for bars
 
-    const {div:axis,preexisting} = div(wrapper, `activation-viz-timeline-${axisName}-axis`)
-
-    try {
-        for (let idx = 0; idx < defaults.numAxisSwaths; idx++ ) {
-            let segment
-            if (!preexisting) {
-                segment = div(axis, tickClass, true).div
-            } else {
-                segment = axis.querySelector(`.${tickClass}:nth-child(${idx + 1})`)
-            }
-            decorator(segment, idx, defaults.numAxisSwaths)
-        }
-    } catch (err) {
-        conso.error(err)
-    }
-}
-
-/**
- * Add a top axis to the timeline that indicates the width of each horizontal swath
- *
- */
-const addHorizontalAxis = (wrapper, interval) => {
-    if (isNaN(interval)) {
-        // no data
-        return
+    const data = {
+        labels: [],
+        datasets: [
+            { type: 'bar', fill, borderWidth, label: 'Successes', data: success },
+            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure },
+            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'transparent', borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
+        ]
     }
 
-    addAxis(wrapper, 'horizontal', (segment, segmentIndex, numSegments) => {
-        // the decorator: add something to the last segment
-        if (segmentIndex === numSegments - 1) {
-            div(segment, 'activation-viz-timeline-horizontal-axis-left-line')
-            div(segment, 'activation-viz-timeline-axis-label').div.innerText = prettyPrintDuration(interval)
-            div(segment, 'activation-viz-timeline-horizontal-axis-right-line')
-        }
-    })
-}
-
-/**
- * Add a top axis to the timeline that indicates the width of each horizontal swath
- *
- */
-const addVerticalAxis = (wrapper, interval) => {
-    if (interval === 0) {
-        // no data
-        return
+    // make the label model for the x axis
+    const { labels } = data
+    for (let idx = 0; idx < nBuckets; idx++) {
+        labels.push(first + idx * interval)
     }
 
-    addAxis(wrapper, 'vertical', (segment, segmentIndex, numSegments) => {
-        // the decorator
-        ui.removeAllDomChildren(segment)
-        const label = div(segment, 'activation-viz-timeline-axis-label').div,
-              labelText = (numSegments - segmentIndex + 1) * interval
-        label.innerText = Math.round(labelText * 10) / 10
-    })
-}
+    //console.error(data)
+    //console.error(labels)
 
-/**
- * Round n to nearest higher multiple of m.
- *    e.g. nearestMultiple(5,20)  -> 20
- *         nearestMultiple(17,20) -> 20
- *         nearestMultiple(25,20) -> 40
- *
- */
-const nearestMultiple = (n,m) => ~~(n + (m - n % m))
+    return { data, labels }
+}
 
 /**
  * Helper method for drawTimeline. This was split out, to allow for
  * re-sorting.
  *
  */
-const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, content, bucketData, sorter=defaultSorter, sortDir=+1) => {
-    const { buckets, summary } = bucketData,
-          { numAxisSwaths } = defaults
+const _drawTimeline = ({options, content, timelineData}) => () => {
+    const timeFormat = 'MM/DD/YYYY HH:mm',
+          { colors } = require(`../themes/${options.theme || 'ibm'}`)
 
-    // determine max height
-    let maxHeight
-    buckets.forEach(({summary:bucketSummary, bucket}) => {
-        // sort the buckets, so that we stack them in the right order
-        sort(bucket, sorter, sortDir)
+    /** render the chart */
+    const render = ({data, labels}) => {
+          // clean the container
+        ui.removeAllDomChildren(content)
 
-        // height of this column
-        const height = bucketSummary.nFailures + bucketSummary.nSuccesses
+        const canvas = document.createElement('canvas'),
+              ctx = canvas.getContext('2d')
+        content.appendChild(canvas)
+        canvas.style.padding = '1em 0 1em 1em'
 
-        // adjust maxHeight across all timeline buckets (max height of a column, across x axis)
-        if (!maxHeight || height > maxHeight) {
-            maxHeight = height
-        }
-    })
+        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, chart:chartStyle } = colors(ctx)
+        data.datasets[0].borderColor = success.border
+        data.datasets[0].backgroundColor = success.bg
+        data.datasets[1].borderColor = failure.border
+        data.datasets[1].backgroundColor = failure.bg
+        data.datasets[2].borderColor = cost.border
+        data.datasets[2].backgroundColor = cost.bg
 
-    // make sure maxHeight is a multiple of the number of tick marks
-    // this avoids fractions in the y axis labels
-    const maxHeightForAxes = nearestMultiple(maxHeight, numAxisSwaths)
-
-    // we now have maxHeight, and so can start rendering
-    const cellRenderingOptions = { nameInTooltip : true }
-
-    // we'll need a wrapper to help with rendering the axes
-    const existingWrapper = document.querySelector(`.${css.wrapperQS}`),
-          wrapper = existingWrapper || document.createElement('div'),
-          timeline = existingWrapper ? wrapper.querySelector(`.${css.timelineQS}`) : document.createElement('div')
-
-    // render the axes, do this first, so that the DOMs stack properly
-    const minuteRounder = 1000 * 60 * 1, // try to round to the nearest minute
-          rounder = bucketData.bucketWidthInMillis < minuteRounder ? 1 : minuteRounder // ... unless the bucket width is less than a minute!
-
-    addHorizontalAxis(content, Math.round(bucketData.bucketWidthInMillis / rounder) * rounder )
-    addVerticalAxis(timeline, maxHeightForAxes / numAxisSwaths)
-
-    // now that the axes are in place, add the rest of the content DOMs
-    wrapper.className = css.wrapper
-    timeline.className = css.timeline
-    timeline.setAttribute('color-by', 'duration')
-    if (!existingWrapper) {
-        content.appendChild(wrapper)
-        wrapper.appendChild(timeline)
-    }
-
-    const columns = []
-    let dragIsOn = false,
-        dragIsMaybe = false,
-        escapeHandler
-    const resetDrag = () => {
-        document.onmouseup = false
-        for (let idx = dragIsOn[0]; idx <= dragIsOn[1]; idx++) {
-            columns[idx].classList.remove('mousedown')
+        if (chartStyle && chartStyle.backgroundColor) {
+            content.style.background = chartStyle.backgroundColor;
         }
 
-        if (escapeHandler) {
-            document.onkeyup = escapeHandler
-        }
+        const range = labels[labels.length - 1] - labels[0],
+              ONE_SECOND = 1000,
+              ONE_MINUTE = 60 * ONE_SECOND,
+              ONE_HOUR = 60 * ONE_MINUTE,
+              ONE_DAY = 24 * ONE_HOUR,
+              ONE_WEEK = 7 * ONE_DAY,
+              ONE_MONTH = 4 * ONE_WEEK,
+              overflow = 5
 
-        dragIsOn = false
-        dragIsMaybe = false
-        escapeHandler = false
-    }
-
-    // now render the header bits (this could have been done earlier)
-    const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
-    ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
-
-    displayTimeRange(bucketData, leftHeader)
-    if (buckets.length > 0) {
-        drawLegend(rightHeader, summary)
-    }
-
-    // now render each column: "buckets" is the array of column models
-    let previousLeave
-    buckets.forEach(({summary:bucketSummary, bucket}, bucketIdx) => {
-        const existingColumn = timeline.querySelector(`.${css.columnQS}:nth-child(${bucketIdx + 2})`),
-              column = existingColumn || document.createElement('div'),
-              peripheral = bucketIdx < 2 ? 'grid-cell-far-far-left' : bucketIdx < 4 ? 'grid-cell-far-left'
-              : buckets.length - bucketIdx < 2 ? 'grid-cell-far-far-right' : buckets.length - bucketIdx < 5 ? 'grid-cell-far-right' : '' // for tooltips
-        column.className = css.column
-
-        columns.push(column)
-        column.onmousedown = () => {
-            dragIsMaybe = {column,bucket,bucketIdx}
-
-            escapeHandler = document.onkeyup
-            document.onkeyup = evt => {
-                if (evt.keyCode === 27) { // escape key maps to keycode `27`
-                    resetDrag()
-                }
-            }
-        }
-        column.onclick = () => {
-            dragIsMaybe = false
-        }
-        column.onmouseleave = () => {
-            previousLeave = bucketIdx
-        }
-        column.onmouseenter = () => {
-            if (dragIsOn && bucketIdx >= dragIsOn[0] && bucketIdx <= dragIsOn[1]) {
-                // retraction
-                let deleteStart, deleteEnd
-                if (previousLeave > bucketIdx) {
-                    // retraction from right <--
-                    deleteStart = bucketIdx + 1
-                    deleteEnd = dragIsOn[1]
-                    dragIsOn[1] = bucketIdx
-                    //console.error('ON-', dragIsOn, bucketIdx);
-                } else {
-                    // retraction from left -->
-                    deleteStart = dragIsOn[0]
-                    deleteEnd = bucketIdx - 1
-                    dragIsOn[0] = bucketIdx
-                    //console.error('-ON', dragIsOn, bucketIdx);
-                }
-                for (let idx = deleteStart; idx <= deleteEnd; idx++) {
-                    columns[idx].classList.remove('mousedown')
-                }
-                return
-            }
-            
-            if (dragIsMaybe) {
-                // initiation
-                dragIsMaybe.column.classList.add('mousedown')
-                dragIsOn = [dragIsMaybe.bucketIdx,dragIsMaybe.bucketIdx]
-                dragIsMaybe = false
-
-                document.onmouseup = evt => {
-                    if (dragIsOn) {
-                        const activations = [],
-                              highlightThis = []
-                        for (let idx = dragIsOn[0]; idx <= dragIsOn[1]; idx++) {
-                            buckets[idx].bucket.forEach(group => group.activations.forEach(activation => activations.push(activation)))
-                            highlightThis.push(columns[idx])
-                        }
-                        resetDrag()
-                        drilldownWith(viewName, showGrid(activations), highlightThis)(evt)
-                    }
-                }
-            }
-
-            if (dragIsOn) {
-                // expansion
-                dragIsOn = [Math.min(dragIsOn[0],bucketIdx), Math.max(dragIsOn[1],bucketIdx)]
-                //console.error('ON',dragIsOn)
-                for (let idx = dragIsOn[0]; idx < dragIsOn[1]; idx++) {
-                    columns[idx].classList.add('mousedown')
-                }
-            }
-        }
-        if (!existingColumn) timeline.appendChild(column)
-
-        const updateCell = (cell, group) => {
-            const isFailure = group.nFailures > 0,
-                  fraction = group.count / maxHeight
-
-            cell.style.height = `${100 * fraction}%`
-            cell.setAttribute('data-count', group.count)
-
-            if (group.count === 0) {
-                cell.classList.remove('grid-cell-occupied')
-            } else {
-                cell.classList.add('grid-cell-occupied')
-            }
-
-            const tooltip = isFailure
-                  ? `Failed Activations: ${group.count}`
-                  : `${group.count} activations with a latency of ${latencyBucketRange(group.groupKey)}`
-            cell.setAttribute('data-balloon', tooltip)
-
-            cell.onclick = event => {
-                resetDrag()
-                drilldownWith(viewName, showGrid(group.activations), cell)(event)
-            }
-        }
-        if (existingColumn) {
-            for (let idx = 0; idx < column.childNodes.length; idx++) {
-                const cell = column.childNodes[idx],
-                      groupKey = parseInt(cell.getAttribute('data-group-key')),
-                      newOne = bucket.find(_ => _.groupKey === groupKey)
-
-                if (!newOne) {
-                    // this cell doesn't exist in the new model
-                    cell.style.height = '0%'
-                    cell.classList.remove('grid-cell-occupied')
-                } else {
-                    updateCell(cell, newOne)
-                    newOne.marked = true
-                }
-            }
-        }
-        let prevCell
-        bucket.forEach(group => {
-            if (group.marked) return // dealt with already in the prior loop nest
-
-            // otherwise, this is a new cell
-            const isFailure = group.nFailures > 0,
-                  fraction = group.count / maxHeight
-
-            if (fraction > 0.01 || isFailure) {
-                // render a new cell
-                cell = document.createElement('div')
-                cell.className = `${css.cell} ${peripheral}`
-                cell.setAttribute('data-group-key', group.groupKey)
-                renderCell(viewName, cell, null, isFailure, group.groupKey, cellRenderingOptions)
-
-                if (column.childNodes.length === 0) {
-                    // this is the first time we've rendered this column
-                    column.appendChild(cell)
-                } else {
-                    let gotIt = false
-                    for (let idx = 0; idx < column.childNodes.length; idx++) {
-                        const otherCell = column.childNodes[idx],
-                              otherGroupIdx = parseInt(cell.getAttribute('data-group-key'))
-                        if (otherGroupIdx > group.groupKey) {
-                            column.insertBefore(cell, otherCell)
-                            gotIt = true
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data,
+            labels,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    mode: 'nearest',
+                    intersect: true,
+                    titleFontFamily: fontFamily,
+                    bodyFontFamily: fontFamily,
+                    footerFontFamily: fontFamily,
+                    callbacks: {
+                        label: (tooltipItem, data) => {
+                            if (tooltipItem.datasetIndex === 2) {
+                                return `$${tooltipItem.yLabel} per million, cumulatively`
+                            } else {
+                                return `${data.datasets[tooltipItem.datasetIndex].label}: ${tooltipItem.yLabel}`
+                            }
                         }
                     }
-                    if (!gotIt) {
-                        column.appendChild(cell)
+                },
+                legend: {
+                    //reverse: true,
+                    labels: {
+                        fontFamily,
+                        fontSize,
+                        padding: 20,
+                        usePointStyle: true
                     }
+                },
+                scales: {
+                    xAxes: [{
+                        type: 'time',
+                        stacked: true,
+                        ticks: {
+                            fontFamily,
+                            /*padding: 10,
+                            maxTicksLimit: 5,
+                            callback: (value, idx, values) => {
+                                return !values[idx] ? null
+                                    : range > ONE_WEEK ? new Date(values[idx].value).toLocaleString()
+                                    : new Date(values[idx].value).toLocaleTimeString()
+                            }*/
+                        },
+                        scaleLabel: {
+                            display: true,
+                            //fontStyle: 'bold',
+                            fontFamily,
+                            fontSize,
+                            labelString: 'Time'
+                        },
+                        time: {
+                            min: labels[0] - (labels[labels.length - 1] - labels[0]) / labels.length / 2,
+                            max: labels[labels.length - 1] + (labels[labels.length - 1] - labels[0]) / labels.length / 2,
+                            unit: range > overflow * ONE_MONTH ? 'month' : range > overflow * ONE_WEEK ? 'week' : range > overflow * ONE_DAY ? 'day' : range > overflow * ONE_HOUR ? 'hour' : 'second',
+			    tooltipFormat: timeFormat
+                        }
+                    }],
+                    yAxes: [{
+                        type: 'linear',
+                        stacked: true,
+                        beginAtZero: true,
+                        scaleLabel: {
+                            display: true,
+                            //fontStyle: 'bold',
+                            fontFamily,
+                            fontSize,
+                            labelString: '# Activations'
+                        },
+                    }, {
+                        type: 'linear',
+                        id: 'cost',
+                        beginAtZero: true,
+                        position: 'right',
+                        ticks: {
+                            callback: (value, idx, values) => {
+                                return `$${value}`
+                            }
+                        },
+                        scaleLabel: {
+                            display: true,
+                            //fontStyle: 'bold',
+                            fontFamily,
+                            fontSize,
+                            labelString: 'Cumulative Cost per Million Activations'
+                        },
+                    }]
                 }
-
-                prevCell = cell
-                updateCell(cell, group)
             }
         })
-    })
+
+        return chart
+    }
+
+    return render(prepare(timelineData))
 }
+
 
 /**
  * This is the module
@@ -407,7 +238,7 @@ const _drawTimeline = (options, {sidecar, leftHeader, rightHeader}, content, buc
  */
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core'),
-          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, null, extraOptions),
+          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, '\t--theme    <orange-cyan|ibm> [default=ibm]\n\t--nBuckets configure the number of buckets along the x axis [default=20]', extraOptions),
           timelineIt = mkCmd('timeline'),
           pollingTimeline = mkCmd('...', { live: true })
 
