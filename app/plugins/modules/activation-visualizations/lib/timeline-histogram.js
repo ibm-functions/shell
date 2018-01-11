@@ -67,7 +67,7 @@ const accumulate = PDF => PDF.reduce((CDF, density, idx) => {
  *
  */
 const prepare = timelineData => {
-    const { success, failure, cost, nBuckets, first, interval} = timelineData,
+    const { success, failure, cost, nBuckets, first, last, interval} = timelineData,
           fill = true,     // we want all of the bars to be filled in
           borderWidth = 0  // for bars
 
@@ -90,7 +90,9 @@ const prepare = timelineData => {
     //console.error(data)
     //console.error(labels)
 
-    return { data, labels }
+    // because of rounding, we need to remember "last" so that
+    // drilldown from the last bucket works; see shell issue #224
+    return { data, labels, last }
 }
 
 /**
@@ -103,7 +105,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
           { colors } = require(`../themes/${options.theme || 'coral'}`)
 
     /** render the chart */
-    const render = ({data, labels}) => {
+    const render = ({data, labels, last}) => {
           // clean the container
         ui.removeAllDomChildren(content)
 
@@ -175,10 +177,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                     const elements = chart.getElementsAtEventForMode(event, 'point')
                     if (elements.length === 1 && elements[0]._datasetIndex < 2) {
                         canvas.style.cursor = 'pointer'
-                        console.error('!!!!', canvas.style.cursor)
                     } else {
                         canvas.style.cursor = 'default'
-                        console.error('@@@@', canvas.style.cursor)
                     }
                 },
                 responsive: true,
@@ -311,8 +311,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
             const elements = chart.getElementsAtEventForMode(event, 'point')
             if (elements.length === 1) {
                 const { _datasetIndex, _index } = elements[0],
-                      timeRangeStart = _index === labels.length - 1 ? labels[_index - 1] : labels[_index],
-                      timeRangeEnd = _index === labels.length - 1 ? labels[_index] : labels[_index + 1]
+                      timeRangeStart = labels[_index],
+                      timeRangeEnd = _index === labels.length - 1 ? last : labels[_index + 1]
                 if (_datasetIndex < 2) {
                     const filter = _datasetIndex === 0 ? 'success' : 'failure'
                     drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --since ${timeRangeStart} --upto ${timeRangeEnd} --${filter}`))()
