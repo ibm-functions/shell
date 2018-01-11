@@ -19,7 +19,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { sort, numericalGroupKeySorter:defaultSorter } = require('./sorting'),
       { modes } = require('./modes'),
-      { ready, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
+      { ready, transparent, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Timeline'
 
@@ -76,7 +76,7 @@ const prepare = timelineData => {
         datasets: [
             { type: 'bar', fill, borderWidth, label: 'Successes', data: success },
             { type: 'bar', fill, borderWidth, label: 'Failures', data: failure },
-            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'transparent', borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
+            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'rgba(255,255,255,0.5)', pointRadius: 3, borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
         ]
     }
 
@@ -99,7 +99,7 @@ const prepare = timelineData => {
  */
 const _drawTimeline = ({options, content, timelineData}) => () => {
     const timeFormat = 'MM/DD/YYYY HH:mm',
-          { colors } = require(`../themes/${options.theme || 'ibm'}`)
+          { colors } = require(`../themes/${options.theme || 'coral'}`)
 
     /** render the chart */
     const render = ({data, labels}) => {
@@ -111,7 +111,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
         content.appendChild(canvas)
         canvas.style.padding = '1em 0 1em 1em'
 
-        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, chart:chartStyle } = colors(ctx)
+        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, tickFontSize = 12, chart:chartStyle, fontColor='#333', gridLinesColor=transparent(fontColor,0.1) } = colors(ctx)
         data.datasets[0].borderColor = success.border
         data.datasets[0].backgroundColor = success.bg
         data.datasets[1].borderColor = failure.border
@@ -159,6 +159,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                     //reverse: true,
                     labels: {
                         fontFamily,
+                        fontColor,
                         fontSize,
                         padding: 20,
                         usePointStyle: true
@@ -170,18 +171,17 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                         stacked: true,
                         ticks: {
                             fontFamily,
-                            /*padding: 10,
-                            maxTicksLimit: 5,
-                            callback: (value, idx, values) => {
-                                return !values[idx] ? null
-                                    : range > ONE_WEEK ? new Date(values[idx].value).toLocaleString()
-                                    : new Date(values[idx].value).toLocaleTimeString()
-                            }*/
+                            fontSize: tickFontSize,
+                            fontColor,
+                        },
+                        gridLines: {
+                            color: gridLinesColor,
                         },
                         scaleLabel: {
                             display: true,
                             //fontStyle: 'bold',
                             fontFamily,
+                            fontColor,
                             fontSize,
                             labelString: 'Time'
                         },
@@ -196,11 +196,20 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                         type: 'linear',
                         stacked: true,
                         beginAtZero: true,
+                        gridLines: {
+                            color: gridLinesColor,
+                        },
+                        ticks: {
+                            fontFamily,
+                            fontSize: tickFontSize,
+                            fontColor,
+                        },
                         scaleLabel: {
                             display: true,
                             //fontStyle: 'bold',
                             fontFamily,
                             fontSize,
+                            fontColor,
                             labelString: '# Activations'
                         },
                     }, {
@@ -208,7 +217,13 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                         id: 'cost',
                         beginAtZero: true,
                         position: 'right',
+                        gridLines: {
+                            display: false,
+                        },
                         ticks: {
+                            fontFamily,
+                            fontSize: tickFontSize,
+                            fontColor,
                             callback: (value, idx, values) => {
                                 return `$${value}`
                             }
@@ -238,7 +253,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
  */
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core'),
-          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, '\t--theme    <orange-cyan|ibm> [default=ibm]\n\t--nBuckets configure the number of buckets along the x axis [default=20]', extraOptions),
+          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, '\t--theme    <orange-cyan|coral|acacia|highcharts|ibm> [default=ibm]\n\t--nBuckets configure the number of buckets along the x axis [default=20]', extraOptions),
           timelineIt = mkCmd('timeline'),
           pollingTimeline = mkCmd('...', { live: true })
 

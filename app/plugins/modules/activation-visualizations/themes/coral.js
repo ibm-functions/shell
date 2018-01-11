@@ -17,9 +17,9 @@
 const { transparent } = require('../lib/util')
 
 exports.colors = ctx => {
-    const orange = '#F4481D',
-          cyan = '#152934',
-          blue = '#152934'
+    const orange = '#F8413C',
+          cyan = '#00557F',
+          blue = '#656565',
           barBorder = transparent('#292525', 0.6)
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 800)
@@ -31,6 +31,7 @@ exports.colors = ctx => {
         success: { border: barBorder, bg: cyan },
         failure: { border: barBorder, bg: orange },
         cost: { border: blue, bg: gradient },
+        fontColor: '#5A5A5A',
         chart: {
             backgroundColor: '#fff'
         },

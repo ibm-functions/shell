@@ -17,22 +17,23 @@
 const { transparent } = require('../lib/util')
 
 exports.colors = ctx => {
-    const orange = '#F4481D',
-          cyan = '#152934',
-          blue = '#152934'
+    const orange = '#DE4E33',
+          cyan = '#97DBF2',
+          blue = '#FACCC3'
           barBorder = transparent('#292525', 0.6)
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, 800)
-    gradient.addColorStop(0, transparent(blue, 0.7))
-    gradient.addColorStop(1, transparent(blue, 0.1))
+    //const gradient = ctx.createLinearGradient(0, 0, 0, 400)
+    //gradient.addColorStop(0, transparent(area, 0.99))
+    //gradient.addColorStop(1, transparent(area, 0.25))
 
     return {
         fontFamily: 'ibm-plex-sans',
         success: { border: barBorder, bg: cyan },
         failure: { border: barBorder, bg: orange },
-        cost: { border: blue, bg: gradient },
+        cost: { border: blue, bg: transparent(blue, 0.2) },
+        fontColor: 'rgba(255,255,255,0.5)',
         chart: {
-            backgroundColor: '#fff'
+            backgroundColor: '#504243'
         },
         borderWidth: 5
     }
