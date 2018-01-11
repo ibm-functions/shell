@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-const { transparent, darken } = require('../lib/util')
+const { transparent } = require('../lib/util')
 
 exports.colors = ctx => {
-    const orange = '#F8413C',
-          cyan = '#00557F',
-          blue = '#009FD8',
+    const orange = '#e31a1c',
+          cyan = '#1f78b4',
+          blue = '#ff7f00',
           barBorder = transparent('#292525', 0.6)
 
-    /*const gradient = ctx.createLinearGradient(0, 0, 0, 800)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 800)
     gradient.addColorStop(0, transparent(blue, 0.7))
-    gradient.addColorStop(1, transparent(blue, 0.1))*/
+    gradient.addColorStop(1, transparent(blue, 0.1))
 
     return {
         fontFamily: 'ibm-plex-sans',
         success: { border: barBorder, bg: cyan },
         failure: { border: barBorder, bg: orange },
-        cost: { border: blue, bg: 'transparent', borderWidth: 8, pointRadius: 6, pointBackgroundColor: darken(blue) },
+        cost: { border: blue, bg: gradient, borderWidth: 8, pointRadius: 6 },
         fontColor: '#5A5A5A',
         chart: {
             backgroundColor: '#fff'
