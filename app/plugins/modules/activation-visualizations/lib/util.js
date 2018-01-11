@@ -85,6 +85,20 @@ const extractTasks = ({fsm}) => {
 }
 
 /**
+ * If requested, filter by success or failure
+ *
+ */
+const filterBySuccess = ({success, failure}) => activations => {
+    if (!success && !failure) {
+        return activations
+    } else if (success) {
+        return activations.filter(exports.isSuccess)
+    } else {
+        return activations.filter(exports.isNotSuccess)
+    }
+}
+
+/**
  * Fetch the activation data from the OpenWhisk API
  *
  */
@@ -126,10 +140,12 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
             .then(tasks => all ? tasks.concat([appName]) : tasks) // if options.all, then add the app to the list of actions
             .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {name:task,filter,include,exclude,skip,upto,since,batchSize}))))
             .then(flatten)
+            .then(filterBySuccess(options))
     }
 
     return Promise.all(new Array(N).fill(0).map((_, idx) => fetch(idx * batchSize)))
         .then(flatten)
+        .then(filterBySuccess(options))
         .then(filterOutNonActionActivations(path||filter||include ? makeFilter(path||filter||include, exclude) : name ? makeFilter(amendWithNamespace(name), exclude) : acceptAnything))
 }
 //exports.fetchActivationDataFromBackend = fetchActivationDataFromBackend
@@ -316,6 +332,7 @@ exports.latencyBucketRange = bucket => {
  *
  */
 exports.isSuccess = activation => activation.statusCode === 0
+exports.isNotSuccess = activation => activation.statusCode !== 0
 
 /**
  * Turn an options struct into a cli string

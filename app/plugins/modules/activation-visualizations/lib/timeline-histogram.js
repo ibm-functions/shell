@@ -19,7 +19,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { sort, numericalGroupKeySorter:defaultSorter } = require('./sorting'),
       { modes } = require('./modes'),
-      { ready, transparent, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
+      { ready, transparent, optionsToString, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Timeline'
 
@@ -76,7 +76,8 @@ const prepare = timelineData => {
         datasets: [
             { type: 'bar', fill, borderWidth, label: 'Successes', data: success },
             { type: 'bar', fill, borderWidth, label: 'Failures', data: failure },
-            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'rgba(255,255,255,0.5)', pointRadius: 3, borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
+            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'rgba(255,255,255,0.5)', pointRadius: 3, pointHoverRadius: 6,
+              borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
         ]
     }
 
@@ -132,13 +133,59 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
               ONE_MONTH = 4 * ONE_WEEK,
               overflow = 5
 
+        // reset mouse cursor after a hover event; ugh, this requires a plugin, at least as of ChartJS 2.7.1
+        // see https://github.com/jtblin/angular-chart.js/issues/598
+        Chart.plugins.register({
+            afterEvent: function(chartInstance, chartEvent) {
+                const elements = chart.getElementsAtEventForMode(event, 'point')
+                if (elements.length === 1 && elements[0]._datasetIndex < 2) {
+                    // then the mouse is currently over a bar; don't
+                    // reset the hover effect just yet
+                    return
+                }
+
+                // otherwise, reset the hover effect if the mouse is now outside the legend
+                var legend = chartInstance.legend;
+                var canvas = chartInstance.chart.canvas;
+                var x = chartEvent.x;
+                var y = chartEvent.y;
+                var cursorStyle = 'default';
+                if (x <= legend.right && x >= legend.left &&
+                    y <= legend.bottom && y >= legend.top) {
+                    for (var i = 0; i < legend.legendHitBoxes.length; ++i) {
+                        var box = legend.legendHitBoxes[i];
+                        if (x <= box.left + box.width && x >= box.left &&
+                            y <= box.top + box.height && y >= box.top) {
+                            cursorStyle = 'pointer';
+                            break;
+                        }
+                    }
+                }
+                canvas.style.cursor = cursorStyle;
+            }
+        })
+
         const chart = new Chart(ctx, {
             type: 'bar',
             data,
             labels,
             options: {
+                events: ['click', 'mousemove', 'mouseout'],
+                onHover: (event, entry) => {
+                    const elements = chart.getElementsAtEventForMode(event, 'point')
+                    if (elements.length === 1 && elements[0]._datasetIndex < 2) {
+                        canvas.style.cursor = 'pointer'
+                        console.error('!!!!', canvas.style.cursor)
+                    } else {
+                        canvas.style.cursor = 'default'
+                        console.error('@@@@', canvas.style.cursor)
+                    }
+                },
                 responsive: true,
                 maintainAspectRatio: false,
+                hover: {
+                    animationDuration: 100
+                },
                 tooltips: {
                     mode: 'nearest',
                     intersect: true,
@@ -157,6 +204,15 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                 },
                 legend: {
                     //reverse: true,
+                    onHover: function(event, entry) {
+                        canvas.style.cursor = 'pointer'
+                    },
+                    onClick: (event, {datasetIndex}) => {
+                        if (datasetIndex < 2) {
+                            const filter = datasetIndex === 0 ? 'success' : 'failure'
+                            drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --${filter}`))()
+                        }
+                    },
                     labels: {
                         fontFamily,
                         fontColor,
@@ -239,6 +295,30 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                 }
             }
         })
+
+        /*chart.onHover = (event, entry) => {
+            console.error(entry)
+            return
+            const elements = chart.getElementsAtEventForMode(event, 'point')
+            if (elements.length === 1) {
+                canvas.style.cursor = 'pointer'
+            } else {
+                canvas.style.cursor = 'default'
+            }
+        }*/
+
+        canvas.onclick = event => {
+            const elements = chart.getElementsAtEventForMode(event, 'point')
+            if (elements.length === 1) {
+                const { _datasetIndex, _index } = elements[0],
+                      timeRangeStart = _index === labels.length - 1 ? labels[_index - 1] : labels[_index],
+                      timeRangeEnd = _index === labels.length - 1 ? labels[_index] : labels[_index + 1]
+                if (_datasetIndex < 2) {
+                    const filter = _datasetIndex === 0 ? 'success' : 'failure'
+                    drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --since ${timeRangeStart} --upto ${timeRangeEnd} --${filter}`))()
+                }
+            }
+        }
 
         return chart
     }
