@@ -77,11 +77,11 @@ const prepare = (timelineData, theme) => {
     const data = {
         labels: [],
         datasets: [
+            { type: 'line', fill: false, borderWidth: theme.cost.borderWidth||6, pointBorderWidth: 3, pointBackgroundColor: theme.cost.pointBackgroundColor || 'rgba(255,255,255,0.5)', pointRadius: theme.cost.pointRadius||3, pointHoverRadius: 6,
+              borderDash: [12,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost',
+              borderColor: theme.cost.border, backgroundColor: theme.cost.bg},
             { type: 'bar', fill, borderWidth, label: 'Successes', data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
-            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg },
-            { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'rgba(255,255,255,0.5)', pointRadius: 3, pointHoverRadius: 6,
-              borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost',
-              borderColor: theme.cost.border, backgroundColor: theme.cost.bg}
+            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg }
         ]
     }
 
@@ -233,6 +233,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                             fontFamily,
                             fontSize: tickFontSize,
                             fontColor,
+                            maxRotation: 20,
+                            autoSkip: true
                         },
                         gridLines: {
                             color: gridLinesColor,

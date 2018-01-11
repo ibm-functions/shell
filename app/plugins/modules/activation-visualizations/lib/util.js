@@ -360,6 +360,7 @@ exports.optionsToString = options => {
  *
  */
 exports.transparent = (color, alpha=0.6) => Color(color).alpha(alpha).rgbString()
+exports.darken = (color, factor=0.3) => Color(color).darken(factor).rgbString()
 
 /**
  * Wait for the ChartJS code to be loaded
