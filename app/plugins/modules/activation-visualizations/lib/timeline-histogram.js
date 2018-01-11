@@ -272,6 +272,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                         type: 'linear',
                         id: 'cost',
                         beginAtZero: true,
+                        stacked: true,      // <--- at least in ChartJS 2.7.1, this is required to make beginAtZero work. ¯\_(ツ)_/¯
                         position: 'right',
                         gridLines: {
                             display: false,
