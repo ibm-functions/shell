@@ -66,18 +66,22 @@ const accumulate = PDF => PDF.reduce((CDF, density, idx) => {
  * Prepare the data models
  *
  */
-const prepare = timelineData => {
+const prepare = (timelineData, theme) => {
     const { success, failure, cost, nBuckets, first, last, interval} = timelineData,
           fill = true,     // we want all of the bars to be filled in
           borderWidth = 0  // for bars
 
+    // hover effect
+    const hover = color => Color(color.bg).darken(0.25).saturate(2).rgbString()
+
     const data = {
         labels: [],
         datasets: [
-            { type: 'bar', fill, borderWidth, label: 'Successes', data: success },
-            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure },
+            { type: 'bar', fill, borderWidth, label: 'Successes', data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
+            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg },
             { type: 'line', fill: true, borderWidth: 6, pointBorderWidth: 3, pointBackgroundColor: 'rgba(255,255,255,0.5)', pointRadius: 3, pointHoverRadius: 6,
-              borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost' }
+              borderDash: [1,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost',
+              borderColor: theme.cost.border, backgroundColor: theme.cost.bg}
         ]
     }
 
@@ -105,22 +109,21 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
           { colors } = require(`../themes/${options.theme || 'coral'}`)
 
     /** render the chart */
-    const render = ({data, labels, last}) => {
+    const render = () => {
           // clean the container
         ui.removeAllDomChildren(content)
 
+        // create the canvas that ChartJS needs
         const canvas = document.createElement('canvas'),
               ctx = canvas.getContext('2d')
         content.appendChild(canvas)
         canvas.style.padding = '1em 0 1em 1em'
 
-        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, tickFontSize = 12, chart:chartStyle, fontColor='#333', gridLinesColor=transparent(fontColor,0.1) } = colors(ctx)
-        data.datasets[0].borderColor = success.border
-        data.datasets[0].backgroundColor = success.bg
-        data.datasets[1].borderColor = failure.border
-        data.datasets[1].backgroundColor = failure.bg
-        data.datasets[2].borderColor = cost.border
-        data.datasets[2].backgroundColor = cost.bg
+        // prepare the data models
+        const theme = colors(ctx)
+        const {data, labels, last} = prepare(timelineData, theme)
+
+        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, tickFontSize = 12, chart:chartStyle, fontColor='#333', gridLinesColor=transparent(fontColor,0.1) } = theme
 
         if (chartStyle && chartStyle.backgroundColor) {
             content.style.background = chartStyle.backgroundColor;
@@ -184,7 +187,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 hover: {
-                    animationDuration: 100
+                    animationDuration: 100,
+                    mode: 'point' // only highlight the hovered bar; the default is to highlight the whole stack
                 },
                 tooltips: {
                     mode: 'nearest',
@@ -323,7 +327,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
         return chart
     }
 
-    return render(prepare(timelineData))
+    return render()
 }
 
 
