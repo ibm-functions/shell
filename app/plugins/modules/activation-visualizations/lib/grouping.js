@@ -293,6 +293,10 @@ const costOf = activation => {
  *
  */
 const successFailureTimeline = (activations, { nBuckets = 20 }) => {
+    if (activations.length === 0) {
+        return []
+    }
+
     // some parameters of the model
     const first = activations[activations.length - 1].start,
           last = activations[0].start,
