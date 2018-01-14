@@ -23,7 +23,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { modes } = require('./modes'),
       { optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
 
-const viewName = 'Activity Grid'
+const viewName = 'Grid'
 
 const css = {
     content: 'activation-viz-plugin',

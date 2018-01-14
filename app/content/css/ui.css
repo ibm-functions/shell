@@ -1326,11 +1326,19 @@ body.oops-total-catastrophe #restart-needed-warning {
 /* tooltips */
 [data-balloon]:hover {
     cursor: pointer;
+    opacity: 1 !important;
 }
 [data-balloon]:after {
     width: 13em;
     white-space: normal !important;
     text-align: center;
+}
+.main [data-balloon]:after {
+    font-size: 0.875rem !important;
+}
+[data-balloon][data-balloon-break]::before, [data-balloon][data-balloon-break]::after {
+    /* you can add &#10; (\u000a if innerText) to data-balloon attrs to force a line break; make sure to add data-balloon-break attr, too */
+    white-space: pre-wrap !important;
 }
 
 /* wskflow qtip rules */

@@ -34,7 +34,7 @@ const mode = mode => options => ({
  *
  */
 const modes = [
-    mode('table'),
+    mode('summary'),
     mode('timeline'),
     mode('grid')
 ]
