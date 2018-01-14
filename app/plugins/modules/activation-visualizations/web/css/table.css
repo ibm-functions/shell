@@ -11,18 +11,27 @@
 .activation-viz-plugin .data-table-scroll-container {
     overflow-y: auto;
     width: 100%;
+    padding-bottom: 1em; /* make some room for tooltips */
 }
 
 .activation-viz-plugin > .data-table {
     margin-top: 2em;
 }
 .activation-viz-plugin .data-table {
+    font-family: "Fira Mono";
     table-layout: fixed;
     border-spacing: 0;
     border-collapse: collapse;
     width: 100%;
-}
 
+    /*background-image: -webkit-linear-gradient(0, var(--color-ui-04), var(--color-ui-04) 1px, transparent 1px);
+    background-size: calc(20%);
+    background-position: -4px 0;*/
+}
+.activation-viz-plugin .data-table.table-header {
+    border-bottom: 4px solid #666;
+    margin-bottom: 0.4rem;
+}
 .activation-viz-plugin .data-table th {
     cursor: pointer;
     border-bottom: 2px solid #666;
@@ -68,31 +77,179 @@
 }
 
 .activation-viz-plugin .data-table td {
-    padding: 0.6rem 1rem;
     text-align: right;
+    padding: 0.8rem 0.75rem;
+    transition: all 150ms ease-in-out;
 }
 
-.activation-viz-plugin table .cell-label {
+.activation-viz-plugin table .cell-label > div {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 .activation-viz-plugin table td.cell-label {
-    font-weight: 400;
-    font-size: 80%;
+    font-weight: 500;
+    font-size: 0.875em;
+    padding-right: 2em;
+}
+.activation-viz-plugin.show-outliers td.cell-hide-when-outliers-shown, .activation-viz-plugin:not(.show-outliers) td.cell-show-only-when-outliers-shown {
+    /* outliers */
+    width: 0;
+    opacity: 0 !important;
 }
 
+/* action name column, and range selector padding for that label column */
+.activation-viz-plugin table td.cell-label, .activation-viz-plugin .x-axis-left-pad {
+    width: 20%;
+}
+.activation-viz-plugin.wide-label table td.cell-label, .activation-viz-plugin.wide-label .x-axis-left-pad, .sidecar-full-screen .activation-viz-plugin table td.cell-label, .sidecar-full-screen .activation-viz-plugin .x-axis-left-pad {
+    /* -w option, or sidecar full screen */
+    width: 25%;
+}
+.activation-viz-plugin.extra-wide-label table td.cell-label, .activation-viz-plugin.extra-wide-label .x-axis-left-pad {
+    /* --ww option */
+    width: 35%;
+}
+
+.activation-viz-plugin .data-table.table-header td.cell-numeric, .activation-viz-plugin .data-table .x-axis-label, .activation-viz-plugin .data-table .x-axis-focus-label {
+    opacity: 0.5;
+    font-size: 0.75em;
+    padding-bottom: 0.5em;
+}
+.activation-viz-plugin .data-table.table-header td.cell-numeric {
+    font-size: 0.75em;
+}
+.activation-viz-plugin .data-table .x-axis-label, .activation-viz-plugin .data-table .x-axis-focus-label {
+    text-align: left;
+    padding-left: 0.5ex;
+    border-left: 1px dotted var(--color-text-01);
+    transition: all 150ms ease-in-out;
+}
+
+/* deal with x axis focus bits */
+.activation-viz-plugin.x-axis-focus .data-table td.x-axis-label {
+    width: 0;
+    opacity: 0;
+    border: none;
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell {
+    padding: 0;
+    position: relative;
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-range {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    top: 0;
+    transition: all 150ms ease-in-out;
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:first-child {
+    text-align: left;
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:last-child {
+    border-left: none;
+    border-right: 1px dotted var(--color-text-01); /* must match border-left for x-axis-label */
+    padding-left: 0;
+    padding-right: 0.5ex; /* also must match padding-left for x-axis-label */
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label {
+    padding-top: 0.8rem;
+    font-weight: bold;
+    opacity: 1;
+    white-space: nowrap;
+    transition: all 150ms ease-in-out;
+}
+.activation-viz-plugin:not(.x-axis-focus) .data-table td.x-axis-focus-label-cell {
+    padding: 0;
+    width: 0;
+    opacity: 0;
+    border: none;
+}
+
+.activation-viz-plugin table td.cell-numeric {
+    font-size: 0.875em;
+}
+.activation-viz-plugin .data-table tr:hover td:hover span:hover, .activation-viz-plugin .data-table tr:hover td:hover div:hover, .activation-viz-plugin .data-table tr:hover td:hover .stat-median-dot, .activation-viz-plugin .data-table tr:hover td:hover .stat-indicator {
+    /* tooltip stacking; always keep median dot above the bar it sits on */
+    z-index: 1;
+}
 .activation-viz-plugin .data-table .cell-stat {
     color: black;
 }
 .activation-viz-plugin .data-table .cell-stat.cell-numeric.cell-stat {
     font-size: 70%;
 }
-.activation-viz-plugin .data-table td.cell-numeric,.activation-viz-plugin .data-table td.cell-version {
-    font-size: 80%;
+.activation-viz-plugin .data-table td.cell-numeric .count-icon {
+    margin-left: 0.5ex;
+    -webkit-font-smoothing: antialiased;
+}
+.activation-viz-plugin .data-table td .cell-header {
+    font-size: 0.75em;
+    opacity: 0.6;
+}
+.activation-viz-plugin .data-table .cell-count > span {
+    vertical-align: middle;
+}
+.activation-viz-plugin .data-table td.cell-stats {
+    padding-right: 0;
+    padding-left: 0;
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-bar-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
+    position: absolute;
+    width: 0.5em;
+    height: 2.1em;
+    background: var(--color-text-02);/*#007f4c*/ /*#a50eb6*/
+    border: 1px solid rgba(255,255,255,0.5);
+    transition: all 150ms ease-in-out;
+}
+.activation-viz-plugin.show-outliers .outlier-dot {
+    /* dot representing an outlier activation */
+    width: 0.3em;
+    background: var(--color-support-01);
+    opacity: 0.6;
+    border-color: rgba(255,255,255,0.2);
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover, .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
+    cursor: pointer;
+    filter: saturate(2) brightness(1.15);
+    z-index: 2; /* see z-index: 1 above; make sure the tooltip floats above the range indicators */
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-indicator {
+    position: absolute;
+    color: white;
+    mix-blend-mode: difference;
+    font-size: 0.67em;
+    opacity: 0.5;
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-bar {
+    position: absolute;
+    /*background: #00557F;*/
+    background: linear-gradient(to right, hsla(48, 100%, 44%, 1),var(--color-support-03));
+    height: 1.6rem;
+    border: 1px solid transparent;
+    transition: all 150ms ease-in-out;
+}
+    /* focused bar */
+/*.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar.focus {
+    border-color: black;
+}*/
+.activation-viz-plugin.x-axis-focus .data-table td.cell-hide-when-focus-shown {
+    opacity: 0 !important;
+}
+.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar:not(.focus) {
+    /* some bar is focused other than this one */
+    opacity: 0.5;
+}
+.activation-viz-plugin .data-table:not(.table-header) .cell-numeric.cell-failures {
+    font-weight: bold;
 }
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
-    width: 4.25rem;
+    width: 5rem;
 }
 .activation-viz-plugin .data-table .cell-numeric.cell-extra-wide {
     width: 5.25rem;
@@ -484,4 +641,43 @@ body.subwindow .grid-grid:not(.activation-viz-timeline) {
 /* timeline range dragging */
 .activation-viz-timeline-column.grid.mousedown {
     background: rgba(198, 198, 200, 0.25);
+}
+
+/* range selector for summary */
+.activation-summary-range-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2em 0 0;
+}
+.activation-summary-range-selector .activation-summary-range-selector-label {
+    text-transform: uppercase;
+    font-weight: 400;
+    font-size: 0.875em;
+}
+.activation-summary-range-selector ul {
+    display: flex;
+    padding-left: 1ex;
+    margin: 0;
+}
+.activation-summary-range-selector li {
+    list-style: none;
+    border: 1px solid var(--color-ui-05);
+    border-radius: 5px / 10px;
+    padding: 1ex 1.5em;
+    font-weight: 400;
+    font-size: 0.75em;
+    margin: 0 1ex;
+    transition: all 150ms ease-in-out;
+}
+.activation-summary-range-selector li:hover {
+    background: var(--color-ui-04);
+    cursor: pointer;
+}
+.activation-summary-range-selector li.selected {
+    background: black;
+    color: white;
+}
+.activation-summary-range-selector li.partially-selected {
+    background: var(--color-ui-05);
 }

@@ -54,7 +54,7 @@ const maybe = (reason, shorthand, disparity, cover) => {
  * Compute statistical properties of a given group of activations
  *
  */
-const summarizePerformance = activations => {
+const summarizePerformance = (activations, options) => {
     const summaries = activations.map(_ => {
         const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
               initAnno = _.annotations.find(({key}) => key === 'initTime'),
@@ -62,7 +62,7 @@ const summarizePerformance = activations => {
               wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
               init = initAnno ? initAnno.value : 0   // and this is "Container Initialization"
 
-        return { duration, wait, init }
+        return { duration, wait, init, activation: _ }
     })
     summaries.sort((a,b) => a.duration - b.duration)
 
@@ -73,17 +73,22 @@ const summarizePerformance = activations => {
     const min = summaries[0].duration,
           max = summaries[summaries.length - 1].duration,
           idx25 = ~~(summaries.length * 0.25),
+          idx50 = ~~(summaries.length * 0.50),
+          idx75 = ~~(summaries.length * 0.75),
+          idx90 = ~~(summaries.length * 0.90),
           idx95 = ~~(summaries.length * 0.95),
+          idx99 = ~~(summaries.length * 0.99),
+          idxOutlier = ~~(summaries.length * (options.outliers === undefined || options.outliers === true ? 0.95 : options.outliers)),  // where do we want to draw the line for "is an outlier"?
           nFast = idx25 + 1,
-          nSlow = summaries.length - idx95,
+          nSlow = summaries.length - idxOutlier,
           waitAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {wait}) => total + wait, 0) / nFast,
-          waitAvgForSlowest = summaries.slice(idx95).reduce((total, {wait}) => total + wait, 0) / nSlow,
+          waitAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {wait}) => total + wait, 0) / nSlow,
           initAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {init}) => total + init, 0) / nFast,
-          initAvgForSlowest = summaries.slice(idx95).reduce((total, {init}) => total + init, 0) / nSlow,
+          initAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {init}) => total + init, 0) / nSlow,
           durAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration}) => total + duration, 0) / nFast,
-          durAvgForSlowest = summaries.slice(idx95).reduce((total, {duration}) => total + duration, 0) / nSlow,
+          durAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {duration}) => total + duration, 0) / nSlow,
           totalAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nFast,
-          totalAvgForSlowest = summaries.slice(idx95).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nSlow
+          totalAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nSlow
 
     const disparity = totalAvgForSlowest - totalAvgForFastest,
           durDisparity = durAvgForSlowest - durAvgForFastest,
@@ -98,15 +103,22 @@ const summarizePerformance = activations => {
                      maybe('Queueing Delays', 'Q', waitDisparity, waitDisparityCover),
                      maybe('Container Initialization', 'I', initDisparity, initDisparityCover)])
 
+    // outlier activations
+    const outliers = summaries.slice(idxOutlier),
+          outlierMax = outliers.reduce((max, {activation}) => Math.max(max, activation.end - activation.start), 0)
+
     return { min, max,
              durDisparityCover, waitDisparityCover, initDisparityCover, why,
+             outliers, outlierMax,
              n: {
                  disparity,
-                 //25: summaries[idx25].duration,
-                 50: summaries[~~(summaries.length * 0.50)].duration,
-                 90: summaries[~~(summaries.length * 0.90)].duration,
-                 //95: summaries[idx95].duration,
-                 99: summaries[~~(summaries.length * 0.99)].duration
+                 min, max,
+                 25: summaries[idx25].duration,
+                 50: summaries[idx50].duration,
+                 75: summaries[idx75].duration,
+                 90: summaries[idx90].duration,
+                 95: summaries[idx95].duration,
+                 99: summaries[idx99].duration
              }
            }
 }
@@ -171,13 +183,13 @@ const splitAroundVersion = version => {
   * Compute statData over all activations
   *
   */
-const summarizeWhole = groups => {
+const summarizeWhole = (groups, options) => {
     const allActivations = groups.reduce((L, group) => L.concat(group.successes || group.activations), []),
           nSuccesses = groups.reduce((S, group) => S + group.nSuccesses, 0),
           nFailures = groups.reduce((S, group) => S + group.nFailures, 0)
 
     return {
-        statData: summarizePerformance(allActivations),
+        statData: summarizePerformance(allActivations, options),
         nFailures,
         nSuccesses,
         errorRate: nFailures / (nSuccesses + nFailures)
@@ -188,7 +200,7 @@ const summarizeWhole = groups => {
   * Compute statData over all activations
   *
   */
-const summarizeWhole2 = allActivations => {
+const summarizeWhole2 = (allActivations, options) => {
     const { nSuccesses, nFailures } = allActivations.reduce((S, activation) => {
         if (isSuccess(activation)) S.nSuccesses++
         else S.nFailures++
@@ -196,7 +208,7 @@ const summarizeWhole2 = allActivations => {
     }, { nSuccesses: 0, nFailures: 0 })
 
     return {
-        statData: summarizePerformance(allActivations),
+        statData: summarizePerformance(allActivations, options),
         nFailures,
         nSuccesses,
         errorRate: nFailures / (nSuccesses + nFailures)
@@ -264,7 +276,7 @@ const toArray = (map, options) => {
 
     for (let x in map) {
         const group = groups[groups.push(map[x]) - 1]
-        group.statData = summarizePerformance(group.successes && group.successes.length > 0 ? group.successes : group.failures || group.activations)
+        group.statData = summarizePerformance(group.successes && group.successes.length > 0 ? group.successes : group.failures || group.activations, options)
         group.errorRate = group.nFailures / (group.nSuccesses + group.nFailures)
         if (options.groupBySuccess) {
             group.count = group.successes.length + group.failures.length
@@ -337,7 +349,7 @@ exports.groupByAction = (activations, options) => {
     return Object.assign(totals, {
         timeline,
         groups,
-        summary: summarizeWhole(groups)   // a "statData" object, for all activations
+        summary: summarizeWhole(groups, options)   // a "statData" object, for all activations
     })
 }
 
@@ -385,9 +397,9 @@ exports.groupByTimeBucket = (activations, options) => {
             const bucket = toArray(bucketMap, options)
             return {
                 bucket,
-                summary: summarizeWhole(bucket)
+                summary: summarizeWhole(bucket, options)
             }
         }),
-        summary: summarizeWhole2(activations)  // a "statData" object, for all activations
+        summary: summarizeWhole2(activations, options)  // a "statData" object, for all activations
     })
 }

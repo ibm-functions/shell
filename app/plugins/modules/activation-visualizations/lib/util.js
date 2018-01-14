@@ -209,8 +209,9 @@ exports.displayTimeRange = ({minTime, maxTime, totalCount}, container) => {
         if (fresh) container.appendChild(document.createTextNode(' activations from '))
         strong(container, 2).innerText = ui.prettyPrintTime(minTime, 'short')
         
-        if (fresh) container.appendChild(document.createTextNode(' to '))
-        strong(container, 3).innerText = ui.prettyPrintTime(maxTime, 'short')
+        if (fresh) container.appendChild(document.createTextNode(' spanning '))
+        //strong(container, 3).innerText = ui.prettyPrintTime(maxTime, 'short')
+        strong(container, 3).innerText = prettyPrintDuration(maxTime - minTime, { compact: true })
     }
 }
 
