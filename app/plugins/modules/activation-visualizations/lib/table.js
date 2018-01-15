@@ -22,7 +22,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { modes } = require('./modes'),
       { optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
       enDash = '\u2013',
-      //emDash = '\u2014',
+      emDash = '\u2014',
       defaultBottom = 25, defaultTop = 75,         // default range to show in summary
       defaultSorter = statDataSorter(defaultTop)   // sort by the default top of the range
 
@@ -192,8 +192,6 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
           tableHeader = document.createElement('table'),
           tableScrollContainer = document.createElement('div'),
           table = document.createElement('table'),
-          ns = namespace.current(),
-          nsPattern = new RegExp(`/${ns}/`),
           { ticks:numTicks = 4 } = options      // number of ticks on the x axis of the bar chart
 
     // clean the container
@@ -240,9 +238,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     xAxisRightPad3.innerText = 'Outliers'
 
     /** Render a selected range on the x axis */
-    const xAxisToggleFocus = ({bar, this25, this75, left, right}) => {
+    const xAxisToggleFocus = ({barWrapper, this25, this75, left, right}) => {
         const inFocus = content.classList.toggle('x-axis-focus')
-        bar.classList.toggle('focus')
+        barWrapper.classList.toggle('focus')
 
         if (inFocus) {
             if (this25 < 100 && this75 < 100) {
@@ -317,27 +315,41 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
             const row = redraw ? rowMap[group.groupKey] : table.insertRow(-1),
                   label = redraw ? row.cells[columnIdx++] : row.insertCell(-1),
-                  labelText = group.groupKey.replace(nsPattern, ''),
                   splitOptions = options.split ? `--split${options.split===true ? '' : ' "' + options.split + '"'} --key "${group.groupKey}"` : '',
                   balloonPos = idx < groups.length - 2 ? 'down' : 'up',
                   { outliers=[] } = group.statData  // extract the list of outliers from the model
 
             if (!redraw) {
-                const labelInner = document.createElement('div')
+                const labelInner = document.createElement('div'),
+                      labelPackage = document.createElement('div'),
+                      labelAction = document.createElement('div'),
+                      labelSplit = group.groupKey.split('/'),
+                      packageName = labelSplit.length === 4 && labelSplit[2],
+                      actionName = labelSplit[labelSplit.length - 1],
+                      nameWithoutNamespace = labelSplit.slice(2).join('/')
+
                 label.appendChild(labelInner)
+                if (packageName) {
+                    labelInner.appendChild(labelPackage)
+                    labelPackage.innerText = packageName
+                    labelPackage.className = 'package-prefix'
+                }
+                labelInner.appendChild(labelAction)
+                labelAction.innerText = actionName
 
                 // cache the row for redrawing later
                 rowMap[group.groupKey] = row
 
-                row.setAttribute('data-action-name', labelText)
+                row.setAttribute('data-action-name', nameWithoutNamespace)
                 row.className = 'grid-cell-occupied'
 
-                labelInner.appendChild(document.createTextNode(labelText))
                 label.className = 'cell-label clickable'
-                label.setAttribute('data-balloon', `Action Name\u000a\u000a${labelText}`) // line break
-                label.setAttribute('data-balloon-break', 'data-balloon-break')
-                label.setAttribute('data-balloon-pos', 'right')
-                label.setAttribute('data-balloon-length', labelText.length < 20 ? 'fit' : 'large')
+
+                if (nameWithoutNamespace.length > 20) {
+                    label.setAttribute('data-balloon', nameWithoutNamespace) // line break
+                    label.setAttribute('data-balloon-pos', 'right')
+                    label.setAttribute('data-balloon-length', nameWithoutNamespace.length < 20 ? 'fit' : 'large')
+                }
 
                 // drill down to grid view; note how we pass through a --name
                 // query, to filter based on the clicked-upon row
@@ -385,17 +397,16 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
                 bar.style.left = percent(left)
                 bar.style.width = percent(right - left)
-                medianDot.style.left = `calc(${percent(medianLeft)} - 0.3em)` // 0.3 is half of the width of .activation-viz-plugin .data-table td.cell-stats .stat-median-dot
-                medianDot.setAttribute('data-balloon', `Median Duration: ${prettyPrintDuration(thisMedian)}`)
-                medianDot.setAttribute('data-balloon-pos', balloonPos)
-                // \u000a are line breaks
-                /*bar.setAttribute('data-balloon', `Range of Durations: ${th(stat25)}${enDash}${th2(stat75)}\u000a\u000a${typeof stat25 === 'number' ? stat25 + '% are faster than' : stat25 + ' is'} ${prettyPrintDuration(this25)}\u000a${typeof stat75 === 'number' ? (100-stat75) + '% are slower than' : stat75 + ' is'} ${prettyPrintDuration(this75)}`)
-                bar.setAttribute('data-balloon-break', 'data-balloon-break')
-                bar.setAttribute('data-balloon-length', 'large')
-                bar.setAttribute('data-balloon-pos', balloonPos)*/
 
-                bar.onmouseover = () => xAxisToggleFocus({bar, this25, this75, left, right})
-                bar.onmouseout = () => xAxisToggleFocus({bar, this25, this75, left, right})
+                // fancy focus, to show the extent of the bar on the x axis!
+                const doFocus = () => xAxisToggleFocus({barWrapper, this25, this75, left, right}),
+                      focus = dom => {
+                          dom.onmouseenter = doFocus
+                          dom.onmouseleave = doFocus
+                      }
+
+                // install the fancy focus handlers
+                focus(bar)
 
                 // add 25th and 75th explainers to widest bar
                 if (this75 - this25 === maxBarRange) {
@@ -412,15 +423,33 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     indicator25.style.left = percent(left + 0.02)
                     indicator75.innerText = `${th2(stat75)} \u25b6`
                     indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
+
+                    // still focus when the mouse flies over the indicators
+                    focus(indicator25)
+                    focus(indicator75)
                 }
-                if (max2BarRange > 0 && this75 - this25 === max2BarRange) {
+
+                // add < median indicator to the second widest bar
+                // whose median isn't "too far right"
+                const showMedianIndicator = max2BarRange > 0 && this75 - this25 === max2BarRange
+                if (showMedianIndicator) {
                     const indicator50 = document.createElement('div')
                     barWrapper.appendChild(indicator50)
                     indicator50.className = 'stat-indicator'
                     indicator50.innerText = `\u25c0 median`
                     indicator50.style.left = `calc(${percent(medianLeft)} + 1ex + 0.3em)`
                     // 0.3em must match .activation-viz-plugin .data-table td.cell-stats .stat-median-dot width
+
+                    // still focus when the mouse flies over the indicator
+                    focus(indicator50)
                 }
+
+                // an element to show the median of this bar
+                medianDot.style.left = percent(medianLeft)
+                medianDot.setAttribute('data-balloon', prettyPrintDuration(thisMedian))
+                medianDot.setAttribute('data-balloon-length', 'small')
+                medianDot.setAttribute('data-balloon-pos', balloonPos)
+                focus(medianDot)
 
                 // outlier activations
                 outliers.forEach(outlier => {
@@ -432,13 +461,16 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     if (!redraw) {
                         outlier.dom = dot
                         dot.className = 'outlier-dot cell-show-only-when-outliers-shown'
-                        dot.setAttribute('data-balloon', `Slow Activation\u000a\u000aDuration: ${prettyPrintDuration(duration)} (${~~(duration/thisMedian*10)/10}x median duration)`)
+                        dot.setAttribute('data-balloon', `${prettyPrintDuration(duration)}\u000a${~~(duration/thisMedian*10)/10}x the median`)
                         dot.setAttribute('data-balloon-break', 'data-balloon-break')
-                        dot.setAttribute('data-balloon-length', 'large')
-                        dot.setAttribute('data-balloon-pos', left < 0.3 ? 'right' : 'left')
+                        dot.setAttribute('data-balloon-length', 'small')
+                        dot.setAttribute('data-balloon-pos', balloonPos)
                         dot.onclick = drilldownWith(viewName, () => repl.pexec(`activation get ${activation.activationId}`))
                         barWrapper.appendChild(dot)
                     }
+
+                    // focus the x axis on the bar, even when hovering over the outlier dots
+                    focus(dot)
                     dot.style.left = percent(left)
                 })
             }
@@ -458,8 +490,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 }
                 cell.appendChild(countPart)
                 countPart.innerText = group.nSuccesses
-                countPart.setAttribute('data-balloon', `Successful Activations: ${group.nSuccesses}`)
-                countPart.setAttribute('data-balloon-pos', 'left')
+                //countPart.setAttribute('data-balloon', `Successful Activations: ${group.nSuccesses}`)
+                //countPart.setAttribute('data-balloon-pos', 'left')
             }
 
             // failure count
@@ -468,25 +500,24 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 cell.className = 'cell-failures cell-numeric red-text cell-hide-when-outliers-shown'
                 cell.setAttribute('data-failures', group.nFailures)
 
-                if (group.nFailures > 0) {
-                    const errorPart = document.createElement('span')
-                    //errorPartIcon = document.createElement('span')
-                    // \u000a is a line break
-                    errorPart.setAttribute('data-balloon', `Failed Activations: ${group.nFailures}`)
-                    errorPart.setAttribute('data-balloon-break', 'data-balloon-break')
-                    errorPart.setAttribute('data-balloon-pos', 'left')
-                    errorPart.className = 'count-part'
-                    //errorPartIcon.className = 'count-icon'
-                    cell.appendChild(errorPart)
-                    //cell.appendChild(errorPartIcon)
-                    errorPart.innerText = group.nFailures
-                    //errorPartIcon.innerText = '\u26a0'
-                    errorPart.className = 'cell-errors'
+                const errorPart = document.createElement('span')
+                //errorPartIcon = document.createElement('span')
+                // \u000a is a line break
+                //errorPart.setAttribute('data-balloon', `Failed Activations: ${group.nFailures}`)
+                //errorPart.setAttribute('data-balloon-break', 'data-balloon-break')
+                //errorPart.setAttribute('data-balloon-pos', 'left')
+                errorPart.className = 'count-part'
+                //errorPartIcon.className = 'count-icon'
+                cell.appendChild(errorPart)
+                //cell.appendChild(errorPartIcon)
+                errorPart.innerText = group.nFailures || emDash  // show emDash when the value is zero
+                //errorPartIcon.innerText = '\u26a0'
+                errorPart.className = 'cell-errors'
 
-                    // drill down to grid, showing just failures
-                    cell.classList.add('clickable')
-                    cell.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure --zoom 1 --name "${group.path}" ${splitOptions}`))
-                } else {
+                // drill down to grid, showing just failures
+                cell.classList.add('clickable')
+                cell.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure --zoom 1 --name "${group.path}" ${splitOptions}`))
+                if (group.nFailures === 0) {
                     cell.classList.add('count-is-zero')
                 }
             }
