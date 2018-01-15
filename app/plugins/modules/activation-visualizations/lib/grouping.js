@@ -58,9 +58,9 @@ const summarizePerformance = (activations, options) => {
     const summaries = activations.map(_ => {
         const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
               initAnno = _.annotations.find(({key}) => key === 'initTime'),
-              duration = _.end - _.start,              
               wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
-              init = initAnno ? initAnno.value : 0   // and this is "Container Initialization"
+              init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
+              duration = _.end - _.start + wait + init
 
         return { duration, wait, init, activation: _ }
     })
@@ -80,38 +80,45 @@ const summarizePerformance = (activations, options) => {
           idx99 = ~~(summaries.length * 0.99),
           idxOutlier = ~~(summaries.length * (options.outliers === undefined || options.outliers === true ? 0.95 : options.outliers)),  // where do we want to draw the line for "is an outlier"?
           nFast = idx25 + 1,
-          nSlow = summaries.length - idxOutlier,
-          waitAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {wait}) => total + wait, 0) / nFast,
-          waitAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {wait}) => total + wait, 0) / nSlow,
-          initAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {init}) => total + init, 0) / nFast,
-          initAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {init}) => total + init, 0) / nSlow,
-          durAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration}) => total + duration, 0) / nFast,
-          durAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {duration}) => total + duration, 0) / nSlow,
-          totalAvgForFastest = summaries.slice(0, idx25 + 1).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nFast,
-          totalAvgForSlowest = summaries.slice(idxOutlier).reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nSlow
+          fastest = summaries.slice(0, idx25 + 1),
+          waitAvgForFastest = fastest.reduce((total, {wait}) => total + wait, 0) / nFast,
+          initAvgForFastest = fastest.reduce((total, {init}) => total + init, 0) / nFast,
+          durAvgForFastest = fastest.reduce((total, {duration}) => total + duration, 0) / nFast,
+          totalAvgForFastest = fastest.reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nFast
 
-    const disparity = totalAvgForSlowest - totalAvgForFastest,
-          durDisparity = durAvgForSlowest - durAvgForFastest,
-          waitDisparity = waitAvgForSlowest - waitAvgForFastest,
-          initDisparity = initAvgForSlowest - initAvgForFastest,
-          durDisparityCover = durDisparity / disparity,
-          waitDisparityCover = waitDisparity / disparity,
-          initDisparityCover = initDisparity / disparity,
-          why = disparity === 0
-          ? document.createTextNode('')
-          : tableOf([maybe('Execution Time', 'E', durDisparity, durDisparityCover, ''),
-                     maybe('Queueing Delays', 'Q', waitDisparity, waitDisparityCover),
-                     maybe('Container Initialization', 'I', initDisparity, initDisparityCover)])
+    /** why was the given activation so slow? */
+    const explainOutlier = activation => {
+        const waitAnno = activation.annotations.find(({key}) => key === 'waitTime'),
+              waitTime = (waitAnno && waitAnno.value) || 0,
+              initAnno = activation.annotations.find(({key}) => key === 'initTime'),
+              initTime = (initAnno && initAnno.value) || 0,
+              start = activation.start - waitTime,
+              duration = activation.end - activation.start,
+              total = duration + waitTime + initTime
+              
+        const durDisparity = duration - durAvgForFastest,
+              waitDisparity = Math.max(0, waitTime - waitAvgForFastest),
+              initDisparity = Math.max(0, initTime - initAvgForFastest),
+              disparity = total - totalAvgForFastest,
+              reasons = [ ]
+
+        if (durDisparity > 0) reasons.push({ why: 'Execution Time', cover: durDisparity / disparity, disparity: durDisparity })
+        if (waitDisparity > 0) reasons.push({ why: 'Queueing Delays', cover: waitDisparity / disparity, disparity: waitDisparity })
+        if (initDisparity > 0) reasons.push({ why: 'Container Init', cover: initDisparity / disparity, disparity: initDisparity })
+
+        reasons.sort((a,b) => b.cover - a.cover)
+
+        return { total, start, reasons }
+    }
 
     // outlier activations
     const outliers = summaries.slice(idxOutlier),
-          outlierMax = outliers.reduce((max, {activation}) => Math.max(max, activation.end - activation.start), 0)
+          outlierMax = outliers.reduce((max, {duration}) => Math.max(max, duration), 0)
 
     return { min, max,
-             durDisparityCover, waitDisparityCover, initDisparityCover, why,
+             explainOutlier,
              outliers, outlierMax,
              n: {
-                 disparity,
                  min, max,
                  25: summaries[idx25].duration,
                  50: summaries[idx50].duration,

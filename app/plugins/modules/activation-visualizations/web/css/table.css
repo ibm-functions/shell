@@ -9,6 +9,7 @@
 }
 
 .activation-viz-plugin .data-table-scroll-container {
+    overflow-x: hidden;
     overflow-y: auto;
     width: 100%;
     padding-bottom: 1em; /* make some room for tooltips */
@@ -216,12 +217,30 @@
     width: 0.2em;
     height: 2.5em;
 }
+.activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"] {
+    /* dot representing an outlier activation that is mostly slow due to queueing delays */
+    background: var(--color-support-01);
+}
+.activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"]:hover {
+    /* HOVER: dot representing an outlier activation that is mostly slow due to queueing delays */
+    background: var(--color-support-01);
+    filter: saturate(2);
+}
+.activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Container Initialization"] {
+    /* dot representing an outlier activation that is mostly slow due to container initialization */
+    background: var(--color-support-02);
+}
+.activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Container Initialization"]:hover {
+    /* HOVER: dot representing an outlier activation that is mostly slow due to container initialization */
+    background: var(--color-support-02);
+    filter: saturate(2);
+}
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover {
     background: #0A8EF6;
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover, .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
     cursor: pointer;
-    z-index: 2; /* see z-index: 1 above; make sure the tooltip floats above the range indicators */
+    z-index: 2 !important; /* see z-index: 1 above; make sure the tooltip floats above the range indicators */
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-indicator {
     position: absolute;
@@ -516,9 +535,9 @@
     /* try to avoid flowing off to the left */
     left: calc(100% + 3.5em);
 }
-.activation-viz-plugin .grid-cell[data-far="right"][data-balloon]:after {
+.activation-viz-plugin .grid-cell[data-far="right"][data-balloon]:after,  [data-balloon-far="right"][data-balloon]:after {
     /* try to avoid flowing off to the right */
-    left: calc(100% - 5.5em);
+    left: calc(100% - 5.5em) !important;
 }
 .activation-viz-plugin .grid-cell-far-far-right[data-balloon]:after {
     /* try to avoid flowing off to the right */

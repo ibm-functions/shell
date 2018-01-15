@@ -456,22 +456,32 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     // render a dot for each outlier
                     const dot = redraw ? outlier.dom : document.createElement('div'),
                           { activation } = outlier,
-                          left = normalize(activation.end - activation.start),
-                          duration = activation.end - activation.start
+                          { total: duration, start, reasons } = group.statData.explainOutlier(activation),
+                          left = normalize(duration)
+
                     if (!redraw) {
                         outlier.dom = dot
                         dot.className = 'outlier-dot cell-show-only-when-outliers-shown'
-                        dot.setAttribute('data-balloon', `${prettyPrintDuration(duration)}\u000a${~~(duration/thisMedian*10)/10}x the median`)
-                        dot.setAttribute('data-balloon-break', 'data-balloon-break')
-                        dot.setAttribute('data-balloon-length', 'small')
-                        dot.setAttribute('data-balloon-pos', balloonPos)
                         dot.onclick = drilldownWith(viewName, () => repl.pexec(`activation get ${activation.activationId}`))
                         barWrapper.appendChild(dot)
+
+                        // try to explain why it's slow
+                        const { why } = reasons[0],
+                              render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join('\u000a')
+                        dot.setAttribute('why-is-it-slow', why)
+
+                        // tooltip metadata
+                        const tooltip = `${prettyPrintDuration(duration)} (${~~(duration/thisMedian*10)/10}x the median)\u000a\u000a${render(reasons)}`
+                        dot.setAttribute('data-balloon', tooltip)
+                        dot.setAttribute('data-balloon-break', 'data-balloon-break')
+                        dot.setAttribute('data-balloon-length', 'large')
+                        dot.setAttribute('data-balloon-pos', balloonPos)
+                        if (left > 0.8) dot.setAttribute('data-balloon-far', 'right')
                     }
 
                     // focus the x axis on the bar, even when hovering over the outlier dots
                     focus(dot)
-                    dot.style.left = percent(left)
+                    dot.style.left = percent(Math.min(left, 1)) // if we aren't showing outliers, yet, they'll flow off the right
                 })
             }
 
