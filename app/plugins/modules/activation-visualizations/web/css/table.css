@@ -82,13 +82,14 @@
     transition: all 150ms ease-in-out;
 }
 
-.activation-viz-plugin table .cell-label > div {
+.activation-viz-plugin table .cell-label div {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 .activation-viz-plugin table td.cell-label {
-    font-weight: 500;
+    font-weight: 400;
+    font-family: var(--font-sans-serif);
     font-size: 0.875em;
     padding-right: 2em;
 }
@@ -112,7 +113,7 @@
 }
 
 .activation-viz-plugin .data-table.table-header td.cell-numeric, .activation-viz-plugin .data-table .x-axis-label, .activation-viz-plugin .data-table .x-axis-focus-label {
-    opacity: 0.5;
+    opacity: 0.6;
     font-size: 0.75em;
     padding-bottom: 0.5em;
 }
@@ -201,22 +202,25 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
-    width: 0.5em;
-    height: 2.1em;
-    background: var(--color-text-02);/*#007f4c*/ /*#a50eb6*/
+    width: 0.4em;
+    height: 2.3em;
+    background: #152934;/*var(--color-text-02)*//*#007f4c*/ /*#a50eb6*/
     border: 1px solid rgba(255,255,255,0.5);
     transition: all 150ms ease-in-out;
 }
 .activation-viz-plugin.show-outliers .outlier-dot {
     /* dot representing an outlier activation */
-    width: 0.3em;
-    background: var(--color-support-01);
+    background: var(--color-support-04);
     opacity: 0.6;
     border-color: rgba(255,255,255,0.2);
+    width: 0.2em;
+    height: 2.5em;
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover {
+    background: #0A8EF6;
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover, .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
     cursor: pointer;
-    filter: saturate(2) brightness(1.15);
     z-index: 2; /* see z-index: 1 above; make sure the tooltip floats above the range indicators */
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-indicator {
@@ -230,23 +234,29 @@
     position: absolute;
     /*background: #00557F;*/
     background: linear-gradient(to right, hsla(48, 100%, 44%, 1),var(--color-support-03));
-    height: 1.6rem;
+    height: 1.6em;
     border: 1px solid transparent;
     transition: all 150ms ease-in-out;
 }
     /* focused bar */
-/*.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar.focus {
+/*.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar-wrapper.focus {
     border-color: black;
 }*/
 .activation-viz-plugin.x-axis-focus .data-table td.cell-hide-when-focus-shown {
     opacity: 0 !important;
 }
-.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar:not(.focus) {
+.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar-wrapper:not(.focus) {
     /* some bar is focused other than this one */
-    opacity: 0.5;
+    filter: grayscale(1);
 }
 .activation-viz-plugin .data-table:not(.table-header) .cell-numeric.cell-failures {
     font-weight: bold;
+}
+.activation-viz-plugin .data-table:not(.table-header) .cell-numeric.cell-failures.count-is-zero {
+    /* special case for zero failures */
+    font-weight: 300;
+    font-size: 0.75em;
+    filter: grayscale(1) opacity(0.6);
 }
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
     width: 5rem;
@@ -313,7 +323,7 @@
     align-content: flex-start;
 }
 .activation-viz-plugin .grid .grid-label {
-    font-family: Lato,sans-serif;
+    font-family: var(--font-sans-serif);
     font-size: 80%;
     text-align: center;
     overflow: hidden;
