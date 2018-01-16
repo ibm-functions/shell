@@ -45,6 +45,9 @@ describe('Take screenshot', function() {
     before(common.before(this))
     after(common.after(this))
 
+    it('should fail take screenshot last as the first command', () => cli.do(`screenshot last`, this.app)
+       .then(cli.expectError(0, 'You requested to screenshot the last REPL output, but this is the first command')))
+
     it('should fail to take screenshot with bogus arg', () => cli.do(`screenshot goober`, this.app)
        .then(cli.expectError(0, 'Capture a screenshot to the clipboard'))) // part of the usage message
 
@@ -53,6 +56,8 @@ describe('Take screenshot', function() {
     it('should fail to screenshot sidecar', () => cli.do('screenshot sidecar', this.app)
        .then(cli.expectError(0, 'You requested to screenshot the sidecar, but it is not currently open')))
     it('should take screenshot repl', () => takeScreenshot(this, 'repl'))
+    it('should take screenshot last', () => takeScreenshot(this, 'last'))
+    it('should take screenshot last-full', () => takeScreenshot(this, 'last-full'))
 
     // create an entity, so we can open the sidecar
     const actionName = 'foo'

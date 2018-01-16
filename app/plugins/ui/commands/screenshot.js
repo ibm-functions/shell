@@ -20,12 +20,14 @@
  */
 const usage = () => `Capture a screenshot to the clipboard.
 
-\tscreenshot [sidecar | repl]
+\tscreenshot [sidecar | repl | full | last]
 
 Required parameters:
 \tsidecar        capture the sidecar contents
 \trepl           capture the REPL contents
 \tfull           capture the entire page, including header
+\tlast           capture the REPL output of the last command
+\tlast           capture the REPL output of the last command
 \t<no params>    capture the entire page, except for header`
 
 /**
@@ -33,6 +35,19 @@ Required parameters:
  *
  */
 const round = Math.round
+
+/**
+ * Query selectors for the subcommands that capture the documented screen territory
+ *
+ */
+const selectors = {
+    full: 'body',                                                             // everything
+    'default': 'body > .page',                                                // everything but header
+    sidecar: '#sidecar',                                                      // entire sidecar region
+    repl: '.main > .repl',                                                    // entire REPL region
+    'last-full': '.main > .repl .repl-block:nth-last-child(2) .repl-output',  // this will include the 'ok' part
+    last: '.main > .repl .repl-block:nth-last-child(2) .repl-result'          // this will include only the non-ok region
+}
 
 /** this is the handler body */
 module.exports = (commandTree, prequire) => {
@@ -44,18 +59,26 @@ module.exports = (commandTree, prequire) => {
                   { app } = remote
 
             // which dom to snap?
-            const which = argv[1] && argv[1].toLowerCase(),
-                  dom = !which ? document.querySelector('body > .page')
-                  : which === 'full' ? document.body
-                  : which === 'sidecar' ? document.getElementById('sidecar')
-                  : which === 'repl' ? document.querySelector('.main > .repl')
-                  : undefined // user passed some unknown string
+            const which = (argv[1] && argv[1].toLowerCase()) || 'default'
 
-            if (!dom || options.help) {
+            if (options.help || !selectors[which]) {
+                // either we couldn't find the area to 
                 return reject(new modules.errors.usage(usage()))
 
             } else if (which === 'sidecar' && !sidecarVisibility.isVisible()) {
+                // sanity check the sidecar option
                 return reject('You requested to screenshot the sidecar, but it is not currently open')
+
+            } else if (which === 'last' && !document.querySelector(selectors.last)) {
+                // sanity check the last option
+                console.error('nope')
+                return reject('You requested to screenshot the last REPL output, but this is the first command')
+            }
+
+            const dom = selectors[which] && document.querySelector(selectors[which])
+            if (!dom) {
+                // either we couldn't find the area to capture :(
+                return reject('Internal Error: could not identify the screen region to capture')
             }
         
             // which rectangle to snap; electron's rect schema differs
@@ -161,6 +184,7 @@ module.exports = (commandTree, prequire) => {
                 // border goes away: https://stackoverflow.com/a/14709695
 		snapImg.style.background = `url(${img.resize({width, height}).toDataURL()}) no-repeat center/cover`
                 snapImg.style.maxWidth = '100%'
+                snapImg.style.minHeight = '300px' // we need some min space to fit the green check and Screenshot copied to clipboard
                 snapImg.style.maxHeight = '100%'
                 snapImg.style.filter = 'blur(1px) grayscale(0.5) contrast(0.5)'
 		snapImg.style.width = '0px'
