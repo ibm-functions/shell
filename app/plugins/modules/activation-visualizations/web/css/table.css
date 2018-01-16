@@ -79,7 +79,7 @@
 
 .activation-viz-plugin .data-table td {
     text-align: right;
-    padding: 0.8rem 0.75rem;
+    padding: 0.6rem 0.75rem;
     transition: all 150ms ease-in-out;
 }
 
@@ -143,7 +143,7 @@
     justify-content: space-between;
     position: absolute;
     top: 0;
-    transition: all 150ms ease-in-out;
+    transition: all 300ms ease-in-out;
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:first-child {
     text-align: left;
@@ -159,7 +159,7 @@
     font-weight: bold;
     opacity: 1;
     white-space: nowrap;
-    transition: all 150ms ease-in-out;
+    transition: all 300ms ease-in-out;
 }
 .activation-viz-plugin:not(.x-axis-focus) .data-table td.x-axis-focus-label-cell {
     padding: 0;
@@ -203,8 +203,8 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
-    width: 0.4em;
-    height: 2.3em;
+    width: 0.3em;
+    height: 2em;
     background: #152934;/*var(--color-text-02)*//*#007f4c*/ /*#a50eb6*/
     border: 1px solid rgba(255,255,255,0.5);
     transition: all 150ms ease-in-out;
@@ -215,11 +215,11 @@
     opacity: 0.6;
     border-color: rgba(255,255,255,0.2);
     width: 0.2em;
-    height: 2.5em;
+    height: 2.1em;
 }
 .activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"] {
     /* dot representing an outlier activation that is mostly slow due to queueing delays */
-    background: var(--color-support-01);
+    background: #E141BB;
 }
 .activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"]:hover {
     /* HOVER: dot representing an outlier activation that is mostly slow due to queueing delays */
@@ -246,14 +246,14 @@
     position: absolute;
     color: white;
     mix-blend-mode: difference;
-    font-size: 0.67em;
+    font-size: 0.625em;
     opacity: 0.5;
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-bar {
     position: absolute;
     /*background: #00557F;*/
     background: linear-gradient(to right, hsla(48, 100%, 44%, 1),var(--color-support-03));
-    height: 1.6em;
+    height: 1.25em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
     border: 1px solid transparent;
     transition: all 150ms ease-in-out;
 }

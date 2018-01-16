@@ -237,14 +237,26 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     xAxisRightPad2.innerText = 'Failures'
     xAxisRightPad3.innerText = 'Outliers'
 
+    // set the focus range to be in the middle so we get some animation on first hover
+    xAxisFocusLabelRange.style.left = percent(0.5)
+    xAxisFocusLabelRange.style.width = 0
+
     /** Render a selected range on the x axis */
     const xAxisToggleFocus = ({barWrapper, this25, this75, left, right}) => {
         const inFocus = content.classList.toggle('x-axis-focus')
         barWrapper.classList.toggle('focus')
 
         if (inFocus) {
-            if (this25 < 100 && this75 < 100) {
+            if (this25 < 1000 && this75 < 1000) {
+                // are both of the numbers small? here we can elide
+                // the pretty print on the lower bound; e.g. 100-125ms
                 xAxisFocusLabelLeft.innerText = `${this25}${enDash}${prettyPrintDuration(this75)}`
+                xAxisFocusLabelRight.innerText = ''
+            } else if ((this25 > 1000 && this75 > 1000 && this75 - this25 < 1000)
+                       || this75 - this25 < 100) {
+                // or close together? here, we need a prettyPrint on
+                // the lower bound; e.g. 1.2s-1.6s
+                xAxisFocusLabelLeft.innerText = `${prettyPrintDuration(this25)}${enDash}${prettyPrintDuration(this75)}`
                 xAxisFocusLabelRight.innerText = ''
             } else {
                 xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25)
@@ -252,6 +264,10 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
             }
             xAxisFocusLabelRange.style.left = percent(left)
             xAxisFocusLabelRange.style.width = percent(right - left)
+        } else {
+            // on mouseleave, move the labels to the center
+            xAxisFocusLabelRange.style.left = percent(0.5)
+            xAxisFocusLabelRange.style.width = 0
         }
     }
 
