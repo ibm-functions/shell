@@ -370,12 +370,29 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
             // paginator
             if (!entity) {
                 const paginator = document.createElement('div'),
+                      leftButtons = document.createElement('div'),
                       description = document.createElement('span'),
                       prev = document.createElement('span'),
                       next = document.createElement('span')
             
                 container.appendChild(paginator)
                 paginator.classList.add('list-paginator')
+
+                // left-fill button box
+                paginator.appendChild(leftButtons)
+                leftButtons.classList.add('list-paginator-left-buttons')
+
+                // show summary buttons
+                const buttons = [ 'summary', 'timeline', 'grid' ]
+                buttons.forEach(buttonText => {
+                    const command = buttonText,  // it so happens...
+                          button = document.createElement('span')
+                    leftButtons.appendChild(button)
+                    button.classList.add('clickable')
+                    button.setAttribute('data-button-command', command)
+                    button.innerText = buttonText
+                    button.onclick = () => repl.pexec(command)
+                })
 
                 // description of current page
                 description.className = 'list-paginator-description'

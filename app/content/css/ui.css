@@ -1406,6 +1406,23 @@ break {
     font-size: 0.875em;
     margin-top: 0.75ex;
 }
+.list-paginator .list-paginator-left-buttons {
+    flex: 1;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+}
+.list-paginator .list-paginator-left-buttons > span {
+    /* a list paginator left button */
+    opacity: 0.6;
+    transition: all 150ms ease-in-out;
+}
+.list-paginator .list-paginator-left-buttons > span:hover {
+    opacity: 1;
+}
+.list-paginator .list-paginator-left-buttons > span:not(:first-child) {
+    /* a list paginator left button, except for the first one */
+    margin-left: 1em;
+}
 .list-paginator .list-paginator-description {
     margin-right: 1em;
 }
