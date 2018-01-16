@@ -331,7 +331,7 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
 .repl-result .entity {
     display: table-row-group;
 }
-.repl-result .entity:hover {
+.repl-result .entity:not(.log-line):hover {
     cursor: pointer;
 }
 .entity-attributes {
