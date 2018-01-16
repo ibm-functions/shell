@@ -486,7 +486,10 @@ const ui = (function() {
             oops.appendChild(err)
         } else {
             // we'll go with our formatted message
-            oops.appendChild(document.createTextNode(message))
+            // wrap in a span so that drag text selection works; see shell issue #249
+            const span = document.createElement('span')
+            span.innerText = message
+            oops.appendChild(span)
         }
         resultDom.appendChild(oops)
 

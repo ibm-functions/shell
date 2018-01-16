@@ -214,7 +214,10 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
             // if either the response is a string, or it's a non-entity (no response.type) and has a message field
             //     then treat the response as a simple string response
             if (echo) {
-                resultDom.appendChild(document.createTextNode(response.message || response))
+                // wrap in a span so that drag text selection works; see shell issue #249
+                const span = document.createElement('span')
+                span.innerText = response.message || response
+                resultDom.appendChild(span)
                 resultDom.parentNode.classList.add('result-vertical')
                 ui.ok(resultDom.parentNode).className = 'ok-for-list'
             }
