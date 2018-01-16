@@ -427,7 +427,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 // add 25th and 75th explainers to widest bar
                 if (this75 - this25 === maxBarRange) {
                     // e.g. 25th versus min; and 75th percentile versus max
-                    const rightPad = stat => typeof stat === 'number' ? '10.5em' : '3em' // extra room for "th percentile"
+                    const kindaNarrow = right - left < 0.4
+                    const thFor75 = kindaNarrow ? th : th2  // no space for "percentile"
+                    const rightPad = stat => typeof stat === 'number' && !kindaNarrow ? '10.5em' : '3.5em' // extra room for "th percentile"
 
                     const indicator25 = document.createElement('div'),
                           indicator75 = document.createElement('div')
@@ -437,7 +439,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     indicator75.className = 'stat-indicator'
                     indicator25.innerText = `\u25c0 ${th(stat25)}`
                     indicator25.style.left = percent(left + 0.02)
-                    indicator75.innerText = `${th2(stat75)} \u25b6`
+                    indicator75.innerText = `${thFor75(stat75)} \u25b6`
                     indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
 
                     // still focus when the mouse flies over the indicators
@@ -482,17 +484,19 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                         barWrapper.appendChild(dot)
 
                         // try to explain why it's slow
-                        const { why } = reasons[0],
-                              render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join('\u000a')
-                        dot.setAttribute('why-is-it-slow', why)
+                        if (reasons.length > 0) {
+                            const { why } = reasons[0],
+                                  render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join('\u000a')
+                            dot.setAttribute('why-is-it-slow', why)
 
-                        // tooltip metadata
-                        const tooltip = `${prettyPrintDuration(duration)} (${~~(duration/thisMedian*10)/10}x the median)\u000a\u000a${render(reasons)}`
-                        dot.setAttribute('data-balloon', tooltip)
-                        dot.setAttribute('data-balloon-break', 'data-balloon-break')
-                        dot.setAttribute('data-balloon-length', 'large')
-                        dot.setAttribute('data-balloon-pos', balloonPos)
-                        if (left > 0.8) dot.setAttribute('data-balloon-far', 'right')
+                            // tooltip metadata
+                            const tooltip = `${prettyPrintDuration(duration)} (${~~(duration/thisMedian*10)/10}x the median)\u000a\u000a${render(reasons)}`
+                            dot.setAttribute('data-balloon', tooltip)
+                            dot.setAttribute('data-balloon-break', 'data-balloon-break')
+                            dot.setAttribute('data-balloon-length', 'large')
+                            dot.setAttribute('data-balloon-pos', balloonPos)
+                            if (left > 0.8) dot.setAttribute('data-balloon-far', 'right')
+                        }
                     }
 
                     // focus the x axis on the bar, even when hovering over the outlier dots
