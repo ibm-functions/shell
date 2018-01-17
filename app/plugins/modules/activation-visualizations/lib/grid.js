@@ -21,7 +21,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
       { modes } = require('./modes'),
-      { optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
+      { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Grid'
 
@@ -204,13 +204,13 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
         const onclick = drilldownWith(viewName, () => repl.pexec(`action get "${group.path}"`))
         ui.addNameToSidecarHeader(sidecar, group.name, packageName, onclick)
 
-        drawLegend(rightHeader, group)
+        drawLegend(viewName, rightHeader, group, options)
     } else {
         const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
         ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
 
         if (groups.length > 0) {
-            drawLegend(rightHeader, summary)
+            drawLegend(viewName, rightHeader, summary)
         }
     }
 
@@ -231,12 +231,25 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
         // add a label to the grid
         const gridLabel = document.createElement('div'),
-              labelText = group.path.replace(nsPattern, '')
+              labelInner = document.createElement('div'),
+              labelPackage = document.createElement('div'),
+              labelAction = document.createElement('div'),
+              labelSplit = group.groupKey.split('/'),
+              packageName = labelSplit.length === 4 ? labelSplit[2] : nbsp
+              actionName = labelSplit[labelSplit.length - 1],
+              nameWithoutNamespace = labelSplit.slice(2).join('/')
+
         if (!redraw /*zoomLevel === 0 || groups.length > 1 || options.fixedHeader*/) {
             gridLabel.className = 'grid-label clickable'
-            gridLabel.innerText = labelText
+            gridLabel.appendChild(labelInner)
             gridDom.appendChild(gridLabel)
             gridLabel.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`))
+
+            labelInner.appendChild(labelPackage)
+            labelPackage.innerText = packageName
+            labelPackage.className = 'package-prefix'
+            labelInner.appendChild(labelAction)
+            labelAction.innerText = actionName
         }
 
         // render the grid

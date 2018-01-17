@@ -74,7 +74,7 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
 
         // failure versus success message for tooltip
         msg = isFailure
-            ? 'FAILED' + (statusCode ? ` with status code ${statusCode}` : '') + (errorMessage ? `: ${errorMessage}` : '')
+            ? 'the activation failed' + (statusCode ? ` with status code ${statusCode}` : '') + (errorMessage ? `: ${errorMessage}` : '')
         : activation.end ? `completed in ${prettyPrintDuration(activation.end - activation.start)}`
         : ''
 

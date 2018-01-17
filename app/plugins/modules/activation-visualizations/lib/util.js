@@ -18,6 +18,12 @@ const path = require('path'),
       defaults = require('./defaults.json'),
       prettyPrintDuration = require('pretty-ms')
 
+exports.nbsp   = '\u00a0'
+exports.enDash = '\u2013'
+exports.emDash = '\u2014'
+exports.leftArrowHead = '\u25c0'
+exports.rightArrowHead = '\u25b6'
+
 /** we may want to filter out activations with internal names */
 exports.isUUIDPattern = /.*[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -85,6 +91,20 @@ const extractTasks = ({fsm}) => {
 }
 
 /**
+ * If requested, filter by latency bucket
+ *
+ */
+const filterByLatencyBucket = options => activations => {
+    const {'latency-bucket':latencyBucket, full} = options
+    if (latencyBucket === undefined) {
+        return activations
+    } else {
+        // TODO support options.full
+        return activations.filter(_ => exports.latencyBucket(_.end - _.start) === latencyBucket)
+    }
+}
+
+/**
  * If requested, filter by success or failure
  *
  */
@@ -140,11 +160,13 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
             .then(tasks => all ? tasks.concat([appName]) : tasks) // if options.all, then add the app to the list of actions
             .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {name:task,filter,include,exclude,skip,upto,since,batchSize}))))
             .then(flatten)
+            .then(filterByLatencyBucket(options))
             .then(filterBySuccess(options))
     }
 
     return Promise.all(new Array(N).fill(0).map((_, idx) => fetch(idx * batchSize)))
         .then(flatten)
+        .then(filterByLatencyBucket(options))
         .then(filterBySuccess(options))
         .then(filterOutNonActionActivations(path||filter||include ? makeFilter(path||filter||include, exclude) : name ? makeFilter(amendWithNamespace(name), exclude) : acceptAnything))
 }
@@ -313,6 +335,7 @@ exports.nLatencyBuckets = 6
 const n100 = 2,
       n1000 = 2,
       n7000 = 2
+exports.latencyBuckets = [50,100,500,1000,3500,3500]
 exports.latencyBucket = value => {
     const nBuckets = exports.nLatencyBuckets
     //return Math.min(nBuckets - 1, value < 100 ? ~~(value / (100/6)) : value < 1000 ? 6 + ~~(value / (1000/5)) : value < 7000 ? 11 + ~~(value / (6000/5)) : nBuckets - 1)
