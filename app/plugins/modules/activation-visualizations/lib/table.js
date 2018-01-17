@@ -20,9 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
       { modes } = require('./modes'),
-      { optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
-      enDash = '\u2013',
-      emDash = '\u2014',
+      { leftArrowHead, rightArrowHead, enDash, emDash, optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
       defaultBottom = 25, defaultTop = 75,         // default range to show in summary
       defaultSorter = statDataSorter(defaultTop)   // sort by the default top of the range
 
@@ -437,9 +435,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     barWrapper.appendChild(indicator75)
                     indicator25.className = 'stat-indicator'
                     indicator75.className = 'stat-indicator'
-                    indicator25.innerText = `\u25c0 ${th(stat25)}`
+                    indicator25.innerText = `${leftArrowHead} ${th(stat25)}`
                     indicator25.style.left = percent(left + 0.02)
-                    indicator75.innerText = `${thFor75(stat75)} \u25b6`
+                    indicator75.innerText = `${thFor75(stat75)} ${rightArrowHead}`
                     indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
 
                     // still focus when the mouse flies over the indicators

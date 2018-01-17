@@ -55,12 +55,18 @@ const maybe = (reason, shorthand, disparity, cover) => {
  *
  */
 const summarizePerformance = (activations, options) => {
+    const latBuckets = Array(nLatencyBuckets).fill(0)
     const summaries = activations.map(_ => {
         const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
               initAnno = _.annotations.find(({key}) => key === 'initTime'),
               wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
               init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
               duration = _.end - _.start + wait + init
+
+        if (isSuccess(_)) {
+            const latBucket = latencyBucket(options.full ? duration : _.end - _.start)
+            latBuckets[latBucket]++
+        }
 
         return { duration, wait, init, activation: _ }
     })
@@ -116,6 +122,7 @@ const summarizePerformance = (activations, options) => {
           outlierMax = outliers.reduce((max, {duration}) => Math.max(max, duration), 0)
 
     return { min, max,
+             latBuckets,
              explainOutlier,
              outliers, outlierMax,
              n: {
