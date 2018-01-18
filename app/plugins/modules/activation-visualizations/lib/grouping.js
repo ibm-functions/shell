@@ -61,14 +61,15 @@ const summarizePerformance = (activations, options) => {
               initAnno = _.annotations.find(({key}) => key === 'initTime'),
               wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
               init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
-              duration = _.end - _.start + wait + init
+              executionTime = _.end - _.start,
+              duration = executionTime + wait + init
 
         if (isSuccess(_)) {
-            const latBucket = latencyBucket(options.full ? duration : _.end - _.start)
+            const latBucket = latencyBucket(options.full ? duration : executionTime)
             latBuckets[latBucket]++
         }
 
-        return { duration, wait, init, activation: _ }
+        return { duration, executionTime, wait, init, activation: _ }
     })
     summaries.sort((a,b) => a.duration - b.duration)
 
@@ -89,8 +90,8 @@ const summarizePerformance = (activations, options) => {
           fastest = summaries.slice(0, idx25 + 1),
           waitAvgForFastest = fastest.reduce((total, {wait}) => total + wait, 0) / nFast,
           initAvgForFastest = fastest.reduce((total, {init}) => total + init, 0) / nFast,
-          durAvgForFastest = fastest.reduce((total, {duration}) => total + duration, 0) / nFast,
-          totalAvgForFastest = fastest.reduce((total, {duration,wait,init}) => total + duration + wait + init, 0) / nFast
+          durAvgForFastest = fastest.reduce((total, {executionTime}) => total + executionTime, 0) / nFast,
+          totalAvgForFastest = fastest.reduce((total, {duration,wait,init}) => total + duration, 0) / nFast
 
     /** why was the given activation so slow? */
     const explainOutlier = activation => {
@@ -99,10 +100,10 @@ const summarizePerformance = (activations, options) => {
               initAnno = activation.annotations.find(({key}) => key === 'initTime'),
               initTime = (initAnno && initAnno.value) || 0,
               start = activation.start - waitTime,
-              duration = activation.end - activation.start,
-              total = duration + waitTime + initTime
+              executionTime = activation.end - activation.start,
+              total = executionTime + waitTime + initTime
               
-        const durDisparity = duration - durAvgForFastest,
+        const durDisparity = executionTime - durAvgForFastest,
               waitDisparity = Math.max(0, waitTime - waitAvgForFastest),
               initDisparity = Math.max(0, initTime - initAvgForFastest),
               disparity = total - totalAvgForFastest,
