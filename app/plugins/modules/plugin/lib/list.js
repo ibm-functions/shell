@@ -41,6 +41,22 @@ const extractNested = root => dir => dir.charAt(0) === '@'
       ? fs.readdir(path.join(root, dir)).then(subdirs => subdirs.map(subdir => `${dir}/${subdir}`))
       : dir // we'll flatten this below
 
+/**
+ * Read the package.json of one given plugin to get its version
+ *
+ */
+const getVersion = pluginHome => plugin => fs.readFile(path.join(pluginHome, plugin, 'package.json'))
+      .then(JSON.parse)                         // parse the package.json
+      .then(_ => _.version)                     // project out the version field
+      .then(version => ({plugin, version}))     // return a pair of the plugin name and its version
+      // for debugging: .then(_ => { console.error(_); return _ })
+
+/**
+ * Read the package.json of all plugins to get their versions
+ *
+ */
+const getVersions = pluginHome => installedPlugins => Promise.all(installedPlugins.map(getVersion(pluginHome)))
+
 const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     if (dashOptions['help']) {
         throw new modules.errors.usage(usage)
@@ -54,15 +70,30 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
           onclick = false    // no drilldown for now
 
     return fs.pathExists(pluginHome)
-        .then(exists => fs.readdir(pluginHome))
-        .then(dirs => Promise.all(dirs.map(extractNested(pluginHome))))
-        .then(flatten)
+        .then(exists => fs.readdir(pluginHome))                          // read the top-level directory contents
+        .then(dirs => Promise.all(dirs.map(extractNested(pluginHome))))  // extract any @foo/bar nested plugins
+        .then(flatten)                                                   // if there are nested plugins, we need to flatten the arrays
+        .then(getVersions(pluginHome))
         .then(installedPlugins => {
-            console.error(installedPlugins)
             if (installedPlugins.length > 0) {
-                return installedPlugins.map(name => ({type, name, onclick}))
+                //
+                // make a list of records that includes more than just
+                // the plugin name, so that the REPL can format them
+                //
+                return installedPlugins.map(({plugin, version}) => ({type, name: `${plugin}@${version}`, onclick}))
             } else {
-                return 'no user-installed plugins found'
+                return 'No user-installed plugins found'
+            }
+        }).catch(err => {
+            if (err.code === 'ENOENT') {
+                // this error is OK; it just means that pluginHome
+                // doesn't exist, so there are no plugins to list!
+                return 'No user-installed plugins found'
+            } else {
+                // some unpredicted error occurred :(
+                console.error(err.code)
+                console.error(err)
+                throw new Error('Internal Error')
             }
         })
 }
