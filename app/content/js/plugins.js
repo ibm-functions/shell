@@ -75,12 +75,19 @@ const scanForModules = dir => {
 
         const doScan = ({modules, moduleDir}) => {
             modules.forEach(module => {
+                const modulePath = path.join(moduleDir, module)
+
+                if (module.charAt(0) === '@') {
+                    // support for @owner/repo style modules; see shell issue #260
+                    return doScan({ modules: fs.readdirSync(modulePath), moduleDir: modulePath })
+                }
+
                 const pluginPath = path.join(moduleDir, module, 'plugin.js')
                 if (fs.existsSync(pluginPath)) {
                     console.log(`Found module ${path.basename(module)}`)
                     plugins[module] = pluginPath
                 } else {
-                    const backupPluginPath = path.join(moduleDir, module, 'plugin', 'plugin.js')
+                    const backupPluginPath = path.join(modulePath, 'plugin', 'plugin.js')
                     if (fs.existsSync(backupPluginPath)) {
                         console.log(`Found module ${path.basename(module)}`)
                         plugins[module] = backupPluginPath
@@ -93,6 +100,7 @@ const scanForModules = dir => {
 
         // scan the app/plugins/modules directory
         const moduleDir = path.join(dir, 'modules')
+        debug('moduleDir', moduleDir)
         doScan({ modules: fs.readdirSync(moduleDir), moduleDir })
 
         // scan any modules in package.json
