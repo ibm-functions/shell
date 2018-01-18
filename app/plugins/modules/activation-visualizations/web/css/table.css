@@ -360,8 +360,8 @@
 }*/
 .activation-viz-plugin .grid-cell {
     /* square aspect ratio */
-    width: 2vw;
-    height: 2vw;
+    width: 2.5vw;
+    height: 2.5vw;
 }
 .activation-viz-plugin .zoom_1 .grid-cell {
     /* square aspect ratio */
@@ -404,9 +404,27 @@
 .activation-viz-plugin .grid .grid-cell-content {
     flex: 1;
     display: flex;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
     position: relative;
 }
+
+/* innerLabel for cells; see cell.js: const innerLabel */
+.activation-viz-plugin .grid-cell-content > span {
+    font-size: 0.61em;
+    color: white;
+    opacity: 0;
+    transition: all 50ms ease-in-out;
+}
+.latency-2.grid-cell-content > span, .latency-3.grid-cell-content > span, .latency-4.grid-cell-content > span {
+    /* for mid-tone backgrounds, we need to mix the colors in order to increase contrast */
+    mix-blend-mode: difference;
+}
+.activation-viz-plugin .grid-cell-content:hover > span {
+    opacity: 1;
+}
+
 .activation-viz-plugin .grid .cell-label {
     display: none;
 }
@@ -543,7 +561,11 @@
     pointer-events: none;
 }
 .activation-viz-plugin [data-balloon]:after, .activation-viz-plugin [data-balloon]:before {
-   transition-delay: 500ms
+    transition-delay: 500ms;
+}
+.activation-viz-plugin .grid-row [data-balloon]:after, .activation-viz-plugin .grid-row [data-balloon]:before {
+    /* a bit slower for grid tooltips */
+    transition-delay: 750ms;
 }
 .activation-viz-plugin .grid-cell-far-far-left[data-balloon]:after {
     /* try to avoid flowing off to the left */

@@ -72,7 +72,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             wrapper3.appendChild(entry)
             cell.className = 'grid-cell grid-cell-occupied'
 
-            renderCell('Legend', cell, null, isFailure, latBucket) // null means no activation associated with cell
+            renderCell('Legend', cell, null, isFailure, 0, latBucket, { zoom }) // null means no activation associated with cell
 
             if (onclick) {
                 cell.onclick = onclick

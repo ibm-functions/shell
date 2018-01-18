@@ -271,7 +271,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             }
 
             // and try to make the gridDom mostly squarish
-            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 3)}vw`
+            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2.5 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 3)}vw`
 
             let idx = 0
             group.activations.forEach(activation => {
@@ -297,7 +297,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
                         const cell = makeCellDom()
                         cellContainer.appendChild(cell)
                         cell.classList.add('grid-cell-newly-created')
-                        renderCell(cell, activation, !isSuccess(activation))
+                        renderCell(viewName, cell, activation, !isSuccess(activation))
                     }
                 } catch (e) {
                     console.error(e)
