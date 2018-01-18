@@ -253,8 +253,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
             } else if ((this25 > 1000 && this75 > 1000 && this75 - this25 < 1000)
                        || this75 - this25 < 100) {
                 // or close together? here, we need a prettyPrint on
-                // the lower bound; e.g. 1.2s-1.6s
-                xAxisFocusLabelLeft.innerText = `${prettyPrintDuration(this25)}${enDash}${prettyPrintDuration(this75)}`
+                // the lower bound; e.g. 1.2-1.6s
+                xAxisFocusLabelLeft.innerText = `${prettyPrintDuration(this25).replace(/s$/,'')}${enDash}${prettyPrintDuration(this75)}`
                 xAxisFocusLabelRight.innerText = ''
             } else {
                 xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25)
@@ -303,8 +303,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 MM.maxBarRange = thisBarRange
             }
             if ((MM.max2BarRange === 0 || thisBarRange > MM.max2BarRange)
-                && thisBarRange < MM.maxBarRange
-                && thisMedian < 0.75 * thisRight) {
+                && thisBarRange < MM.maxBarRange) {
                 MM.max2BarRange = thisBarRange
             }
             if (MM.maxRange === 0 || thisRange > MM.maxRange) MM.maxRange = thisRange
@@ -425,7 +424,11 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 // add 25th and 75th explainers to widest bar
                 if (this75 - this25 === maxBarRange) {
                     // e.g. 25th versus min; and 75th percentile versus max
-                    const kindaNarrow = right - left < 0.4
+                    const kindaNarrow = right - left < 0.4,
+                          veryNarrow = right - left < 0.1,
+                          veryFarRight = right > 0.95,
+                          veryFarLeft = left < 0.05
+
                     const thFor75 = kindaNarrow ? th : th2  // no space for "percentile"
                     const rightPad = stat => typeof stat === 'number' && !kindaNarrow ? '10.5em' : '3.5em' // extra room for "th percentile"
 
@@ -435,10 +438,24 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     barWrapper.appendChild(indicator75)
                     indicator25.className = 'stat-indicator'
                     indicator75.className = 'stat-indicator'
-                    indicator25.innerText = `${leftArrowHead} ${th(stat25)}`
-                    indicator25.style.left = percent(left + 0.02)
-                    indicator75.innerText = `${thFor75(stat75)} ${rightArrowHead}`
-                    indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
+                    if (!veryNarrow) {
+                        indicator25.innerText = `${leftArrowHead} ${th(stat25)}`
+                        indicator25.style.left = percent(left + 0.02)
+                        indicator75.innerText = `${thFor75(stat75)} ${rightArrowHead}`
+                        indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
+                    } else if (veryFarRight) {
+                        // bar is not wide at all, and ends very far to the RIGHT
+                        indicator25.innerText = `${th(stat25)} ${rightArrowHead}`
+                        indicator25.style.left = `calc(${percent(left)} - 8ex)`
+                        indicator75.innerText = `${thFor75(stat75)} ${rightArrowHead}`
+                        indicator75.style.left = `calc(${percent(right - 0.02)} - ${rightPad(stat75)})`
+                    } else if (veryFarLeft) {
+                        // bar is not wide at all, and ends very far to the LEFT
+                        indicator25.innerText = `${leftArrowHead} ${th(stat25)}`
+                        indicator25.style.left = percent(left + 0.02)
+                        indicator75.innerText = `${leftArrowHead} ${thFor75(stat75)}`
+                        indicator75.style.left = `calc(${percent(right)} + 1ex)`
+                    }
 
                     // still focus when the mouse flies over the indicators
                     focus(indicator25)
@@ -452,8 +469,14 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     const indicator50 = document.createElement('div')
                     barWrapper.appendChild(indicator50)
                     indicator50.className = 'stat-indicator'
-                    indicator50.innerText = `\u25c0 median`
-                    indicator50.style.left = `calc(${percent(medianLeft)} + 1ex + 0.3em)`
+                    if (medianLeft < 0.85) {
+                        indicator50.innerText = `${leftArrowHead} median`
+                        indicator50.style.left = `calc(${percent(medianLeft)} + 1ex + 0.3em)`
+                    } else {
+                        // otherwise, place the median indicator on the left side
+                        indicator50.innerText = `median ${rightArrowHead}`
+                        indicator50.style.left = `calc(${percent(medianLeft)} - 10ex - 0.3em)`
+                    }
                     // 0.3em must match .activation-viz-plugin .data-table td.cell-stats .stat-median-dot width
 
                     // still focus when the mouse flies over the indicator
