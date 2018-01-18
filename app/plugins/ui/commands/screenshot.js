@@ -160,7 +160,7 @@ module.exports = (commandTree, prequire) => {
                       ts = new Date(),
                       filename = `Screen Shot ${ts.toLocaleDateString().replace(/\//g,'-')}-${ts.toLocaleTimeString().replace(/:/g,'-')}.png`,
                       location = require('path').join(app.getPath('desktop'), filename)
-                saveButton.innerText = 'Save to Disk'
+                saveButton.innerText = 'Save to Desktop'
                 saveButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-save'
                 saveButton.onclick = () => {
                     remote.require('fs').writeFile(location,
