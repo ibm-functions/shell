@@ -22,7 +22,7 @@ const prettyPrintDuration = require('pretty-ms'),
  * Draw the given activation in the given cell (a dom)
  *
  */
-exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response.success, latBucket=latencyBucket(activation.end - activation.start), options) => {
+exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response.success, duration=activation.end-activation.start, latBucket=latencyBucket(duration), options) => {
     let returnValue = cell
     if (!cell) {
         // then the caller asked us to make the container
@@ -50,6 +50,12 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
     cell.className = `${cell.className} is-failure-${isFailure}`
     container.className = `grid-cell-content latency-${latBucket}`
 
+    if (!isFailure && (!options || options.zoom > 0)) {
+        const innerLabel = document.createElement('span')
+        innerLabel.innerText = prettyPrintDuration(duration)
+        container.appendChild(innerLabel)
+    }
+
     //label = document.createElement('div')
     // container.appendChild(label)
     // label.className = 'cell-label'
@@ -75,13 +81,12 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         // failure versus success message for tooltip
         msg = isFailure
             ? 'the activation failed' + (statusCode ? ` with status code ${statusCode}` : '') + (errorMessage ? `: ${errorMessage}` : '')
-        : activation.end ? `completed in ${prettyPrintDuration(activation.end - activation.start)}`
-        : ''
+            : ''
 
         //cell.setAttribute('data-activation-id', activation.activationId)
         cell.id = activation.activationId
         cell.setAttribute('data-action-name', activation.name)
-        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}, and ${msg}`)
+        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}`)
         cell.setAttribute('data-balloon-pos', 'up')
     }
 
