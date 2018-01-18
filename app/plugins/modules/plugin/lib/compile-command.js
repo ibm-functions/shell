@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-module.exports = ((commandTree, prequire) => {
-    commandTree.subtree('/plugin', { docs: 'Manage shell plugins' })
+const path = require('path'),
+      compile = require('./compile'),
+      { success } = require('./util')
 
-    require('./lib/compile-command')(commandTree, prequire)
-    require('./lib/install')(commandTree, prequire)
-    require('./lib/list')(commandTree, prequire)
-    require('./lib/remove')(commandTree, prequire)
-})
+module.exports = commandTree => {
+    commandTree.listen('/plugin/compile', () => {
+        const { app } = require('electron').remote
+        const rootDir = path.join(app.getPath('userData'))
+
+        return compile(rootDir, true).then(success)
+    })
+}
