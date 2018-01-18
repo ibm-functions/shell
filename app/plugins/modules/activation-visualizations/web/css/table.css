@@ -238,7 +238,7 @@
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover {
     background: #0A8EF6;
 }
-.activation-viz-plugin .data-table td.cell-stats:hover .stat-median-dot, .activation-viz-plugin .data-table td.cell-stats:hover .stat-indicator, .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin.show-outliers .outlier-dot:hover, .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
+.activation-viz-plugin .data-table td.cell-stats:hover .stat-median-dot, .activation-viz-plugin .data-table td.cell-stats:hover .stat-indicator, .activation-viz-plugin .data-table td.cell-stats .stat-median-dot:hover, .activation-viz-plugin td.cell-stats:hover .outlier-dot, .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
     cursor: pointer;
     z-index: 2 !important; /* see z-index: 1 above; make sure the tooltip floats above the range indicators */
 }
