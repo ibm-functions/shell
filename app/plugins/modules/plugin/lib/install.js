@@ -54,10 +54,24 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                 return reject(error)
             }
 
+            if (stderr.length > 0) {
+                console.error(stderr)
+            }
+            if (stdout.length > 0) {
+                console.log(stdout)
+            }
+
             exec(`npm install ${name} --prod --no-save --no-shrinkwrap`, { cwd: pluginHome }, (error, stdout, stderr) => {
                 if (error) {
                     fs.removeSync(pluginHome)
-                    return reject(error)
+                    if (error.message.indexOf('code E404') >= 0) {
+                        // the user tried to install a plugin which
+                        // doesn't exist in the npm registry
+                        return reject(`The plugin ${name} does not exist`)
+                    } else {
+                        // some other error we don't know about
+                        return reject(error)
+                    }
                 }
 
                 fs.rename(path.join(pluginHome, 'node_modules', name), path.join(moduleDir, name), err => {

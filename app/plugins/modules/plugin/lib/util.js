@@ -22,7 +22,7 @@ exports.success = (operation, message) => {
     const msg = document.createElement('div'),
           clicky = document.createElement('span')
 
-    msg.appendChild(document.createTextNode(operation ? `The plugin ${name} has been ${operation}.` : '' + ' Please '))
+    msg.appendChild(document.createTextNode((operation ? `The plugin ${name} has been ${operation}.` : '') + ' Please '))
     msg.appendChild(clicky)
     msg.appendChild(document.createTextNode(' to complete the installation.'))
 
