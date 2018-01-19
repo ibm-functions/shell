@@ -18,7 +18,7 @@
  * Return a message for the REPL, asking the user to reload
  *
  */
-exports.success = (operation, message) => {
+exports.success = (operation, availableMessage, updatedCommands) => {
     const msg = document.createElement('div'),
           clicky = document.createElement('span')
 
@@ -29,6 +29,30 @@ exports.success = (operation, message) => {
     clicky.innerText = 'reload'
     clicky.className = 'clickable clickable-blatant'
     clicky.onclick = () => require('electron').remote.getCurrentWindow().reload()
+
+    if (availableMessage && updatedCommands && updatedCommands.length > 0) {
+        const available = document.createElement('div'),
+              leadIn = document.createElement('span'),
+              list = document.createElement('span')
+
+        available.style.paddingTop = '1em'
+
+        msg.appendChild(available)
+        available.appendChild(leadIn)
+        available.appendChild(list)
+
+        leadIn.innerText = `The following commands are ${availableMessage}:`
+
+        updatedCommands.forEach(cmd => {
+            const cmdDom = document.createElement('span')
+            cmdDom.innerText = cmd
+            cmdDom.className = 'clickable clickable-blatant'
+            cmdDom.onclick = () => repl.partial(cmd)
+            cmdDom.style.paddingLeft = '1em'
+
+            list.appendChild(cmdDom)
+        })
+    }
 
     return msg
 }

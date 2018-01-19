@@ -46,10 +46,11 @@ const doRemove = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOp
 
 
     return remove(pluginHome)
-        .then(() => compile(rootDir, true))
-        .then(() => success('removed'))
+        .then(() => compile(rootDir, true, false, true))   // the last true means we want a reverse diff
+        .then(removedCommands => success('removed', ' will no be longer available, after reload', removedCommands))
 }
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/plugin/remove', doRemove, { docs: 'Remove installed shell plugin' })
+    const cmd = commandTree.listen('/plugin/remove', doRemove, { docs: 'Remove installed shell plugin' })
+    commandTree.synonym('/plugin/uninstall', doRemove, cmd)
 }

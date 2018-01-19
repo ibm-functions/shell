@@ -35,17 +35,60 @@ global.ui = {
 debug('bootstrap done')
 
 /**
+ * Return the location of the pre-scanned cache file
+ *
+ */
+const prescanned = dir => path.join(dir, '.pre-scanned')
+
+/**
  * Write the plugin list to the .pre-scanned file in app/plugins/.pre-scanned
  *
  */
 const writeToFile = (dir, modules) => new Promise((resolve, reject) => {
-    fs.writeFile(path.join(dir, '.pre-scanned'),
+    fs.writeFile(prescanned(dir),
                  JSON.stringify(modules, undefined, 4),
                  err => {
                      if (err) reject(err)
                      else resolve()
                  })
 })
+
+/**
+ * Read the current .pre-scanned file 
+ *
+ */
+const readFile = dir => new Promise((resolve, reject) => {
+    fs.readFile(prescanned(dir), (err, data) => {
+        if (err) {
+            console.error(err.code)
+            if (err.code === 'ENOENT') {
+                resolve({})
+            } else {
+                reject(err)
+            }
+        } else {
+            resolve(JSON.parse(data.toString()))
+        }
+    })
+})
+
+/**
+ * Find what's new in after versus before, two structures
+ *
+ */
+const diff = ({commandToPlugin:before}, {commandToPlugin:after}, reverseDiff = false) => {
+    const A = (reverseDiff ? after : before) || [],
+          B = (reverseDiff ? before : after) || []
+
+    const changes = []
+    for (let key in B) {
+        if (! (key in A)) {
+            changes.push(key.replace(/^\//,'').replace('/', ' '))
+        }
+    }
+
+    return changes
+}
 
 /**
  * Uglify the javascript
@@ -74,17 +117,7 @@ const uglify = modules => modules.flat.map(module => new Promise((resolve, rejec
         .catch(reject)
 }))
 
-/**
- * Generic filesystem scanning routine
- *     Note that, when scanning for plugins, we ignore subdirectories named "helpers"
- *
- */
-const readDirRecursively = dir => path.basename(dir) !== 'helpers' && path.basename(dir) !== 'node_modules' && fs.statSync(dir).isDirectory()
-      ? Array.prototype.concat(...fs.readdirSync(dir).map(f => readDirRecursively(path.join(dir, f))))
-      : dir
-
-
-module.exports = (rootDir, externalOnly, cleanup = false) => new Promise((resolve, reject) => {
+module.exports = (rootDir, externalOnly, cleanup = false, reverseDiff = false) => new Promise((resolve, reject) => {
 
     /**
      * assemble the list of plugins, then minify the plugins, if we can,
@@ -108,15 +141,17 @@ module.exports = (rootDir, externalOnly, cleanup = false) => new Promise((resolv
         debug('pluginRoot is %s', pluginRoot)
         debug('externalOnly is %s', externalOnly)
 
-        return mkdirp(path.join(pluginRoot, 'modules'))
-            .then(() => plugins.assemble({ pluginRoot, externalOnly }))
-            .then(modules => Object.assign(modules, {
-                flat: modules.flat.map(module => Object.assign(module, {
-                    // make the paths relative to the root directory
-                    path: path.relative(path.join(__dirname, '..', '..', '..'), module.path)
-                }))
-            }))
-            .then(modules => Promise.all([writeToFile(pluginRoot, modules), ...uglify(modules)]))
-            .then(()=>resolve()).catch(err=>reject(err))
+        return readFile(pluginRoot)
+            .then(before => mkdirp(path.join(pluginRoot, 'modules'))
+                  .then(() => plugins.assemble({ pluginRoot, externalOnly }))
+                  .then(modules => Object.assign(modules, {
+                      flat: modules.flat.map(module => Object.assign(module, {
+                          // make the paths relative to the root directory
+                          path: path.relative(path.join(__dirname, '..', '..', '..'), module.path)
+                      }))
+                  }))
+                  .then(modules => Promise.all([writeToFile(pluginRoot, modules), ...uglify(modules)])
+                        .then(() => resolve(diff(before, modules, reverseDiff)))))  // resolve with what is new
+            .catch(err => reject(err))
     }
 })
