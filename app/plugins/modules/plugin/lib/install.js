@@ -87,9 +87,9 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                         }
 
                         // recompile the plugin model
-                        compile(rootDir, true)
-                            .then(() => fs.removeSync(pluginHome))
-                            .then(() => resolve(success('installed')))
+                        return compile(rootDir, true)
+                            .then(newCommands => fs.remove(pluginHome)
+                                  .then(() => resolve(success('installed', ' will be available, after reload', newCommands))))
                             .catch(reject)
                     })
                 })
