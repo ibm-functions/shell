@@ -1073,7 +1073,7 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     /* hide bar chart when the sidecar is visible */
     max-width: 0;
     padding: 0;
-    opacity: 0 !important;
+    /*opacity: 0 !important;*/  /* see https://github.com/ibm-functions/shell/issues/278 */
     width: 0;
     border: none;
 }
