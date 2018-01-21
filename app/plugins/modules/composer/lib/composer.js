@@ -18,6 +18,7 @@ const debug = require('debug')('composer-utils')
 debug('starting')
 
 const path = require('path'),
+      util = require('util'),
       redis = require('redis'),
       messages = require('./messages.json'),
       { app:appBadge } = require('./badges'),
@@ -445,7 +446,7 @@ exports.update = ({name, entity, fsm, type, wsk, commandTree, execOptions}) => {
  */
 exports.isAnApp = action => {
     const allManagement = action.annotations && action.annotations.find(({key}) => key === 'wskng.combinators'),
-          anyAppManagement = allManagement && allManagement.value.find(({type}) => type === 'composition')
+          anyAppManagement = allManagement && util.isArray(allManagement.value) && allManagement.value.find(({type}) => type === 'composition')
 
     return anyAppManagement
 }
