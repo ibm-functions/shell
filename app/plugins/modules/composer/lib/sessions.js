@@ -66,6 +66,7 @@ const getNameAndStartTime = sessionId => repl.qexec(`wsk activation get ${sessio
               return { name: 'unknown', start: sessionActivation.start }
           }
       })
+      .catch(internalError => ({ internalError }))
 
 /**
  * Create renderable entities out of the session list data
@@ -88,8 +89,8 @@ const map = (result, manager, status, statusPretty) => {
                     throw err
                 }
             })
-           .then(([ result, {name,start}, end=start ]) => {
-               if (result && result.internalError) {
+            .then(([ result, {name,start,internalError:nameStartInternalError}, end=start ]) => {
+               if (result && result.internalError || nameStartInternalError) {
                    // expired session
                    console.error(result.internalError)
                    return
@@ -182,7 +183,7 @@ module.exports = (commandTree, prequire) => {
         if (options.name) options.clientSideFiltering = true
 
         if (options.help || options.name === true) {
-            // user specified --name with no arg
+            // user asked for usage, or user specified --name with no arg
             throw new modules.errors.usage(usage())
         }
 
