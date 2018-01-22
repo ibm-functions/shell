@@ -729,10 +729,23 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
 
     const verbIndex = argv.findIndex(arg => arg === verbSynonym),
           nameIndex = verbIndex + 1,
-          hasName = argv[nameIndex],
+          hasName = argv[nameIndex] !== undefined,   // !== undefined important, as minimist turns all-zeroes into numeric 0 (shell #284)
           restIndex = hasName ? nameIndex + 1 : nameIndex
     if (hasName) {
         options.name = argv[nameIndex]
+        if (typeof options.name === 'number') {
+            // see https://github.com/ibm-functions/shell/issues/284
+            // minimist bug: it auto-converts numeric-looking strings
+            // into Numbers! thus all-numeric uuids become javascript
+            // Numbers :(
+
+            // the solution is to scan the original (before minimist
+            // mucked things up) argv_full, looking for an arg that is
+            // ==, but not === the one that minimist gave us.
+            // THUS NOTE THE USE OF == in `arg == options.name` <-- important
+            options.name = argv_full.find(arg => arg == options.name && argv !== options.name)
+        }
+
     } else if (!noImplicitName[verb]) {
         //
         // OPERATION WITH IMPLICIT ENTITY: try to get the name from the current selection
