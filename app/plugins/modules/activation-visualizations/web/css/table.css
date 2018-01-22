@@ -141,6 +141,7 @@
 .activation-viz-plugin .data-table .x-axis-focus-label-range {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
     position: absolute;
     top: 0;
     transition: all 300ms ease-in-out;
@@ -173,7 +174,7 @@
 }
 .activation-viz-plugin .data-table tr:hover td:hover span:hover, .activation-viz-plugin .data-table tr:hover td:hover div:hover, .activation-viz-plugin .data-table tr:hover td:hover .stat-median-dot, .activation-viz-plugin .data-table tr:hover td:hover .stat-indicator {
     /* tooltip stacking; always keep median dot above the bar it sits on */
-    z-index: 1;
+    /*z-index: 1;*/
 }
 .activation-viz-plugin .data-table .cell-stat {
     color: black;

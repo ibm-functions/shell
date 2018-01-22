@@ -216,6 +216,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     const xAxisFocusLabelCell = headerRow.insertCell(-1),
           xAxisFocusLabelRange = document.createElement('div'),
           xAxisFocusLabelLeft = document.createElement('div'),
+          xAxisFocusLabelMiddle = document.createElement('div'),
           xAxisFocusLabelRight = document.createElement('div')
     xAxisFocusLabelCell.className = 'x-axis-focus-label-cell'
     xAxisFocusLabelRange.className = 'x-axis-focus-label-range'
@@ -223,8 +224,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     xAxisFocusLabelRight.className = 'x-axis-focus-label'
     xAxisFocusLabelCell.appendChild(xAxisFocusLabelRange)
     xAxisFocusLabelRange.appendChild(xAxisFocusLabelLeft)
+    xAxisFocusLabelRange.appendChild(xAxisFocusLabelMiddle)
     xAxisFocusLabelRange.appendChild(xAxisFocusLabelRight)
-    
+
     const xAxisRightPad1 = headerRow.insertCell(-1),
           xAxisRightPad2 = headerRow.insertCell(-1),
           xAxisRightPad3 = headerRow.insertCell(-1)
@@ -245,17 +247,23 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
         barWrapper.classList.toggle('focus')
 
         if (inFocus) {
-            if (this25 < 1000 && this75 < 1000) {
+            // this will house the enDash for e.g. 1.1-1.3s
+            xAxisFocusLabelMiddle.innerText = ''
+
+            const veryNarrow = right - left < 0.25
+            if (veryNarrow && this25 < 1000 && this75 < 1000) {
                 // are both of the numbers small? here we can elide
                 // the pretty print on the lower bound; e.g. 100-125ms
-                xAxisFocusLabelLeft.innerText = `${this25}${enDash}${prettyPrintDuration(this75)}`
-                xAxisFocusLabelRight.innerText = ''
-            } else if ((this25 > 1000 && this75 > 1000 && this75 - this25 < 1000)
-                       || this75 - this25 < 100) {
+                xAxisFocusLabelLeft.innerText = this25
+                xAxisFocusLabelMiddle.innerText = enDash
+                xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
+            } else if (veryNarrow && ((this25 > 1000 && this75 > 1000 && this75 - this25 < 1000)
+                                      || this75 - this25 < 100)) {
                 // or close together? here, we need a prettyPrint on
                 // the lower bound; e.g. 1.2-1.6s
-                xAxisFocusLabelLeft.innerText = `${prettyPrintDuration(this25).replace(/s$/,'')}${enDash}${prettyPrintDuration(this75)}`
-                xAxisFocusLabelRight.innerText = ''
+                xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25).replace(/s$/,'')
+                xAxisFocusLabelMiddle.innerText = enDash
+                xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
             } else {
                 xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25)
                 xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
@@ -329,7 +337,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
             const row = redraw ? rowMap[group.groupKey] : table.insertRow(-1),
                   label = redraw ? row.cells[columnIdx++] : row.insertCell(-1),
                   splitOptions = options.split ? `--split${options.split===true ? '' : ' "' + options.split + '"'} --key "${group.groupKey}"` : '',
-                  balloonPos = idx < groups.length - 2 ? 'down' : 'up',
+                  balloonPos = idx === 0 || idx < groups.length - 2 ? 'down' : 'up',
                   { outliers=[] } = group.statData  // extract the list of outliers from the model
 
             if (!redraw) {
@@ -425,7 +433,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 if (this75 - this25 === maxBarRange) {
                     // e.g. 25th versus min; and 75th percentile versus max
                     const kindaNarrow = right - left < 0.4,
-                          veryNarrow = right - left < 0.1,
+                          veryNarrow = right - left < 0.25,
                           veryFarRight = right > 0.95,
                           veryFarLeft = left < 0.05
 
@@ -534,6 +542,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 cell.setAttribute('data-successes', group.count)
                 if (group.nSuccesses === 0) {
                     cell.classList.add('count-is-zero')
+                    cell.classList.remove('clickable')
                 } else {
                     // drill down to grid, showing just successes
                     cell.classList.add('clickable')
@@ -570,6 +579,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 cell.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure --zoom 1 --name "${group.path}" ${splitOptions}`))
                 if (group.nFailures === 0) {
                     cell.classList.add('count-is-zero')
+                    cell.classList.remove('clickable')
                 }
             }
 
@@ -582,6 +592,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 cell.setAttribute('data-outliers', nOutliers)
                 if (nOutliers === 0) {
                     cell.classList.add('count-is-zero')
+                    nOutliers.classList.remove('clickable')
                 }
                 cell.appendChild(countPart)
                 countPart.innerText = nOutliers
