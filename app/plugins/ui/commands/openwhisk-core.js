@@ -743,7 +743,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
             // mucked things up) argv_full, looking for an arg that is
             // ==, but not === the one that minimist gave us.
             // THUS NOTE THE USE OF == in `arg == options.name` <-- important
-            options.name = argv_full.find(arg => arg == options.name && argv !== options.name)
+            options.name = argv_full.find(arg => arg == options.name && arg !== options.name)
         }
 
     } else if (!noImplicitName[verb]) {

@@ -21,6 +21,7 @@ const common = require('../../../lib/common'),
       isUrl = require('is-url'),
       fs = require('fs'),
       path = require('path'),
+      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       keys = ui.keys,
       cli = ui.cli,
@@ -42,6 +43,17 @@ describe('app create error handling and app create --dry-run', function() {
     after(common.after(this))
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
+
+    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+        .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
+       .catch(common.oops(this)))
+
+    it('should 404 session get with all-numeric uuid', () => cli.do('session get 00000000000000000000000000000000 --timeout 5s', this.app)
+       .then(cli.expectError(404))
+       .catch(common.oops(this)))
+    it('should 404 session get with another all-numeric uuid', () => cli.do('session get 00000000000000000000000000000001 --timeout 5s', this.app)
+       .then(cli.expectError(404))
+       .catch(common.oops(this)))
 
     it('should reject unknown option --mojo', () => cli.do('app create demos/if.js --mojo', this.app)
         .then(cli.expectError(0, 'Unexpected option mojo'))

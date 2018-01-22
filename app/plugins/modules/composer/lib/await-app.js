@@ -65,8 +65,21 @@ const get = activationId => new Promise((resolve, reject) => {
  * This is the command handler for await-app
  *
  */
-const await = (wsk, cmd, projection) => (_a, _b, _c, modules, _1, _2, argvNoOptions, commandLineOptions) => new Promise((resolve, reject) => init(wsk, {noping: true}).then(({manager}) => {
-    const sessionId = argvNoOptions[argvNoOptions.indexOf(cmd) + 1]
+const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, argvNoOptions, commandLineOptions) => new Promise((resolve, reject) => init(wsk, {noping: true}).then(({manager}) => {
+    let sessionId = argvNoOptions[argvNoOptions.indexOf(cmd) + 1]
+
+    if (typeof sessionId === 'number') {
+        // see https://github.com/ibm-functions/shell/issues/284
+        // minimist bug: it auto-converts numeric-looking strings
+        // into Numbers! thus all-numeric uuids become javascript
+        // Numbers :(
+
+        // the solution is to scan the original (before minimist
+        // mucked things up) argv_full, looking for an arg that is
+        // ==, but not === the one that minimist gave us.
+        // THUS NOTE THE USE OF == in `arg == options.name` <-- important
+        sessionId = argv_full.find(arg => arg == sessionId && arg !== sessionId)
+    }
 
     // parseDuration expects a string, and returns millis; we must be
     // aware that manager.get expects a value unit of seconds; the default is 30 seconds
@@ -229,7 +242,14 @@ const await = (wsk, cmd, projection) => (_a, _b, _c, modules, _1, _2, argvNoOpti
                             } else if (err.message && err.message.indexOf('ECONNREFUSED') >= 0) {
                                 reject(messages.slowInit)
                             } else {
-                                reject(err)
+                                if (typeof err === 'string' && err.indexOf('Cannot find') >= 0) {
+                                    // the composer's manager API does
+                                    // not nicely wrap this error with
+                                    // a status code :(
+                                    reject({ code: 404, message: err })
+                                } else {
+                                    reject(err)
+                                }
                             }
                         })
                 })
