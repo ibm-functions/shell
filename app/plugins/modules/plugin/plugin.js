@@ -17,6 +17,7 @@
 module.exports = ((commandTree, prequire) => {
     commandTree.subtree('/plugin', { docs: 'Manage shell plugins' })
 
+    require('./lib/commands')(commandTree, prequire)
     require('./lib/compile-command')(commandTree, prequire)
     require('./lib/install')(commandTree, prequire)
     require('./lib/list')(commandTree, prequire)

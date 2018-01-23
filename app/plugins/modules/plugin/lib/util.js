@@ -22,9 +22,11 @@ exports.success = (operation, availableMessage, updatedCommands) => {
     const msg = document.createElement('div'),
           clicky = document.createElement('span')
 
-    msg.appendChild(document.createTextNode((operation ? `The plugin ${name} has been ${operation}.` : '') + ' Please '))
-    msg.appendChild(clicky)
-    msg.appendChild(document.createTextNode(' to complete the installation.'))
+    if (operation !== false) {
+        msg.appendChild(document.createTextNode((operation ? `The plugin ${name} has been ${operation}.` : '') + ' Please '))
+        msg.appendChild(clicky)
+        msg.appendChild(document.createTextNode(' to complete the installation.'))
+    }
 
     clicky.innerText = 'reload'
     clicky.className = 'clickable clickable-blatant'
@@ -35,13 +37,18 @@ exports.success = (operation, availableMessage, updatedCommands) => {
               leadIn = document.createElement('span'),
               list = document.createElement('span')
 
-        available.style.paddingTop = '1em'
+        if (operation !== false) {
+            available.style.paddingTop = '1em'
+        }
 
         msg.appendChild(available)
         available.appendChild(leadIn)
         available.appendChild(list)
 
         leadIn.innerText = `The following commands are ${availableMessage}:`
+
+        list.style.display = 'flex'
+        list.style.flexWrap = 'wrap'
 
         updatedCommands.forEach(cmd => {
             const cmdDom = document.createElement('span')

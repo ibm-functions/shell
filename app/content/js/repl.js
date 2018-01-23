@@ -648,6 +648,7 @@ self.partial = (cmd, execOptions) => {
         prompt.execOptions = execOptions
         prompt.classList.add('repl-partial')
         setTimeout(() => prompt.classList.remove('repl-partial'), 1000)
+        ui.getCurrentPrompt().focus()
     }
 }
 
