@@ -47,7 +47,7 @@ describe('Install and remove plugins', function() {
 
     it('should install shell-sample-plugin', () => cli.do('plugin install shell-sample-plugin', this.app)
        .then(cli.expectOKWithCustom({passthrough: true}))
-       .then(reload)
+       .then(reload)  // reload the app, to pick up the plugin model changes
        .catch(common.oops(this)))
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
@@ -56,10 +56,19 @@ describe('Install and remove plugins', function() {
        .then(cli.expectOK)
        .catch(common.oops(this)))
 
+    it('should show available commands with "plugin commands shell-sample-plugin"', () => cli.do('plugin commands shell-sample-plugin', this.app)
+       .then(cli.expectOKWithCustom({expect: '/sample/hello'}))
+       .catch(common.oops(this)))
+
     it('should remove shell-sample-plugin', () => cli.do('plugin remove shell-sample-plugin', this.app)
        .then(cli.expectOKWithCustom({passthrough: true}))
        .then(reload)
        .catch(common.oops(this)))
+
+    it('should show an error with "plugin commands shell-sample-plugin"', () => cli.do('plugin commands shell-sample-plugin', this.app)
+       .then(cli.expectError(404))
+       .catch(common.oops(this)))
+
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 

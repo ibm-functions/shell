@@ -99,5 +99,5 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
 }
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/plugin/list', doList, { docs: 'List install shell plugins' })
+    commandTree.listen('/plugin/list', doList, { docs: 'List installed shell plugins' })
 }
