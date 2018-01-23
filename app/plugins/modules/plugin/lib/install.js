@@ -16,9 +16,10 @@
 
 const debug = require('debug')('plugin')
 
-const path = require('path'),
+const tmp = require('tmp'),
+      path = require('path'),
       fs = require('fs-extra'),
-      { exec } = require('child_process'),
+      { exec, spawn } = require('child_process'),
       compile = require('./compile'),
       { success } = require('./util')
 
@@ -41,59 +42,81 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
     const { app } = require('electron').remote
     const rootDir = path.join(app.getPath('userData'))
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
-    const pluginHome = path.join(moduleDir, `${name}-tmp`)
+    const targetDir = path.join(moduleDir, name)                  // final location of the plugin
 
-    fs.mkdirpSync(pluginHome)
-
-    debug(`install plugin ${name} in ${pluginHome}`)
-
+    // make a staging area for the npm install
     return new Promise((resolve, reject) => {
-        exec('npm init -y', { cwd: pluginHome }, (error, stdout, stderr) => {
-            if (error) {
-                fs.removeSync(pluginHome)
-                return reject(error)
+        tmp.dir((err, pluginHome, cleanupDir) => {
+            const cleanup = () => Promise.resolve(true)//fs.remove(pluginHome)//.then(cleanupDir, cleanupDir)
+            const fail = err => {
+                console.error(err)
+                return cleanup().then(() => reject(err)).catch(reject)
             }
 
-            if (stderr.length > 0) {
-                console.error(stderr)
-            }
-            if (stdout.length > 0) {
-                console.log(stdout)
-            }
+            if (err) {
+                fail(err)
+            } else {
+                debug(`install plugin ${name} in ${pluginHome}`)
 
-            exec(`npm install ${name} --prod --no-save --no-shrinkwrap`, { cwd: pluginHome }, (error, stdout, stderr) => {
-                if (error) {
-                    fs.removeSync(pluginHome)
-                    if (error.message.indexOf('code E404') >= 0) {
-                        // the user tried to install a plugin which
-                        // doesn't exist in the npm registry
-                        return reject(`The plugin ${name} does not exist`)
-                    } else {
-                        // some other error we don't know about
-                        return reject(error)
-                    }
-                }
-
-                fs.rename(path.join(pluginHome, 'node_modules', name), path.join(moduleDir, name), err => {
+                exec('npm init -y', { cwd: pluginHome }, (error, stdout, stderr) => {
                     if (error) {
-                        fs.removeSync(pluginHome)
-                        return reject(error)
+                        return fail(error)
                     }
 
-                    fs.rename(path.join(pluginHome, 'node_modules'), path.join(moduleDir, name, 'node_modules'), err => {
-                        if (error) {
-                            fs.removeSync(pluginHome)
-                            return reject(error)
-                        }
+                    if (stderr.length > 0) {
+                        console.error(stderr)
+                    }
+                    if (stdout.length > 0) {
+                        console.log(stdout)
+                    }
 
-                        // recompile the plugin model
-                        return compile(rootDir, true)
-                            .then(newCommands => fs.remove(pluginHome)
-                                  .then(() => resolve(success('installed', ' will be available, after reload', newCommands))))
-                            .catch(reject)
+                    const sub = spawn('npm',
+                                      ['install', name, '--prod', '--no-save', '--no-shrinkwrap'],
+                                      { cwd: pluginHome })
+
+                    if (!sub) {
+                        fail('Internal Error')
+                    }
+
+                    sub.stderr.on('data', data => {
+                        const error = data.toString()
+                        if (error.indexOf('code E404') >= 0) {
+                            // the user tried to install a plugin which
+                            // doesn't exist in the npm registry
+                            sub.kill()
+                            return reject(`The plugin ${name} does not exist`)
+                        } else if (error.indexOf('ERR') >= 0) {
+                            // some other error we don't know about
+                            return reject(error)
+                        } else {
+                            console.error(error)
+                        }
+                    })
+
+                    sub.stdout.on('data', data => {
+                        console.log(data.toString())
+                    })
+
+                    sub.on('close', code => {
+                        if (code !== 0) {
+                            reject()
+                        } else {
+                            //
+                            // NOTE: fs.move doesn't work on linux; fs-extra seems to do hard links?? hence the use of fs.copy
+                            //
+                            return fs.ensureDir(targetDir)
+                                .then(() => fs.copy(path.join(pluginHome, 'node_modules', name), targetDir))
+                                .then(() => fs.copy(path.join(pluginHome, 'node_modules'), path.join(targetDir, 'node_modules')))
+                                .then(() => Promise.all([compile(rootDir, true), cleanup()]))  // recompile the plugin model
+                                .then(([newCommands]) => success('installed',
+                                                                 ' will be available, after reload',
+                                                                 newCommands))
+                                .then(resolve)
+                                .catch(fail)
+                        }
                     })
                 })
-            })
+            }
         })
     })
 }
