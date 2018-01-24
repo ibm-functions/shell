@@ -22,7 +22,9 @@ exports.nbsp   = '\u00a0'
 exports.enDash = '\u2013'
 exports.emDash = '\u2014'
 exports.leftArrowHead = '\u25c0'
+exports.leftArrowHeadEmpty = '\u25c1'
 exports.rightArrowHead = '\u25b6'
+exports.rightArrowHeadEmpty = '\u25b7'
 
 /** we may want to filter out activations with internal names */
 exports.isUUIDPattern = /.*[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -268,9 +270,16 @@ exports.visualize = (wsk, commandTree, cmd, viewName, draw, extraUsage, extraOpt
 
 \t${cmd} [appName]
 
+Example:
+\tgrid --outliers max --success  will show only the worst offending successful activations
+
 Options:
-\tappName    optionally, if you specify an app, the view will be show only its tasks
-\t--batches  the number of 200-activation batches to fetch${extraUsage ? '\n' + extraUsage : ''}`)
+\tappName    include only the tasks of the given app
+\t--name     include only activations of the given named package/action
+\t--success  include only successful activations
+\t--failure  include only failed activations
+\t--outliers include only outlier activations; allowed values: min,25,50,90*,95,99,max
+\t--batches  the number of 200-activation batches to fetch; default=4${extraUsage ? '\n' + extraUsage : ''}`)
     }
 
     if (idx < 0) {
