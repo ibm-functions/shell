@@ -62,7 +62,7 @@ const summarizePerformance = (activations, options) => {
               wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
               init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
               executionTime = _.end - _.start,
-              duration = executionTime + wait + init
+              duration = executionTime + wait  // note: executionTime already factors in `init`, so we don't add it here
 
         if (isSuccess(_)) {
             const latBucket = latencyBucket(options.full ? duration : executionTime)
@@ -287,12 +287,20 @@ const addToGroup = (options, totals, splitRequested, splitter) => (groups, activ
  *
  */
 const toArray = (map, options) => {
-    const groups = []
+    const groups = [],
+          outlierFilter = filterByOutlieriness(options)
 
     for (let x in map) {
         const group = groups[groups.push(map[x]) - 1]
-        group.statData = summarizePerformance(group.successes && group.successes.length > 0 ? group.successes : group.failures || group.activations, options)
+
+        group.statData = summarizePerformance(group.successes && group.successes.length > 0
+                                              ? group.successes
+                                              : group.failures || group.activations, options)
         group.errorRate = group.nFailures / (group.nSuccesses + group.nFailures)
+
+        // the user asked us to filter to show only outliers?
+        group.activations = outlierFilter(group)
+
         if (options.groupBySuccess) {
             group.count = group.successes.length + group.failures.length
         } else {
@@ -417,4 +425,47 @@ exports.groupByTimeBucket = (activations, options) => {
         }),
         summary: summarizeWhole2(activations, options)  // a "statData" object, for all activations
     })
+}
+
+/**
+ * Return the keys of a given object
+ *
+ */
+const keys = M => {
+    const A = []
+    for (let key in M) {
+        A.push(key)
+    }
+    return A
+}
+
+/**
+ * User asked to filter based on outlier-iness. This must have a
+ * grouping. the {activations,statData} is a group from grouping.js
+ *
+ */
+const filterByOutlieriness = options => ({activations,statData}) => {
+    if (!options.outliers) {
+        return activations
+    } else {
+        const thresholdN = typeof options.outliers === 'number' ?
+              options.outliers < 1 ? 100 * options.outliers : options.outliers  // --outliers 0.25 versus --outliers 25
+              : options.outliers === true ? '90' // if true, this means the user passed --outliers with no arg; use default
+              : options.outliers                 // some random string; we'll check for supported strings in the next if clause
+              threshold = statData.n[thresholdN]
+
+        // check that the user passed a supported options.outliers parameter
+        if (typeof options.outliers !== true && threshold === undefined) {
+            // then the user specified an undefined threhsold
+            throw new Error(`Unsupported threhsold. Supported threhsolds: ${keys(statData.n)}`)
+        }
+
+        return activations.filter(activation => {
+            const waitAnno = activation.annotations.find(({key}) => key === 'waitTime'),
+                  waitTime = (waitAnno && waitAnno.value) || 0,
+                  executionTime = activation.end - activation.start,
+                  duration = executionTime + waitTime
+            return duration >= threshold
+        })
+    }
 }

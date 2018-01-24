@@ -333,7 +333,7 @@
     flex-direction: column;
     align-items: center;
     width: auto;
-    padding: 0.5em 1em 0;
+    padding: 0.5em 1.5em 0;
     /* want this, but it's not yet supported z-index: attr(data-grid-index number);*/
 }
 .activation-viz-plugin .grid .grid-row {
@@ -345,10 +345,14 @@
 .activation-viz-plugin .grid .grid-label {
     font-weight: 400;
     text-align: center;
+    padding-bottom: 1ex;
+    min-width: 8em;
+}
+.activation-viz-plugin .grid .grid-label .grid-label-part {
+    /* the action and package name bits of a grid label */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-bottom: 1ex;
 }
 .activation-viz-plugin .grid-grid:not(.zoom_0) .grid-label {
     max-width: none !important;
@@ -525,7 +529,7 @@
     flex-direction: row;
     padding: 0;
     padding-right: 0.5ex;
-    padding-top: 0.5ex;
+    padding-top: 0.75ex;
 }
 .activation-viz-plugin.grid-header-key .grid:last-child {
     padding-right: 0;
@@ -541,9 +545,6 @@
 .activation-viz-plugin.grid-header-key .zoom_-1 .activation-viz-legend-label {
     font-size: 0.875em;
     opacity: 0.6;
-    text-align: right;
-}
-.activation-viz-plugin.grid-header-key .zoom_-1:first-child .activation-viz-legend-label {
     text-align: left;
 }
 .activation-viz-plugin.grid-header-key .zoom_-1 .kind {

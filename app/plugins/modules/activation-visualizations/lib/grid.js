@@ -21,7 +21,9 @@ const prettyPrintDuration = require('pretty-ms'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
       { modes } = require('./modes'),
-      { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, displayTimeRange, prepareHeader, visualize } = require('./util')
+      { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket,
+        filterByOutlieriness,
+        displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Grid'
 
@@ -235,21 +237,23 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
               labelPackage = document.createElement('div'),
               labelAction = document.createElement('div'),
               labelSplit = group.groupKey.split('/'),
-              packageName = labelSplit.length === 4 ? labelSplit[2] : nbsp
-              actionName = labelSplit[labelSplit.length - 1],
-              nameWithoutNamespace = labelSplit.slice(2).join('/')
+              hasPackage = labelSplit.length === 4,                 // this action is part of a pacakge?
+              packageName = hasPackage ? labelSplit[2] : nbsp,      // the package name to display
+              actionName = labelSplit[labelSplit.length - 1]        // the action name to display
 
         if (!redraw /*zoomLevel === 0 || groups.length > 1 || options.fixedHeader*/) {
-            gridLabel.className = 'grid-label clickable'
+            gridLabel.className = 'grid-label'
             gridLabel.appendChild(labelInner)
             gridDom.appendChild(gridLabel)
-            gridLabel.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`))
 
             labelInner.appendChild(labelPackage)
             labelPackage.innerText = packageName
-            labelPackage.className = 'package-prefix'
+            labelPackage.className = 'package-prefix grid-label-part'
+
             labelInner.appendChild(labelAction)
             labelAction.innerText = actionName
+            labelAction.className = 'clickable grid-label-part'
+            labelAction.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`))
         }
 
         // render the grid
@@ -267,7 +271,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
             // now that we know the width of the grid, adjust the width of the label
             if (zoomLevel === 0) {
-                gridLabel.style.maxWidth = `${width * 5}vw`
+                gridLabel.style.maxWidth = `${width * 8}vw`
             }
 
             // and try to make the gridDom mostly squarish

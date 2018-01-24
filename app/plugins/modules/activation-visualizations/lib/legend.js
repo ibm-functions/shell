@@ -17,7 +17,8 @@
 const prettyPrintDuration = require('pretty-ms'),
       { renderCell } = require('./cell'),
       { drilldownWith } = require('./drilldown'),
-      { nbsp, enDash, leftArrowHead, rightArrowHead, latencyBuckets, nLatencyBuckets, latencyBucket, optionsToString } = require('./util')
+      { nbsp, enDash,
+        latencyBuckets, nLatencyBuckets, latencyBucket, optionsToString } = require('./util')
 
 // for future reference, here is a platform way to render percents
 //const locale = window.navigator.userLanguage || window.navigator.language
@@ -107,8 +108,9 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
     }
 
     //
-    // find the index of the last non-zero legend entry for the
-    // performance squares (latency buckets)
+    // find the index of the first and last non-zero legend entries
+    // for the performance squares (latency buckets)
+    const firstNonZero = statData.latBuckets.findIndex(_ => _ > 0)
     let lastNonZero = -1
     for (let idx = statData.latBuckets.length - 1; idx >= 0; idx--) {
         if (statData.latBuckets[idx] > 0) {
@@ -123,7 +125,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
     //
     if (lastNonZero >= 0) {
         latencyBuckets.forEach((latencyRange, idx, A) => {
-            const first = idx === 0,
+            const isFirstNonZero = idx === firstNonZero,
                   last = idx === A.length - 1,
                   isLastNonZero = idx === lastNonZero,
                   lower = idx === 0 ? 0 : A[idx - 1],
@@ -145,7 +147,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
                 entry(labelText, count, false, idx, // false means not a failure
                     { zoom: -1, labelAsTooltip: true,
                       balloonPos: idx < ~~(nLatencyBuckets / 2) - 1? 'right' : 'left',
-                      useThisLabelInstead: first ? `${leftArrowHead} fastest` : isLastNonZero ? `slowest ${rightArrowHead}` : nbsp,
+                      useThisLabelInstead: isFirstNonZero ? `fastest` : isLastNonZero ? `slowest` : nbsp,
                       onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --success --latency-bucket ${idx}`))
                     })
             }
