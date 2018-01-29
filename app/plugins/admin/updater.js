@@ -103,8 +103,9 @@ const defaultBackupPlans = [ { exec: 'npm',
                              } ]
 const checkForUpdates = (quiet=false, exec='npm', opts={}, backupPlans=defaultBackupPlans) => new Promise((resolve, reject) => {
     try {
-        const spawn = require('child_process').exec,
-              child = spawn(`${exec} outdated -g @ibm-functions/shell`, opts, (err, stdout, stderr) => {
+        const shellName = '@ibm-functions/shell'
+        const spawn = require('child_process').exec
+              child = spawn(`${exec} outdated -g ${shellName}`, opts, (err, stdout, stderr) => {
 
                   if (err && stdout.length === 0) {
                       if (backupPlans.length > 0) {
@@ -135,16 +136,7 @@ const checkForUpdates = (quiet=false, exec='npm', opts={}, backupPlans=defaultBa
                     //Package               Current   Wanted   Latest  Location
                     //@ibm-functions/shell  1.3.137  1.3.140  1.3.140
                     //
-                    const lines = stdout.split(/\r?\n/),
-                          header = lines[0],
-                          Current = header.indexOf('Current'),
-                          Wanted = header.indexOf('Wanted'),
-                          Location = header.indexOf(' Location')
-                    resolve(wrapInDiv(lines
-                                      .filter(_ => _)                             // strip blank lines
-                                      .map(line => line.substring(0, Location)) // strip last column
-                                      .map(line => line.substring(0, Current + 'Current'.length)
-                                           + line.substring(Wanted + 'Wanted'.length)))) // strip Wanted column
+                    resolve(wrapInDiv(npmProcessResponse(exec, shellName, stdout)))
                 }
               })
     } catch (err) {
@@ -152,6 +144,29 @@ const checkForUpdates = (quiet=false, exec='npm', opts={}, backupPlans=defaultBa
         reject(err)
     }
 })
+
+const npmProcessResponse = (exec = 'npm', name, stdout) => {
+        // npm5 reports code=1 for "updates available"
+        // then updates are available; `stdout` will be something
+        // like this. strip off the last column, and any blank lines
+        //
+        //Package               Current   Wanted   Latest  Location
+        //@ibm-functions/shell  1.3.137  1.3.140  1.3.140
+        //
+        const lines = stdout.split(/\r?\n/),
+            header = lines[0],
+            Current = header.indexOf('Current'),
+            Wanted = header.indexOf('Wanted'),
+            Location = header.indexOf(' Location')
+        return lines
+            .filter(_ => _)                           // strip blank lines
+            .map(line => line.substring(0, Location)) // strip last column
+            .map(line => line.substring(0, Current + 'Current'.length) +
+                         line.substring(Wanted + 'Wanted'.length)) // strip Wanted column
+            .concat('To update, run the following command from the terminal:')
+            .concat(`${exec} update ${name} -g`)
+}
+
 const checkForUpdatesQuietly = () => checkForUpdates(true)
 
 /**
