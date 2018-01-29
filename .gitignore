@@ -11,3 +11,4 @@ app/plugins/.pre-scanned
 .openwhisk-shell
 dump.rdb
 openwhisk
+.idea
