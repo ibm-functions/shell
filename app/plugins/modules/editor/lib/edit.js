@@ -88,7 +88,12 @@ const updateText = quill => text => {
  *
  */
 const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
-    const sidecar = document.querySelector('#sidecar')
+    const sidecar = document.querySelector('#sidecar'),
+          leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
+          rightHeader = sidecar.querySelector('.header-right-bits .custom-header-content')
+
+    ui.removeAllDomChildren(leftHeader)
+    ui.removeAllDomChildren(rightHeader)
 
     const name = args[args.indexOf('edit') + 1]
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
