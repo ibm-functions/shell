@@ -80,15 +80,29 @@ const filterOutNonActionActivations = filter => activations => {
     return activations.filter(_ => _.end && filter(pathOf(_)))
 }
 
-const extractTasks = ({fsm}) => {
-    const tasks = []
-    for (let id in fsm.States || {}) {
-        const state = fsm.States[id]
-        if (state.Type === 'Task' && state.Action) {
-            // state.Action might be undefined, e.g. for inline functions
-            tasks.push(state.Action)
+/**
+ * Which tasks, e.g. actions or sequences referenced by name, does the
+ * given app include? If the given app structure does not represent a
+ * composition, then return the app's name. This fallback seems
+ * reasonable, as the "tasks" in an action is [action]
+ *
+ */
+const extractTasks = app => {
+    const { name, fsm } = app
+
+    const tasks = [ name ]
+    if (fsm) {
+        // this is indeed an app; now we try to extract the named
+        // tasks in the app
+        for (let id in fsm.States || {}) {
+            const state = fsm.States[id]
+            if (state.Type === 'Task' && state.Action) {
+                // state.Action might be undefined, e.g. for inline functions
+                tasks.push(state.Action)
+            }
         }
     }
+
     return tasks
 }
 
