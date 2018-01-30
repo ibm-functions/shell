@@ -103,7 +103,7 @@ class Occupancy {
                 cells.push(cell)
                 cell.className = `${cell.className} grid-cell-occupied` // ${peripheral}
 
-                cell.onmouseover = evt => {
+                cell.onmouseenter = evt => {
                     const win = this.gridGrid.getBoundingClientRect(),
                           cell = evt.currentTarget
                     if (win.right - evt.clientX < 80) {
@@ -111,9 +111,16 @@ class Occupancy {
                     } else if (evt.clientX - win.left < 80) {
                         cell.setAttribute('data-balloon-pos', 'up-left')
                     }
-                }
-                cell.onmouseout = evt => {
-                    const cell = evt.currentTarget
+
+                    if (cell.id && cell.isFailure && !cell.failureMessage) {
+                        repl.qexec(`wsk activation get ${cell.id}`)
+                            .then(({response}) => {
+                                if (response.result.error) {
+                                    cell.failureMessage = response.result.error
+                                    cell.setAttribute('data-balloon', cell.getAttribute('data-balloon') + ` with: ${cell.failureMessage.substring(0, 10)}`)
+                                }
+                            })
+                    }
                 }
             }
         }

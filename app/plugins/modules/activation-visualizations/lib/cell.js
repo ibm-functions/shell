@@ -16,7 +16,7 @@
 
 const prettyPrintDuration = require('pretty-ms'),
       { drilldownWith } = require('./drilldown'),
-      { latencyBucket } = require('./util')
+      { newline, latencyBucket } = require('./util')
 
 /**
  * Draw the given activation in the given cell (a dom)
@@ -80,12 +80,14 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
 
         // failure versus success message for tooltip
         msg = isFailure
-            ? 'the activation failed' + (statusCode ? ` with status code ${statusCode}` : '') + (errorMessage ? `: ${errorMessage}` : '')
+            ? `${newline}failed` + (statusCode ? ` with status code ${statusCode}` : '') + (errorMessage ? `: ${errorMessage}` : '')
             : ''
 
         //cell.setAttribute('data-activation-id', activation.activationId)
         cell.id = activation.activationId
+        cell.isFailure = isFailure
         cell.setAttribute('data-action-name', activation.name)
+        cell.setAttribute('data-balloon-break', 'data-balloon-break')
         cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}`)
         cell.setAttribute('data-balloon-pos', 'up')
     }
