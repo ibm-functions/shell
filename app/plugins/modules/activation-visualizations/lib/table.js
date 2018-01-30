@@ -20,7 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
       { modes } = require('./modes'),
-      { leftArrowHead, rightArrowHead, enDash, emDash, optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
+      { leftArrowHead, rightArrowHead, newline, enDash, emDash, optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
       defaultBottom = 25, defaultTop = 75,         // default range to show in summary
       defaultSorter = statDataSorter(defaultTop)   // sort by the default top of the range
 
@@ -515,7 +515,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                         // try to explain why it's slow
                         if (reasons.length > 0) {
                             const { why } = reasons[0],
-                                  render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join('\u000a')
+                                  render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join(newline)
                             dot.setAttribute('why-is-it-slow', why)
 
                             // tooltip metadata

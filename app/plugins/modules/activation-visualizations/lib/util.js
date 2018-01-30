@@ -19,6 +19,7 @@ const path = require('path'),
       prettyPrintDuration = require('pretty-ms')
 
 exports.nbsp   = '\u00a0'
+exports.newline = '\u000a'
 exports.enDash = '\u2013'
 exports.emDash = '\u2014'
 exports.leftArrowHead = '\u25c0'
