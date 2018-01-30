@@ -992,6 +992,39 @@ const ui = (function() {
     }
 
     /**
+     * Sidecar badges
+     *
+     */
+    const addBadge = badgeText => {
+        const sidecar = document.querySelector('#sidecar'),
+              header = sidecar.querySelector('.sidecar-header'),
+              badges = header.querySelector('.badges')
+
+        const badge = document.createElement('badge')
+        if (typeof badgeText === 'string') {
+            badge.innerText = badgeText
+        } else {
+            badge.appendChild(badgeText)
+        }
+        badges.appendChild(badge)
+        return badge
+    }
+    const addVersionBadge = (action, {clear=false}={}) => {
+        if (clear) {
+            self.clearBadges()
+        }
+        if (action.version) {
+            addBadge(`v${action.version}`).classList.add('version')
+        }
+    }
+    self.addVersionBadge = addVersionBadge
+    self.clearBadges = () => {
+        const sidecar = document.querySelector('#sidecar'),
+              header = sidecar.querySelector('.sidecar-header')
+        removeAllDomChildren(header.querySelector('.badges'))
+    }
+
+    /**
      * Load the given entity into the sidecar UI
      *
      */
@@ -1032,19 +1065,7 @@ const ui = (function() {
         // the name of the entity, for the header
         const nameDom = self.addNameToSidecarHeader(sidecar, entity.name, entity.packageName)
 
-        const badges = header.querySelector('.badges')
-        removeAllDomChildren(badges)
-        const addBadge = badgeText => {
-            const badge = document.createElement('badge')
-            if (typeof badgeText === 'string') {
-                badge.innerText = badgeText
-            } else {
-                badge.appendChild(badgeText)
-            }
-            badges.appendChild(badge)
-            return badge
-        }
-        const addVersionBadge = action => action.version && addBadge(`v${action.version}`).classList.add('version')
+        ui.clearBadges()
         const maybeAddWebBadge = action => {
             const isWebExported = action.annotations && action.annotations.find(kv => kv.key === 'web-export' && kv.value)
             if (isWebExported) {

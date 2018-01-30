@@ -33,9 +33,10 @@ const modules = {
     errors: {
         usage: require('./usage-error')
     },
-    ui: ui,
-    namespace: namespace,
-    wsk: wsk,
+    eventBus,
+    ui,
+    namespace,
+    wsk,
     repl: self
 }
 

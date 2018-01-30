@@ -813,7 +813,7 @@ sidecar:not(.entity-is-rules) .rule-content {
 sidecar:not(.entity-is-triggers) .trigger-content {
     display: none;
 }
-sidecar.entity-is-actions:not(.entity-is-sequence) .action-source, sidecar .activation-result, code.hljs {
+sidecar.entity-is-actions:not(.entity-is-sequence) .action-source, sidecar .activation-result, code.hljs, .code-highlighting pre {
     font-family: var(--font-monospace);
     font-weight: 400;
     font-size: 90%;
