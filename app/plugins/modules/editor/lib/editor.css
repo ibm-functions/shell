@@ -1,3 +1,16 @@
+/* add an edit icon next to the action name in the sidecar header */
+#sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
+    content: "\270e";
+    color: var(--color-support-02);
+    margin-left: 0.35em;
+    font-size: 0.875em;
+    transform: scaleX(-1);  /* flip around y axis */
+    transition: color 150ms ease-in-out;
+}
+#sidecar.edit-mode.is-modified .sidecar-header-name:after {
+    color: var(--color-support-01);
+}
+
 .code-highlighting {
     flex: 1;
 }
@@ -33,7 +46,7 @@
     opacity: 0;
     width: 0;
 }
-.custom-header-content .editor-status.is-modified .is-modified, .custom-header-content .editor-status:not(.is-modified) .is-up-to-date {
+#sidecar.is-modified .custom-header-content .editor-status .is-modified, #sidecar:not(.is-modified) .custom-header-content .editor-status .is-up-to-date {
     opacity: 1;
     width: auto;
 }

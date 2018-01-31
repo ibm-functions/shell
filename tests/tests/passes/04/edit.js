@@ -67,4 +67,14 @@ describe('edit actions', function() {
        .then(sidecar.expectShowing('foo2'))
        .then(sidecar.expectBadge('v0.0.1'))
        .catch(common.oops(this)))
+
+    it('should create a zip action', () => cli.do('let zippy.zip = data/zip', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('zippy'))
+       .catch(common.oops(this)))
+
+    it('should report 406 for edit of zip', () => cli.do('edit zippy', this.app)
+       .then(cli.expectError(406))
+       .catch(common.oops(this)))
 })
