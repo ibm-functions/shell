@@ -512,9 +512,11 @@ self.exec = (commandUntrimmed, execOptions) => {
                 execOptions = {}
             }
 
-            execOptions.history = history.add({
-                raw: command
-            })
+            if (!execOptions || !execOptions.quiet) {
+                execOptions.history = history.add({
+                    raw: command
+                })
+            }
         }
 
         // the Read part of REPL

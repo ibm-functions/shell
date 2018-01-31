@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-const path = require('path')
+const path = require('path'),
+      beautify = require('js-beautify')
 
 const strings = {
-    save: 'Save',
+    save: 'Deploy',
     revert: 'Revert',
-    isUpToDate: 'You are viewing the currently deployed version',
-    isModified: 'You have unsaved edits'
+    tidy: 'Tidy Up',
+    readonly: 'Done Editing',
+    isUpToDate: 'You are in edit mode, viewing the <strong>currently deployed version</strong>',
+    isModified: 'You are in edit mode, with <strong>unsaved edits</strong>'
 }
 
 /** from https://github.com/Microsoft/monaco-editor-samples/blob/master/sample-electron/index.html */
@@ -33,6 +36,20 @@ function uriFromPath(_path) {
 }
 
 /**
+ * Throw an error if we can't edit the given action
+ *
+ */
+const checkForConformance = action => {
+    if (action.exec.binary) {
+        const err = new Error('Editing of binary actions not yet supported')
+        err.code = 406    // 406: Not Acceptable http status code
+        throw err
+    }
+
+    return action
+}
+
+/**
  * Save the given action
  *
  */
@@ -42,6 +59,9 @@ const save = ({wsk, action, editor, eventBus}) => ({
     direct: () => {
         action.exec.code = editor.getValue()
 
+        // odd: if we don't delete this, the backend will 
+        delete action.version
+
         const owOpts = wsk.owOpts({
             name: action.name,
             namespace: action.namespace,
@@ -49,9 +69,7 @@ const save = ({wsk, action, editor, eventBus}) => ({
         })
 
         return wsk.ow.actions.update(owOpts)
-            .then(() => {
-                eventBus.emit('/editor/save', { text: action.exec.code })
-            })
+            .then(action => eventBus.emit('/editor/save', action))
     }
 })
 
@@ -69,21 +87,60 @@ const revert = ({wsk, action, editor, eventBus}) => ({
         })
 
         return wsk.ow.actions.get(owOpts)
-            .then(action => action.exec)
-            .then(updateText(editor))
-            .then(text => eventBus.emit('/editor/save', { text: action.exec.code }))
+            .then(action => {
+                updateText(editor)(action.exec)
+                eventBus.emit('/editor/save', action)
+            })
+            .then(() => true)
     }
 })
 
+/**
+  * Tidy up the source
+  *
+  */
+const tidy = ({wsk, action, editor, eventBus}) => ({
+    mode: strings.tidy,
+    actAsButton: true,
+    direct: () => {
+        const raw = editor.getValue(),
+              nicer = beautify(raw, { wrap_line_length: 80 })
+
+        setText(editor)({ kind: action.exec.kind,
+                          code: nicer
+                        })
+
+        return true
+    }
+})
+
+/**
+  * Switch to read-only mode
+  *
+  */
+const readonly = ({wsk, action, editor, eventBus}) => ({
+    mode: strings.readonly,
+    actAsButton: true,
+    direct: () => repl.qexec(`wsk action get /${action.namespace}/${action.name}`)
+        .then(entity => wsk.addPrettyType(entity.type, 'update', entity.name)(entity))
+        .then(ui.showEntity)
+})
+
+/**
+ * What is the monaco "language" for the given kind?
+*
+*/
 const language = kind => {
-    if (kind.indexOf('nodejs') > 0) {
+    if (kind.indexOf('nodejs') >= 0) {
         return 'javascript'
-    } else if (kind.indexOf('python') > 0) {
+    } else if (kind.indexOf('python') >= 0) {
         return 'python'
-    } else if (kind.indexOf('swift') > 0) {
+    } else if (kind.indexOf('swift') >= 0) {
         return 'swift'
-    } else if (kind.indexOf('java') > 0) {
+    } else if (kind.indexOf('java') >= 0) {
         return 'java'
+    } else if (kind.indexOf('php') >= 0) {
+        return 'php'
     } else {
         //???
         return 'javascript'
@@ -114,7 +171,7 @@ const setText = editor => ({code, kind}, otherEdits=[]) => {
 const updateText = editor => exec => {
     // monaco let's us replace the full range of text, so we don't need
     // an explicit delete of the current text
-    setText(editor)(exec)
+    return setText(editor)(exec)
 }
 
 /**
@@ -176,7 +233,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
             }
 
             amdRequire(['vs/editor/editor.main'], () => {
-                // try to disable the helper thingies
+                // for now, try to disable the completion helper thingies
                 monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
 
                 /*monaco.editor.defineTheme('myCustomTheme', {
@@ -199,7 +256,6 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
                     renderLineHighlight: 'none',
                     contextmenu: false,
                     scrollBeyondLastLine: false,
-                    hover: false,
                     cursorStyle: 'block',
                     fontFamily: 'var(--font-monospace)',
                     fontSize: 14, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
@@ -237,15 +293,20 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
         subtext.appendChild(status)
         status.appendChild(upToDate)
         status.appendChild(modified)
-        upToDate.innerText = strings.isUpToDate
-        modified.innerText = strings.isModified
+        upToDate.innerHTML = strings.isUpToDate
+        modified.innerHTML = strings.isModified
         status.className = 'editor-status is-up-to-date'
         upToDate.className = 'is-up-to-date'
         modified.className = 'is-modified'
-        const mod = () => status.classList.add('is-modified')
-        const unmod = () => status.classList.remove('is-modified')
-        eventBus.on('/editor/save', unmod)
-        editor.getModel().onDidChangeContent(mod)
+        const editsInProgress = () => sidecar.classList.add('is-modified')  // edits in progress
+        const editsCommitted = action => {                               // edits committed
+            sidecar.classList.remove('is-modified')
+
+            // update the version badge to reflect the update
+            ui.addVersionBadge(action, { clear: true })
+        }
+        eventBus.on('/editor/save', editsCommitted)
+        editor.getModel().onDidChangeContent(editsInProgress)
 
         ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
         ui.addVersionBadge(action, { clear: true })
@@ -254,13 +315,17 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
     })
 
     return repl.qexec(`wsk action get ${name}`)
+        .then(checkForConformance)
         .then(updateEditor)
         .then(({ action, editor}) => ({
             type: 'custom',
             content,
-            displayOptions: [`entity-is-${action.type}`],
+            displayOptions: [`entity-is-${action.type}`, 'edit-mode'],
             modes: [ save({wsk, action, editor, eventBus}),
-                     revert({wsk, action, editor, eventBus})]
+                     revert({wsk, action, editor, eventBus}),
+                     tidy({wsk, action, editor, eventBus}),
+                     readonly({wsk, action, editor, eventBus})
+                   ]
         }))
         .catch(err => {
             //
