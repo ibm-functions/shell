@@ -42,6 +42,12 @@ describe('edit actions', function() {
        .then(sidecar.expectShowing('foo'))
        .catch(common.oops(this)))
 
+    it('should edit with implicit entity', () => cli.do('edit', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo'))
+       .catch(common.oops(this)))
+
     it('should create an second action', () => cli.do('let foo2 = x=>x', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)

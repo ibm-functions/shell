@@ -29,7 +29,7 @@ module.exports = () => {
     let searchBar = document.createElement('div');
     searchBar.setAttribute('id', 'search-bar');
     searchBar.style.opacity = 0 // we need the initial opacity:0 due to injectCSS's asynchronicity
-    searchBar.innerHTML = "<div id='search-container'><div id='search-input-container'><input id='search-input' placeholder='search term' onfocus='this.select();' onmouseup='return false;'/><span id='search-found-text' class='no-search-yet'></span></div><span id='search-close-button'>&#x274c;</span></div>";
+    searchBar.innerHTML = "<div id='search-container'><div id='search-input-container'><input id='search-input' placeholder='search term' onfocus='this.select();' onclick='event.stopPropagation(); return false;'/><span id='search-found-text' class='no-search-yet'></span></div><span id='search-close-button'>&#x274c;</span></div>";
     document.getElementsByClassName('page')[0].insertBefore(searchBar, document.getElementsByTagName('main')[0]);
     
     // now add the logic

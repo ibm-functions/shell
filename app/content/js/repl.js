@@ -281,7 +281,7 @@ self.init = (prefs={}) => {
     }
 
     // focus the current prompt no matter where the user clicks
-    document.body.onmouseup = evt => {
+    document.body.onclick = evt => {
         if (!window.getSelection().toString()) {
             // if there is no selected text, then focus
             // this works, because the HTML (? or chrome?) section model behavior is to clear the selection upon click
