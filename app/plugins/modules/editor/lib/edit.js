@@ -103,12 +103,14 @@ const tidy = ({wsk, action, editor, eventBus}) => ({
     mode: strings.tidy,
     actAsButton: true,
     direct: () => {
-        const raw = editor.getValue(),
-              nicer = beautify(raw, { wrap_line_length: 80 })
+        if (language(action.exec.kind) === 'javascript') {
+            const raw = editor.getValue(),
+                  nicer = beautify(raw, { wrap_line_length: 80 })
 
-        setText(editor)({ kind: action.exec.kind,
-                          code: nicer
-                        })
+            setText(editor)({ kind: action.exec.kind,
+                              code: nicer
+                            })
+        }
 
         return true
     }
@@ -152,19 +154,12 @@ const language = kind => {
  *
  */
 const setText = editor => ({code, kind}, otherEdits=[]) => {
-    const lang = language(kind)
-    monaco.editor.setModelLanguage(editor.getModel(), lang)
-
-    //editor.saveViewState()
-    //monaco.editor.setModelMarkers(editor.getModel(), [])
-    editor.getModel().applyEdits(otherEdits.concat([{
-        range: editor.getModel().getFullModelRange(),
-        forceMoveMarkers: true,
-        text: code
-    }]))
-    //const x = editor.getModel().modifyPosition(editor.getModel().getPositionAt(0), 0)
-    //console.error(x)
-    //editor.restoreViewState()
+    const oldModel = editor.getModel(),
+	  newModel = monaco.editor.createModel(code, language(kind));
+    editor.setModel(newModel)
+    if (oldModel) {
+	oldModel.dispose()
+    }
 
     return code
 }
@@ -213,6 +208,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
     // wait till monaco's loader is ready, then resolve with an editor
     // widget
     //
+    let editor
     const ready = () => new Promise((resolve, reject) => {
         if (typeof AMDLoader === 'undefined') {
             setTimeout(ready, 20)
@@ -232,6 +228,10 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
 	        self.process.browser = true;
             }
 
+            if (editor) {
+                return resolve(editor)
+            }
+
             amdRequire(['vs/editor/editor.main'], () => {
                 // for now, try to disable the completion helper thingies
                 monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
@@ -246,7 +246,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
 	            ]
                 });*/
                 
-                const editor = monaco.editor.create(content, {
+                editor = monaco.editor.create(content, {
                     automaticLayout: true, // respond to window layout changes
                     minimap: {
 		        enabled: false
