@@ -23,15 +23,24 @@ const strings = {
     isModified: 'You have unsaved edits'
 }
 
+/** from https://github.com/Microsoft/monaco-editor-samples/blob/master/sample-electron/index.html */
+function uriFromPath(_path) {
+    var pathName = path.resolve(_path).replace(/\\/g, '/');
+    if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+	pathName = '/' + pathName;
+    }
+    return encodeURI('file://' + pathName);
+}
+
 /**
  * Save the given action
  *
  */
-const save = ({wsk, action, quill, eventBus}) => ({
+const save = ({wsk, action, editor, eventBus}) => ({
     mode: strings.save,
     actAsButton: true,
     direct: () => {
-        action.exec.code = quill.getText()
+        action.exec.code = editor.getValue()
 
         const owOpts = wsk.owOpts({
             name: action.name,
@@ -50,7 +59,7 @@ const save = ({wsk, action, quill, eventBus}) => ({
   * Revert to the currently deployed version
   *
   */
-const revert = ({wsk, action, quill, eventBus}) => ({
+const revert = ({wsk, action, editor, eventBus}) => ({
     mode: strings.revert,
     actAsButton: true,
     direct: () => {
@@ -60,33 +69,59 @@ const revert = ({wsk, action, quill, eventBus}) => ({
         })
 
         return wsk.ow.actions.get(owOpts)
-            .then(action => action.exec.code)
-            .then(updateText(quill))
+            .then(action => action.exec)
+            .then(updateText(editor))
             .then(text => eventBus.emit('/editor/save', { text: action.exec.code }))
     }
 })
+
+const language = kind => {
+    if (kind.indexOf('nodejs') > 0) {
+        return 'javascript'
+    } else if (kind.indexOf('python') > 0) {
+        return 'python'
+    } else if (kind.indexOf('swift') > 0) {
+        return 'swift'
+    } else if (kind.indexOf('java') > 0) {
+        return 'java'
+    } else {
+        //???
+        return 'javascript'
+    }
+}
 
 /**
  * Update the code in the editor to use the given text
  *
  */
-const setText = quill => text => {
-    quill.format('code-block', true)
-    quill.insertText(0, text, 'code-block', true)
-    //quill.setText(action.exec.code, 'silent')
-    //quill.formatText(0, action.exec.code.length, { 'code-block': true }, 'silent')
-    //hljs.highlightBlock(content.querySelector('code'))
-    return text
+const setText = editor => ({code, kind}, otherEdits=[]) => {
+    const lang = language(kind)
+    monaco.editor.setModelLanguage(editor.getModel(), lang)
+
+    //editor.saveViewState()
+    //monaco.editor.setModelMarkers(editor.getModel(), [])
+    editor.getModel().applyEdits(otherEdits.concat([{
+        range: editor.getModel().getFullModelRange(),
+        forceMoveMarkers: true,
+        text: code
+    }]))
+    //const x = editor.getModel().modifyPosition(editor.getModel().getPositionAt(0), 0)
+    //console.error(x)
+    //editor.restoreViewState()
+
+    return code
 }
-const updateText = quill => text => {
-    quill.deleteText(0, quill.getText().length)
-    setText(quill)(text)
+const updateText = editor => exec => {
+    // monaco let's us replace the full range of text, so we don't need
+    // an explicit delete of the current text
+    setText(editor)(exec)
 }
 
 /**
  * Command handler for `edit actionName`
  *
  */
+let amdRequire
 const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
     const sidecar = document.querySelector('#sidecar'),
           leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
@@ -100,32 +135,90 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
 
     if (!name || options.help) {
         throw new errors.usage('edit <actionName>')
+        return
     }
 
-    ui.injectScript('https://cdn.quilljs.com/1.3.5/quill.min.js')
+    // Monaco uses a custom amd loader that over-rides node's require.
+    // Keep a reference to node's require so we can restore it after executing the amd loader file.
+    const nodeRequire = global.require;
+    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.10.1/min/vs/loader.js')
+    ui.injectCSS(path.join(__dirname, 'mono-blue.css'))
     ui.injectCSS(path.join(__dirname, 'editor.css'))
-    //ui.injectCSS('https://cdn.quilljs.com/1.3.5/quill.snow.css')
-    //ui.injectCSS('https://cdn.quilljs.com/1.3.5/quill.bubble.css')
 
     const content = document.createElement('div')
-    content.onmouseup = evt => {
+
+    // override the repl's capturing of the focus
+    content.onclick = evt => {
         evt.stopPropagation()
     }
-    
+
+    //
+    // wait till monaco's loader is ready, then resolve with an editor
+    // widget
+    //
     const ready = () => new Promise((resolve, reject) => {
-        if (typeof Quill === 'undefined') {
-            setTimeout(iter, 20)
+        if (typeof AMDLoader === 'undefined') {
+            setTimeout(ready, 20)
         } else {
-            resolve(new Quill(content, { modules: { syntax: true, toolbar: false } }))
+            if (!amdRequire) {
+                // Save Monaco's amd require and restore Node's require
+	        amdRequire = global.require
+	        global.require = nodeRequire
+
+                amdRequire.config({
+		    baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+	        })
+
+                // workaround monaco-css not understanding the environment
+	        self.module = undefined;
+	        // workaround monaco-typescript not understanding the environment
+	        self.process.browser = true;
+            }
+
+            amdRequire(['vs/editor/editor.main'], () => {
+                // try to disable the helper thingies
+                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
+
+                /*monaco.editor.defineTheme('myCustomTheme', {
+	            base: 'vs',    // can also be vs-dark or hc-black
+	            inherit: true, // can also be false to completely replace the builtin rules
+	            rules: [
+		        { token: 'comment', foreground: 'ffa500', fontStyle: 'italic underline' },
+		        { token: 'comment.js', foreground: '008800', fontStyle: 'bold' },
+		        { token: 'comment.css', foreground: '0000ff' } // will inherit fontStyle from `comment` above
+	            ]
+                });*/
+                
+                const editor = monaco.editor.create(content, {
+                    automaticLayout: true, // respond to window layout changes
+                    minimap: {
+		        enabled: false
+	            },
+                    codeLens: false,
+                    quickSuggestions: false,
+                    renderLineHighlight: 'none',
+                    contextmenu: false,
+                    scrollBeyondLastLine: false,
+                    hover: false,
+                    cursorStyle: 'block',
+                    fontFamily: 'var(--font-monospace)',
+                    fontSize: 14, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
+
+                    // we will fill these two in later, in setText
+	            value: '',
+	            language: 'javascript'
+                })
+
+                resolve(editor)
+            })
         }
     })
 
-    const updateEditor = action => ready().then(quill => {
+    const updateEditor = action => ready().then(editor => {
         const kind = sidecar.querySelector('.action-content .kind')
         kind.innerText = ''
 
-        //quill.format('code-block', true, 'silent')
-        setTimeout(() => setText(quill)(action.exec.code), 0)
+        setText(editor)(action.exec)
 
         content.classList.add('code-highlighting')
 
@@ -152,23 +245,39 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
         const mod = () => status.classList.add('is-modified')
         const unmod = () => status.classList.remove('is-modified')
         eventBus.on('/editor/save', unmod)
-        setTimeout(() => quill.on('text-change', mod), 0)
+        editor.getModel().onDidChangeContent(mod)
 
         ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
         ui.addVersionBadge(action, { clear: true })
 
-        return { action, quill }
+        return { action, editor }
     })
 
     return repl.qexec(`wsk action get ${name}`)
         .then(updateEditor)
-        .then(({ action, quill}) => ({
+        .then(({ action, editor}) => ({
             type: 'custom',
             content,
             displayOptions: [`entity-is-${action.type}`],
-            modes: [ save({wsk, action, quill, eventBus}),
-                     revert({wsk, action, quill, eventBus})]
+            modes: [ save({wsk, action, editor, eventBus}),
+                     revert({wsk, action, editor, eventBus})]
         }))
+        .catch(err => {
+            //
+            // make sure we finish up with ready before with throw the
+            // error; monaco editor currently smashes global.require!!
+            //
+            // the edit test covers this; try `edit nope` for some
+            // non-existant action name "nope", and then try creating
+            // an action. without this cleanup logic, the legitimate
+            // action create, after edit fail, will also fail
+            //
+            const done = () => {
+                throw err
+            }
+            return ready().then(done, done)
+        })
+
 }
 
 module.exports = (commandTree, prequire) => {

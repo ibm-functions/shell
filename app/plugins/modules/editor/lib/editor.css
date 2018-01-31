@@ -1,8 +1,20 @@
-.ql-container {
-    padding: 1.5em 1em;
+.code-highlighting {
+    flex: 1;
+}
+.code-highlighting > .monaco-editor {
+    padding: 1em 0;
+}
+
+#sidecar .monaco-editor, #sidecar .monaco-editor .margin, #sidecar .monaco-editor-background {
+    background: transparent;
+}
+
+.monaco-editor .view-lines  {
     -webkit-app-region: no-drag;
-    font-size: 1rem;
-    font-family: var(--font-monospace);
+
+    /* monaco doesn't let us do this; we have to hard-wire it in the editor constructor in edit.js */
+    /*font-size: 0.9rem !important;
+    font-family: var(--font-monospace) !important;*/
 }
 
 .ql-editor > p {
