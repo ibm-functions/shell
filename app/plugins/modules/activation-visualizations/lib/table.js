@@ -364,7 +364,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 row.setAttribute('data-action-name', nameWithoutNamespace)
                 row.className = 'grid-cell-occupied'
 
-                label.className = 'cell-label clickable'
+                label.className = 'cell-label'
+                labelAction.className = 'clickable'
+                label.onclick = drilldownWith(viewName, `action get ${group.path}`)
 
                 if (nameWithoutNamespace.length > 20) {
                     label.setAttribute('data-balloon', nameWithoutNamespace) // line break

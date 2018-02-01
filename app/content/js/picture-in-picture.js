@@ -68,6 +68,7 @@ const restore = (pippedContainer, sidecarClass, capturedHeaders, highlightThis, 
     if (pippedContainer !== true) {
         if (pippedContainer.parentNode) pippedContainer.parentNode.removeChild(pippedContainer)
         parent.appendChild(pippedContainer)
+        console.error('!!!!!!!!!!!!!!',parent, pippedContainer, capturedHeaders)
     }
         //pippedContainer.onclick = null
 //}, 300)
@@ -178,15 +179,6 @@ module.exports = (command, highlightThis, container, returnTo, options) => event
     const modeButtons = document.querySelector(bottomStripe.css.modeContainer).capture
     const capturedFooter = capture(bottomStripe.css.buttons, modeButtons && modeButtons())
 
-    // now we can safely begin executing the command
-    setTimeout(() => {
-        if (typeof command === 'string') {
-            repl.pexec(command)
-        } else {
-            command()
-        }
-    }, 0)
-
     if (container && !alreadyPipped) {
         // make the transition
         pip(container, [capturedHeader, capturedHeader2, capturedHeader3, capturedHeader4, capturedFooter], highlightThis, returnTo, options)
@@ -202,4 +194,7 @@ module.exports = (command, highlightThis, container, returnTo, options) => event
     }
 
     highlight(highlightThis)
+
+    // now we can safely begin executing the command
+    return typeof command === 'string' ? repl.pexec(command) : command()
 }
