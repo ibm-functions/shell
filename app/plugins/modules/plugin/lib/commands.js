@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-const debug = require('debug')('plugins'),
-      fs = require('fs-extra'),
+const debug = require('debug')('plugin commands')
+debug('loading')
+
+const fs = require('fs-extra'),
       path = require('path'),
       { success } = require('./util')
+
+debug('finished loading modules')
 
 /**
  * Format usage message

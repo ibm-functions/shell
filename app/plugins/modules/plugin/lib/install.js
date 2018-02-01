@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-const debug = require('debug')('plugin')
+const debug = require('debug')('plugin install')
+debug('loading')
 
 const tmp = require('tmp'),
       path = require('path'),
@@ -22,6 +23,8 @@ const tmp = require('tmp'),
       { exec, spawn } = require('child_process'),
       compile = require('./compile'),
       { success } = require('./util')
+
+debug('finished module imports')
 
 /**
  * Format usage message
@@ -31,25 +34,28 @@ const usage = `Install shell plugin
 
 \tplugin install <plugin-name>`
 
-const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+const doInstall = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+    debug('command execution started')
+
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('install') + 1)
 
     const name = argvWithoutOptions.shift()
     if (!name || dashOptions['help']) {
-        throw new modules.errors.usage(usage)
+        throw new errors.usage(usage)
     }
 
-    const { app } = require('electron').remote
-    const rootDir = path.join(app.getPath('userData'))
+    const rootDir = ui.userDataDir()
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
     const targetDir = path.join(moduleDir, name)                  // final location of the plugin
+
+    debug(`installing ${name}`)
 
     // make a staging area for the npm install
     return new Promise((resolve, reject) => {
         tmp.dir((err, pluginHome, cleanupDir) => {
             const cleanup = () => Promise.resolve(true)//fs.remove(pluginHome)//.then(cleanupDir, cleanupDir)
             const fail = err => {
-                console.error(err)
+                debug(err)
                 return cleanup().then(() => reject(err)).catch(reject)
             }
 
@@ -64,10 +70,10 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                     }
 
                     if (stderr.length > 0) {
-                        console.error(stderr)
+                        debug(stderr)
                     }
                     if (stdout.length > 0) {
-                        console.log(stdout)
+                        debug(stdout)
                     }
 
                     const sub = spawn('npm',
@@ -89,15 +95,17 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                             // some other error we don't know about
                             return reject(error)
                         } else {
-                            console.error(error)
+                            debug(error)
                         }
                     })
 
                     sub.stdout.on('data', data => {
-                        console.log(data.toString())
+                        debug(data.toString())
                     })
 
                     sub.on('close', code => {
+                        debug('npm install done')
+
                         if (code !== 0) {
                             reject()
                         } else {
@@ -109,7 +117,7 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
                                 .then(() => fs.copy(path.join(pluginHome, 'node_modules'), path.join(targetDir, 'node_modules')))
                                 .then(() => Promise.all([compile(rootDir, true), cleanup()]))  // recompile the plugin model
                                 .then(([newCommands]) => success('installed',
-                                                                 ' will be available, after reload',
+                                                                 'will be available, after reload',
                                                                  newCommands))
                                 .then(resolve)
                                 .catch(fail)
@@ -124,3 +132,5 @@ const doInstall = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutO
 module.exports = (commandTree, prequire) => {
     commandTree.listen('/plugin/install', doInstall, { docs: 'Install a Shell plugin' })
 }
+
+debug('loading done')

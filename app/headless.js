@@ -99,6 +99,11 @@ function mimicDom(app, { createWindow }, localStorage) {
     })
     global.ui = {
         headless: true,
+        userDataDir: () => {
+            const remote = require('electron')
+            const { app } = remote
+            return app.getPath('userData')
+        },
         createWindow: function() {
             // opens the full UI
             try {
@@ -254,6 +259,7 @@ rowify.sequence = rowify.actions  // same formatter...
 rowify.composer = rowify.sequence // same formatter...
 rowify.binding = rowify.packages  // same formatter...
 rowify.live = rowify.session // same formatter...
+rowify._default = rowify.app
 
 /**
  * Pretty print routine that dispatches to the underlying smarter
@@ -293,7 +299,8 @@ const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') =
                     // msg is an array of stuff
                     if (msg.length > 0) {
                         try {
-                            logger(require('columnify')(msg.map(rowify[msg[0].prettyType || msg[0].type]),
+                            const print = rowify[msg[0].prettyType || msg[0].type] || rowify._default
+                            logger(require('columnify')(msg.map(print),
                                                         { headingTransform: _ => _.dim,
                                                           /*config: { name: { minWidth: 20 }}*/}))
                         } catch (err) {
