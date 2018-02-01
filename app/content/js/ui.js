@@ -700,6 +700,18 @@ const ui = (function() {
         container.innerText = beautify(raw, { wrap_line_length: 80 })
         setTimeout(() => hljs.highlightBlock(container), 0)
     }
+    
+    /**
+     * Beautify any kinds we know how to
+     *
+     */
+    const beautify = (kind, code) => {
+        if (kind.indexOf('nodejs') >= 0) {
+            return require('js-beautify').js_beautify(code)
+        } else {
+            return code
+        }
+    }
 
     /**
      * Render the given field of the given entity in the given dom container
@@ -1118,16 +1130,16 @@ const ui = (function() {
                             const code = Buffer.from(entity.exec.code, 'base64'),
                                   Zip = require('adm-zip'),
                                   zip = Zip(code),
-		                  indexEntry = zip.getEntry('index.js')
+                                  indexEntryJavascript = zip.getEntry('index.js'),
+		                  indexEntry = indexEntryJavascript
                                   || zip.getEntry('index.py')
                                   || zip.getEntry('index.php')
                                   || zip.getEntry('index.swift')
 
                             if (indexEntry) {
-                                const beautify = require('js-beautify').js_beautify,
-                                      indexContent = zip.readAsText(indexEntry),
+                                const indexContent = zip.readAsText(indexEntry),
                                       src = sidecar.querySelector('.action-source')
-                                src.innerText = beautify(indexContent.toString())
+                                src.innerText = beautify(indexEntryJavascript ? 'nodejs' : 'other', indexContent.toString())
                                 setTimeout(() => hljs.highlightBlock(src), 0)
                             } else {
                                 addThirdPartyMessage('Unable to locate the index.js file in the zip file')
@@ -1265,16 +1277,15 @@ const ui = (function() {
                                 //
                                 // render the textual source code
                                 //
-                                const code = sidecar.querySelector('.action-content .action-source'),
-                                      beautify = require('js-beautify').js_beautify
+                                const code = sidecar.querySelector('.action-content .action-source')
 
                                 code.className = `action-source ${uiNameForKind(entity.exec.kind.substring(0, entity.exec.kind.indexOf(':')))}`
-                                code.innerText = beautify(entity.exec.code)
+                                code.innerText = beautify(entity.exec.kind, entity.exec.code)
 
                                 // apply the syntax highlighter to the code; there is some but in higlightjs w.r.t. comments;
                                 // we need to repeat in order to assure that the whole block isn't rendered as a giant comment
                                 hljs.highlightBlock(code)
-                                setTimeout(() => { code.innerText = beautify(entity.exec.code); hljs.highlightBlock(code) }, 100) // HACK HACK to work around highlightjs bug v0.9.12
+                                setTimeout(() => { code.innerText = beautify(entity.exec.kind, entity.exec.code); hljs.highlightBlock(code) }, 100) // HACK HACK to work around highlightjs bug v0.9.12
                             } else {
                                 // TODO what do we do with binary actions?
                             }
