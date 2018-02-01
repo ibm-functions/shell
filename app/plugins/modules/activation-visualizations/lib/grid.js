@@ -116,8 +116,8 @@ class Occupancy {
                         repl.qexec(`wsk activation get ${cell.id}`)
                             .then(({response}) => {
                                 if (response.result.error) {
-                                    cell.failureMessage = response.result.error
-                                    cell.setAttribute('data-balloon', cell.getAttribute('data-balloon') + ` with: ${cell.failureMessage.substring(0, 10)}`)
+                                    cell.failureMessage = response.result.error.error || response.result.error
+                                    cell.setAttribute('data-balloon', cell.getAttribute('data-balloon') + ` with: ${cell.failureMessage.substring(0, 40)}`)
                                 }
                             })
                     }
