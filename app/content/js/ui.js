@@ -470,7 +470,8 @@ const ui = (function() {
 
         if (!errString || (errString.indexOf('HTTP 404') < 0 && errString.indexOf('HTTP 409') < 0)) {
             // don't scream about 404s and 409s
-            console.error(`${message} ${err} ${err && err.stack}`, err)
+            console.error(`${message} ${errString} ${err && err.stack}`, err)
+            console.trace()
         }
 
         if (!block) return // we're not attached to a prompt right now
@@ -1634,7 +1635,9 @@ const ui = (function() {
      *
      */
     self.findFile = filepath => {
-        if (filepath.charAt(0) === '@') {
+        if (!filepath) {
+            throw new Error('Please specify a file')
+        } else if (filepath.charAt(0) === '@') {
             // ui.js is in the root /app directory already
             return require('path').join(__dirname, filepath.substring(1))
         } else {
