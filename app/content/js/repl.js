@@ -624,8 +624,8 @@ self.exec = (commandUntrimmed, execOptions) => {
             throw e
         }
 
-        console.error(e)
-        //ui.oops(block, nextBlock)(e)
+        console.error(e.message)
+        console.trace()
 
         const blockForError = block || ui.getCurrentProcessingBlock()
 
