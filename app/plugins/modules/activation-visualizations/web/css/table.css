@@ -151,9 +151,11 @@
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:last-child {
     border-left: none;
-    border-right: 1px dotted var(--color-text-01); /* must match border-left for x-axis-label */
     padding-left: 0;
     padding-right: 0.5ex; /* also must match padding-left for x-axis-label */
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:last-child:not(.no-border) {
+    border-right: 1px dotted var(--color-text-01); /* must match border-left for x-axis-label */
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label {
     padding-top: 0.8rem;
@@ -204,10 +206,11 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
-    width: 0.3em;
-    height: 2em;
+    width: 0.4em;
+    height: 2.2em;
     background: #152934;/*var(--color-text-02)*//*#007f4c*/ /*#a50eb6*/
-    border: 1px solid rgba(255,255,255,0.5);
+    outline: 2px solid rgba(255,255,255,0.5);
+    border: 1px solid rgba(0,0,0,0.9);
     transition: all 150ms ease-in-out;
 }
 .activation-viz-plugin.show-outliers .outlier-dot {
@@ -215,7 +218,7 @@
     background: var(--color-support-04);
     opacity: 0.6;
     border-color: rgba(255,255,255,0.2);
-    width: 0.2em;
+    width: 0.3em;
     height: 2.1em;
 }
 .activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"] {
@@ -246,17 +249,20 @@
 .activation-viz-plugin .data-table td.cell-stats .stat-indicator {
     position: absolute;
     color: white;
-    mix-blend-mode: difference;
-    font-size: 0.625em;
-    opacity: 0.5;
+    /*mix-blend-mode: difference;*/
+    font-size: 0.6875em;
+    opacity: 0.6;
+}
+.activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
+    outline: 1px solid rgba(0, 85, 127, 0.2)
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-bar {
     position: absolute;
-    /*background: #00557F;*/
-    background: linear-gradient(to right, hsla(48, 100%, 44%, 1),var(--color-support-03));
-    height: 1.25em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
-    border: 1px solid transparent;
-    transition: all 150ms ease-in-out;
+    background: #00557F;
+    /*background: linear-gradient(to right, hsla(48, 100%, 44%, 1),var(--color-support-03));*/
+    height: 1.9em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
+    border: 2px solid rgba(0,0,0,0.1);
+    transition: all 150ms ease-in-out, outline 300ms ease-in-out;
 }
     /* focused bar */
 /*.activation-viz-plugin.x-axis-focus .data-table td.cell-stats .stat-bar-wrapper.focus {

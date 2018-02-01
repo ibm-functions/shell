@@ -250,24 +250,44 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
             // this will house the enDash for e.g. 1.1-1.3s
             xAxisFocusLabelMiddle.innerText = ''
 
-            const veryNarrow = right - left < 0.25
-            if (veryNarrow && this25 < 1000 && this75 < 1000) {
-                // are both of the numbers small? here we can elide
-                // the pretty print on the lower bound; e.g. 100-125ms
-                xAxisFocusLabelLeft.innerText = this25
-                xAxisFocusLabelMiddle.innerText = enDash
-                xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
-            } else if (veryNarrow && ((this25 > 1000 && this75 > 1000 && this75 - this25 < 1000)
-                                      || this75 - this25 < 100)) {
+            const pretty25 = prettyPrintDuration(this25),
+                  pretty75 = prettyPrintDuration(this75),
+                  split25 = pretty25.match(/[^\d]/).index,
+                  split75 = pretty75.match(/[^\d]/).index,
+                  num25 = pretty25.substring(0, split25),
+                  unit25 = pretty25.substring(split25),
+                  num75 = pretty75.substring(0, split75),
+                  unit75 = pretty75.substring(split75),
+                  sameUnit = unit25 === unit75,
+                  rangeLessThanOne = sameUnit && num75 - num25 < 1,
+                  superNarrow = right - left < 0.05,
+                  veryNarrow = right - left < 0.25
+
+            if (superNarrow) {
+                xAxisFocusLabelRight.classList.add('no-border')
+            } else {
+                xAxisFocusLabelRight.classList.remove('no-border')
+            }
+
+            if (rangeLessThanOne || superNarrow) {
+                // e.g. 32-32ms, just show 32ms!
+                xAxisFocusLabelLeft.innerText = pretty75
+                xAxisFocusLabelMiddle.innerText = ''
+                xAxisFocusLabelRight.innerText = ''
+
+            } else if (veryNarrow && sameUnit) {
                 // or close together? here, we need a prettyPrint on
                 // the lower bound; e.g. 1.2-1.6s
-                xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25).replace(/s$/,'')
+                xAxisFocusLabelLeft.innerText = num25
                 xAxisFocusLabelMiddle.innerText = enDash
-                xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
+                xAxisFocusLabelRight.innerText = pretty75
+
             } else {
-                xAxisFocusLabelLeft.innerText = prettyPrintDuration(this25)
-                xAxisFocusLabelRight.innerText = prettyPrintDuration(this75)
+                xAxisFocusLabelLeft.innerText = pretty25
+                xAxisFocusLabelMiddle.innerText = ''
+                xAxisFocusLabelRight.innerText = pretty75
             }
+
             xAxisFocusLabelRange.style.left = percent(left)
             xAxisFocusLabelRange.style.width = percent(right - left)
         } else {
