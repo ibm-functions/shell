@@ -15,11 +15,14 @@
  */
 
 const debug = require('debug')('plugins')
+debug('loading')
 
 const path = require('path'),
       { remove } = require('fs-extra'),
       { success } = require('./util'),
       compile = require('./compile')
+
+debug('finished module imports')
 
 /**
  * Format usage message
@@ -29,16 +32,17 @@ const usage = `Remove installed shell plugin
 
 \tplugin remove <plugin-name>`
 
-const doRemove = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+const doRemove = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+    debug('command execution started')
+
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('remove') + 1)
 
     const name = argvWithoutOptions.shift()
     if (!name || dashOptions['help']) {
-        throw new modules.errors.usage(usage)
+        throw new errors.usage(usage)
     }
 
-    const { app } = require('electron').remote
-    const rootDir = path.join(app.getPath('userData'))
+    const rootDir = ui.userDataDir()
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
     const pluginHome = path.join(moduleDir, name)
 
@@ -47,10 +51,12 @@ const doRemove = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOp
 
     return remove(pluginHome)
         .then(() => compile(rootDir, true, false, true))   // the last true means we want a reverse diff
-        .then(removedCommands => success('removed', ' will no be longer available, after reload', removedCommands))
+        .then(removedCommands => success('removed', 'will no be longer available, after reload', removedCommands))
 }
 
 module.exports = (commandTree, prequire) => {
     const cmd = commandTree.listen('/plugin/remove', doRemove, { docs: 'Remove installed shell plugin' })
     commandTree.synonym('/plugin/uninstall', doRemove, cmd)
 }
+
+debug('loading done')

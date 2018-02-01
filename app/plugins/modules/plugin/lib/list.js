@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-const debug = require('debug')('plugins'),
-      path = require('path'),
+const debug = require('debug')('plugins')
+debug('loading')
+
+const path = require('path'),
       fs = require('fs-extra'),
       util = require('util')
+
+debug('finished module imports')
 
 /**
  * Format usage message
@@ -45,7 +49,7 @@ const extractNested = root => dir => dir.charAt(0) === '@'
  * Read the package.json of one given plugin to get its version
  *
  */
-const getVersion = pluginHome => plugin => fs.readFile(path.join(pluginHome, plugin, 'package.json'))
+const getVersion = moduleDir => plugin => fs.readFile(path.join(moduleDir, plugin, 'package.json'))
       .then(JSON.parse)                         // parse the package.json
       .then(_ => _.version)                     // project out the version field
       .then(version => ({plugin, version}))     // return a pair of the plugin name and its version
@@ -55,25 +59,27 @@ const getVersion = pluginHome => plugin => fs.readFile(path.join(pluginHome, plu
  * Read the package.json of all plugins to get their versions
  *
  */
-const getVersions = pluginHome => installedPlugins => Promise.all(installedPlugins.map(getVersion(pluginHome)))
+const getVersions = moduleDir => installedPlugins => Promise.all(installedPlugins.map(getVersion(moduleDir)))
 
 const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
+    debug('command execution started')
+
     if (dashOptions['help']) {
         throw new modules.errors.usage(usage)
     }
 
-    const { app } = require('electron').remote
-    const pluginHome = path.join(app.getPath('userData'), 'plugins', 'modules')
+    const rootDir = ui.userDataDir()
+    const moduleDir = path.join(rootDir, 'plugins', 'modules')
 
     // help the REPL render our records
     const type = 'plugins',
           onclick = false    // no drilldown for now
 
-    return fs.pathExists(pluginHome)
-        .then(exists => fs.readdir(pluginHome))                          // read the top-level directory contents
-        .then(dirs => Promise.all(dirs.map(extractNested(pluginHome))))  // extract any @foo/bar nested plugins
+    return fs.pathExists(moduleDir)
+        .then(exists => fs.readdir(moduleDir))                           // read the top-level directory contents
+        .then(dirs => Promise.all(dirs.map(extractNested(moduleDir))))   // extract any @foo/bar nested plugins
         .then(flatten)                                                   // if there are nested plugins, we need to flatten the arrays
-        .then(getVersions(pluginHome))
+        .then(getVersions(moduleDir))
         .then(installedPlugins => {
             if (installedPlugins.length > 0) {
                 //
@@ -86,7 +92,7 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
             }
         }).catch(err => {
             if (err.code === 'ENOENT') {
-                // this error is OK; it just means that pluginHome
+                // this error is OK; it just means that moduleDir
                 // doesn't exist, so there are no plugins to list!
                 return 'No user-installed plugins found'
             } else {
@@ -101,3 +107,5 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
 module.exports = (commandTree, prequire) => {
     commandTree.listen('/plugin/list', doList, { docs: 'List installed shell plugins' })
 }
+
+debug('loading done')

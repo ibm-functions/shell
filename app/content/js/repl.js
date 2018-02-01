@@ -20,9 +20,14 @@
  *
  */
 
+const debug = require('debug')('repl')
+debug('loading')
+
 const self = {},
       minimist = require('minimist'),
       commandTree = require('./command-tree')
+
+debug('finished loading modules')
 
 // TODO clean up when repl becomes a module
 let wsk, help, history
@@ -718,3 +723,4 @@ self.doCancel = () => {
 
 module.exports = self
 
+debug('loading done')

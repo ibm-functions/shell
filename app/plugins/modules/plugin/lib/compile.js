@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-const debug = require('debug')('plugins')
+const debug = require('debug')('plugin compile')
+debug('loading')
 
 const fs = require('fs-extra'),
       path = require('path'),
@@ -23,16 +24,18 @@ const fs = require('fs-extra'),
       { exec } = require('child_process'),
       TMP = 'plugins'  // we'll stash the original plugins here
 
-debug('modules loaded')
-
-global.plugins = require(path.join(__dirname, '../../../../content/js/plugins'))
-global.localStorage = { getItem: () => '{}' }
-global.eventBus = new events.EventEmitter()
-global.ui = {
-    startsWithVowel: () => false
+if (typeof global.plugins === 'undefined') {
+    // this is the case when compiling plugins from the command line;
+    // e.g. via an `npm install` in the top of the app directory
+    global.plugins = require(path.join(__dirname, '../../../../content/js/plugins'))
+    global.localStorage = { getItem: () => '{}' }
+    global.eventBus = new events.EventEmitter()
+    global.ui = {
+        startsWithVowel: () => false
+    }
 }
 
-debug('bootstrap done')
+debug('modules loaded')
 
 /**
  * Return the location of the pre-scanned cache file
@@ -155,3 +158,5 @@ module.exports = (rootDir, externalOnly, cleanup = false, reverseDiff = false) =
             .catch(err => reject(err))
     }
 })
+
+debug('loading done')

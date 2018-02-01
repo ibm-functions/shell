@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('ui')
+debug('loading')
+
 const namespace = (function() {
     let cached
     const self = {},
@@ -1639,6 +1642,16 @@ const ui = (function() {
         }
     }
 
+    /**
+     * Get the userdata directory
+     *
+     */
+    self.userDataDir = () => {
+        const { app } = require('electron').remote
+        return app.getPath('userData')
+    }
+    
     return self
 })()
 
+debug('loading done')

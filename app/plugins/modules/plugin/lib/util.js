@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('plugin util')
+debug('loading')
+
 /**
  * Return a message for the REPL, asking the user to reload
  *
@@ -23,9 +26,14 @@ exports.success = (operation, availableMessage, updatedCommands) => {
           clicky = document.createElement('span')
 
     if (operation !== false) {
-        msg.appendChild(document.createTextNode((operation ? `The plugin ${name} has been ${operation}.` : '') + ' Please '))
-        msg.appendChild(clicky)
-        msg.appendChild(document.createTextNode(' to complete the installation.'))
+        const installed = operation ? `The plugin has been ${operation}.` : ''
+
+        msg.appendChild(document.createTextNode(ui.headless ? installed.blue : installed))
+        if (!ui.headless) {
+            msg.appendChild(document.createTextNode(' Please '))
+            msg.appendChild(clicky)
+            msg.appendChild(document.createTextNode(' to complete the installation.'))
+        }
     }
 
     clicky.innerText = 'reload'
@@ -45,17 +53,18 @@ exports.success = (operation, availableMessage, updatedCommands) => {
         available.appendChild(leadIn)
         available.appendChild(list)
 
-        leadIn.innerText = `The following commands are ${availableMessage}:`
+        leadIn.innerText = ` The following commands ${availableMessage}: `
 
         list.style.display = 'flex'
         list.style.flexWrap = 'wrap'
 
-        updatedCommands.forEach(cmd => {
-            const cmdDom = document.createElement('span')
-            cmdDom.innerText = cmd
+        updatedCommands.forEach((cmd, idx) => {
+            const cmdDom = document.createElement('span'),
+                  sep = idx === 0 ? '' : ', '
+
+            cmdDom.innerText = `${sep}${cmd}`
             cmdDom.className = 'clickable clickable-blatant'
             cmdDom.onclick = () => repl.partial(cmd)
-            cmdDom.style.paddingLeft = '1em'
 
             list.appendChild(cmdDom)
         })
@@ -63,3 +72,5 @@ exports.success = (operation, availableMessage, updatedCommands) => {
 
     return msg
 }
+
+debug('loading done')

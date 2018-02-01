@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('plugin compile-command')
+debug('loading')
+
 const path = require('path'),
       compile = require('./compile'),
       { success } = require('./util')
+
+debug('finished loading modules')
 
 module.exports = commandTree => {
     commandTree.listen('/plugin/compile', () => {
