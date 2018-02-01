@@ -49,6 +49,33 @@ const selectors = {
     last: '.main > .repl .repl-block:nth-last-child(2) .repl-result'          // this will include only the non-ok region
 }
 
+/**
+ * Sizing elements to fit prior to capturing them
+ *
+ */
+const squishers = {
+    sidecar: [
+        { selector: 'main', property: 'align-items', value: 'flex-start' },
+        { selector: '#sidecar', property: 'height', value: 'initial' },
+        { selector: 'sidecar .custom-content', property: 'flex', value: 'initial' },
+        { selector: 'sidecar .sidecar-content', property: 'flex', value: 'initial' }
+    ]
+}
+const _squish = (which, op) => {
+    const squisher = squishers[which]
+    if (squisher) {
+        squisher.forEach(({selector, property, value}) => {
+            const element = document.querySelector(selector)
+            if (element) {
+                op(element, property, value)
+            }
+        })
+    }
+}
+const squish = which => _squish(which, (element, property, value) => element.style[property] = value)
+const unsquish = which => _squish(which, (element, property, value) => element.style[property] = null)
+
+
 /** this is the handler body */
 module.exports = (commandTree, prequire) => {
     const sidecarVisibility = prequire('/views/sidecar/visibility')
@@ -80,11 +107,15 @@ module.exports = (commandTree, prequire) => {
                 // either we couldn't find the area to capture :(
                 return reject('Internal Error: could not identify the screen region to capture')
             }
+
+            // squish down the element to be copied, sizing it to fit
+            squish(which)
         
             // which rectangle to snap; electron's rect schema differs
             // from the underlying dom's schema. sigh
             // https://github.com/electron/electron/blob/master/docs/api/structures/rectangle.md
             // note that all four values must be integral, hence the rounding bits
+            const snap = () => {
             const domRect = dom.getBoundingClientRect(),
                   rect = { x: round(domRect.left),
                            y: round(domRect.top),
@@ -182,7 +213,8 @@ module.exports = (commandTree, prequire) => {
                 // we trick chrome into thinking the image has no
                 // width and height (but fake it with padding), the
                 // border goes away: https://stackoverflow.com/a/14709695
-		snapImg.style.background = `url(${img.resize({width, height}).toDataURL()}) no-repeat center/cover`
+		snapImg.style.background = `url(${img.resize({width, height}).toDataURL()}) no-repeat center bottom/contain`
+		snapImg.style.backgroundColor = 'white'
                 snapImg.style.maxWidth = '100%'
                 snapImg.style.minHeight = '300px' // we need some min space to fit the green check and Screenshot copied to clipboard
                 snapImg.style.maxHeight = '100%'
@@ -232,6 +264,9 @@ module.exports = (commandTree, prequire) => {
                 // stack, rather than replace
                 ipcRenderer.removeListener('capture-page-to-clipboard-done', listener)
 
+                // undo any squishing
+                unsquish(which)
+
 		resolve('Successfully captured a screenshot to the clipboard')
 	    }
 
@@ -243,6 +278,10 @@ module.exports = (commandTree, prequire) => {
 	    ipcRenderer.send('capture-page-to-clipboard',
 			     remote.getCurrentWebContents().id,
 			     rect)
+            }
+
+            setTimeout(snap, 100)
+
         } catch (e) {
             console.error(e)
             reject('Internal Error')
