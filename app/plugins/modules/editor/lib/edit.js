@@ -44,6 +44,10 @@ const checkForConformance = action => {
         const err = new Error('Editing of binary actions not yet supported')
         err.code = 406    // 406: Not Acceptable http status code
         throw err
+    } else if (action.exec.kind === 'sequence') {
+        const err = new Error('Editing of sequence actions not yet supported')
+        err.code = 406    // 406: Not Acceptable http status code
+        throw err
     }
 
     return action
