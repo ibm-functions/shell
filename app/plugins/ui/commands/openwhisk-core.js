@@ -147,7 +147,7 @@ const synonyms = {
         get: ['g', 'cat', 'show', 'open'],
         list: ['l', 'ls'],
         delete: ['d' ],
-        create: ['c', 'new',
+        create: ['c',
                  // these are synonyms from the openwhisk npm standpoint, but not from the openwhisk command experience standpoint
                  { nickname: 'update', name: 'update', notSynonym: true},
                  { nickname: 'bind', name: 'bind', notSynonym: true, limitTo: {packages:true} }
@@ -752,7 +752,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         //
         const sidecar = document.querySelector('#sidecar')
         if (sidecar && sidecar.entity) {
-            options.name = `/${sidecar.entity.namespace}/${sidecar.entity.name}`
+            options.name = `/${sidecar.entity.namespace || '_'}/${sidecar.entity.name}`
 
             if (sidecar.entity.type === 'activations') {
                 //

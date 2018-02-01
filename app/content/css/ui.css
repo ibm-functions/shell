@@ -1268,6 +1268,9 @@ body.subwindow.sidecar-full-screen sidecar/*.custom-content*/ .sidecar-header-ic
 body.subwindow sidecar.entity-is-actions:not(.entity-is-sequence) .action-source, sidecar .activation-result {
     padding: inherit;
 }
+sidecar .activation-result {
+    padding: 0;
+}
 body.subwindow.sidecar-full-screen sidecar .sidecar-header .entity-name-line {
     flex-wrap: wrap;
 }
