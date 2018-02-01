@@ -46,7 +46,7 @@
     opacity: 0;
     width: 0;
 }
-#sidecar.is-modified .custom-header-content .editor-status .is-modified, #sidecar:not(.is-modified) .custom-header-content .editor-status .is-up-to-date {
+#sidecar.is-modified .custom-header-content .editor-status .is-modified, #sidecar:not(.is-modified) .custom-header-content .editor-status:not(.is-new) .is-up-to-date, #sidecar .custom-header-content .editor-status.is-new .is-new {
     opacity: 1;
     width: auto;
 }

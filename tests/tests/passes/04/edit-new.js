@@ -1,0 +1,105 @@
+/*
+ * Copyright 2018 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+//
+// test the new actionName command
+//
+const common = require('../../../lib/common'),
+      openwhisk = require('../../../lib/openwhisk'),
+      ui = require('../../../lib/ui'),
+      assert = require('assert'),
+      keys = ui.keys,
+      cli = ui.cli,
+      sidecar = ui.sidecar,
+      actionName = 'long'
+
+describe('create new actions in editor', function() {
+    before(common.before(this))
+    after(common.after(this))
+
+    it('should have an active repl', () => cli.waitForRepl(this.app))
+
+    it('should create an action', () => cli.do('let foo = x=>x', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo'))
+       .catch(common.oops(this)))
+
+    it('should report 409 for new over existing action', () => cli.do('new foo', this.app)
+       .then(cli.expectError(409))
+       .catch(common.oops(this)))
+
+    /** deploy the new action */
+    const deploy = app => () => {
+        return app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('Deploy'))
+            .then(() => app.client.waitForExist(`${ui.selectors.SIDECAR} .editor-status.is-new`, 10000, false))
+    }
+
+    it('should successfully open editor for unused name', () => cli.do('new foo2', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo2'))
+       .then(deploy(this.app))
+       .catch(common.oops(this)))
+
+    it('should get the new action', () => cli.do('action get foo2', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo2'))
+       .catch(common.oops(this)))
+
+    it('should invoke the new action', () => cli.do('invoke foo2', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo2'))
+       .catch(common.oops(this)))
+
+    it('should open a new python', () => cli.do('new foo3 --kind python', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo3'))
+       .then(deploy(this.app))
+       .catch(common.oops(this)))
+    it('should invoke the new python action, with implicit entity', () => cli.do('invoke', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo3'))
+       .catch(common.oops(this)))
+
+    it('should open a new swift', () => cli.do('new foo4 --kind swift', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo4'))
+       .then(deploy(this.app))
+       .catch(common.oops(this)))
+    it('should invoke the new swift action, with explicit entity', () => cli.do('invoke foo4', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo4'))
+       .catch(common.oops(this)))
+
+    it('should open a new php', () => cli.do('new foo5 --kind php', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo5'))
+       .then(deploy(this.app))
+       .catch(common.oops(this)))
+    it('should invoke the new php action, with implicit entity', () => cli.do('invoke', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo5'))
+       .catch(common.oops(this)))
+})

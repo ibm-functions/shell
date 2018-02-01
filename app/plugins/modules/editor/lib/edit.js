@@ -15,15 +15,26 @@
  */
 
 const path = require('path'),
-      beautify = require('js-beautify')
+      beautify = require('js-beautify'),
+      placeholders = require('./placeholders')
 
+/** default settings */
+const defaults = {
+    kind: 'nodejs:default'
+}
+
+/** translations */
 const strings = {
     save: 'Deploy',
     revert: 'Revert',
     tidy: 'Tidy Up',
     readonly: 'Done Editing',
+    actionAlreadyExists: 'The given action name is already in use',
+    isNew: 'You are in edit mode, viewing <strong>a new action</strong>',
     isUpToDate: 'You are in edit mode, viewing the <strong>currently deployed version</strong>',
-    isModified: 'You are in edit mode, with <strong>unsaved edits</strong>'
+    isModified: 'You are in edit mode, with <strong>unsaved edits</strong>',
+    editdoc: 'Open the code for an action in a text editor',
+    newDoc: 'Open the code editor to create a new action or app'
 }
 
 /** from https://github.com/Microsoft/monaco-editor-samples/blob/master/sample-electron/index.html */
@@ -174,25 +185,23 @@ const updateText = editor => exec => {
 }
 
 /**
- * Command handler for `edit actionName`
+ * Open the code editor
+ *
+ * @return a function that can be passed an action to display in the
+ * editor, and which returns { action, editor, content }
+ *     - action: the action that was displayed
+ *     - editor: an instance of the monaco editor class
+ *     - content: a dom that contains the instance; this must be attached somewhere!
  *
  */
 let amdRequire
-const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
+const openEditor = () => {
     const sidecar = document.querySelector('#sidecar'),
           leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
           rightHeader = sidecar.querySelector('.header-right-bits .custom-header-content')
 
     ui.removeAllDomChildren(leftHeader)
     ui.removeAllDomChildren(rightHeader)
-
-    const name = args[args.indexOf('edit') + 1]
-          || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
-
-    if (!name || options.help) {
-        throw new errors.usage('edit <actionName>')
-        return
-    }
 
     // Monaco uses a custom amd loader that over-rides node's require.
     // Keep a reference to node's require so we can restore it after executing the amd loader file.
@@ -214,70 +223,80 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
     //
     let editor
     const ready = () => new Promise((resolve, reject) => {
-        if (typeof AMDLoader === 'undefined') {
-            setTimeout(ready, 20)
-        } else {
-            if (!amdRequire) {
-                // Save Monaco's amd require and restore Node's require
-	        amdRequire = global.require
-	        global.require = nodeRequire
+        const iter = () => {
+            if (typeof AMDLoader === 'undefined') {
+                setTimeout(iter, 20)
+            } else {
+                if (!amdRequire) {
+                    // Save Monaco's amd require and restore Node's require
+	            amdRequire = global.require
+	            global.require = nodeRequire
 
-                amdRequire.config({
-		    baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
-	        })
+                    amdRequire.config({
+		        baseUrl: uriFromPath(path.join(__dirname, '../node_modules/monaco-editor/min'))
+	            })
 
-                // workaround monaco-css not understanding the environment
-	        self.module = undefined;
-	        // workaround monaco-typescript not understanding the environment
-	        self.process.browser = true;
-            }
+                    // workaround monaco-css not understanding the environment
+	            self.module = undefined;
+	            // workaround monaco-typescript not understanding the environment
+	            self.process.browser = true;
+                }
 
-            if (editor) {
-                return resolve(editor)
-            }
+                if (editor) {
+                    return resolve(editor)
+                }
 
-            amdRequire(['vs/editor/editor.main'], () => {
-                // for now, try to disable the completion helper thingies
-                monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
+                amdRequire(['vs/editor/editor.main'], () => {
+                    // for now, try to disable the completion helper thingies
+                    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
 
-                /*monaco.editor.defineTheme('myCustomTheme', {
-	            base: 'vs',    // can also be vs-dark or hc-black
-	            inherit: true, // can also be false to completely replace the builtin rules
-	            rules: [
-		        { token: 'comment', foreground: 'ffa500', fontStyle: 'italic underline' },
-		        { token: 'comment.js', foreground: '008800', fontStyle: 'bold' },
-		        { token: 'comment.css', foreground: '0000ff' } // will inherit fontStyle from `comment` above
-	            ]
-                });*/
+                    /*monaco.editor.defineTheme('myCustomTheme', {
+	              base: 'vs',    // can also be vs-dark or hc-black
+	              inherit: true, // can also be false to completely replace the builtin rules
+	              rules: [
+		      { token: 'comment', foreground: 'ffa500', fontStyle: 'italic underline' },
+		      { token: 'comment.js', foreground: '008800', fontStyle: 'bold' },
+		      { token: 'comment.css', foreground: '0000ff' } // will inherit fontStyle from `comment` above
+	              ]
+                      });*/
                 
-                editor = monaco.editor.create(content, {
-                    automaticLayout: true, // respond to window layout changes
-                    minimap: {
-		        enabled: false
-	            },
-                    codeLens: false,
-                    quickSuggestions: false,
-                    renderLineHighlight: 'none',
-                    contextmenu: false,
-                    scrollBeyondLastLine: false,
-                    cursorStyle: 'block',
-                    fontFamily: 'var(--font-monospace)',
-                    fontSize: 14, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
+                    editor = monaco.editor.create(content, {
+                        automaticLayout: true, // respond to window layout changes
+                        minimap: {
+		            enabled: false
+	                },
+                        codeLens: false,
+                        quickSuggestions: false,
+                        renderLineHighlight: 'none',
+                        contextmenu: false,
+                        scrollBeyondLastLine: false,
+                        cursorStyle: 'block',
+                        fontFamily: 'var(--font-monospace)',
+                        fontSize: 14, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
+                        
+                        // we will fill these two in later, in setText
+	                value: '',
+	                language: 'javascript'
+                    })
 
-                    // we will fill these two in later, in setText
-	            value: '',
-	            language: 'javascript'
+                    resolve(editor)
                 })
+            }
+        } /* end of iter */
 
-                resolve(editor)
-            })
-        }
+        iter()
     })
 
-    const updateEditor = action => ready().then(editor => {
+    /**
+     * Given an editor instance, return a function that can update
+     * that instance to show a given action entity.
+     *
+     */
+    const updater = editor => action => {
         const kind = sidecar.querySelector('.action-content .kind')
         kind.innerText = ''
 
+        // update the editor text
         setText(editor)(action.exec)
 
         content.classList.add('code-highlighting')
@@ -291,20 +310,30 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
         // isModified display
         const subtext = sidecar.querySelector('.custom-header-content'),
               status = document.createElement('div'),
+              isNew = document.createElement('div'),
               upToDate = document.createElement('div'),
               modified = document.createElement('div')
         ui.removeAllDomChildren(subtext)
         subtext.appendChild(status)
+        status.appendChild(isNew)
         status.appendChild(upToDate)
         status.appendChild(modified)
+        isNew.innerHTML = strings.isNew
         upToDate.innerHTML = strings.isUpToDate
         modified.innerHTML = strings.isModified
-        status.className = 'editor-status is-up-to-date'
+        status.className = 'editor-status'
+        if (action.isNew) {
+            status.classList.add('is-new')
+        } else {
+            status.classList.add('is-up-to-date')
+        }
+        isNew.className = 'is-new'
         upToDate.className = 'is-up-to-date'
         modified.className = 'is-modified'
         const editsInProgress = () => sidecar.classList.add('is-modified')  // edits in progress
-        const editsCommitted = action => {                               // edits committed
+        const editsCommitted = action => {                                  // edits committed
             sidecar.classList.remove('is-modified')
+            status.classList.remove('is-new')
 
             // update the version badge to reflect the update
             ui.addVersionBadge(action, { clear: true })
@@ -315,42 +344,130 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
         ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
         ui.addVersionBadge(action, { clear: true })
 
-        return { action, editor }
-    })
+        return Promise.resolve({ action, editor, content })
+    } /* end of updater */
 
-    return repl.qexec(`wsk action get ${name}`)
-        .then(checkForConformance)
+    // once the editor is ready, return a function that can populate it
+    return ready().then(updater)
+
+} /* end of openEditor */
+
+/**
+ * Prepare a response for the REPL. Consumes the output of
+
+ * updateEditor
+ *
+ */
+const respondToRepl = (wsk, eventBus) => ({ action, editor, content }) => ({
+    type: 'custom',
+    content,
+    displayOptions: [`entity-is-${action.type}`, 'edit-mode'],
+    modes: [ save({wsk, action, editor, eventBus}),
+             revert({wsk, action, editor, eventBus}),
+             tidy({wsk, action, editor, eventBus}),
+             readonly({wsk, action, editor, eventBus})
+           ]
+})
+
+/**
+ * Simple convenience routine to fetch an action and ensure that it is
+ * compatible with the editor
+ *
+ */
+const fetchAction = name => repl.qexec(`wsk action get ${name}`).then(checkForConformance)
+
+/**
+ * Fail with 409 if the given action name exists, otherwise succeed
+ *
+ */
+const nope409 = _ => {
+    const error = new Error(strings.actionAlreadyExists)
+    error.code = 409
+    throw error
+}
+const betterNotExist = name => fetchAction(name).then(nope409).catch(err => {
+    if (err.statusCode !== 404) {
+        throw err
+    }
+})
+
+
+/**
+ * Simple convenience routine that takes the result of an action
+ * fetch and an editor open call, and passes the former to the latter
+ *
+ */
+const updateEditor = ([action, updateEditor]) => updateEditor(action)
+
+/**
+ * Command handler for `edit actionName`
+ *
+ */
+const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
+    const sidecar = document.querySelector('#sidecar'),
+          name = args[args.indexOf('edit') + 1]
+          || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
+
+    if (!name || options.help) {
+        throw new errors.usage('edit <actionName>')
+        return
+    }
+
+    //
+    // fetch the action and open the editor in parallel
+    // then update the editor to show the action
+    // then send a response back to the repl
+    //
+    return Promise.all([fetchAction(name), openEditor()])
         .then(updateEditor)
-        .then(({ action, editor}) => ({
-            type: 'custom',
-            content,
-            displayOptions: [`entity-is-${action.type}`, 'edit-mode'],
-            modes: [ save({wsk, action, editor, eventBus}),
-                     revert({wsk, action, editor, eventBus}),
-                     tidy({wsk, action, editor, eventBus}),
-                     readonly({wsk, action, editor, eventBus})
-                   ]
-        }))
-        .catch(err => {
-            //
-            // make sure we finish up with ready before with throw the
-            // error; monaco editor currently smashes global.require!!
-            //
-            // the edit test covers this; try `edit nope` for some
-            // non-existant action name "nope", and then try creating
-            // an action. without this cleanup logic, the legitimate
-            // action create, after edit fail, will also fail
-            //
-            const done = () => {
-                throw err
-            }
-            return ready().then(done, done)
-        })
+        .then(respondToRepl(wsk, eventBus))
 
+} /* end of edit command handler */
+
+/**
+ * If the user specified a kind of 'nodejs', then add ':default'
+ *
+ */
+const addVariantSuffix = kind => {
+    if (kind.indexOf(':') < 0) {
+        return `${kind}:default`
+    } else {
+        return kind
+    }
+}
+
+/**
+ * Command handler to create a new action or app
+ *
+ */
+const newAction = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
+    const name = args[args.indexOf('new') + 1],
+          kind = addVariantSuffix(options.kind || defaults.kind)
+
+    if (options.help || !name) {
+        throw new errors.usage('new <actionName> [--kind <nodejs:default*|python:default|php:default|swift:default>]')
+    }
+
+    // our placeholder action
+    const action = { name,
+                     type: 'actions',
+                     exec: { kind, code: placeholders[language(kind)] },
+                     isNew: true
+                   }
+
+    //
+    // open the editor
+    // then update the editor to show the placeholder action
+    // then send a response back to the repl
+    //
+    return Promise.all([action, openEditor(), betterNotExist(name)])
+        .then(updateEditor)
+        .then(respondToRepl(wsk, eventBus))
 }
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
-    commandTree.listen('/edit', edit(wsk), { docs: 'Open the code for an action in a text editor' })
+    commandTree.listen('/edit', edit(wsk), { docs: strings.editDoc })
+    commandTree.listen('/new', newAction(wsk), { docs: strings.newDoc })
 }
