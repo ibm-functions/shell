@@ -1080,7 +1080,7 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     /* further squish the activation id when the sidecar is visible */
     max-width: 8em;
 }
-.repl.sidecar-visible .log-lines .log-line .log-line-bar-field, .repl.sidecar-visible .log-lines .log-line .log-field.start-time-field {
+.repl.sidecar-visible .log-lines .log-line .log-line-bar-field, .repl.sidecar-visible .log-lines .log-line .log-field.start-time-field, .repl.sidecar-visible .log-lines .log-line .hide-with-sidecar, .repl.sidecar-visible .entity-attributes .hide-with-sidecar {
     /* hide bar chart when the sidecar is visible */
     max-width: 0;
     padding: 0;

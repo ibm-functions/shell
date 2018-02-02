@@ -66,7 +66,7 @@ const showChanges = ui => data => {
         onclick: () => window.open(`${project.repository}/${linkTo(message, sha)}`),
         attributes: [
             { value: message, css: 'deemphasize wrap-normal' },
-            { value: ui.prettyPrintTime(date, 'short', idx > 0 && changes[idx - 1].date), css: 'deemphasize' }
+            { value: ui.prettyPrintTime(date, 'short', idx > 0 && changes[idx - 1].date), css: 'deemphasize', outerCSS: 'hide-with-sidecar' }
         ]
     }))
 }
