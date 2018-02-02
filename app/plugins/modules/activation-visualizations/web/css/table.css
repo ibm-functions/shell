@@ -419,11 +419,14 @@
     justify-content: center;
     flex-direction: column;
     position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* innerLabel for cells; see cell.js: const innerLabel */
 .activation-viz-plugin .grid-cell-content > span {
-    font-size: 0.61em;
+    font-size: 0.75vw;
     color: white;
     opacity: 0;
     transition: all 50ms ease-in-out;
