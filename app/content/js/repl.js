@@ -129,7 +129,10 @@ const formatOneListResult = options => (entity, idx, A) => {
     //
     // case-specific cells
     //
-    if (entity.type === 'actions') {
+    if (entity.attributes) {
+        entity.attributes.forEach(({value, css}) => addCell('', value, css))
+
+    } else if (entity.type === 'actions') {
         // action-specific cells
         const kind = entity.annotations.find(({key}) => key === 'exec')
         if (kind || entity.prettyKind) {

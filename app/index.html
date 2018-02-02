@@ -16,7 +16,7 @@
     <script src="content/js/ui.js"></script>
   </head>
 
-  <body onload="bootstrap()" class='still-loading'><div class="page">
+  <body onload="__shell_bootstrap()" class='still-loading'><div class="page">
     <header class="header">
       <div class="header-left-bits">
         <div class="application-icon"></div>
@@ -198,7 +198,8 @@
         document.body.classList.add('oops-total-catastrophe')
     }
 
-    function bootstrap() {
+    // note: the q npm doesn't like functions called "bootstrap"!
+    function __shell_bootstrap() {
         if (process.cwd() === '/') {
             // ugh, on macos, dock- and finder-launched apps have a cwd of /
             try {

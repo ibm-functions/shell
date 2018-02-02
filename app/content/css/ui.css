@@ -1450,3 +1450,7 @@ break {
     opacity: 1;
     cursor: pointer;
 }
+
+.wrap-normal {
+    white-space: normal;
+}
