@@ -1,5 +1,5 @@
 /* add an edit icon next to the action name in the sidecar header */
-#sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
+xxx #sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
     content: "\270e";
     color: var(--color-support-02);
     margin-left: 0.35em;
@@ -10,8 +10,27 @@
 #sidecar.edit-mode.is-modified .sidecar-header-name:after {
     color: var(--color-support-01);
 }
+#sidecar .lock-button.is-new {
+    opacity: 0;
+}
+#sidecar .lock-button {
+    font-size: 1.5rem;
+    float: right;
+    position: relative;
+    z-index: 10;
+    transition: all 150ms ease-in-out;
+}
+#sidecar .lock-button:hover {
+    color: var(--color-brand-02);
+}
+#sidecar .lock-button > div {
+    position: absolute;
+    top: 1ex;
+    right: 1.5ex;
+}
 
 .code-highlighting {
+    min-width: 0; /* hack needed for chrome to send resize events on shrink */
     flex: 1;
 }
 .code-highlighting > .monaco-editor {

@@ -25,7 +25,7 @@ const css = {
 }
 exports.css = css
 
-const addModeButton = (bottomStripe, {mode, label, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
+const addModeButton = (bottomStripe, {mode, label, fontawesome, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
     // create the button dom, and attach it
     const button = document.createElement('div')
 
@@ -40,9 +40,18 @@ const addModeButton = (bottomStripe, {mode, label, command, direct, defaultMode,
     if ( ( ((!show||show==='default') && defaultMode) || show === mode) && !actAsButton ) {
         button.classList.add(css.active)
     }
-    button.innerText = label || mode
     button.setAttribute('data-mode', mode)
     bottomStripe.appendChild(button)
+
+    // add the button label
+    if (fontawesome) {
+        const icon = document.createElement('i')
+        icon.className = fontawesome
+        button.classList.add('graphical-icon')
+        button.appendChild(icon)
+    } else {
+        button.innerText = label || mode
+    }
 
     // back button does not modify sidecar entity, causing the mode buttons to have the wrong behavior (using the previous entity)
     // set sidecar entity to the current entity every time when mode buttons are regenerated

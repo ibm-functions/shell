@@ -47,7 +47,7 @@ selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N = N => `${selectors.SIDECAR_SEQUENCE_CA
 selectors.SIDECAR_LIMIT = type => `${selectors.SIDECAR} .sidecar-header .limits .limit[data-limit-type="${type}"]`
 selectors.SIDECAR_BADGES = `${selectors.SIDECAR} .sidecar-header .badges`
 selectors.SIDECAR_CUSTOM_CONTENT = `${selectors.SIDECAR} .custom-content`
-selectors.SIDECAR_MODE_BUTTONS = `${selectors.SIDECAR} .sidecar-bottom-stripe .sidecar-bottom-stripe-button` // all mode buttons in the bottom stripe
+selectors.SIDECAR_MODE_BUTTONS = `${selectors.SIDECAR} .sidecar-bottom-stripe .sidecar-bottom-stripe-mode-bits .sidecar-bottom-stripe-button` // all mode buttons in the bottom stripe
 selectors.SIDECAR_MODE_BUTTON = mode => `${selectors.SIDECAR_MODE_BUTTONS}[data-mode="${mode}"]` // specific mode button in the bottom stripe
 selectors.SIDECAR_BACK_BUTTON = `${selectors.SIDECAR} .sidecar-bottom-stripe-back-button` // back button in the bottom stripe
 selectors.SIDECAR_CLOSE_BUTTON = `${selectors.SIDECAR} .sidecar-bottom-stripe-close` // close button in the bottom stripe
