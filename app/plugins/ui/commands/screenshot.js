@@ -117,7 +117,7 @@ module.exports = (commandTree, prequire) => {
             // note that all four values must be integral, hence the rounding bits
             const snap = () => {
             const domRect = dom.getBoundingClientRect(),
-                  rect = { x: round(domRect.left),
+                  rect = { x: round(domRect.left) + (options.offset || 0), // see #346 for options.offset
                            y: round(domRect.top),
                            width: round(domRect.width),
                            height: round(domRect.height)
