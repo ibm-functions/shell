@@ -54,13 +54,16 @@ describe('edit actions', function() {
        .then(sidecar.expectShowing('foo2'))
        .catch(common.oops(this)))
 
-    it('should edit the first action', () => cli.do('edit foo', this.app)
-       .then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing('foo'))
-       .then(sidecar.expectBadge('v0.0.1'))
-       .catch(common.oops(this)))
-
+    // do this in a loop, to make sure we don't have any event listener leaks
+    for (let idx = 0; idx < 20; idx++) {
+        it(`should edit the first action iter=${idx}`, () => cli.do('edit foo', this.app)
+           .then(cli.expectOK)
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing('foo'))
+           .then(sidecar.expectBadge('v0.0.1'))
+           .catch(common.oops(this)))
+    }
+    
     it('should edit the second action', () => cli.do('edit foo2', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)

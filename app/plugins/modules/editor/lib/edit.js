@@ -15,6 +15,7 @@
  */
 
 const path = require('path'),
+      events = require('events'),
       beautify = require('js-beautify'),
       placeholders = require('./placeholders')
 
@@ -68,10 +69,12 @@ const checkForConformance = action => {
  * Save the given action
  *
  */
-const save = ({wsk, action, editor, eventBus}) => ({
+const save = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.save,
     actAsButton: true,
     direct: () => {
+        const action = getAction()
+
         action.exec.code = editor.getValue()
 
         // odd: if we don't delete this, the backend will 
@@ -92,14 +95,15 @@ const save = ({wsk, action, editor, eventBus}) => ({
   * Revert to the currently deployed version
   *
   */
-const revert = ({wsk, action, editor, eventBus}) => ({
+const revert = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.revert,
     actAsButton: true,
     direct: () => {
-        const owOpts = wsk.owOpts({
-            name: action.name,
-            namespace: action.namespace
-        })
+        const action = getAction(),
+              owOpts = wsk.owOpts({
+                  name: action.name,
+                  namespace: action.namespace
+              })
 
         return wsk.ow.actions.get(owOpts)
             .then(action => {
@@ -114,10 +118,12 @@ const revert = ({wsk, action, editor, eventBus}) => ({
   * Tidy up the source
   *
   */
-const tidy = ({wsk, action, editor, eventBus}) => ({
+const tidy = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.tidy,
     actAsButton: true,
     direct: () => {
+        const action = getAction()
+
         if (language(action.exec.kind) === 'javascript') {
             const raw = editor.getValue(),
                   nicer = beautify(raw, { wrap_line_length: 80 })
@@ -135,10 +141,11 @@ const tidy = ({wsk, action, editor, eventBus}) => ({
   * Switch to read-only mode
   *
   */
-const readonly = ({wsk, action, editor, eventBus}) => ({
+const readonly = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.readonly,
     actAsButton: true,
-    direct: () => repl.qexec(`wsk action get /${action.namespace}/${action.name}`)
+    direct: () => Promise.resolve(getAction())
+        .then(action => repl.qexec(`wsk action get /${action.namespace}/${action.name}`))
         .then(entity => wsk.addPrettyType(entity.type, 'update', entity.name)(entity))
         .then(ui.showEntity)
 })
@@ -293,6 +300,8 @@ const openEditor = () => {
      *
      */
     const updater = editor => action => {
+        const eventBus = new events.EventEmitter()
+
         const kind = sidecar.querySelector('.action-content .kind')
         kind.innerText = ''
 
@@ -334,6 +343,7 @@ const openEditor = () => {
         const editsCommitted = action => {                                  // edits committed
             sidecar.classList.remove('is-modified')
             status.classList.remove('is-new')
+            sidecar.entity = action
 
             // update the version badge to reflect the update
             ui.addVersionBadge(action, { clear: true })
@@ -344,7 +354,8 @@ const openEditor = () => {
         ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
         ui.addVersionBadge(action, { clear: true })
 
-        return Promise.resolve({ action, editor, content })
+        const getAction = () => sidecar.entity
+        return Promise.resolve({ getAction, editor, content, eventBus })
     } /* end of updater */
 
     // once the editor is ready, return a function that can populate it
@@ -358,14 +369,14 @@ const openEditor = () => {
  * updateEditor
  *
  */
-const respondToRepl = (wsk, eventBus) => ({ action, editor, content }) => ({
+const respondToRepl = wsk => ({ getAction, editor, content, eventBus }) => ({
     type: 'custom',
     content,
-    displayOptions: [`entity-is-${action.type}`, 'edit-mode'],
-    modes: [ save({wsk, action, editor, eventBus}),
-             revert({wsk, action, editor, eventBus}),
-             tidy({wsk, action, editor, eventBus}),
-             readonly({wsk, action, editor, eventBus})
+    displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
+    modes: [ save({wsk, getAction, editor, eventBus}),
+             revert({wsk, getAction, editor, eventBus}),
+             tidy({wsk, getAction, editor, eventBus}),
+             readonly({wsk, getAction, editor, eventBus})
            ]
 })
 
@@ -403,7 +414,7 @@ const updateEditor = ([action, updateEditor]) => updateEditor(action)
  * Command handler for `edit actionName`
  *
  */
-const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
+const edit = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const sidecar = document.querySelector('#sidecar'),
           name = args[args.indexOf('edit') + 1]
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
@@ -420,7 +431,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, o
     //
     return Promise.all([fetchAction(name), openEditor()])
         .then(updateEditor)
-        .then(respondToRepl(wsk, eventBus))
+        .then(respondToRepl(wsk))
 
 } /* end of edit command handler */
 
@@ -440,7 +451,7 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, args, options) => {
+const newAction = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const name = args[args.indexOf('new') + 1],
           kind = addVariantSuffix(options.kind || defaults.kind)
 
@@ -462,7 +473,7 @@ const newAction = wsk => (_0, _1, fullArgv, { ui, errors, eventBus }, _2, _3, ar
     //
     return Promise.all([action, openEditor(), betterNotExist(name)])
         .then(updateEditor)
-        .then(respondToRepl(wsk, eventBus))
+        .then(respondToRepl(wsk))
 }
 
 module.exports = (commandTree, prequire) => {
