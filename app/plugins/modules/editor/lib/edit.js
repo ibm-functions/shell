@@ -28,7 +28,7 @@ const defaults = {
 const strings = {
     save: 'Deploy',
     revert: 'Revert',
-    tidy: 'Tidy Up',
+    tidy: 'Tidy Source',
     readonly: 'Done Editing',
     actionAlreadyExists: 'The given action name is already in use',
     isNew: 'You are in edit mode, viewing <strong>a new action</strong>',
@@ -72,6 +72,7 @@ const checkForConformance = action => {
 const save = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.save,
     actAsButton: true,
+    //fontawesome: 'fas fa-cloud-upload-alt',
     direct: () => {
         const action = getAction()
 
@@ -98,6 +99,8 @@ const save = ({wsk, getAction, editor, eventBus}) => ({
 const revert = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.revert,
     actAsButton: true,
+    //fontawesome: 'fas fa-cloud-download-alt',
+    //fontawesome: 'fas fa-sync-alt',
     direct: () => {
         const action = getAction(),
               owOpts = wsk.owOpts({
@@ -121,6 +124,7 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
 const tidy = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.tidy,
     actAsButton: true,
+    //fontawesome: 'fas fa-indent',
     direct: () => {
         const action = getAction()
 
@@ -141,7 +145,7 @@ const tidy = ({wsk, getAction, editor, eventBus}) => ({
   * Switch to read-only mode
   *
   */
-const readonly = ({wsk, getAction, editor, eventBus}) => ({
+const readonly = ({ wsk, getAction }) => ({
     mode: strings.readonly,
     actAsButton: true,
     direct: () => Promise.resolve(getAction())
@@ -192,6 +196,37 @@ const updateText = editor => exec => {
 }
 
 /**
+  * Render a lock/unlock icon in the given container
+  *
+  */
+const renderLockIcon = (wsk, getAction, content) => {
+    const lockIcon = document.createElement('div'),
+          lockIconInner = document.createElement('div'),
+          lockIconInnerInner = document.createElement('div'),
+          lockIconGraphics = document.createElement('i')
+
+    // tooltip
+    lockIconInnerInner.setAttribute('data-balloon', 'You are in edit mode.\u000aClick to return to view mode.')
+    lockIconInnerInner.setAttribute('data-balloon-break', 'true')
+    lockIconInnerInner.setAttribute('data-balloon-pos', 'left')
+
+    // styling
+    lockIcon.className = 'graphical-button lock-button'
+    lockIconGraphics.className = 'fas fa-unlock-alt'
+
+    // pack them in the container
+    lockIcon.appendChild(lockIconInner)
+    lockIconInner.appendChild(lockIconInnerInner)
+    lockIconInnerInner.appendChild(lockIconGraphics)
+    content.appendChild(lockIcon)
+
+    // onclick handler
+    lockIcon.onclick = readonly({wsk, getAction}).direct
+
+    return lockIcon
+}
+
+/**
  * Open the code editor
  *
  * @return a function that can be passed an action to display in the
@@ -202,10 +237,13 @@ const updateText = editor => exec => {
  *
  */
 let amdRequire
-const openEditor = () => {
+const openEditor = wsk => {
     const sidecar = document.querySelector('#sidecar'),
           leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
           rightHeader = sidecar.querySelector('.header-right-bits .custom-header-content')
+
+    /** returns the current action entity */
+    const getAction = () => sidecar.entity
 
     ui.removeAllDomChildren(leftHeader)
     ui.removeAllDomChildren(rightHeader)
@@ -218,6 +256,8 @@ const openEditor = () => {
     ui.injectCSS(path.join(__dirname, 'editor.css'))
 
     const content = document.createElement('div')
+
+    const lockIcon = renderLockIcon(wsk, getAction, content)
 
     // override the repl's capturing of the focus
     content.onclick = evt => {
@@ -279,7 +319,7 @@ const openEditor = () => {
                         scrollBeyondLastLine: false,
                         cursorStyle: 'block',
                         fontFamily: 'var(--font-monospace)',
-                        fontSize: 14, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
+                        fontSize: 14.4, // TODO this doesn't adjust with ctrl/cmd-+ font size changes :(
                         
                         // we will fill these two in later, in setText
 	                value: '',
@@ -333,6 +373,7 @@ const openEditor = () => {
         status.className = 'editor-status'
         if (action.isNew) {
             status.classList.add('is-new')
+            lockIcon.classList.add('is-new')
         } else {
             status.classList.add('is-up-to-date')
         }
@@ -343,6 +384,7 @@ const openEditor = () => {
         const editsCommitted = action => {                                  // edits committed
             sidecar.classList.remove('is-modified')
             status.classList.remove('is-new')
+            lockIcon.classList.remove('is-new')
             sidecar.entity = action
 
             // update the version badge to reflect the update
@@ -354,7 +396,6 @@ const openEditor = () => {
         ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
         ui.addVersionBadge(action, { clear: true })
 
-        const getAction = () => sidecar.entity
         return Promise.resolve({ getAction, editor, content, eventBus })
     } /* end of updater */
 
@@ -375,8 +416,8 @@ const respondToRepl = wsk => ({ getAction, editor, content, eventBus }) => ({
     displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
     modes: [ save({wsk, getAction, editor, eventBus}),
              revert({wsk, getAction, editor, eventBus}),
-             tidy({wsk, getAction, editor, eventBus}),
-             readonly({wsk, getAction, editor, eventBus})
+             //tidy({wsk, getAction, editor, eventBus})
+             //readonly({wsk, getAction, editor, eventBus})
            ]
 })
 
@@ -391,16 +432,18 @@ const fetchAction = name => repl.qexec(`wsk action get ${name}`).then(checkForCo
  * Fail with 409 if the given action name exists, otherwise succeed
  *
  */
-const nope409 = _ => {
+const failWith409 = _ => {
     const error = new Error(strings.actionAlreadyExists)
     error.code = 409
     throw error
 }
-const betterNotExist = name => fetchAction(name).then(nope409).catch(err => {
+const failIfNot404 = err => {
     if (err.statusCode !== 404) {
+        console.error(err)
         throw err
     }
-})
+}
+const betterNotExist = name => fetchAction(name).then(failWith409).catch(failIfNot404)
 
 
 /**
@@ -429,7 +472,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) =>
     // then update the editor to show the action
     // then send a response back to the repl
     //
-    return Promise.all([fetchAction(name), openEditor()])
+    return Promise.all([fetchAction(name), openEditor(wsk)])
         .then(updateEditor)
         .then(respondToRepl(wsk))
 

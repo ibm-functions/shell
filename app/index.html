@@ -12,8 +12,10 @@
     <link href="https://fonts.googleapis.com/css?family=Fira+Mono:400,500,700" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="content/css/ui.css">
     <link rel="stylesheet" type="text/css" href="content/css/themes/ibm.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css">
     <script src="content/js/events.js"></script>
     <script src="content/js/ui.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
   </head>
 
   <body onload="__shell_bootstrap()" class='still-loading'><div class="page">
@@ -161,21 +163,29 @@
         <!-- sidecar bottom stripe -->
         <div class='sidecar-bottom-stripe'>
           <div class='sidecar-bottom-stripe-left-bits'>
-            <div class='sidecar-bottom-stripe-back-bits sidecar-bottom-stripe-button-container'>
-              <span class='sidecar-bottom-stripe-close-icon'>&#x2329;&#x2329;</span>
-              <span class='sidecar-bottom-stripe-back-inner-bits'></span>
+            <div class='sidecar-bottom-stripe-back-bits sidecar-bottom-stripe-button-container sidecar-bottom-stripe-button'>
+              <div class='sidecar-bottom-stripe-button'>
+                <div class='graphical-icon'><i class='fas fa-angle-double-left'></i></div>
+                <div class='sidecar-bottom-stripe-back-inner-bits'></div>
+              </div>
             </div> <!-- back button -->
             <div class='sidecar-bottom-stripe-mode-bits sidecar-bottom-stripe-button-container'></div> <!-- mode switch buttons -->
           </div>
           <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-maximize' onclick="repl.pexec('screenshot sidecar')"> <!-- screenshot button -->
-            Screenshot
+            <div class='graphical-icon'
+                 data-balloon='Capture Screenshot' data-balloon-length="small" data-balloon-pos='up'>
+              <i class='fas fa-camera'></i>
+            </div>
           </div>
           <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-maximize' onclick="ui.toggleSidecarMaximization()"> <!-- maximize button -->
-            <span class='maximize-button-label'>Maximize</span>
-            <span class='unmaximize-button-label'>Restore Split Screen</span>
+            <span class='maximize-button-label'><div class='graphical-icon' data-balloon='Expand to full width' data-balloon-length='small' data-balloon-pos='up'><i class='far fa-window-maximize'></i></div></span>
+            <span class='unmaximize-button-label'><div class='graphical-icon' data-balloon='Restore split screen' data-balloon-length='small' data-balloon-pos='up'><i class='fas fa-columns'></i></div></span>
           </div>
           <div class='sidecar-bottom-stripe-button sidecar-bottom-stripe-close' onclick="ui.toggleSidecar()"> <!-- close button -->
-            Close
+            <div class='graphical-icon'
+                 data-balloon='Collapse the sidecar' data-balloon-length="small" data-balloon-pos='up-right'>
+              <i class='fas fa-angle-double-right'></i>
+            </div>
           </div>
         </div>
 

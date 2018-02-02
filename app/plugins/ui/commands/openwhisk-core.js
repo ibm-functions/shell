@@ -493,7 +493,7 @@ const specials = {}
 
 /** for parametrizable entity types, e.g. actions, packages, the standard view modes */
 const standardViewModes = (defaultMode, fn) => {
-    const modes = [{ mode: 'parameters', command: () => 'parameters' },
+    const modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
                    { mode: 'annotations', command: () => 'annotations' },
                    { mode: 'raw', command: () => 'raw' }]
 

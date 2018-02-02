@@ -553,7 +553,7 @@ body.os-win32 #sidecar .sidecar-bottom-stripe-close-icon {
 
     /* so that the "hidden" maximize button (see opacity:0,width:0 just below)
        doesn't occlude the close button */
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 .maximize-button-label, .unmaximize-button-label {
     transition: opacity 300ms ease-in-out;
@@ -592,18 +592,28 @@ body.sidecar-full-screen #sidecar .sidecar-bottom-stripe-maximize .maximize-butt
 body.os-win32 #sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
     letter-spacing: -1px; /* windows is different here */
 }
-#sidecar .sidecar-bottom-stripe-button.sidecar-bottom-stripe-back-button {
+#sidecar .sidecar-bottom-stripe-back-bits {
     /* back button in sidecar bottom stripe */
     border-right: 1px dotted hsla(240, 2%, 90%, 0.5);
     padding-right: 1em;
-    opacity: 0.6;
+}
+#sidecar .sidecar-bottom-stripe-back-bits > div {
     transition: all 150ms ease-in-out;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+}
+#sidecar .sidecar-bottom-stripe-back-bits > div:hover {
+    opacity: 1;
 }
 #sidecar .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits:not(.has-back-button) {
     display: none;
 }
+#sidecar .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits .graphical-icon {
+    font-size: 0.875em;
+}
 #sidecar .sidecar-bottom-stripe-button-container.sidecar-bottom-stripe-back-bits.has-back-button .sidecar-bottom-stripe-back-inner-bits {
-    margin-left: 2ex;
+    margin-left: 0.75ex;
 }
 
 /* custom content */
@@ -1285,6 +1295,21 @@ body.subwindow.sidecar-full-screen #sidecar .sidecar-bottom-stripe .sidecar-bott
     /* hide the close button in the sidecar bottom stripe when in sidecar-full-screen mode */
     display: none;
 }
+.sidecar-bottom-stripe .graphical-icon {
+    /* font awesome icons in the bottom stripe */
+    font-size: 1.25rem;
+    width: 1em;
+    display: flex;
+    justify-content: flex-start;
+
+    /* these two rules are an attempt to push the tooltips just above the bottom stripe */
+    height: 2rem;
+    align-items: center;
+}
+.graphical-icon[data-balloon]:after, .graphical-icon[data-balloon]:before {
+    text-transform: none;
+    transition-delay: 750ms;
+}
 
 /* pulse animation for repl.partial */
 input.repl-partial {
@@ -1452,5 +1477,6 @@ break {
 }
 
 .wrap-normal {
+    /* i want this element to line wrap normally */
     white-space: normal;
 }
