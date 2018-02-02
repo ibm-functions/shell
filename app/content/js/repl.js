@@ -130,7 +130,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     // case-specific cells
     //
     if (entity.attributes) {
-        entity.attributes.forEach(({value, css}) => addCell('', value, css))
+        entity.attributes.forEach(({value, css='', outerCSS=''}) => addCell(outerCSS, value, css))
 
     } else if (entity.type === 'actions') {
         // action-specific cells
