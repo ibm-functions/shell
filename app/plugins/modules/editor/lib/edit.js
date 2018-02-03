@@ -223,11 +223,12 @@ const readonly = ({ wsk, getAction }) => ({
  *    only nodejs and compositions diverge from monaco's notation
  */
 const language = kind => {
-    const base = kind.substring(0, kind.indexOf(':'))
+    const base = kind.substring(0, kind.indexOf(':')) || kind
 
     return base === 'nodejs'
         || base === 'app'
-        || base === 'composition' ? 'javascript' : base
+        || base === 'composition'
+        || base === 'sequence' ? 'javascript' : base
 }
 
 /**
