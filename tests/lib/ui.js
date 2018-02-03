@@ -189,8 +189,8 @@ exports.sidecar = {
         .then(actualSource => assert.equal(actualSource.replace(/\s+/g, ''), expectedSource.replace(/\s+/g, '')))
         .then(() => app),
 
-    expectBadge: badge => app => app.client.getText(selectors.SIDECAR_BADGES)
-        .then(badges => assert.ok(badges.indexOf(badge) >= 0))
+    expectBadge: badge => app => app.client.waitUntil(() => app.client.getText(selectors.SIDECAR_BADGES)
+                                                      .then(badges => badges.indexOf(badge) >= 0))
         .then(() => app),
 
     expectLimit: (type, expectedValue) => app => {

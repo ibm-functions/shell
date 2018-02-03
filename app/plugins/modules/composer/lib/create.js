@@ -82,7 +82,7 @@ module.exports = (commandTree, prequire) => {
                     throw new Error(messages.invalidFSM)
                 } else {
                     type = badges.fsm
-                    fsmPromise = Promise.resolve(fsm)
+                    fsmPromise = Promise.resolve({fsm})
                 }
 
             } else if (input.endsWith('.js')) {
@@ -90,7 +90,7 @@ module.exports = (commandTree, prequire) => {
                 // we were given the source code, which means we'll need to generate the FSM
                 //
                 type = badges.composerLib
-                fsmPromise = compileToFSM(input)
+                fsmPromise = compileToFSM(input, { code: true }) // we want the code back
 
                 if (dryRun) {
                     return fsmPromise
@@ -126,8 +126,14 @@ module.exports = (commandTree, prequire) => {
                 //else annotations[index] = {key: 'log', value: logType};
                 annotations.push({key: 'log', value: logType})
 
-                return fsmPromise.then(fsm => {
-                    
+                return fsmPromise.then(({fsm,code,localCodePath}) => {
+                    if (code) {
+                        annotations.push({key: 'code', value: code})
+                    }
+                    if (localCodePath) {
+                        annotations.push({key: 'file', value: localCodePath})
+                    }
+
                     let count = 0;
                     let addEcho = name => {
                         let echoName = 'echo_'+count;
@@ -177,7 +183,17 @@ module.exports = (commandTree, prequire) => {
                 else annotations.push({key: 'log', value: false});
                 //console.log('app create no logging', index, annotations);
                 // great, we now have a valid FSM!                    
-                return fsmPromise.then(fsm => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
+                return fsmPromise.then(({fsm,code,localCodePath}) => {
+                    if (code) {
+                        annotations.push({key: 'code', value: code})
+                    }
+                    if (localCodePath) {
+                        annotations.push({key: 'file', value: localCodePath})
+                    }
+
+                    console.error('!!!!!!!!', fsm, code)
+                    return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations })
+                })
             }
         }
     }

@@ -51,7 +51,9 @@ const patterns = {
  *
  */
 exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
-    fs.readFile(ui.findFile(expandHomeDir(src)), (err, data) => {
+    const localCodePath = expandHomeDir(src)
+
+    fs.readFile(ui.findFile(localCodePath), (err, data) => {
         if (err) {
             reject(err)
         } else {
@@ -233,7 +235,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                     reject('Your code could not be composed')
                 } else {
                     if (opts.code) {
-                        resolve({fsm, code: originalCode})
+                        resolve({fsm, code: originalCode, localCodePath})
                     } else {
                         resolve(fsm)
                     }

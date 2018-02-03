@@ -19,6 +19,11 @@ const path = require('path'),
       beautify = require('js-beautify'),
       placeholders = require('./placeholders')
 
+/** optional command line arguments, by command */
+const optionalArguments = {
+    new: '[--kind <nodejs:default*|python:default|php:default|swift:default>]'
+}
+
 /** default settings */
 const defaults = {
     kind: 'nodejs:default'
@@ -34,8 +39,11 @@ const strings = {
     isNew: 'You are in edit mode, viewing <strong>a new action</strong>',
     isUpToDate: 'You are in edit mode, viewing the <strong>currently deployed version</strong>',
     isModified: 'You are in edit mode, with <strong>unsaved edits</strong>',
+
+    // commands
     editdoc: 'Open the code for an action in a text editor',
-    newDoc: 'Open the code editor to create a new action or app'
+    newDoc: 'Open the code editor to create a new action',
+    composeDoc: 'Open the code editor to create a new composition'
 }
 
 /** from https://github.com/Microsoft/monaco-editor-samples/blob/master/sample-electron/index.html */
@@ -56,6 +64,33 @@ const checkForConformance = action => {
         const err = new Error('Editing of binary actions not yet supported')
         err.code = 406    // 406: Not Acceptable http status code
         throw err
+    } else if (action.fsm) {
+        // compositions currently have a sequence wrapper, but we know how to edit them
+        const codeAnno = action.annotations.find(({key})=> key === 'code')
+        if (codeAnno) {
+            action.exec.code = codeAnno.value
+            action.saver = saveComposition
+        } else {
+            // hmm, no code annotation; let's look for a 'file' annotation
+            const localCodePath = action.annotations.find(({key})=> key === 'file')
+            if (localCodePath) {
+                return new Promise((resolve, reject) => require('fs').readFile(localCodePath, (err, data) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        action.exec.code = data.toString()
+                        action.saver = saveComposition
+                        resolve(action)
+                    }                            
+                }))
+            } else {
+                //action.exec.code = JSON.stringify(action.fsm, undefined, 4)
+                const err = new Error('Your composition does not have an assocated source file')
+                err.code = 406
+                throw err
+            }
+        }
+
     } else if (action.exec.kind === 'sequence') {
         const err = new Error('Editing of sequence actions not yet supported')
         err.code = 406    // 406: Not Acceptable http status code
@@ -69,25 +104,53 @@ const checkForConformance = action => {
  * Save the given action
  *
  */
+const saveNormalAction = (wsk, action) => {
+    const owOpts = wsk.owOpts({
+        name: action.name,
+        namespace: action.namespace,
+        action
+    })
+
+    return wsk.ow.actions.update(owOpts)
+}
+const saveComposition = (wsk, app) => new Promise((resolve, reject) => {
+    const fs = require('fs'),
+          tmp = require('tmp')
+
+    tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, path, fd, cleanup) => {
+        if (err) {
+            reject(err)
+        } else {
+            fs.write(fd, app.exec.code, err => {
+                if (err) {
+                    reject(err)
+                } else {
+                    return repl.qexec(`app update "${app.name}" "${path}"`)
+                        .then(app => {
+                            cleanup()
+                            resolve(app)
+                        })
+                }
+            })
+        }
+    })
+})
 const save = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.save,
     actAsButton: true,
     //fontawesome: 'fas fa-cloud-upload-alt',
     direct: () => {
-        const action = getAction()
+        const action = getAction(),
+              { saver=saveNormalAction } = action
 
+        // transfer the latest code from the editor into the entity
         action.exec.code = editor.getValue()
 
-        // odd: if we don't delete this, the backend will 
+        // odd: if we don't delete this, the backend will not perform its default version tagging behavior
+        // https://github.com/apache/incubator-openwhisk/issues/3237
         delete action.version
 
-        const owOpts = wsk.owOpts({
-            name: action.name,
-            namespace: action.namespace,
-            action
-        })
-
-        return wsk.ow.actions.update(owOpts)
+        return saver(wsk, action)
             .then(action => eventBus.emit('/editor/save', action))
     }
 })
@@ -103,6 +166,7 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
     //fontawesome: 'fas fa-sync-alt',
     direct: () => {
         const action = getAction(),
+              //{ reverter=revertNormalAction } = action,
               owOpts = wsk.owOpts({
                   name: action.name,
                   namespace: action.namespace
@@ -149,30 +213,21 @@ const readonly = ({ wsk, getAction }) => ({
     mode: strings.readonly,
     actAsButton: true,
     direct: () => Promise.resolve(getAction())
-        .then(action => repl.qexec(`wsk action get /${action.namespace}/${action.name}`))
+        .then(action => repl.qexec(`wsk action get "/${action.namespace}/${action.name}"`))
         .then(entity => wsk.addPrettyType(entity.type, 'update', entity.name)(entity))
         .then(ui.showEntity)
 })
 
 /**
  * What is the monaco "language" for the given kind?
-*
-*/
+ *    only nodejs and compositions diverge from monaco's notation
+ */
 const language = kind => {
-    if (kind.indexOf('nodejs') >= 0) {
-        return 'javascript'
-    } else if (kind.indexOf('python') >= 0) {
-        return 'python'
-    } else if (kind.indexOf('swift') >= 0) {
-        return 'swift'
-    } else if (kind.indexOf('java') >= 0) {
-        return 'java'
-    } else if (kind.indexOf('php') >= 0) {
-        return 'php'
-    } else {
-        //???
-        return 'javascript'
-    }
+    const base = kind.substring(0, kind.indexOf(':'))
+
+    return base === 'nodejs'
+        || base === 'app'
+        || base === 'composition' ? 'javascript' : base
 }
 
 /**
@@ -182,10 +237,16 @@ const language = kind => {
 const setText = editor => ({code, kind}, otherEdits=[]) => {
     const oldModel = editor.getModel(),
 	  newModel = monaco.editor.createModel(code, language(kind));
+
     editor.setModel(newModel)
+    editor.setPosition(editor.getModel().getPositionAt(code.length))
+
     if (oldModel) {
 	oldModel.dispose()
     }
+
+    // see https://github.com/Microsoft/monaco-editor/issues/194
+    setTimeout(() => editor.focus(), 500)
 
     return code
 }
@@ -236,7 +297,7 @@ const renderLockIcon = (wsk, getAction, content) => {
  *     - content: a dom that contains the instance; this must be attached somewhere!
  *
  */
-let amdRequire
+let amdRequire, initDone
 const openEditor = wsk => {
     const sidecar = document.querySelector('#sidecar'),
           leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
@@ -256,6 +317,7 @@ const openEditor = wsk => {
     ui.injectCSS(path.join(__dirname, 'editor.css'))
 
     const content = document.createElement('div')
+    content.focus() // we want the editor to have focus, so the user can start coding
 
     const lockIcon = renderLockIcon(wsk, getAction, content)
 
@@ -294,8 +356,18 @@ const openEditor = wsk => {
                 }
 
                 amdRequire(['vs/editor/editor.main'], () => {
-                    // for now, try to disable the completion helper thingies
-                    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
+                    if (!initDone) {
+                        // for now, try to disable the completion helper thingies
+                        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
+
+                        // install custom languages
+                        const languages = require('./language-scan')
+                        languages.forEach(({language, provider}) => {
+                            monaco.languages.registerCompletionItemProvider(language, provider)
+                        })
+
+                        initDone = true
+                    }
 
                     /*monaco.editor.defineTheme('myCustomTheme', {
 	              base: 'vs',    // can also be vs-dark or hc-black
@@ -410,7 +482,7 @@ const openEditor = wsk => {
  * updateEditor
  *
  */
-const respondToRepl = wsk => ({ getAction, editor, content, eventBus }) => ({
+const respondToRepl = (wsk) => ({ getAction, editor, content, eventBus }) => ({
     type: 'custom',
     content,
     displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
@@ -426,7 +498,7 @@ const respondToRepl = wsk => ({ getAction, editor, content, eventBus }) => ({
  * compatible with the editor
  *
  */
-const fetchAction = name => repl.qexec(`wsk action get ${name}`).then(checkForConformance)
+const fetchAction = name => repl.qexec(`wsk action get "${name}"`).then(checkForConformance)
 
 /**
  * Fail with 409 if the given action name exists, otherwise succeed
@@ -494,19 +566,19 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
-    const name = args[args.indexOf('new') + 1],
-          kind = addVariantSuffix(options.kind || defaults.kind)
+const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, saver, reverter}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+    const name = args[args.indexOf(op) + 1],
+          kind = addVariantSuffix(options.kind || _kind)
 
     if (options.help || !name) {
-        throw new errors.usage('new <actionName> [--kind <nodejs:default*|python:default|php:default|swift:default>]')
+        throw new errors.usage(`${op} <actionName> ${optionalArguments[op] || ''}`)
     }
 
     // our placeholder action
-    const action = { name,
-                     type: 'actions',
-                     exec: { kind, code: placeholders[language(kind)] },
-                     isNew: true
+    const action = { name, type,
+                     exec: { kind, code: placeholder || placeholders[language(kind)] },
+                     isNew: true,
+                     saver, reverter
                    }
 
     //
@@ -519,9 +591,20 @@ const newAction = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, option
         .then(respondToRepl(wsk))
 }
 
+/**
+ * Special options for compositions
+ *
+ */
+const compositionOptions = baseOptions => Object.assign({type: 'apps',
+                                                         _kind: 'app',
+                                                         placeholder: placeholders.composition,
+                                                         saver: saveComposition }, baseOptions)
+
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
     commandTree.listen('/edit', edit(wsk), { docs: strings.editDoc })
-    commandTree.listen('/new', newAction(wsk), { docs: strings.newDoc })
+    commandTree.listen('/new', newAction({wsk}), { docs: strings.newDoc })
+    commandTree.listen('/compose', newAction(compositionOptions({ wsk, op: 'compose'})),
+                       { docs: strings.composeDoc })
 }
