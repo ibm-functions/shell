@@ -66,30 +66,7 @@ const checkForConformance = action => {
         throw err
     } else if (action.fsm) {
         // compositions currently have a sequence wrapper, but we know how to edit them
-        const codeAnno = action.annotations.find(({key})=> key === 'code')
-        if (codeAnno) {
-            action.exec.code = codeAnno.value
-            action.saver = saveComposition
-        } else {
-            // hmm, no code annotation; let's look for a 'file' annotation
-            const localCodePath = action.annotations.find(({key})=> key === 'file')
-            if (localCodePath) {
-                return new Promise((resolve, reject) => require('fs').readFile(localCodePath, (err, data) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        action.exec.code = data.toString()
-                        action.saver = saveComposition
-                        resolve(action)
-                    }                            
-                }))
-            } else {
-                //action.exec.code = JSON.stringify(action.fsm, undefined, 4)
-                const err = new Error('Your composition does not have an assocated source file')
-                err.code = 406
-                throw err
-            }
-        }
+        return persisters.apps.getCode(action)
 
     } else if (action.exec.kind === 'sequence') {
         const err = new Error('Editing of sequence actions not yet supported')
@@ -101,47 +78,89 @@ const checkForConformance = action => {
 }
 
 /**
- * Save the given action
+ * Logic for saving and reverting
  *
  */
-const saveNormalAction = (wsk, action) => {
-    const owOpts = wsk.owOpts({
-        name: action.name,
-        namespace: action.namespace,
-        action
-    })
+const persisters = {
+    actions: {
+        getCode: action => action,
+        save: (wsk, action) => {
+            const owOpts = wsk.owOpts({
+                name: action.name,
+                namespace: action.namespace,
+                action
+            })
 
-    return wsk.ow.actions.update(owOpts)
-}
-const saveComposition = (wsk, app) => new Promise((resolve, reject) => {
-    const fs = require('fs'),
-          tmp = require('tmp')
+            return wsk.ow.actions.update(owOpts)
+        },
+        revert: (wsk, action) => {
+        }
+    },
+    apps: {
+        getCode: action => new Promise((resolve, reject) => {
+            const codeAnno = action.annotations.find(({key})=> key === 'code')
+            if (codeAnno) {
+                action.exec.code = codeAnno.value
+                action.persister = persisters.apps
+                resolve(action)
 
-    tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, path, fd, cleanup) => {
-        if (err) {
-            reject(err)
-        } else {
-            fs.write(fd, app.exec.code, err => {
+            } else {
+                // hmm, no code annotation; let's look for a 'file' annotation
+                const localCodePath = action.annotations.find(({key})=> key === 'file')
+                if (localCodePath) {
+                    require('fs').readFile(localCodePath, (err, data) => {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            action.exec.code = data.toString()
+                            action.persister = persisters.apps
+                            resolve(action)
+                        }                            
+                    })
+                } else {
+                    //action.exec.code = JSON.stringify(action.fsm, undefined, 4)
+                    const err = new Error('Your composition does not have an assocated source file')
+                    err.code = 406
+                    reject(err)
+                }
+            }
+        }),
+        save: (wsk, app) => new Promise((resolve, reject) => {
+            const fs = require('fs'),
+                  tmp = require('tmp')
+
+            tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, path, fd, cleanup) => {
                 if (err) {
                     reject(err)
                 } else {
-                    return repl.qexec(`app update "${app.name}" "${path}"`)
-                        .then(app => {
-                            cleanup()
-                            resolve(app)
-                        })
+                    fs.write(fd, app.exec.code, err => {
+                        if (err) {
+                            reject(err)
+                        } else {
+                            return repl.qexec(`app update "${app.name}" "${path}"`)
+                                .then(app => {
+                                    cleanup()
+                                    resolve(app)
+                                })
+                        }
+                    })
                 }
             })
-        }
-    })
-})
+        })
+    }
+}
+
+/**
+ * Save the given action
+ *
+ */
 const save = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.save,
     actAsButton: true,
     //fontawesome: 'fas fa-cloud-upload-alt',
     direct: () => {
         const action = getAction(),
-              { saver=saveNormalAction } = action
+              { save } = action.persister || persisters.actions
 
         // transfer the latest code from the editor into the entity
         action.exec.code = editor.getValue()
@@ -150,7 +169,7 @@ const save = ({wsk, getAction, editor, eventBus}) => ({
         // https://github.com/apache/incubator-openwhisk/issues/3237
         delete action.version
 
-        return saver(wsk, action)
+        return save(wsk, action)
             .then(action => eventBus.emit('/editor/save', action))
     }
 })
@@ -166,15 +185,19 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
     //fontawesome: 'fas fa-sync-alt',
     direct: () => {
         const action = getAction(),
-              //{ reverter=revertNormalAction } = action,
+              persister = action.persister || persisters.actions,
+              { getCode } = persister,
               owOpts = wsk.owOpts({
                   name: action.name,
                   namespace: action.namespace
               })
 
+        console.error('@@@@@', persister)
         return wsk.ow.actions.get(owOpts)
+            .then(getCode)
             .then(action => {
-                updateText(editor)(action.exec)
+                action.persister = persister
+                updateText(editor)(action)
                 eventBus.emit('/editor/save', action)
             })
             .then(() => true)
@@ -234,7 +257,7 @@ const language = kind => {
  * Update the code in the editor to use the given text
  *
  */
-const setText = editor => ({code, kind}, otherEdits=[]) => {
+const setText = editor => ({code, kind}) => {
     const oldModel = editor.getModel(),
 	  newModel = monaco.editor.createModel(code, language(kind));
 
@@ -250,10 +273,10 @@ const setText = editor => ({code, kind}, otherEdits=[]) => {
 
     return code
 }
-const updateText = editor => exec => {
+const updateText = editor => action => {
     // monaco let's us replace the full range of text, so we don't need
     // an explicit delete of the current text
-    return setText(editor)(exec)
+    return setText(editor)(action.exec)
 }
 
 /**
@@ -566,7 +589,7 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, saver, reverter}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const name = args[args.indexOf(op) + 1],
           kind = addVariantSuffix(options.kind || _kind)
 
@@ -578,7 +601,7 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
     const action = { name, type,
                      exec: { kind, code: placeholder || placeholders[language(kind)] },
                      isNew: true,
-                     saver, reverter
+                     persister
                    }
 
     //
@@ -598,7 +621,7 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
 const compositionOptions = baseOptions => Object.assign({type: 'apps',
                                                          _kind: 'app',
                                                          placeholder: placeholders.composition,
-                                                         saver: saveComposition }, baseOptions)
+                                                         persister: persisters.apps }, baseOptions)
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
