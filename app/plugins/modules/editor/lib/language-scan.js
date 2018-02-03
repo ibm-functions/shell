@@ -14,29 +14,9 @@
  * limitations under the License.
  */
 
-exports.javascript = `function main(params) {
-   return params
-}`
+const fs = require('fs'),
+      path = require('path'),
+      subdir = 'languages'
+      dir = path.join(__dirname, subdir)
 
-exports.python = `def main(params):
-   return { "python": "fun" }`
-
-exports.swift = `func main(params: [String:Any]) -> [String:Any] {
-   return params
-}`
-
-exports.php = `<?php
-function main(array $args) : array
-{
-    $name = $args["name"] ?? "stranger";
-    $greeting = "Hello $name!";
-    echo $greeting;
-    return ["greeting" => $greeting];
-}`
-
-exports.composition = `const echo = x=>x    // a handy utility routine for debugging
-
-//
-// try typing "composer." to begin your composition
-//
-`
+module.exports = fs.readdirSync(dir).filter(_ => _.endsWith('.js')).map(file => require(`./${subdir}/${file}`))

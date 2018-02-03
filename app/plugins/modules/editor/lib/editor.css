@@ -1,15 +1,4 @@
-/* add an edit icon next to the action name in the sidecar header */
-xxx #sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
-    content: "\270e";
-    color: var(--color-support-02);
-    margin-left: 0.35em;
-    font-size: 0.875em;
-    transform: scaleX(-1);  /* flip around y axis */
-    transition: color 150ms ease-in-out;
-}
-#sidecar.edit-mode.is-modified .sidecar-header-name:after {
-    color: var(--color-support-01);
-}
+/* lock/unlock button */
 #sidecar .lock-button.is-new {
     opacity: 0;
 }
@@ -27,6 +16,13 @@ xxx #sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
     position: absolute;
     top: 1ex;
     right: 1.5ex;
+}
+
+.monaco-editor .main {
+    /* ui.css has a .main rule that we have to override; otherwise, the
+   completion/suggestion UI list elements will have zero height and be
+   rendered invisible */
+    height: auto;
 }
 
 .code-highlighting {
@@ -65,7 +61,7 @@ xxx #sidecar.edit-mode .sidecar-header-name .entity-name-line:after {
     opacity: 0;
     width: 0;
 }
-#sidecar.is-modified .custom-header-content .editor-status .is-modified, #sidecar:not(.is-modified) .custom-header-content .editor-status:not(.is-new) .is-up-to-date, #sidecar .custom-header-content .editor-status.is-new .is-new {
+#sidecar.is-modified .custom-header-content .editor-status:not(.is-new) .is-modified, #sidecar:not(.is-modified) .custom-header-content .editor-status:not(.is-new) .is-up-to-date, #sidecar .custom-header-content .editor-status.is-new .is-new {
     opacity: 1;
     width: auto;
 }
