@@ -1485,7 +1485,7 @@ break {
 #sidecar.minimized {
     flex: 0 0 2em;
     align-items: stretch;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 #sidecar.minimized header.sidecar-header {
     flex: 1;
@@ -1518,6 +1518,7 @@ break {
 #sidecar.minimized .sidecar-bottom-stripe {
     align-items: flex-end;
     padding: 0 0.375rem;
+    box-shadow: none;
 }
 #sidecar.minimized .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-close) {
     /*flex: 0;*/
@@ -1530,6 +1531,7 @@ break {
 #sidecar.minimized .graphical-icon {
     justify-content: center;
     transform: scaleX(-1);
+    mix-blend-mode: difference;
 }
 #sidecar.minimized [data-balloon]:before, #sidecar.minimized [data-balloon]:after {
     opacity: 0;
