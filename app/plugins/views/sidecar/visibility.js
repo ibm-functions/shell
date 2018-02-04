@@ -20,13 +20,17 @@
  *
  */
 
+const debug = require('debug')('sidecar visibility')
+
 const hide = clearSelectionToo => {
-    console.log('repl::hide sidecar')
+    debug('hide')
+
     const sidecar = document.querySelector('#sidecar')
-    sidecar.className = (sidecar.className || '').replace(/visible/g, '')
+    sidecar.classList.remove('visible')
+    sidecar.classList.add('minimized')
 
     const replView = document.querySelector('#main-repl')
-    replView.className = (replView.className || '').replace(/sidecar-visible/g, '')
+    replView.classList.remove('sidecar-visible')
 
     // we just hid the sidecar. make sure the current prompt is active for text input
     ui.getCurrentPrompt().focus()
@@ -40,14 +44,16 @@ const hide = clearSelectionToo => {
 }
 
 const show = (block, nextBlock) => {
-    console.log('repl::show sidecar')
+    debug('show')
+
     const sidecar = document.querySelector('#sidecar')
     if (sidecar.entity || sidecar.className.indexOf('custom-content') >= 0) {
-        sidecar.setAttribute('class', `visible ${(sidecar.getAttribute('class') || '').replace(/visible/g, '')}`)
+        sidecar.classList.remove('minimized')
+        sidecar.classList.add('visible')
 
         repl.scrollIntoView()
         const replView = document.querySelector('#main-repl')
-        replView.className = `sidecar-visible ${(replView.getAttribute('class') || '').replace(/sidecar-visible/g, '')}`
+        replView.classList.add('sidecar-visible')
 
         return true
     } else {
