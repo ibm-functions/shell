@@ -83,7 +83,7 @@ sidecar.activation-success-false .sidecar-header-icon, span[data-extra-decoratio
 
 .repl-result .entity:nth-child(2n+1) td, .repl-result .entity:nth-child(2n+1) .entity-attributes {
     /* table row striping */
-    background:var(--color-ui-03);
+    background:var(--color-ui-02);
 }
 
 sidecar {
