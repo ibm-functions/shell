@@ -192,7 +192,6 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
                   namespace: action.namespace
               })
 
-        console.error('@@@@@', persister)
         return wsk.ow.actions.get(owOpts)
             .then(getCode)
             .then(action => {
@@ -281,35 +280,18 @@ const updateText = editor => action => {
 }
 
 /**
-  * Render a lock/unlock icon in the given container
+  * Render a lock/unlock icon as a mode button
   *
   */
-const renderLockIcon = (wsk, getAction, content) => {
-    const lockIcon = document.createElement('div'),
-          lockIconInner = document.createElement('div'),
-          lockIconInnerInner = document.createElement('div'),
-          lockIconGraphics = document.createElement('i')
-
-    // tooltip
-    lockIconInnerInner.setAttribute('data-balloon', 'You are in edit mode.\u000aClick to return to view mode.')
-    lockIconInnerInner.setAttribute('data-balloon-break', 'true')
-    lockIconInnerInner.setAttribute('data-balloon-pos', 'left')
-
-    // styling
-    lockIcon.className = 'graphical-button lock-button'
-    lockIconGraphics.className = 'fas fa-unlock-alt'
-
-    // pack them in the container
-    lockIcon.appendChild(lockIconInner)
-    lockIconInner.appendChild(lockIconInnerInner)
-    lockIconInnerInner.appendChild(lockIconGraphics)
-    content.appendChild(lockIcon)
-
-    // onclick handler
-    lockIcon.onclick = readonly({wsk, getAction}).direct
-
-    return lockIcon
-}
+const lockIcon = ({wsk, getAction, editor, eventBus}) => ({
+    mode: 'lock',  // doesn't need to be translated, as we use an icon
+    actAsButton: true,
+    fontawesome: 'fas fa-unlock-alt',
+    data: { 'data-balloon': 'You are in edit mode.\u000aClick to return to view mode.', 
+            'data-balloon-break': true,
+            'data-balloon-pos': 'up-left' },
+    direct: readonly({wsk, getAction}).direct
+})
 
 /**
  * Open the code editor
@@ -342,8 +324,6 @@ const openEditor = wsk => {
 
     const content = document.createElement('div')
     content.focus() // we want the editor to have focus, so the user can start coding
-
-    const lockIcon = renderLockIcon(wsk, getAction, content)
 
     // override the repl's capturing of the focus
     content.onclick = evt => {
@@ -469,7 +449,6 @@ const openEditor = wsk => {
         status.className = 'editor-status'
         if (action.isNew) {
             status.classList.add('is-new')
-            lockIcon.classList.add('is-new')
         } else {
             status.classList.add('is-up-to-date')
         }
@@ -478,6 +457,8 @@ const openEditor = wsk => {
         modified.className = 'is-modified'
         const editsInProgress = () => sidecar.classList.add('is-modified')  // edits in progress
         const editsCommitted = action => {                                  // edits committed
+            const lockIcon = sidecar.querySelector('[data-mode="lock"]')
+
             sidecar.classList.remove('is-modified')
             status.classList.remove('is-new')
             lockIcon.classList.remove('is-new')
@@ -506,15 +487,17 @@ const openEditor = wsk => {
  * updateEditor
  *
  */
-const respondToRepl = (wsk) => ({ getAction, editor, content, eventBus }) => ({
+const respondToRepl = (wsk, extraModes=[]) => ({ getAction, editor, content, eventBus }) => ({
     type: 'custom',
     content,
     displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
-    modes: [ save({wsk, getAction, editor, eventBus}),
-             revert({wsk, getAction, editor, eventBus}),
-             //tidy({wsk, getAction, editor, eventBus})
-             //readonly({wsk, getAction, editor, eventBus})
-           ]
+    modes: extraModes
+        .map(_ => _({wsk, getAction, editor, eventBus}))
+        .concat([ save({wsk, getAction, editor, eventBus}),
+                  revert({wsk, getAction, editor, eventBus}),
+                  //tidy({wsk, getAction, editor, eventBus})
+                  //readonly({wsk, getAction, editor, eventBus})
+                ])
 })
 
 /**
@@ -570,7 +553,7 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) =>
     //
     return Promise.all([fetchAction(name), openEditor(wsk)])
         .then(updateEditor)
-        .then(respondToRepl(wsk))
+        .then(respondToRepl(wsk, [ lockIcon ]))
 
 } /* end of edit command handler */
 
