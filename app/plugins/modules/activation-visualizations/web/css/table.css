@@ -431,7 +431,7 @@
     opacity: 0;
     transition: all 50ms ease-in-out;
 }
-.latency-2.grid-cell-content > span, .latency-3.grid-cell-content > span, .latency-4.grid-cell-content > span {
+.latency-2.grid-cell-content > span, .latency-3.grid-cell-content > span {
     /* for mid-tone backgrounds, we need to mix the colors in order to increase contrast */
     mix-blend-mode: difference;
 }
