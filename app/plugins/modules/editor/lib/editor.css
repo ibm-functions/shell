@@ -1,21 +1,6 @@
 /* lock/unlock button */
-#sidecar .lock-button.is-new {
-    opacity: 0;
-}
-#sidecar .lock-button {
-    font-size: 1.5rem;
-    float: right;
-    position: relative;
-    z-index: 10;
-    transition: all 150ms ease-in-out;
-}
-#sidecar .lock-button:hover {
-    color: var(--color-brand-02);
-}
-#sidecar .lock-button > div {
-    position: absolute;
-    top: 1ex;
-    right: 1.5ex;
+#sidecar.is-modified .graphical-icon:not(:hover) .fa-unlock-alt {
+    color: var(--color-support-01);
 }
 
 .monaco-editor .main {

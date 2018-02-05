@@ -25,7 +25,7 @@ const css = {
 }
 exports.css = css
 
-const addModeButton = (bottomStripe, {mode, label, fontawesome, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
+const addModeButton = (bottomStripe, {mode, label, fontawesome, data, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
     // create the button dom, and attach it
     const button = document.createElement('div')
 
@@ -42,6 +42,13 @@ const addModeButton = (bottomStripe, {mode, label, fontawesome, command, direct,
     }
     button.setAttribute('data-mode', mode)
     bottomStripe.appendChild(button)
+
+    if (data) {
+        // we were asked to add some data attributes
+        for (let attr in data) {
+            button.setAttribute(attr, data[attr])
+        }
+    }
 
     // add the button label
     if (fontawesome) {
