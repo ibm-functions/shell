@@ -72,8 +72,7 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
 
     // help the REPL render our records
-    const type = 'plugins',
-          onclick = false    // no drilldown for now
+    const type = 'plugins'
 
     return fs.pathExists(moduleDir)
         .then(exists => fs.readdir(moduleDir))                           // read the top-level directory contents
@@ -86,7 +85,10 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
                 // make a list of records that includes more than just
                 // the plugin name, so that the REPL can format them
                 //
-                return installedPlugins.map(({plugin, version}) => ({type, name: `${plugin}@${version}`, onclick}))
+                return installedPlugins.map(({plugin, version}) => ({type, name: `${plugin}`,
+                                                                     attributes: [ { key: 'verison', value: version } ],
+                                                                     onclick: () => repl.pexec(`plugin commands ${plugin}`)
+                                                                    }))
             } else {
                 return 'No user-installed plugins found'
             }

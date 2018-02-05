@@ -61,7 +61,13 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
             }
             return commands
         })
-        .then(commands => success(false, `offered by the ${plugin} plugin`, commands))
+        .then(commands => commands.sort((a,b) => -a.localeCompare(b)))
+        .then(commands => commands.filter((command, idx) => !commands.find((other, other_idx) => idx !== other_idx && command.endsWith(other))))
+        .then(commands => commands.map(command => ({ type: 'command',
+                                                     name: command.replace(/^\//,'').replace(/\//g, ' '),
+                                                     onclick: () => repl.partial(command)
+                                                   })))
+            //success(false, `offered by the ${plugin} plugin`, commands))
 }
 
 module.exports = (commandTree, prequire) => {

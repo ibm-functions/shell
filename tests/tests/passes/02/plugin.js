@@ -57,7 +57,7 @@ describe('Install and remove plugins', function() {
        .catch(common.oops(this)))
 
     it('should show available commands with "plugin commands shell-sample-plugin"', () => cli.do('plugin commands shell-sample-plugin', this.app)
-       .then(cli.expectOKWithCustom({expect: '/sample/hello'}))
+       .then(cli.expectOKWithCustom({expect: 'hello'}))
        .catch(common.oops(this)))
 
     it('should remove shell-sample-plugin', () => cli.do('plugin remove shell-sample-plugin', this.app)
