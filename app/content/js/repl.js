@@ -46,18 +46,21 @@ const modules = {
 }
 
 /**
- * Make sure that the repl-active is visible;
- *    NOTE: the 155ms needs to be in step with the transition: all1 150ms ease-in-out for the sidecar
+ * Make sure that the given repl block is visible.
+ *
+ * @param when wait this long; e.g. the 305ms is in step with the sidecar transition: all 300ms ease-in-out
+ * @param which the repl block sub-element that needs to be visible
+ * @param center this is passed directly to the underlying API https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoViewIfNeeded
  *
  */
-self.scrollIntoView = () => setTimeout(() => {
+self.scrollIntoView = ({ when=305, which='.repl-active', center=true }={}) => setTimeout(() => {
     try {
         // false here means "bottom of the element will be aligned to the bottom of the visible area of the scrollable ancestor"
         //    (see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)
         //document.querySelector('#main-repl .repl-active').scrollIntoView(true)
-        document.querySelector('#main-repl .repl-active').scrollIntoViewIfNeeded()
+        document.querySelector(`#main-repl ${which}`).scrollIntoViewIfNeeded(center)
     } catch (e) {}
-}, 305)
+}, when)
 
 const formatOneListResult = options => (entity, idx, A) => {
     const dom = document.createElement('div')
@@ -497,6 +500,7 @@ self.exec = (commandUntrimmed, execOptions) => {
     try {
         if (block && !nested && echo) {
             block.className = `${block.getAttribute('data-base-class')} processing`
+            self.scrollIntoView({when:0,which:'.processing .repl-result'})
             prompt.readOnly = true
         }
 
