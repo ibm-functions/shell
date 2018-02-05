@@ -295,7 +295,7 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
     flex-direction: column
 }
 .repl-block .whitespace {
-    white-space: pre;
+    white-space: pre-wrap;
 }
 .repl-block.processing .repl-output, .repl-block.valid-response .repl-output {
     display: flex;

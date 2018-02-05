@@ -56,8 +56,17 @@ const doShell = (argv, options) => new Promise((resolve, reject) => {
                 process.env.OLDPWD = OLDPWD
                 resolve(shell.pwd().toString())
             } else {
-                // otherwise, respond with the output of the command
-                resolve(output ? output.toString() : true)
+                // otherwise, respond with the output of the command;
+                if (output) {
+                    // add a line-wrapping wrapper
+                    const wrapper = document.createElement('div')
+                    wrapper.classList.add('whitespace')
+                    wrapper.innerText = cmd === 'ls' ? output.toString().replace(/,/g,' ') : output.toString()
+                    resolve(wrapper)
+
+                } else {
+                    resolve(true)
+                }
             }
         }
     }
