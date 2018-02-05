@@ -69,14 +69,14 @@ const formatOneListResult = options => (entity, idx, A) => {
     dom.appendChild(entityName)
 
     // add any badges
-    const prefix = document.createElement('span')
+    /*const prefix = document.createElement('span')
     prefix.className = 'repl-result-prefix'
     entityName.appendChild(prefix)
 
     const prettyType = document.createElement('span')
     prettyType.className = 'openwhisk-pretty-type'
     prettyType.innerText = entity.prettyType || wsk.toOpenWhiskKind(entity.type)
-    prefix.appendChild(prettyType)
+    prefix.appendChild(prettyType)*/
 
     // now add the clickable name
     const entityNameGroup = document.createElement('span')
