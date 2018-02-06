@@ -1,0 +1,16 @@
+{
+  "name": "local",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "rm -rf plugin && mv node_modules/shell-local-plugin plugin",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "shell-local-plugin": "^0.0.7"
+  }
+}

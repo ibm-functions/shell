@@ -83,7 +83,7 @@ const addModeButton = (bottomStripe, {mode, label, fontawesome, data, command, d
                 repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo, noHistory })
             } else {
                 const view = direct(entity)
-                if (view.then && !actAsButton) {
+                if (view && view.then && !actAsButton) {
                     view.then(custom => ui.showCustom(custom, { leaveBottomStripeAlone: true }))
                 }
             }
