@@ -130,7 +130,7 @@ const scanForModules = dir => {
 const prequire = module => {
     debug('prequire %s', module)
 
-    if (registrar[module]) return registrar[module]
+    if (registrar.hasOwnProperty(module)) return registrar[module]
     else throw new Error('Module not found: ' + module)
 }
 
@@ -437,7 +437,7 @@ exports.assemble = opts => exports.scan(Object.assign({ quiet: true, assembly: t
 exports.require = (route, options) => {
     debug('prequire %s', route)
 
-    if (!registrar[route]) {
+    if (!registrar.hasOwnProperty(route)) {
         const module = prescan.flat.find(_ => _.route === route)
         if (module) {
             const location = path.join(__dirname, '..', '..', 'plugins', module.path)
