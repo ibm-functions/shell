@@ -1541,3 +1541,11 @@ break {
 [data-zoom] #sidecar.minimized .sidecar-bottom-stripe {
     font-size: 0.875em;
 }
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.fade-in {
+    animation: fadein 1s;
+}

@@ -4,13 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "rm -rf plugin && mv node_modules/shell-local-plugin plugin",
+    "postinstall": "rm -rf plugin && mv node_modules/@ibm-functions/shell-local-plugin plugin",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "shell-local-plugin": "^0.0.7"
+    "@ibm-functions/shell-local-plugin": "^0.0.14"
   }
 }
