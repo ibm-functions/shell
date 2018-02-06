@@ -41,7 +41,7 @@ describe('local plugin', function() {
        .then(sidecar.expectShowing('foo'))
        .catch(common.oops(this)))
 
-    it('should play that action locally', () => cli.do('play foo -p name smurf', this.app)
+    it('should invoke that action locally', () => cli.do('local invoke foo -p name smurf', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo', 'local activation'))
@@ -57,13 +57,22 @@ describe('local plugin', function() {
        .then(text => assert.ok(text.indexOf(LOG_ENTRY) >= 0)) // <-- our log entry
        .catch(common.oops(this)))
 
-    it('should play that action locally, again', () => cli.do('play foo -p dance floor', this.app)
+    it('should invoke that action locally, again', () => cli.do('local invoke foo -p dance floor', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo', 'local activation'))
        .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
        .then(ui.expectStruct({dance:"floor"}))
        .catch(common.oops(this)))
+
+    // broken right now
+    /*it('should play that action locally, with local invoke, variant 1', () => cli.do('invoke -p dance floor2 foo', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo', 'local activation'))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .then(ui.expectStruct({dance:"floor2"}))
+       .catch(common.oops(this)))*/
 
     it('should create another action', () => cli.do(`let foo2 = x=> { console.log("${LOG_ENTRY2}"); return x }`, this.app)
        .then(cli.expectOK)
