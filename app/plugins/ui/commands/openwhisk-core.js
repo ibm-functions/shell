@@ -615,6 +615,7 @@ const activationModes = (opts={}) => Object.assign(opts, {
                        { mode: 'raw', command: () => 'raw' }
                      ]
 })
+
 specials.activations = {
     // activations list always gets full docs, and has a default limit of 10, but can be overridden
     list: (options, argv) => activationModes({ options: Object.assign({}, { limit: 10 }, options, { docs: false }) }),
@@ -968,7 +969,13 @@ module.exports = (commandTree, prequire) => {
 
         /** all terms for the given type */
         synonyms: synonymsFn,
-        
+
+        /** export the activation bottom stripe modes */
+        activationModes: entity => {
+            entity.modes = activationModes().modes(entity)
+            return entity
+        },
+
         /** main terms (not including synonyms) for all crudable types */
         // [].concat(...crudableTypes.map(synonymsFn)), // flatten the result
         crudable: crudableTypes,
