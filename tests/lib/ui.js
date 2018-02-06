@@ -31,6 +31,7 @@ const selectors = {
 selectors.SIDECAR = `${selectors.SIDECAR_BASE}.visible`,
 selectors.SIDECAR_WITH_FAILURE = `${selectors.SIDECAR_BASE}.visible.activation-success-false`,
 selectors.SIDECAR_HIDDEN = `${selectors.SIDECAR_BASE}:not(.visible)`,
+selectors.SIDECAR_FULLY_HIDDEN = `${selectors.SIDECAR_BASE}:not(.visible):not(.minimized)`,
 selectors.SIDECAR_ACTIVATION_TITLE = `${selectors.SIDECAR} .sidecar-header-name .activation-id`,
 selectors.SIDECAR_TITLE = `${selectors.SIDECAR} .sidecar-header-name-content .entity-name`,
 selectors.SIDECAR_PACKAGE_NAME_TITLE = `${selectors.SIDECAR} .sidecar-header-name-content .package-prefix`,
@@ -182,7 +183,12 @@ exports.sidecar = {
     expectOpen: app => app.client.waitForVisible(selectors.SIDECAR, timeout).then(() => app),
     expectOpenWithFailure: app => app.client.waitForVisible(selectors.SIDECAR_WITH_FAILURE, timeout).then(() => app),
 
+    // either minimized or fully closed
     expectClosed: app => app.client.waitForExist(selectors.SIDECAR_HIDDEN, timeout)
+	.then(() => app),
+
+    // fully closed, not just minimized
+    expectFullyClosed: app => app.client.waitForExist(selectors.SIDECAR_FULLY_HIDDEN, timeout)
 	.then(() => app),
 
     expectSource: expectedSource => app => app.client.getText(selectors.SIDECAR_ACTION_SOURCE)
