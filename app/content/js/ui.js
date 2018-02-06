@@ -925,7 +925,7 @@ const ui = (function() {
      * Given an entity name and an optional packageName, decorate the sidecar header
      *
      */
-    self.addNameToSidecarHeader = (sidecar, name, packageName='', onclick) => {
+    self.addNameToSidecarHeader = (sidecar=document.querySelector('#sidecar'), name, packageName='', onclick, viewName) => {
         const nameDom = sidecar.querySelector('.sidecar-header-name-content')
         nameDom.className = nameDom.getAttribute('data-base-class')
         nameDom.querySelector('.package-prefix').innerText = packageName
@@ -934,6 +934,10 @@ const ui = (function() {
         if (onclick) {
             nameDom.querySelector('.entity-name').classList.add('clickable')
             nameDom.querySelector('.entity-name').onclick = onclick
+        }
+
+        if (viewName) {
+            sidecar.querySelector('.sidecar-header-icon').innerText = viewName
         }
 
         return nameDom

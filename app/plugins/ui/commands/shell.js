@@ -24,7 +24,7 @@
 const shell = require('shelljs')
 const request = require('request-promise')
 
-const doShell = (argv, options) => new Promise((resolve, reject) => {
+const doShell = (argv, options, execOptions) => new Promise((resolve, reject) => {
     if (argv.length < 2) {
         reject('Please provide a bash command')
     }
@@ -85,49 +85,59 @@ const doShell = (argv, options) => new Promise((resolve, reject) => {
     const parentNode = document.createElement('div')
 
     proc.stdout.on('data', data => {
-        const span = document.createElement('span')
-        parentNode.appendChild(span)
-        span.setAttribute('class', 'whitespace')
-        span.appendChild(document.createTextNode(data))
+        if (execOptions.stdout) {
+            execOptions.stdout(data.toString())
+        } else {
+            const span = document.createElement('span')
+            parentNode.appendChild(span)
+            span.setAttribute('class', 'whitespace')
+            span.appendChild(document.createTextNode(data))
+        }
     })
 
     proc.stderr.on('data', data => {
-        const span = document.createElement('span')
-        parentNode.appendChild(span)
-        span.setAttribute('class', 'whitespace oops')
-        span.appendChild(document.createTextNode(data))
+        if (execOptions.stderr) {
+            execOptions.stderr(data.toString())
+            //stderrLines += data.toString()
+        } else {
+            const span = document.createElement('span')
+            parentNode.appendChild(span)
+            span.setAttribute('class', 'whitespace oops')
+            span.appendChild(document.createTextNode(data))
+        }
     })
 
     proc.on('close', exitCode => {
         console.log('shell command done')
         if (exitCode === 0) {
             // great, the process exited normally. resolve!
+            //resolve(execOptions.stdout ? stdoutLines : parentNode)
             resolve(parentNode)
         } else {
             // oops, non-zero exit code. reject!
-            reject(parentNode)
+            reject(execOptions.stderr ? code : parentNode)
         }
     })
 })
 
 module.exports = commandTree => {
-    const shellFn = (_1, _2, fullArgv, _3, _4, _5, argv, options) => doShell(fullArgv)
+    const shellFn = (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(fullArgv, options, execOptions)
     const shellCmd = commandTree.listen('/!', shellFn, { docs: 'Execute a UNIX shell command' })
     // commandTree.synonym('/shell', shellFn, shellCmd)
 
-    commandTree.listen('/pwd', (_1, _2, fullArgv, _3, _4, _5, argv, options) => doShell(['!', 'pwd', ...argv.slice(1)], options),
+    commandTree.listen('/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions),
                        { docs: 'Print the current working directory' })
 
-    commandTree.listen('/lcd', (_1, _2, fullArgv, _3, _4, _5, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options),
+    commandTree.listen('/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options, execOptions),
                        { docs: 'Change the current working directory for future shell commands' })
 
-    commandTree.listen('/lls', (_1, _2, fullArgv, _3, _4, _5, argv, options) => doShell(['!', 'ls', '-l', ...argv.slice(1)]),
+    commandTree.listen('/lls', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'ls', '-l', ...argv.slice(1)], options, execOptions),
                        { docs: 'Directory listing of your local filesystem' })
 
-    commandTree.listen('/lrm', (_1, _2, fullArgv, _3, _4, _5, argv, options) => doShell(['!', 'rm', ...argv.slice(1)]),
+    commandTree.listen('/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'rm', ...argv.slice(1)], options, execOptions),
                        { docs: 'Remove a file from your local filesystem' })
 
     return {
-        exec: (block, nextBlock, argv, modules) => doShell(['!', ...argv], modules)
+        exec: (_1, _2, argv, _3, _4, execOptions, _a, options) => doShell(['!', ...argv], options, execOptions)
     }
 }
