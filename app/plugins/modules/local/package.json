@@ -11,6 +11,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ibm-functions/shell-local-plugin": "^0.0.14"
+    "@ibm-functions/shell-local-plugin": "^0.0.17"
   }
 }

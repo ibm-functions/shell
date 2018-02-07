@@ -24,7 +24,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      actionName = 'long'
+      { exec } = require('child_process')
 
 describe('local plugin', function() {
     before(common.before(this))
@@ -34,6 +34,14 @@ describe('local plugin', function() {
 
     const LOG_ENTRY = 'hi',
           LOG_ENTRY2 = 'munchies'
+
+    it('should kill the container', () => cli.do('local kill', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should remove the nodejs image', () => cli.do('local clean', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
 
     it('should create an action', () => cli.do(`let foo = x=> { console.log("${LOG_ENTRY}"); return x }`, this.app)
        .then(cli.expectOK)
@@ -65,13 +73,31 @@ describe('local plugin', function() {
        .then(ui.expectStruct({dance:"floor"}))
        .catch(common.oops(this)))
 
-    // broken right now
-    /*it('should play that action locally, with local invoke, variant 1', () => cli.do('invoke -p dance floor2 foo', this.app)
+    it('should kill the container', () => cli.do('local kill', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+    it('should kill the container', () => cli.do('local kill', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+    it('should kill the container', () => cli.do('local kill', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should invoke that action locally after kill', () => cli.do('local invoke foo -p dance floor2', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo', 'local activation'))
        .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
        .then(ui.expectStruct({dance:"floor2"}))
+       .catch(common.oops(this)))
+
+    // broken right now
+    /*it('should play that action locally, with local invoke, variant 1', () => cli.do('invoke -p dance floor3 foo', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo', 'local activation'))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .then(ui.expectStruct({dance:"floor3"}))
        .catch(common.oops(this)))*/
 
     it('should create another action', () => cli.do(`let foo2 = x=> { console.log("${LOG_ENTRY2}"); return x }`, this.app)
