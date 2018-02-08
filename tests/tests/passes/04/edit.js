@@ -46,6 +46,13 @@ describe('edit actions', function() {
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo'))
+       // now we click on the lock/unlock buttons a few times to make
+       // sure we can toggle back and forth between read-only and edit
+       // mode
+       .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('lock')))
+       .then(() => this.app.client.waitForExist(ui.selectors.SIDECAR_MODE_BUTTON('unlock')))
+       .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('unlock')))
+       .then(() => this.app.client.waitForExist(ui.selectors.SIDECAR_MODE_BUTTON('lock')))
        .catch(common.oops(this)))
 
     it('should create an second action', () => cli.do('let foo2 = x=>x', this.app)
