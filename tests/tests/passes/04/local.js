@@ -73,6 +73,13 @@ describe('local plugin', function() {
        .then(ui.expectStruct({dance:"floor"}))
        .catch(common.oops(this)))
 
+    it('should invoke that action locally, again, with implicit entity', () => cli.do('local invoke', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo', 'local activation'))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .catch(common.oops(this)))
+
     it('should kill the container', () => cli.do('local kill', this.app)
        .then(cli.expectOK)
        .catch(common.oops(this)))
