@@ -23,8 +23,10 @@ const common = require('../../../lib/common'),
       sidecar = ui.sidecar,
       actionName1 = 'foo1',
       actionName1b = 'foo1b',
+      actionName1c = 'foo1c',
       actionName2 = 'foo2',
       actionName2b = 'foo2b',
+      actionName2c = 'foo2c',
       packageName1 = 'ppp1',
       packageName2 = 'ppp2',
       packageName3 = 'ppp3',
@@ -37,7 +39,7 @@ describe('Use cp to copy entities', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    const cp = (a,b,aPackage,bPackage) => {
+    const cp = (a,b,aPackage,bPackage,cmd='cp') => {
         // pass this key-value pair to the invocation
         const key = 'name',
               value = `whisker ${a} to ${b}`,
@@ -51,7 +53,7 @@ describe('Use cp to copy entities', function() {
         expect[key1] = value1 // bound to the original action; make sure it survives the copy
         expectAnnotations[key1] = value1
 
-        it(`should copy ${aFull} to ${bFull}`, () => cli.do(`cp ${aFull} ${bFull}`, this.app)
+        it(`should copy ${aFull} to ${bFull}`, () => cli.do(`${cmd} ${aFull} ${bFull}`, this.app)
 	    .then(cli.expectJustOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(b, undefined, undefined, bPackage))
@@ -97,6 +99,7 @@ describe('Use cp to copy entities', function() {
        .then(sidecar.expectShowing(actionName1))
        .catch(common.oops(this)))
     cp(actionName1, actionName1b)
+    cp(actionName1, actionName1c, undefined, undefined, 'copy')
 
     // COPY PACKAGED ACTION TO NON-PACKAGED ACTION
     it('should create a packaged action via let', () => cli.do(`let ${packageName1}/${actionName2}.js = x=>x -p ${key1} ${value1} -a ${key1} ${value1}`, this.app)
@@ -105,6 +108,7 @@ describe('Use cp to copy entities', function() {
        .then(sidecar.expectShowing(actionName2, undefined, undefined, packageName1))
        .catch(common.oops(this)))
     cp(actionName2, actionName2b, packageName1)
+    cp(actionName2, actionName2c, packageName1, undefined, 'copy')
 
     // COPY PACKAGED ACTION TO PACKAGED ACTION, existing package
     it('should create a package', () => cli.do(`wsk package update ${packageName2}`, this.app)

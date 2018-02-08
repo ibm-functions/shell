@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('cp')
 
 /**
  * This plugin copies an entity.
@@ -38,8 +39,10 @@ module.exports = (commandTree, require) => {
      * This is the core logic
      *
      */
-    const doLogic = type => (retryOK, _2, _3, _4, _5, _6, argv, options) => {
-        const idx = argv.indexOf(OP) + 1,
+    const doLogic = type => op => (retryOK, _2, _3, _4, _5, _6, argv, options) => {
+        debug(`${type} ${op}`)
+
+        const idx = argv.indexOf(op) + 1,
               oldName = argv[idx],
               newName = argv[idx + 1]
 
@@ -57,7 +60,7 @@ module.exports = (commandTree, require) => {
                           packageName = path.length === 2 ? path[0] : path.length === 3 ? path[1] : undefined
                     if (packageName) {
                         return repl.qexec(`wsk package update "${packageName}"`)
-                            .then(() => doLogic(type)(false, _2, _3, _4, _5, _6, argv, options)) // false: don't retry again
+                            .then(() => doLogic(type)(op)(false, _2, _3, _4, _5, _6, argv, options)) // false: don't retry again
                     }
                 }
 
@@ -65,7 +68,7 @@ module.exports = (commandTree, require) => {
                 throw err
             }
 
-            return repl.qfexec(`wsk ${type} update --copy ${newName} ${oldName}`)
+            return repl.qfexec(`wsk ${type} update --copy "${newName}" "${oldName}"`)
                 .catch(packageAutoCreate(newName))
         }
     }
@@ -74,10 +77,10 @@ module.exports = (commandTree, require) => {
     ['actions'].forEach(type => {
         const handler = doLogic(type)
         wsk.synonyms(type).forEach(syn => {
-            const cmd = commandTree.listen(`/wsk/${syn}/${OP}`, handler, { docs: `Copy OpenWhisk ${type}` })
+            const cmd = commandTree.listen(`/wsk/${syn}/${OP}`, handler(OP), { docs: `Copy OpenWhisk ${type}` })
 
             OP_SYNS.forEach(op_syn => {
-                commandTree.synonym(`/wsk/${syn}/${op_syn}`, handler, cmd)
+                commandTree.synonym(`/wsk/${syn}/${op_syn}`, handler(op_syn), cmd)
             })
         })
     })
