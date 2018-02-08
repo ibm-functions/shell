@@ -85,6 +85,7 @@ describe('app create error handling and app create --dry-run', function() {
                         { input: `${badDir}/if-bad.js`, err: `if-bad.js:2
   /* cond */ 'authenticate',,  /* double comma, expect parse error */
                             ^
+
 SyntaxError: Unexpected token ,` }]
 
     it(`should dry-run check ${dryRunOk} with -n`, () => cli.do(`app create ${dryRunOk} -n`, this.app)

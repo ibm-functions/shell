@@ -41,6 +41,18 @@ Options:
 `
 
 /**
+  * compileToFSM returns a struct as its error
+  *
+  */
+const handleFailure_fsmPromise = err => {
+    if (err.fsm) {
+        throw new Error(err.fsm)
+    } else {
+        throw err
+    }
+}
+
+/**
  * Here is the app create module entry point. Here we register command
  * handlers.
  *
@@ -95,14 +107,7 @@ module.exports = (commandTree, prequire) => {
                 if (dryRun) {
                     return fsmPromise
                         .then(() => 'Your code compiles without error')
-                        .catch(err => {
-                            console.error(err)
-                            if (err.fsm) {
-                                throw new Error(err.fsm)
-                            } else {
-                                throw err
-                            }
-                        })
+                        .catch(handleFailure_fsmPromise)
                 }
 
             } else {
@@ -174,10 +179,10 @@ module.exports = (commandTree, prequire) => {
                         fsm.Entry = addEcho(fsm.Entry);
 
                     return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations });
-                });
+                }).catch(handleFailure_fsmPromise)
 
-            }   
-            else{                
+            }
+            else {
                 let index = annotations.findIndex(element => element.key == 'log');
                 if(index != -1) annotations.splice(index, 1);
                 else annotations.push({key: 'log', value: false});
@@ -191,9 +196,8 @@ module.exports = (commandTree, prequire) => {
                         annotations.push({key: 'file', value: localCodePath})
                     }
 
-                    console.error('!!!!!!!!', fsm, code)
                     return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations })
-                })
+                }).catch(handleFailure_fsmPromise)
             }
         }
     }
