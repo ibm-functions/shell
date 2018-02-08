@@ -239,18 +239,23 @@ const prettyDom = (dom, logger=log, stream=process.stdout, color='reset') => {
 const prettyJSON = (msg, logger=log) => rawOutput ? logger(JSON.stringify(msg, undefined, 4)) : require('jsome')(msg)
 
 /**
+  * Render a name with an optional package name
+  *
+  */
+const pn = (actionName, packageName) => `${packageName ? packageName + '/' : ''}`.dim + actionName.blue
+
+/**
  * Turn an entity into a row, because this entity came as part of an
  * array of entities
  *
  */
-const pn = _ => _.blue                                         // pretty name
 const pp = _ => (_ ? 'public' : 'private').dim                 // pretty publish
 const pk = _ => _.find(({key}) => key === 'exec').value.green  // pretty kind
 const rowify = {
-    app: ({name}) => ({name:pn(name)}),
+    app: ({name, packageName, version, fsm}) => ({name:pn(name, packageName), version:version.dim}),
     session: ({sessionId, name, status, start}) => ({sessionId, app:pn(name), start:new Date(start).toLocaleString().dim, status:status.green}),
     activations: ({activationId, name}) => ({activationId, name:pn(name)}),
-    actions: ({name, publish, annotations}) => ({name:pn(name), 'published?':pp(publish), kind:pk(annotations)}),
+    actions: ({name, packageName, publish, annotations, version}) => ({name:pn(name, packageName), 'published?':pp(publish), kind:pk(annotations), version:version.dim}),
     triggers: ({name, publish}) => ({name:pn(name), 'published?':pp(publish)}),
     packages: ({name, publish, binding}) => ({name:pn(name), 'published?':pp(publish), binding}),
 }
