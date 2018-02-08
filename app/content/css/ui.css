@@ -288,6 +288,10 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
     padding-top: 0.75ex;
     font-size: 0.875em;
 }
+.repl-block.valid-response .oops {
+    /* oops output often times doesn't word wrap nicely on its own, e.g. help/usage; issue #396 */
+    word-break: break-all;
+}
 .repl-input, .repl-output {
     display: flex
 }
