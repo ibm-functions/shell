@@ -37,7 +37,7 @@ describe('Use mv to rename entities', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    const mv = (a,b,aPackage,bPackage) => {
+    const mv = (task,a,b,aPackage,bPackage) => {
         // pass this key-value pair to the invocation
         const key = 'name',
               value = `whisker ${a} to ${b}`,
@@ -50,6 +50,8 @@ describe('Use mv to rename entities', function() {
         expect[key] = value   // passed to this invocation
         expect[key1] = value1 // bound to the original action; make sure it survives the copy
         expectAnnotations[key1] = value1
+
+        it(`***** ${task}`, () => true)
 
         it(`should rename ${aFull} to ${bFull}`, () => cli.do(`mv ${aFull} ${bFull}`, this.app)
 	    .then(cli.expectJustOK)
@@ -88,7 +90,7 @@ describe('Use mv to rename entities', function() {
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName1))
        .catch(common.oops(this)))
-    mv(actionName1, actionName1b)
+    mv('non-package to non-package', actionName1, actionName1b)
 
     // RENAME PACKAGED ACTION TO NON-PACKAGED ACTION
     it('should create a packaged action via let', () => cli.do(`let ${packageName1}/${actionName2}.js = x=>x -p ${key1} ${value1} -a ${key1} ${value1}`, this.app)
@@ -96,7 +98,7 @@ describe('Use mv to rename entities', function() {
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName2, undefined, undefined, packageName1))
        .catch(common.oops(this)))
-    mv(actionName2, actionName2b, packageName1)
+    mv('package to non-package', actionName2, actionName2b, packageName1)
 
     // RENAME non-packaged ACTION TO PACKAGED ACTION, existing package
     it('should create a package', () => cli.do(`wsk package update ${packageName2}`, this.app)
@@ -104,8 +106,8 @@ describe('Use mv to rename entities', function() {
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(packageName2))
        .catch(common.oops(this)))
-    mv(actionName1b, actionName2b, undefined, packageName2)
+    mv('non-package to existing package', actionName1b, actionName2b, undefined, packageName2)
 
     // RENAME PACKAGED ACTION TO PACKAGED ACTION, new package
-    mv(actionName2b, actionName1, packageName2, packageName3)
+    mv('existing package to existing package', actionName2b, actionName1, packageName2, packageName3)
 })

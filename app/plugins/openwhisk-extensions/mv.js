@@ -44,8 +44,8 @@ module.exports = (commandTree, require) => {
         if (!oldName || !newName || options.help) {
             return usage()
         } else {
-            return repl.qfexec(`wsk ${type} cp ${oldName} ${newName}`)
-                .then(resp => repl.qexec(`wsk ${type} rm ${oldName}`).then(() => resp))
+            return repl.qfexec(`${type} cp "${oldName}" "${newName}"`)
+                .then(resp => repl.qexec(`wsk ${type} rm "${oldName}"`).then(() => resp))
         }
     }
 
