@@ -25,7 +25,9 @@ const css = {
 }
 exports.css = css
 
-const addModeButton = (bottomStripe, {mode, label, fontawesome, data, command, direct, defaultMode, actAsButton, echo=false, noHistory=true}, entity, show) => {
+const addModeButton = (bottomStripe, opts, entity, show) => {
+    const {mode, label, fontawesome, data, command=()=>mode, direct, defaultMode, actAsButton, echo=false, noHistory=true} = opts
+
     // create the button dom, and attach it
     const button = document.createElement('div')
 
@@ -65,7 +67,7 @@ const addModeButton = (bottomStripe, {mode, label, fontawesome, data, command, d
     if (entity.type !== 'custom') {
         document.querySelector('#sidecar').entity = entity;
     }
-        
+
     // insert the command handler
     if (command || direct) {
         button.onclick = () => {
@@ -79,13 +81,13 @@ const addModeButton = (bottomStripe, {mode, label, fontawesome, data, command, d
             }
 
             // execute the command
-            if (command) {
-                repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo, noHistory })
-            } else {
+            if (direct) {
                 const view = direct(entity)
                 if (view && view.then && !actAsButton) {
                     view.then(custom => ui.showCustom(custom, { leaveBottomStripeAlone: true }))
                 }
+            } else {
+                repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo, noHistory })
             }
         }
     }

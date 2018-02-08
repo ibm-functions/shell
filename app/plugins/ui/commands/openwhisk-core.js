@@ -493,19 +493,21 @@ const specials = {}
 
 /** for parametrizable entity types, e.g. actions, packages, the standard view modes */
 const standardViewModes = (defaultMode, fn) => {
-    const modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
+    let modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
                    { mode: 'annotations', command: () => 'annotations' },
                    { mode: 'raw', command: () => 'raw' }]
 
-    if (defaultMode && !util.isArray(defaultMode)) {
-        defaultMode = [defaultMode]
-    }
-    defaultMode.forEach(mode => {
-        if (!modes.find(_ => _.mode === mode)) {
-            // only add the defaultMode if it isn't already in the list
-            modes.splice(0, 0,  { mode: mode.mode || mode, defaultMode: typeof mode === 'string' || mode.default, command: () => mode.mode || mode })
+    if (defaultMode) {
+        if (!util.isArray(defaultMode)) {
+            if (!modes.find(_ => _.mode === defaultMode)) {
+                // only add the defaultMode if it isn't already in the list
+                const mode = defaultMode.mode || defaultMode
+                modes.splice(0, 0,  { mode, defaultMode: typeof mode === 'string' || mode.default, command: () => mode })
+            }
+        } else {
+            modes = defaultMode.concat(modes)
         }
-    })
+    }
 
     if (fn) {
         return (options, argv) => Object.assign(fn(options, argv) || {}, { modes: entity => modes })
@@ -514,7 +516,7 @@ const standardViewModes = (defaultMode, fn) => {
     }
 }
 
-const actionSpecificModes = [{ mode: 'limits' }, { mode: 'code', default: true }]
+const actionSpecificModes = [{ mode: 'code', defaultMode: true }, { mode: 'limits' }]
 specials.actions = {
     get: standardViewModes(actionSpecificModes),
     create: standardViewModes(actionSpecificModes, (options, argv) => {
@@ -1057,6 +1059,13 @@ module.exports = (commandTree, prequire) => {
                 console.error(err)
                 throw err
             }
+        },
+
+        /** add action modes */
+        addActionMode: (mode, where='push') => {
+            actionSpecificModes[where](mode)
+            debug('adding action mode', where, mode, actionSpecificModes)
+            specials.actions.get = standardViewModes(actionSpecificModes)
         },
 
 	owOpts: owOpts,

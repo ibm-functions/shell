@@ -1,6 +1,23 @@
-/* lock/unlock button */
-#sidecar.is-modified .graphical-icon:not(:hover) .fa-unlock-alt {
+/* is modified indicator */
+#sidecar .is-modified-wrapper {
+    display: flex;
+    align-items: center;
+}
+#sidecar .is-modified-indicator {
+    transition: all 300ms ease-in-out;
+    opacity: 0;
+    font-size: 0.5em;
+    margin-left: 0.25em;
+}
+#sidecar.is-modified .is-modified-indicator {
+    opacity: 1;
     color: var(--color-support-01);
+}
+#sidecar .is-modified-wrapper > span:first-child {
+    /* make sure the name part doesn't overflow */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .monaco-editor .main {

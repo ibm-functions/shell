@@ -929,7 +929,14 @@ const ui = (function() {
         const nameDom = sidecar.querySelector('.sidecar-header-name-content')
         nameDom.className = nameDom.getAttribute('data-base-class')
         nameDom.querySelector('.package-prefix').innerText = packageName
-        nameDom.querySelector('.entity-name').innerText = name
+
+        if (typeof name === 'string') {
+            nameDom.querySelector('.entity-name').innerText = name
+        } else {
+            const nameContainer = nameDom.querySelector('.entity-name')
+            ui.removeAllDomChildren(nameContainer)
+            nameContainer.appendChild(name)
+        }
 
         if (onclick) {
             nameDom.querySelector('.entity-name').classList.add('clickable')

@@ -17,7 +17,8 @@
 const path = require('path'),
       events = require('events'),
       beautify = require('js-beautify'),
-      placeholders = require('./placeholders')
+      placeholders = require('./placeholders'),
+      { lockIcon } = require('./readonly')
 
 /** optional command line arguments, by command */
 const optionalArguments = {
@@ -39,6 +40,7 @@ const strings = {
     isNew: 'You are in edit mode, viewing <strong>a new action</strong>',
     isUpToDate: 'You are in edit mode, viewing the <strong>currently deployed version</strong>',
     isModified: 'You are in edit mode, with <strong>unsaved edits</strong>',
+    isModifiedIndicator: 'You have unsaved edits',
 
     // commands
     editdoc: 'Open the code for an action in a text editor',
@@ -227,18 +229,6 @@ const tidy = ({wsk, getAction, editor, eventBus}) => ({
     }
 })
 
-/**
-  * Switch to read-only mode
-  *
-  */
-const readonly = ({ wsk, getAction }) => ({
-    mode: strings.readonly,
-    actAsButton: true,
-    direct: () => Promise.resolve(getAction())
-        .then(action => repl.qexec(`wsk action get "/${action.namespace}/${action.name}"`))
-        .then(entity => wsk.addPrettyType(entity.type, 'update', entity.name)(entity))
-        .then(ui.showEntity)
-})
 
 /**
  * What is the monaco "language" for the given kind?
@@ -278,20 +268,6 @@ const updateText = editor => action => {
     // an explicit delete of the current text
     return setText(editor)(action.exec)
 }
-
-/**
-  * Render a lock/unlock icon as a mode button
-  *
-  */
-const lockIcon = ({wsk, getAction, editor, eventBus}) => ({
-    mode: 'lock',  // doesn't need to be translated, as we use an icon
-    actAsButton: true,
-    fontawesome: 'fas fa-unlock-alt',
-    data: { 'data-balloon': 'You are in edit mode.\u000aClick to return to view mode.', 
-            'data-balloon-break': true,
-            'data-balloon-pos': 'up-left' },
-    direct: readonly({wsk, getAction}).direct
-})
 
 /**
  * Open the code editor
@@ -470,7 +446,23 @@ const openEditor = wsk => {
         eventBus.on('/editor/save', editsCommitted)
         editor.getModel().onDidChangeContent(editsInProgress)
 
-        ui.addNameToSidecarHeader(sidecar, action.name, action.packageName)
+        // make a wrapper around the action name to house the "is
+        // modified" indicator
+        const nameDiv = document.createElement('div'),
+              namePart = document.createElement('span'),
+              isModifiedPart = document.createElement('span'),
+              isModifiedIcon = document.createElement('i')
+        nameDiv.appendChild(namePart)
+        nameDiv.appendChild(isModifiedPart)
+        isModifiedPart.appendChild(isModifiedIcon)
+        namePart.innerText = action.name
+        nameDiv.className = 'is-modified-wrapper'
+        isModifiedPart.className = 'is-modified-indicator'
+        isModifiedIcon.className = 'fas fa-asterisk'
+        isModifiedPart.setAttribute('data-balloon', strings.isModifiedIndicator)
+        isModifiedPart.setAttribute('data-balloon-pos', 'left')
+
+        ui.addNameToSidecarHeader(sidecar, nameDiv, action.packageName)
         ui.addVersionBadge(action, { clear: true })
 
         return Promise.resolve({ getAction, editor, content, eventBus })
