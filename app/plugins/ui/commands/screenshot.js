@@ -108,6 +108,10 @@ module.exports = (commandTree, prequire) => {
                 return reject('Internal Error: could not identify the screen region to capture')
             }
 
+            // remove any hover effects on the capture screenshot button
+            const screenshotButton = document.getElementById('sidecar-screenshot-button')
+            screenshotButton.classList.add('force-no-hover')
+
             // squish down the element to be copied, sizing it to fit
             squish(which)
         
@@ -133,6 +137,7 @@ module.exports = (commandTree, prequire) => {
             const listener = (event, buf) => {
 		if (!buf) {
 		    // some sort of internal error in the main process
+                    screenshotButton.classList.remove('force-no-hover')
 		    return reject('Internal Error')
 		}
 
@@ -267,6 +272,7 @@ module.exports = (commandTree, prequire) => {
                 // undo any squishing
                 unsquish(which)
 
+                screenshotButton.classList.remove('force-no-hover')
 		resolve('Successfully captured a screenshot to the clipboard')
 	    }
 

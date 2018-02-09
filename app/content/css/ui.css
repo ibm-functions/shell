@@ -590,6 +590,12 @@ body.sidecar-full-screen #sidecar .sidecar-bottom-stripe-maximize .maximize-butt
     cursor: pointer;
     opacity: 1;
 }
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active).force-no-hover:hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.force-no-hover.hover {
+    /* e.g. the screenshot plugin wants to disallow tooltips on the
+   "capture screenshot" button while capturing a screenshot! */
+    color: inherit !important;
+    transition: none !important;
+}
 .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
     /* on hover, squeeze the >> a bit closer together */
     letter-spacing: -1.25ex;
@@ -1359,6 +1365,11 @@ body.oops-total-catastrophe #restart-needed-warning {
 }
 
 /* tooltips */
+.force-no-hover [data-balloon]:before, .force-no-hover [data-balloon]:after {
+    /* e.g. the screenshot plugin wants to disallow tooltips on the
+   "capture screenshot" button while capturing a screenshot! */
+    display: none;
+}
 [data-balloon]:hover {
     cursor: pointer;
     opacity: 1 !important;
