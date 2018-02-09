@@ -77,11 +77,11 @@ const prepare = (timelineData, theme) => {
     const data = {
         labels: [],
         datasets: [
-            { type: 'line', fill: false, borderWidth: theme.cost.borderWidth||6, pointBorderWidth: 3, pointBackgroundColor: theme.cost.pointBackgroundColor || 'rgba(255,255,255,0.5)', pointRadius: theme.cost.pointRadius||3, pointHoverRadius: 6,
-              borderDash: [12,4], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost',
+            { type: 'line', fill: false, borderWidth: theme.cost.borderWidth||6, pointBorderWidth: 3, pointBackgroundColor: theme.cost.pointBackgroundColor || 'rgba(255,255,255,0.5)', pointRadius: theme.cost.pointRadius === undefined ? 3 :theme.cost.pointRadius, pointHoverRadius: 6,
+              xborderDash: [12,4], label: 'Cumulative Cost'.toUpperCase(), data: accumulate(cost), yAxisID: 'cost',
               borderColor: theme.cost.border, backgroundColor: theme.cost.bg},
-            { type: 'bar', fill, borderWidth, label: 'Successes', data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
-            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg }
+            { type: 'bar', fill, borderWidth, label: 'Successes'.toUpperCase(), data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
+            { type: 'bar', fill, borderWidth, label: 'Failures'.toUpperCase(), data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg }
         ]
     }
 
@@ -106,7 +106,7 @@ const prepare = (timelineData, theme) => {
  */
 const _drawTimeline = ({options, content, timelineData}) => () => {
     const timeFormat = 'MM/DD/YYYY HH:mm',
-          { colors } = require(`../themes/${options.theme || 'coral'}`)
+          { colors } = require(`../themes/${options.theme || 'ibm'}`)
 
     /** render the chart */
     const render = () => {
@@ -123,7 +123,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
         const theme = colors(ctx)
         const {data, labels, last} = prepare(timelineData, theme)
 
-        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 14, tickFontSize = 12, chart:chartStyle, fontColor='#333', gridLinesColor=transparent(fontColor,0.1) } = theme
+        const { fontFamily, success, failure, cost, borderWidth = 1, fontSize = 12, tickFontSize = 12, chart:chartStyle, fontColor='#333', gridLinesColor=transparent(fontColor,0.1) } = theme
 
         if (chartStyle && chartStyle.backgroundColor) {
             content.style.background = chartStyle.backgroundColor;
@@ -272,7 +272,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                             fontFamily,
                             fontSize,
                             fontColor,
-                            labelString: '# Activations'
+                            labelString: 'Activations'.toUpperCase()
                         },
                     }, {
                         type: 'linear',
@@ -296,7 +296,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                             //fontStyle: 'bold',
                             fontFamily,
                             fontSize,
-                            labelString: 'Cumulative Cost per Million Activations'
+                            fontColor,
+                            labelString: 'Cumulative Cost per Million Activations'.toUpperCase()
                         },
                     }]
                 }

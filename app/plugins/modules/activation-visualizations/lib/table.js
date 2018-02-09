@@ -655,7 +655,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     return {
         type: 'custom',
         content,
-        modes: modes('table', options)
+        modes: modes(viewName.toLowerCase(), options)
     }
 }
 
