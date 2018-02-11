@@ -43,9 +43,11 @@ const strings = {
     isModifiedIndicator: 'You have unsaved edits',
 
     // commands
-    editdoc: 'Open the code for an action in a text editor',
-    newDoc: 'Open the code editor to create a new action',
-    composeDoc: 'Open the code editor to create a new composition'
+    docs: {
+        edit: 'Open the code for an action in a text editor',
+        new: 'Open the code editor to create a new action',
+        compose: 'Open the code editor to create a new composition'
+    }
 }
 
 /** from https://github.com/Microsoft/monaco-editor-samples/blob/master/sample-electron/index.html */
@@ -570,7 +572,9 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
           kind = addVariantSuffix(options.kind || _kind)
 
     if (options.help || !name) {
-        throw new errors.usage(`${op} <actionName> ${optionalArguments[op] || ''}`)
+        throw new errors.usage(`${strings.docs[op]}.
+
+    ${op} <actionName> ${optionalArguments[op] || ''}`)
     }
 
     // our placeholder action
@@ -591,19 +595,27 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
 }
 
 /**
- * Special options for compositions
+ * Special options for compositions. Mostly, we need to specify the
+ * initial "placeholder" code to display when creating a new file, and
+ * the persister to use when deploying edits.
  *
  */
 const compositionOptions = baseOptions => Object.assign({type: 'apps',
                                                          _kind: 'app',
-                                                         placeholder: placeholders.composition,
-                                                         persister: persisters.apps }, baseOptions)
+                                                         placeholder: placeholders.composition,      // the placeholder impl
+                                                         persister: persisters.apps                  // the persister impl
+                                                        }, baseOptions)
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
-    commandTree.listen('/edit', edit(wsk), { docs: strings.editDoc })
-    commandTree.listen('/new', newAction({wsk}), { docs: strings.newDoc })
+    // command registration: edit existing action
+    commandTree.listen('/edit', edit(wsk), { docs: strings.docs.edit })
+
+    // command registration: create new action
+    commandTree.listen('/new', newAction({wsk}), { docs: strings.docs.new })
+
+    // command registration: create new app/composition
     commandTree.listen('/compose', newAction(compositionOptions({ wsk, op: 'compose'})),
-                       { docs: strings.composeDoc })
+                       { docs: strings.docs.compose })
 }
