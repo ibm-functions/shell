@@ -70,6 +70,8 @@ const update = (cursor, updateFn) => {
 
 /** execute the command N again */
 const again = (N, historyEntry) => {
+    debug('again', N, historyEntry)
+    
     if (!lines[N]) {
         throw new Error('Could not find the command to re-execute')
     } else {
@@ -88,19 +90,59 @@ const parseN = str => {
     }
 }
 
+const usage = {
+    history: `List current history, optionally filtering by a given string.
+
+Examples:
+   history              list the most recent ${DEFAULT_HISTORY_N} commands
+   history <N>          list the most recent N commands
+   history <N> <str>    filter the most recent N commands, showing only those that contain the given string
+   history <str>        ibid, but using the default of N=${DEFAULT_HISTORY_N}`,
+
+    again: op => `Re-execute a given command index.
+
+Examples:
+   ${op}                  re-execute the previous comman
+   ${op} <N>              ibid, but at the given history index; hint: use history to list recently executed commands`
+}
+
 module.exports = commandTree => {
     debug('init')
 
     /** clear view or clear history */
     commandTree.listen('/history/clear', wipe, { docs: 'Clear your command history' })
 
-    /** list current history */
-    commandTree.listen('/history', (_1, _2, argv) => {
-        const filterStr = !parseN(argv[1]) && argv[1],
+    /**
+     * List current history
+     *
+     * Examples:
+     *    history <N>                list the most recent N commands
+     *    history <N> <filterStr>    look back at most N commands for those that contain filterStr
+     *    history <filterStr>        look back at most 20 commands for those that contain filterStr
+     *   
+     */
+    commandTree.listen('/history', (_1, _2, argv, { errors }, _5, _6, _7, options) => {
+        if (options.help) {
+            throw new errors.usage(usage.history)
+        }
+
+        const historyIdx = argv.indexOf('history'),
+              Nargs = argv.length - historyIdx - 1,
+              firstArgLooksLikeN = parseN(argv[historyIdx + 1]),
+              Nidx = Nargs === 2 || firstArgLooksLikeN ? historyIdx + 1 : -1,
+              N = Nidx > 0 ? firstArgLooksLikeN : DEFAULT_HISTORY_N,
+              filterIdx = Nargs === 2 ? historyIdx + 2 : !firstArgLooksLikeN ? historyIdx + 1 : -1,
+              filterStr = filterIdx > 0 && argv[filterIdx],
               filter = filterStr ? line => !line.raw.startsWith('history') && line.raw.indexOf(filterStr) >= 0 : () => true, // ignore history commands if a filterStr is specified
-              N = parseN(argv[argv.length - 1]) || DEFAULT_HISTORY_N,
               recent = lines.slice(cursor - N - 1, cursor + 1)
 
+        debug('argv',argv)
+        debug('Nargs',Nargs)
+        debug('Nidx',Nidx)
+        debug('N',N)
+        debug('filterIdx', filterIdx)
+        debug('filterStr', filterStr)
+        
         return recent.map((line, idx) => {
             if (!filter(line)) return
 
@@ -118,7 +160,7 @@ module.exports = commandTree => {
                 rest.innerText = shortForm.substring(whitespace)
             }
 
-            return Object.assign({}, line, { type: `${cursor - (N - idx + 1)}s`,
+            return Object.assign({}, line, { beforeAttributes: [ { key: 'N', value: `${cursor - (N - idx + 1)}`, css: 'deemphasize' } ],
                                              fullName: line.raw,
                                              name: shortFormPretty,
                                              noSort: true,
@@ -128,10 +170,17 @@ module.exports = commandTree => {
     }, { docs: 'Show recently executed commands' })
 
     /** re-execute from history */
-    commandTree.listen('/!!', (_1, _2, argv, _4, _5, execOptions) => {
-        const N = argv[1] || cursor - 1  // use the last command, if the user entered only "!!"
+    const againCmd = op => (_1, _2, argv, { errors }, _5, execOptions, _7, options) => {
+        if (options.help) {
+            throw new errors.usage(usage.again(op))
+        }
+
+        const N = argv[1] || cursor - 2  // use the last command, if the user entered only "!!"
+        console.error(execOptions)
         return again(N, execOptions && execOptions.history)
-    }, { docs: 'Re-execute the last command, or, with !! N, the command at history position N ' })
+    }
+    const cmd = commandTree.listen('/!!', againCmd('!!'), { docs: 'Re-execute the last command, or, with !! N, the command at history position N ' })
+    commandTree.synonym('/again', againCmd('again'), cmd)
     
 
     const self = {}

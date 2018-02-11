@@ -40,7 +40,7 @@ describe('History commands', function() {
        .then(sidecar.expectShowing(entityName))
        .catch(common.oops(this)))
 
-    it(`should list history with filter 1`, () => cli.do(`history create 1`, this.app).then(cli.expectOKWithOnly(createCommand))) // 1 says it better be the last command we executed
+    it(`should list history with filter 1`, () => cli.do(`history 1 create`, this.app).then(cli.expectOKWithOnly(createCommand))) // 1 says it better be the last command we executed
     it(`should list history 2 and show the action creation`, () => cli.do(`history 2`, this.app).then(cli.expectOKWith(createCommand)))
 
     // get something on the screen
@@ -50,7 +50,7 @@ describe('History commands', function() {
         .then(cli.expectOK)
        .then(sidecar.expectClosed))
 
-    it('should re-execte from history', () => cli.do('history create 5', this.app)
+    it('should re-execte from history', () => cli.do('history 5 create', this.app)
         .then(cli.expectOKWithCustom({ passthrough: true }))
        .then(N => this.app.client.click(`${ui.selectors.LIST_RESULTS_N(N)}:first-child .entity-name`))
        .then(() => this.app)
