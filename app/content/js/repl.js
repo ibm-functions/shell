@@ -81,6 +81,23 @@ const formatOneListResult = options => (entity, idx, A) => {
     prettyType.innerText = entity.prettyType || wsk.toOpenWhiskKind(entity.type)
     prefix.appendChild(prettyType)*/
 
+    /** add a cell to the current row of the list view we] are generating. "entityName" is the current row */
+    const addCell = (className, value, innerClassName='', parent=entityName) => {
+        const cell = document.createElement('span'),
+              inner = document.createElement('span')
+        cell.className = className
+        inner.className = innerClassName
+        inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+        cell.appendChild(inner)
+        parent.appendChild(cell)
+        return cell
+    }
+
+    // add any attributes that should appear *before* the name column
+    if (entity.beforeAttributes) {
+        entity.beforeAttributes.forEach(({value, css='', outerCSS=''}) => addCell(outerCSS, value, css))
+    }
+
     // now add the clickable name
     const entityNameGroup = document.createElement('span')
     entityNameGroup.className = 'entity-name-group'
@@ -115,18 +132,6 @@ const formatOneListResult = options => (entity, idx, A) => {
         dom.onclick = entityNameClickable.onclick = entity.onclick
             || (() => self.pexec(`wsk ${entity.type} get "/${entity.namespace}/${entity.name}"`)
                 .then(ui.showEntity))
-    }
-
-    /** add a cell to the current row of the list view we] are generating. "entityName" is the current row */
-    const addCell = (className, value, innerClassName='', parent=entityName) => {
-        const cell = document.createElement('span'),
-              inner = document.createElement('span')
-        cell.className = className
-        inner.className = innerClassName
-        inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
-        cell.appendChild(inner)
-        parent.appendChild(cell)
-        return cell
     }
 
     //
