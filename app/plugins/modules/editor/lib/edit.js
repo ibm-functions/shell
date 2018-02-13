@@ -34,7 +34,7 @@ const defaults = {
 const strings = {
     save: 'Deploy',
     revert: 'Revert',
-    tidy: 'Tidy Source',
+    tidy: 'Reformat source code',
     readonly: 'Done Editing',
     actionAlreadyExists: 'The given action name is already in use',
     isNew: 'You are in edit mode, viewing <strong>a new action</strong>',
@@ -164,6 +164,7 @@ const save = ({wsk, getAction, editor, eventBus}) => ({
     //fontawesome: 'fas fa-cloud-upload-alt',
     direct: () => {
         const action = getAction(),
+              persister = action.persister || persisters.actions,
               { save } = action.persister || persisters.actions
 
         // transfer the latest code from the editor into the entity
@@ -174,7 +175,10 @@ const save = ({wsk, getAction, editor, eventBus}) => ({
         delete action.version
 
         return save(wsk, action)
-            .then(action => eventBus.emit('/editor/save', action))
+            .then(action => {
+                action.persister = persister
+                eventBus.emit('/editor/save', action, { event: 'save' })
+            })
     }
 })
 
@@ -196,12 +200,12 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
                   namespace: action.namespace
               })
 
-        return wsk.ow.actions.get(owOpts)
+        return repl.qexec(`action get "/${action.namespace}/${action.name}"`)
             .then(getCode)
             .then(action => {
                 action.persister = persister
                 updateText(editor)(action)
-                eventBus.emit('/editor/save', action)
+                eventBus.emit('/editor/save', action, { event: 'revert' })
             })
             .then(() => true)
     }
@@ -214,7 +218,9 @@ const revert = ({wsk, getAction, editor, eventBus}) => ({
 const tidy = ({wsk, getAction, editor, eventBus}) => ({
     mode: strings.tidy,
     actAsButton: true,
-    //fontawesome: 'fas fa-indent',
+    fontawesome: 'fas fa-align-left',
+    balloon: strings.tidy,
+    balloonLength: 'medium',
     direct: () => {
         const action = getAction()
 
@@ -281,7 +287,8 @@ const updateText = editor => action => {
  *     - content: a dom that contains the instance; this must be attached somewhere!
  *
  */
-let amdRequire, initDone
+let amdRequire   // the monaco editor uses the AMD module loader, and smashes the global.require; we need to finagle it a bit
+let initDone     // this is part of the finagling, to make sure we finagle only once
 const openEditor = wsk => {
     const sidecar = document.querySelector('#sidecar'),
           leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
@@ -300,8 +307,12 @@ const openEditor = wsk => {
     ui.injectCSS(path.join(__dirname, 'mono-blue.css'))
     ui.injectCSS(path.join(__dirname, 'editor.css'))
 
-    const content = document.createElement('div')
-    content.focus() // we want the editor to have focus, so the user can start coding
+    const content = document.createElement('div'),
+          editorWrapper = document.createElement('div')
+
+    editorWrapper.className = 'monaco-editor-wrapper'
+    content.appendChild(editorWrapper)
+    editorWrapper.focus() // we want the editor to have focus, so the user can start coding
 
     // override the repl's capturing of the focus
     content.onclick = evt => {
@@ -337,12 +348,15 @@ const openEditor = wsk => {
                     return resolve(editor)
                 }
 
+                //
+                // use monaco's AMD module loader to load the monaco editor module
+                //
                 amdRequire(['vs/editor/editor.main'], () => {
                     if (!initDone) {
-                        // for now, try to disable the completion helper thingies
+                        // for now, try to disable the built-in Javascript-specific completion helper thingies
                         monaco.languages.typescript.javascriptDefaults.setCompilerOptions({ noLib: true, allowNonTsExtensions: true });
 
-                        // install custom languages
+                        // install any custom languages we might have
                         const languages = require('./language-scan')
                         languages.forEach(({language, provider}) => {
                             monaco.languages.registerCompletionItemProvider(language, provider)
@@ -360,12 +374,14 @@ const openEditor = wsk => {
 		      { token: 'comment.css', foreground: '0000ff' } // will inherit fontStyle from `comment` above
 	              ]
                       });*/
-                
-                    editor = monaco.editor.create(content, {
-                        automaticLayout: true, // respond to window layout changes
+
+                    // here we instantiate an editor widget
+                    editor = monaco.editor.create(editorWrapper, {
+                        //automaticLayout: true, // respond to window layout changes
                         minimap: {
 		            enabled: false
 	                },
+                        autoIndent: true,
                         codeLens: false,
                         quickSuggestions: false,
                         renderLineHighlight: 'none',
@@ -383,10 +399,10 @@ const openEditor = wsk => {
                     resolve(editor)
                 })
             }
-        } /* end of iter */
+        } /* end of iter() */
 
         iter()
-    })
+    }) /* end of ready() */
 
     /**
      * Given an editor instance, return a function that can update
@@ -433,13 +449,15 @@ const openEditor = wsk => {
         isNew.className = 'is-new'
         upToDate.className = 'is-up-to-date'
         modified.className = 'is-modified'
+
+        // even handlers for saved and content-changed
         const editsInProgress = () => sidecar.classList.add('is-modified')  // edits in progress
         const editsCommitted = action => {                                  // edits committed
             const lockIcon = sidecar.querySelector('[data-mode="lock"]')
 
             sidecar.classList.remove('is-modified')
             status.classList.remove('is-new')
-            lockIcon.classList.remove('is-new')
+            if (lockIcon) lockIcon.classList.remove('is-new')
             sidecar.entity = action
 
             // update the version badge to reflect the update
@@ -524,13 +542,13 @@ const betterNotExist = name => fetchAction(name).then(failWith409).catch(failIfN
  * fetch and an editor open call, and passes the former to the latter
  *
  */
-const updateEditor = ([action, updateEditor]) => updateEditor(action)
+const prepareEditorWithAction = ([action, updateFn]) => updateFn(action)
 
 /**
  * Command handler for `edit actionName`
  *
  */
-const edit = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+const edit = (wsk, prequire) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const sidecar = document.querySelector('#sidecar'),
           name = args[args.indexOf('edit') + 1]
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
@@ -546,7 +564,9 @@ const edit = wsk => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) =>
     // then send a response back to the repl
     //
     return Promise.all([fetchAction(name), openEditor(wsk)])
-        .then(updateEditor)
+        .then(addCompositionOptions(prequire))
+        .then(prepareEditorWithAction)
+        .then(addExtraContentDelegate)
         .then(respondToRepl(wsk, [ lockIcon ]))
 
 } /* end of edit command handler */
@@ -567,7 +587,7 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions, addExtraContent=x=>x}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const name = args[args.indexOf(op) + 1],
           kind = addVariantSuffix(options.kind || _kind)
 
@@ -590,8 +610,80 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
     // then send a response back to the repl
     //
     return Promise.all([action, openEditor(), betterNotExist(name)])
-        .then(updateEditor)
+        .then(prepareEditorWithAction)
+        .then(addExtraContent)
         .then(respondToRepl(wsk))
+}
+
+/**
+ *
+ *
+ */
+const addExtraContentDelegate = opts => {
+    const { getAction, editor, content, eventBus } = opts,
+          action = getAction()
+
+    if (action.addExtraContent) {
+        return action.addExtraContent(opts)
+    } else {
+        return opts
+    }
+}
+
+/**
+ * Add the wskflow visualization component to the given content
+ *
+ */
+let globalEventBus = eventBus
+const addWskflow = prequire => opts => {
+    const { visualize } = prequire('wskflow')
+
+    const { getAction, editor, content, eventBus } = opts,
+          wskflowContainer = document.createElement('div'),
+          h = document.getElementById("sidecar").getBoundingClientRect().height
+
+    content.appendChild(wskflowContainer)
+    wskflowContainer.className = 'wskflow-container'
+
+    /** update the view to show the latest FSM */
+    const updateView = (_, { event='init' }={}) => {
+        const action = getAction(),
+              { fsm } = action,
+              editorDom = content.querySelector('.monaco-editor-wrapper')
+
+        const relayout = () => {
+            editor.updateOptions({ automaticLayout: false })
+            setTimeout(() => {
+                const { width, height } = editorDom.getBoundingClientRect()
+                editor.layout({ width: width - 10, height: height - 7 })
+            }, 300)
+        }
+
+        if (fsm) {
+            wskflowContainer.classList.add('visible')
+            editorDom.classList.add('half-height')
+
+            if (event === 'revert') {
+                content.removeChild(wskflowContainer)
+                content.appendChild(wskflowContainer)
+                
+            } else {
+                // don't bother redrawing on revert
+                ui.removeAllDomChildren(wskflowContainer)
+
+                visualize(fsm, wskflowContainer, undefined, h, undefined, { xdirection: 'RIGHT' })
+            }
+
+        }
+        globalEventBus.on('/sidecar/maximize', relayout)
+        window.addEventListener('resize', relayout)
+        relayout()
+    }
+
+    eventBus.on('/editor/save', updateView)
+    setTimeout(updateView, 0) // needs to be async'd in order for wskflow to work with `edit myApp`
+
+    return opts
 }
 
 /**
@@ -600,22 +692,35 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
  * the persister to use when deploying edits.
  *
  */
-const compositionOptions = baseOptions => Object.assign({type: 'apps',
-                                                         _kind: 'app',
-                                                         placeholder: placeholders.composition,      // the placeholder impl
-                                                         persister: persisters.apps                  // the persister impl
-                                                        }, baseOptions)
+const compositionOptions = (prequire, baseOptions) => {
+    return Object.assign({type: 'apps',
+                          _kind: 'app',
+                          placeholder: placeholders.composition,      // the placeholder impl
+                          persister: persisters.apps,                 // the persister impl
+                          addExtraContent: addWskflow(prequire)       // we want to splice in the wskflow visualization
+                         }, baseOptions)
+}
+const addCompositionOptions = prequire => params => {
+    const [action, updateFn] = params
+
+    if (action.fsm) {
+        action.persister = persisters.apps
+        action.addExtraContent = addWskflow(prequire)
+    }
+
+    return params
+}
 
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
     // command registration: edit existing action
-    commandTree.listen('/edit', edit(wsk), { docs: strings.docs.edit })
+    commandTree.listen('/edit', edit(wsk, prequire), { docs: strings.docs.edit })
 
     // command registration: create new action
     commandTree.listen('/new', newAction({wsk}), { docs: strings.docs.new })
 
     // command registration: create new app/composition
-    commandTree.listen('/compose', newAction(compositionOptions({ wsk, op: 'compose'})),
+    commandTree.listen('/compose', newAction(compositionOptions(prequire, { wsk, op: 'compose'})),
                        { docs: strings.docs.compose })
 }

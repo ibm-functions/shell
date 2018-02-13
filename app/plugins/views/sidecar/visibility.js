@@ -78,7 +78,10 @@ module.exports = commandTree => {
         isVisible: isVisible,
         hide: hide,
         show: show,
-        toggleMaximization: () => document.body.classList.toggle('sidecar-full-screen'),
+        toggleMaximization: () => {
+            document.body.classList.toggle('sidecar-full-screen')
+            eventBus.emit('/sidecar/maximize')
+        },
         toggle: () => isVisible() ? hide() : show()
     }
 }

@@ -34,9 +34,7 @@ function main(array $args) : array
     return ["greeting" => $greeting];
 }`
 
-exports.composition = `const echo = x=>x    // a handy utility routine for debugging
+exports.composition = `const echo = x=>x    // handy routine for debugging
 
-//
 // try typing "composer." to begin your composition
-//
 `
