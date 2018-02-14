@@ -90,33 +90,30 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"display": "none",
 		"flex-direction": "column",
 		"align-items": "center",
+		"margin": "0 auto",
 		"flex": "1",
 		"font-weight": 400,
 		"position": "relative",
-		"-webkit-app-region": "no-drag",
-
-            // commented out. see shell issue #420
-            //		"width": width,
-            //		"height": height
+		"-webkit-app-region": "no-drag"
 	});
 
 	
 	let ssvg = d3.select("#wskflowContainer")
 	    .append("svg")
-	    .attr("id", "wskflowSVG")	   
-	    .style("width", "100%")
-	    .style("height", "100%")
+	    .attr("id", "wskflowSVG")
+            // we will set the viewBox below, once we know the dimensions of the graph
+	    .attr("preserveAspectRatio", "xMidYMin")
 	    .style("flex", "1");
 
 	let container = ssvg.append('g')		
         .call(zoom)
         .on("dblclick.zoom", null);        
    
-    container.append('rect')
+/*    container.append('rect')
     	.attr('width', width)
     	.attr('height', height)
     	.style('fill', 'none')
-    	.style("pointer-events", "all");
+    	.style("pointer-events", "all");*/
 
 	let svg = container
 		.append("g")
@@ -267,11 +264,20 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		})
    		.then(data => {
 
-			// scale to fit but no zooming in more than 2
-			let initScale = Math.min(width/data.width, height/data.height, 2);
+                       // shell issue #423: allow graph to auto-scale with window size
+                       $("#wskflowSVG").attr("viewBox", `0 0 ${data.width} ${data.height}`)
 
-			// initial translate - only X, y stays at 0
-			let initTransX = Math.max(width/2 - data.width*initScale/2, 0);		
+                       // see shell issue #422: avoid the visualization becoming too ridiculously scaled up/blown up/zoomed in
+                       $("#wskflowContainer").css({
+                            "min-width": data.width,
+                            "min-height": data.height,
+                            'max-width': 2.5 * data.width,
+                            'max-height': 2.5 * data.height
+                        })
+
+			// with shell issue #423, we don't need to have an inititial scale or translation
+   		        let initScale = 1;
+  		        let initTransX = 0;
 			let initTransY = 0; 
 
 			container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);
