@@ -563,7 +563,7 @@ exports.hasUnknownOptions = (options, expected) => {
 exports.decorateAsApp = action => {
     action.prettyType = appBadge
     action.fsm = action.annotations.find(({key}) => key === 'fsm').value
-    action.modes = exports.vizAndfsmViewModes().concat((action.modes||[]).filter(_ => _.mode !== 'code'))
+    action.modes = (action.modes||[]).filter(_ => _.mode !== 'code').concat(exports.vizAndfsmViewModes())
 
     if (action.exec) {
         action.exec.prettyKind = 'app'
