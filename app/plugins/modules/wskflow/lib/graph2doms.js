@@ -94,8 +94,10 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"font-weight": 400,
 		"position": "relative",
 		"-webkit-app-region": "no-drag",
-		"width": width,
-		"height": height
+
+            // commented out. see shell issue #420
+            //		"width": width,
+            //		"height": height
 	});
 
 	
