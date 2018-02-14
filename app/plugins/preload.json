@@ -1,6 +1,7 @@
 {
     "preload": [
         "editor-preload",
+        "offline",
         "/ui/commands/tab-completion",
         "/ui/commands/text-search"
     ]

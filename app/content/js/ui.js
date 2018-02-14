@@ -22,8 +22,10 @@ const namespace = (function() {
     const self = {},
           key = 'wsk.namespaces',
           read = () => wsk.apiHost.get().then(host => {
+              debug('namespace:read:host', host)
               let model = cached
               if (!model) {
+                  debug('namespace:read:not cached')
                   const raw = localStorage.getItem(key)
                   try {
                       //console.log(`ui::read ${host} ${raw}`)
@@ -40,6 +42,7 @@ const namespace = (function() {
                   }
 
                   cached = model
+                  debug('namespace:read:computed', model)
               }
               return {
                   _full: model,            // the full model, needed for reserializing

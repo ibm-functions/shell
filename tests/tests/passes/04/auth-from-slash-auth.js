@@ -59,7 +59,7 @@ describe('auth tests executed from /auth', function() {
 
     // install namespace key
     it('should install a namespace key', () => cli.do(`add ${process.env.AUTH2}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns2}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns2}` })))
 
     doSwitch('/wsk/actions', '/wsk/actions')
 
@@ -77,5 +77,5 @@ describe('auth tests executed from /auth', function() {
 
     // switch back to first namespace
     it('should switch to the first namespace, using the CLI auth add command', () => cli.do(`auth add ${process.env.AUTH}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns1}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns1}` })))
 })
