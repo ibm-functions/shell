@@ -112,14 +112,28 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyEdgeExists('seq2', 'seq3'))
        .catch(common.oops(this)))
 
-    /** test: now create with no args, testing for handling of implicit entity */
+    /** test: viz, then create with no args, testing for handling of implicit entity */
     it(`should create with implicit entity`, () => cli.do('app create', this.app)
        .then(verifyTheBasicStuff(seq.file.replace(/\.[^\.]*/,''), 'composerLib'))   // the .replace part strips off the ".js" suffix
-       .then(verifyNodeExists('seq1'))
-       .then(verifyNodeExists('seq2'))
-       .then(verifyNodeExists('seq3'))
+       .then(verifyNodeExists('seq1', false)) // not deployed
+       .then(verifyNodeExists('seq2', false)) // not deployed
+       .then(verifyNodeExists('seq3', false)) // not deployed
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
+       .catch(common.oops(this)))
+
+    /** test: preview wookiechat */
+    it(`show visualization from javascript source ${seq.path}`, () => cli.do(`app preview ./data/composer-wookiechat/app.js`, this.app)
+       .then(verifyTheBasicStuff('app.js', 'composerLib'))
+       .then(verifyNodeExists('swapi', false)) // not yet deployed
+       .then(verifyNodeExists('stapi', false)) // not yet deployed
+       .catch(common.oops(this)))
+
+    /** test: viz, then create with -r, testing for handling of implicit entity and auto-deploy */
+    it(`should create wookiechat with implicit entity`, () => cli.do('app update -r', this.app)
+       .then(verifyTheBasicStuff('app', 'composerLib'))   // the .replace part strips off the ".js" suffix
+       .then(verifyNodeExists('swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('stapi', true)) // expect to be deployed
        .catch(common.oops(this)))
 
     /** test: if js file */

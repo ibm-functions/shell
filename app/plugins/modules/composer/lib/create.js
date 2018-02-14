@@ -17,10 +17,11 @@
 const debug = require('debug')('app create')
 debug('loading')
 
-const { create, isValidFSM, hasUnknownOptions } = require('./composer'),
+const { create, isValidFSM, hasUnknownOptions, extractActionsFromFSM, deployActions } = require('./composer'),
       badges = require('./badges'),
       messages = require('./messages.json'),
       fs = require('fs'),
+      path = require('path'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source')
 
 debug('finished loading modules')
@@ -67,7 +68,8 @@ module.exports = (commandTree, prequire) => {
 
     const doCreate = cmd => function(_1, _2, fullArgs, { ui, errors }, fullCommand, execOptions, args, options) {
         const idx = args.indexOf(cmd) + 1,
-              dryRun = options['dry-run'] || options.n   // compile to check for errors, but don't create anything
+              dryRun = options['dry-run'] || options.n,  // compile to check for errors, but don't create anything
+              recursive = options.recursive || options.r // try to deploy tasks, too
 
         let name = args[idx],                            // name of creation
             input = dryRun ? name : args[idx + 1]        // input file; if dryRun, then it's the first and only non-opt arg
@@ -75,11 +77,14 @@ module.exports = (commandTree, prequire) => {
         // check for unknown options
         hasUnknownOptions(options, [ 'n', 'dry-run', 'all',
                                      'h', 'help',
+                                     'r', 'recursive',
                                      'a', 'annotation',
                                      'p', 'parameter', 'P', 'param-file',
                                      'm', 'memory', 'l', 'logsize', 't', 'timeout',                                     
                                      'log-all', 'log-input', 'log-inline' ])    
 
+        // if the user didn't provide an input file, maybe we can
+        // infer one from the current selection
         if (!input) {
             const selection = ui.currentSelection()
             if (selection && selection.fsm) {
@@ -102,6 +107,8 @@ module.exports = (commandTree, prequire) => {
         }
         
         if (!name || !input || options.help) {
+            // the user didn't supply either a name or an input file,
+            // or asked for help
             throw new errors.usage(usage(cmd))
 
         } else {
@@ -223,7 +230,13 @@ module.exports = (commandTree, prequire) => {
                         annotations.push({key: 'file', value: localCodePath})
                     }
 
-                    return create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations })
+                    // were we asked to (try to) deploy the actions referenced by the FSM?
+                    const deployStep = !localCodePath || !recursive
+                          ? Promise.resolve()
+                          : deployActions(path.dirname(localCodePath),
+                                          extractActionsFromFSM(fsm))
+
+                    return deployStep.then(() => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
                 }).catch(handleFailure_fsmPromise)
             }
         }

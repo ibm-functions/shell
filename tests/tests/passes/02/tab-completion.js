@@ -72,7 +72,8 @@ describe('Tab completion', function() {
 
     const expected = ['commandFile.wsk',
                       'composer-source/',
-                      'composer-source-expect-errors/']
+                      'composer-source-expect-errors/',
+                      'composer-wookiechat/']
 
     // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list \\\\
     it('should tab complete with options', () => tabbyWithOptions(this.app, 'lls data/com',

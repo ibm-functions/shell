@@ -86,6 +86,7 @@ const checkForConformance = action => {
  *
  */
 const persisters = {
+    // persisters for regular actions
     actions: {
         getCode: action => action,
         save: (wsk, action) => {
@@ -100,6 +101,8 @@ const persisters = {
         revert: (wsk, action) => {
         }
     },
+
+    // persisters for apps/compositions
     apps: {
         getCode: action => new Promise((resolve, reject) => {
             const codeAnno = action.annotations.find(({key})=> key === 'code')
@@ -141,7 +144,8 @@ const persisters = {
                         if (err) {
                             reject(err)
                         } else {
-                            return repl.qexec(`app update "${app.name}" "${path}"`)
+                            // -r means try to deploy the actions, too
+                            return repl.qexec(`app update "${app.name}" "${path}" -r`)
                                 .then(app => {
                                     cleanup()
                                     resolve(app)
