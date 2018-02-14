@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('editor')
+
 const path = require('path'),
       events = require('events'),
       beautify = require('js-beautify'),
@@ -381,7 +383,7 @@ const openEditor = wsk => {
 
                     // here we instantiate an editor widget
                     editor = monaco.editor.create(editorWrapper, {
-                        //automaticLayout: true, // respond to window layout changes
+                        automaticLayout: false, // respond to window layout changes
                         minimap: {
 		            enabled: false
 	                },
@@ -546,13 +548,18 @@ const betterNotExist = name => fetchAction(name).then(failWith409).catch(failIfN
  * fetch and an editor open call, and passes the former to the latter
  *
  */
-const prepareEditorWithAction = ([action, updateFn]) => updateFn(action)
+const prepareEditorWithAction = ([action, updateFn]) => {
+    debug('prepareEditorWithAction')
+    return updateFn(action)
+}
 
 /**
  * Command handler for `edit actionName`
  *
  */
 const edit = (wsk, prequire) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+    debug('edit command execution started')
+
     const sidecar = document.querySelector('#sidecar'),
           name = args[args.indexOf('edit') + 1]
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
@@ -567,10 +574,11 @@ const edit = (wsk, prequire) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args,
     // then update the editor to show the action
     // then send a response back to the repl
     //
+    debug('begin')
     return Promise.all([fetchAction(name), openEditor(wsk)])
-        .then(addCompositionOptions(prequire))
+        .then(addCompositionOptions)
         .then(prepareEditorWithAction)
-        .then(addExtraContentDelegate)
+        .then(addWskflow(prequire))
         .then(respondToRepl(wsk, [ lockIcon ]))
 
 } /* end of edit command handler */
@@ -591,7 +599,7 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions, addExtraContent=x=>x}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+const newAction = ({wsk, prequire, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const name = args[args.indexOf(op) + 1],
           kind = addVariantSuffix(options.kind || _kind)
 
@@ -615,23 +623,8 @@ const newAction = ({wsk, op='new', type='actions', _kind=defaults.kind, placehol
     //
     return Promise.all([action, openEditor(), betterNotExist(name)])
         .then(prepareEditorWithAction)
-        .then(addExtraContent)
+        .then(addWskflow(prequire))
         .then(respondToRepl(wsk))
-}
-
-/**
- *
- *
- */
-const addExtraContentDelegate = opts => {
-    const { getAction, editor, content, eventBus } = opts,
-          action = getAction()
-
-    if (action.addExtraContent) {
-        return action.addExtraContent(opts)
-    } else {
-        return opts
-    }
 }
 
 /**
@@ -640,30 +633,33 @@ const addExtraContentDelegate = opts => {
  */
 let globalEventBus = eventBus
 const addWskflow = prequire => opts => {
-    const { visualize } = prequire('wskflow')
+    debug('addWskflow')
 
     const { getAction, editor, content, eventBus } = opts,
           wskflowContainer = document.createElement('div'),
+          editorDom = content.querySelector('.monaco-editor-wrapper'),
           h = document.getElementById("sidecar").getBoundingClientRect().height
 
     content.appendChild(wskflowContainer)
     wskflowContainer.className = 'wskflow-container'
 
+    /** call editor.layout */
+    const relayout = () => {
+        editor.updateOptions({ automaticLayout: false })
+        setTimeout(() => {
+            const { width, height } = editorDom.getBoundingClientRect()
+            editor.layout({ width: width - 10, height: height - 7 })
+        }, 300)
+    }
+
     /** update the view to show the latest FSM */
     const updateView = (_, { event='init' }={}) => {
         const action = getAction(),
-              { fsm } = action,
-              editorDom = content.querySelector('.monaco-editor-wrapper')
-
-        const relayout = () => {
-            editor.updateOptions({ automaticLayout: false })
-            setTimeout(() => {
-                const { width, height } = editorDom.getBoundingClientRect()
-                editor.layout({ width: width - 10, height: height - 7 })
-            }, 300)
-        }
+              { fsm } = action
 
         if (fsm) {
+            const { visualize } = prequire('wskflow')
+
             wskflowContainer.classList.add('visible')
             editorDom.classList.add('half-height')
 
@@ -679,13 +675,14 @@ const addWskflow = prequire => opts => {
             }
 
         }
+
         globalEventBus.on('/sidecar/maximize', relayout)
         window.addEventListener('resize', relayout)
         relayout()
     }
 
     eventBus.on('/editor/save', updateView)
-    setTimeout(updateView, 0) // needs to be async'd in order for wskflow to work with `edit myApp`
+    setTimeout(updateView, 300) // needs to be async'd in order for wskflow to work with `edit myApp`
 
     return opts
 }
@@ -701,15 +698,13 @@ const compositionOptions = (prequire, baseOptions) => {
                           _kind: 'app',
                           placeholder: placeholders.composition,      // the placeholder impl
                           persister: persisters.apps,                 // the persister impl
-                          addExtraContent: addWskflow(prequire)       // we want to splice in the wskflow visualization
                          }, baseOptions)
 }
-const addCompositionOptions = prequire => params => {
+const addCompositionOptions = params => {
     const [action, updateFn] = params
 
     if (action.fsm) {
         action.persister = persisters.apps
-        action.addExtraContent = addWskflow(prequire)
     }
 
     return params
@@ -722,9 +717,9 @@ module.exports = (commandTree, prequire) => {
     commandTree.listen('/edit', edit(wsk, prequire), { docs: strings.docs.edit })
 
     // command registration: create new action
-    commandTree.listen('/new', newAction({wsk}), { docs: strings.docs.new })
+    commandTree.listen('/new', newAction({wsk, prequire}), { docs: strings.docs.new })
 
     // command registration: create new app/composition
-    commandTree.listen('/compose', newAction(compositionOptions(prequire, { wsk, op: 'compose'})),
+    commandTree.listen('/compose', newAction(compositionOptions({ wsk, prequire, op: 'compose'})),
                        { docs: strings.docs.compose })
 }
