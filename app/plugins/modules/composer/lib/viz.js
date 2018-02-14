@@ -121,6 +121,7 @@ const addRecentItem = file => {
              reject(messages.unknownInput)
          }
 
+         // create a fake action/entity record
          const formatForUser = defaultMode => ({fsm,code}) => {            
              resolve({
                  verb: 'get',
@@ -138,7 +139,9 @@ const addRecentItem = file => {
                      { key: 'wskng.combinators',
                        value: [{ role: 'replacement', type: 'composition', badge: type } ]
                      },
-                     { key: 'fsm', value: fsm }
+                     { key: 'fsm', value: fsm },
+                     { key: 'code', value: code },
+                     { key: 'file', value: input }
                  ]
              })
          }
