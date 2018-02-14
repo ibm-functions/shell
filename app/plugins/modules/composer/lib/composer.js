@@ -17,7 +17,8 @@
 const debug = require('debug')('composer-utils')
 debug('starting')
 
-const path = require('path'),
+const fs = require('fs'),
+      path = require('path'),
       util = require('util'),
       redis = require('redis'),
       messages = require('./messages.json'),
@@ -570,6 +571,59 @@ exports.decorateAsApp = action => {
     }
 
     return action
+}
+
+/**
+ * Extract the Action Tasks from a given FSM
+ *
+ */
+exports.extractActionsFromFSM = ({States}) => {
+    const actions = []
+
+    for (let state in States) {
+        const { Action, Type } = States[state]
+        if (Type === 'Task' && Action) {
+            actions.push(Action)
+        }
+    }
+
+    return actions
+}
+
+/**
+ * Deploy a given action, if we can find the source
+ *
+ */
+exports.deployAction = home => actionName => new Promise((resolve, reject) => {
+
+    try {
+        const suffixes = ['.js', '.php', '.python']
+
+        for (let idx = 0; idx < suffixes.length; idx++) {
+            const suffix = suffixes[idx],
+                  actionPath = path.join(home, `${actionName}${suffix}`)
+
+            debug('attempting to deploy action', actionPath)
+
+            fs.exists(actionPath, exists => {
+                if (exists) {
+                    debug('deploying action', actionName, actionPath)
+                    return repl.qexec(`wsk action update "${actionName}" "${actionPath}"`).then(resolve, reject)
+                }
+            })
+        }
+
+        reject(`action source near ${path.join(home, actionName)} cannot be found`)
+
+    } catch (err) {
+        reject(err)
+    }
+}).catch(err => {
+    console.error(err)
+})
+exports.deployActions = (home, actions) => {
+    debug('deploying actions', home, actions)
+    return Promise.all(actions.map(exports.deployAction(home)))
 }
 
 debug('init done')

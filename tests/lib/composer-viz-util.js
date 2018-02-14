@@ -35,9 +35,12 @@ const composerInput = file => input(file, 'composer-source')
  * Verify that a node with the given action name exists on the canvas
  *
  */
-const verifyNodeExists = name => app => app.client.elements(`#wskflowSVG .node[data-name="${name}"]`)
-      .then(nodes => assert.equal(nodes.value.length, 1))
-      .then(() => app)
+const verifyNodeExists = (name, isDeployed=false) => app => {
+    const selector = `#wskflowSVG .node[data-name="${name}"][data-deployed="${isDeployed ? 'deployed' : 'not-deployed'}"]`
+    return app.client.elements(selector)
+        .then(nodes => assert.equal(nodes.value.length, 1))
+        .then(() => app)
+}
 const verifyNodeExistsById = id => app => {
     return app.client.waitUntil(() => app.client.elements(`#wskflowSVG #${id}`)
                                 .then(nodes => nodes.value.length === 1))
