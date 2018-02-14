@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-2018 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('auth plugin')
 
 /**
  * This plugin introduces /wsk/auth, to help with switching between
@@ -30,13 +31,13 @@ const fs = require('fs'),
  * The message we will use to inform the user of a auth switch event
  *
  */
-const informUserOfChange = (commandTree, subject) => () => {
+const informUserOfChange = (wsk, commandTree, subject) => () => {
     setTimeout(() => eventBus.emit('/auth/change', {
         namespace: namespace.current(),
         subject: subject
     }), 0)
 
-    return commandTree.clearSelection(`You are now using the OpenWhisk namespace ${namespace.current()}`)
+    return wsk.apiHost.get().then(host => commandTree.clearSelection(`You are now using the OpenWhisk host ${host}, and namespace ${namespace.current()}`))
 }
 
 /**
@@ -127,7 +128,7 @@ const use = (wsk, commandTree) => verb => (_1, _2, _3, _4, _5, _6, argv) => name
     if (auth) {
 	return updateLocalWskProps(wsk, auth)
             .then(namespace.use)
-            .then(informUserOfChange(commandTree))
+            .then(informUserOfChange(wsk, commandTree))
     } else {
         return namespace.list().then(namespaces => {
             const ns = firstArg(argv, verb)
@@ -138,8 +139,8 @@ const use = (wsk, commandTree) => verb => (_1, _2, _3, _4, _5, _6, argv) => name
 })
 
 /** this is the auth body */
-module.exports = (commandTree, require) => {
-    const wsk = require('/ui/commands/openwhisk-core')
+module.exports = (commandTree, prequire) => {
+    const wsk = prequire('/ui/commands/openwhisk-core')
 
     commandTree.subtree('/host', { docs: 'Commands to switch OpenWhisk API host' })
     commandTree.subtree('/auth', { docs: 'Commands to switch, list, and remember OpenWhisk authorization keys' })
@@ -154,11 +155,13 @@ module.exports = (commandTree, require) => {
 
     /** register a new namespace, by auth, given by argv[2] */
     const addFn = (key, subject) => {
+        debug('add', key, subject)
+
         const previousAuth = wsk.auth.get()
         return wsk.auth.set(key)
             .then(() => namespace.init(true)) // true means that we'll do the error handling
             .then(() => updateLocalWskProps(wsk, key, subject))
-            .then(informUserOfChange(commandTree, subject))
+            .then(informUserOfChange(wsk, commandTree, subject))
             .catch(err => {
                 if (err.statusCode === 401) {
                     // then the key is bogus, restore the previousAuth
@@ -203,6 +206,7 @@ module.exports = (commandTree, require) => {
                            const argv = slice(argv_without_options, 'set')
                            let host = argv[0] || options.host // the new apihost to use
                            let ignoreCerts = options.ignoreCerts || options.insecureSSL || options.insecure
+                           let isLocal = false // is this a local openwhisk?
 
                            if (!host || options.help) {
                                throw new Error('Usage: host set <hostname>')
@@ -231,16 +235,53 @@ module.exports = (commandTree, require) => {
                                // local docker-machine host (this is usually macOS)
                                host = 'http://192.168.99.100:10001'
                                ignoreCerts = true
-                           } else if (host === 'local') {
-                               // local docker host
-                               host = 'http://172.17.0.1:10001'
+                               isLocal = true
+                           } else if (host === 'vagrant') {
+                               // local vagrant
+                               host = 'https://192.168.33.13'
                                ignoreCerts = true
+                               isLocal = true
+                           } else if (host === 'local') {
+                               // try a variety of options
+                               const variants = [ 'https://192.168.33.13', 'http://172.17.0.1:10001', 'http://192.168.99.100:10001' ]
+                               const request = require('request')
+
+                               host = new Promise((resolve, reject) => {
+                                   const ping = idx => {
+                                       debug('ping', idx)
+                                       const host = variants[idx]
+
+                                       debug('trying local', host)
+
+                                       const tryNext = err => {
+                                           console.error(err)
+                                           if (idx === variants.length - 1) {
+                                               reject('No local OpenWhisk host found')
+                                           } else {
+                                               // nope! try the next one in the variants list
+                                               ping(idx + 1)
+                                           }
+                                       }
+
+                                       const req = request.get({ url: `${host}/ping`,
+                                                                 rejectUnauthorized: false,
+                                                                 timeout: 500
+                                                               })
+                                             .on('response', () => {
+                                                 ignoreCerts = true
+                                                 isLocal = true
+                                                 resolve(host)
+                                             }).on('error', tryNext)
+                                   }
+                                   ping(0)
+                               })
                            }
 
-                           return wsk.apiHost.set(host, { ignoreCerts })
+                           return Promise.resolve(host).then(host => wsk.apiHost.set(host, { ignoreCerts })
                                .then(namespace.setApiHost)
                                .then(notifyOfHostChange(host))
                                .then(() => namespace.list().then(auths => {
+                                   debug('got auths', auths)
                                //
                                // after switching hosts, we'll need to get a new AUTH key. either:
                                //
@@ -255,6 +296,10 @@ module.exports = (commandTree, require) => {
                                    // use `auth add` to register the key for this host
                                    return repl.qfexec(`auth add ${specifiedKey}`)
                                } else if (auths.length === 0) {
+                                   if (isLocal) {
+                                       // fixed key for local openwhisk
+                                       return repl.qfexec('auth add 23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP')
+                                   }
                                    // no keys, yet. enter a special mode requesting further assistance
                                    namespace.setNoNamespace()
                                    const dom = document.createElement('div'),
@@ -277,7 +322,7 @@ module.exports = (commandTree, require) => {
                                    namespace.setPleaseSelectNamespace()
                                    return list()
                                }
-                           }))
+                               })))
                        },
                        { docs: 'Update the current OpenWhisk API host' })
 

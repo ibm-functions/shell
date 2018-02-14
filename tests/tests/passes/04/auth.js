@@ -45,7 +45,7 @@ describe('auth tests', function() {
 
     // install namespace key
     it(`should install a namespace key for ${ns2}`, () => cli.do(`auth add ${process.env.AUTH2}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns2}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns2}` })))
 
     // list should show no actions
     it(`should NOT find the foo action with "ls"`, () => cli.do('ls', this.app).then(cli.expectJustOK))
@@ -61,7 +61,7 @@ describe('auth tests', function() {
 
     // switch to first namespace
     it('should switch to the first namespace, using the CLI switch command', () => cli.do(`auth switch ${ns1}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns1}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns1}` })))
 
     // list should show only foo
     it(`should find the foo action with "ls"`, () => cli.do('ls', this.app).then(cli.expectOKWithOnly('foo')))
@@ -71,7 +71,7 @@ describe('auth tests', function() {
 
     // switch back to second namespace
     it('should switch to the second namespace, using the CLI use command', () => cli.do(`auth use ${ns2}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns2}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns2}` })))
 
     // list should show only foo2
     it(`should find the foo2 action with "ls"`, () => cli.do('ls', this.app).then(cli.expectOKWithOnly('foo2')))
@@ -87,5 +87,5 @@ describe('auth tests', function() {
 
     // switch back to first namespace
     it('should switch to the first namespace, using the CLI auth add command', () => cli.do(`auth add ${process.env.AUTH}`, this.app)
-	.then(cli.expectOKWithCustom({selector: '', expect: `You are now using the OpenWhisk namespace ${ns1}` })))
+	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns1}` })))
 })
