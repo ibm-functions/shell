@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('app create')
+debug('loading')
+
 const { create, isValidFSM, hasUnknownOptions } = require('./composer'),
       badges = require('./badges'),
       messages = require('./messages.json'),
       fs = require('fs'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source')
+
+debug('finished loading modules')
 
 /**
  * Usage message
@@ -60,11 +65,12 @@ const handleFailure_fsmPromise = err => {
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
-    const doCreate = cmd => function(_1, _2, fullArgs, modules, fullCommand, execOptions, args, options) {
+    const doCreate = cmd => function(_1, _2, fullArgs, { ui, errors }, fullCommand, execOptions, args, options) {
         const idx = args.indexOf(cmd) + 1,
-              dryRun = options['dry-run'] || options.n,  // compile to check for errors, but don't create anything
-              name = args[idx],                          // name of creation
-              input = dryRun ? name : args[idx + 1]      // input file; if dryRun, then it's the first and only non-opt arg
+              dryRun = options['dry-run'] || options.n   // compile to check for errors, but don't create anything
+
+        let name = args[idx],                            // name of creation
+            input = dryRun ? name : args[idx + 1]        // input file; if dryRun, then it's the first and only non-opt arg
 
         // check for unknown options
         hasUnknownOptions(options, [ 'n', 'dry-run', 'all',
@@ -74,12 +80,31 @@ module.exports = (commandTree, prequire) => {
                                      'm', 'memory', 'l', 'logsize', 't', 'timeout',                                     
                                      'log-all', 'log-input', 'log-inline' ])    
 
+        if (!input) {
+            const selection = ui.currentSelection()
+            if (selection && selection.fsm) {
+                // then the sidecar is currently showing an app
+                if (selection.prettyType === 'preview') {
+                    // then the sidecar is showing an app preview
+                    const inputAnnotation = selection.annotations.find(({key}) => key === 'file')
+                    if (inputAnnotation) {
+                        input = inputAnnotation.value
+                        debug('using preview for input', input)
+
+                        if (!name) {
+                            // then the user typed "app create"; let's use the file name as the app name
+                            name = selection.name.replace(/\.[^\.]*/,'') // strip off the ".js" suffix
+                            debug('using preview for name', name)
+                        }
+                    }
+                }
+            }
+        }
         
         if (!name || !input || options.help) {
-            throw new modules.errors.usage(usage(cmd))
+            throw new errors.usage(usage(cmd))
 
         } else {
-            
             let fsmPromise // our goal is to acquire an FSM, so that we can create an invokable OpenWhisk wrapper for it
             let type       // metadata to help with understanding how this FSM was created; 
 
@@ -87,6 +112,7 @@ module.exports = (commandTree, prequire) => {
                 //
                 // we were given the FSM directly
                 //
+                debug('input is composer FSM')
                 const fsm = readFSMFromDisk(args[idx + 1])
 
                 if (!isValidFSM(fsm)) {
@@ -101,6 +127,7 @@ module.exports = (commandTree, prequire) => {
                 //
                 // we were given the source code, which means we'll need to generate the FSM
                 //
+                debug('input is composer javascript')
                 type = badges.composerLib
                 fsmPromise = compileToFSM(input, { code: true }) // we want the code back
 
@@ -117,7 +144,7 @@ module.exports = (commandTree, prequire) => {
             const { kvOptions: { action: { annotations=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');
 
             if(options['log-input'] || options['log-inline'] || options['log-all']){
-                console.log('app create logging');                
+                debug('adding input logging');                
                 //let index = annotations.findIndex(element => element.key == 'log'), logType;
                 let logType;
                 if((options['log-input'] && options['log-inline']) || options['log-all'])
@@ -206,3 +233,5 @@ module.exports = (commandTree, prequire) => {
     const cmd = commandTree.listen(`/wsk/app/create`, doCreate('create'), { docs: 'Create an invokeable composer from an FSM' })
     commandTree.synonym(`/wsk/app/update`, doCreate('update'), cmd)
 }
+
+debug('finished loading')

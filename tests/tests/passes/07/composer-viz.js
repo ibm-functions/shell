@@ -20,6 +20,7 @@ const fs = require('fs'),
       ui = require('../../../lib/ui'),
       cli = ui.cli,
       sidecar = ui.sidecar,
+      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       {
           input,
           composerInput,
@@ -97,9 +98,23 @@ describe('show the composer visualization without creating openwhisk assets', fu
            .catch(common.oops(this)))
     })
 
+    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+        .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
+       .catch(common.oops(this)))
+
     /** test: sequence js file */
     it(`show visualization from javascript source ${seq.path}`, () => cli.do(`app viz ${seq.path}`, this.app)
        .then(verifyTheBasicStuff(seq.file, 'composerLib'))
+       .then(verifyNodeExists('seq1'))
+       .then(verifyNodeExists('seq2'))
+       .then(verifyNodeExists('seq3'))
+       .then(verifyEdgeExists('seq1', 'seq2'))
+       .then(verifyEdgeExists('seq2', 'seq3'))
+       .catch(common.oops(this)))
+
+    /** test: now create with no args, testing for handling of implicit entity */
+    it(`should create with implicit entity`, () => cli.do('app create', this.app)
+       .then(verifyTheBasicStuff(seq.file.replace(/\.[^\.]*/,''), 'composerLib'))   // the .replace part strips off the ".js" suffix
        .then(verifyNodeExists('seq1'))
        .then(verifyNodeExists('seq2'))
        .then(verifyNodeExists('seq3'))
