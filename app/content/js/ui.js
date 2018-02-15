@@ -594,7 +594,7 @@ const ui = (function() {
 
         console.log('repl::maybeHideEntity', entityMatchesSelection, entity)
         if (entityMatchesSelection) {
-            sidecarVisibility.hide()
+            ui.clearSelection()
             return true
         }
     }
