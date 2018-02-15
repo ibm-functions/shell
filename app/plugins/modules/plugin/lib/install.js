@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 const debug = require('debug')('plugin install')
 debug('loading')
 
@@ -23,6 +22,7 @@ const tmp = require('tmp'),
       { exec, spawn } = require('child_process'),
       compile = require('./compile'),
       { success } = require('./util')
+      which = require('which')
 
 debug('finished module imports')
 
@@ -64,70 +64,95 @@ const doInstall = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvW
             } else {
                 debug(`install plugin ${name} in ${pluginHome}`)
 
-                exec('npm init -y', { cwd: pluginHome }, (error, stdout, stderr) => {
-                    if (error) {
-                        return fail(error)
-                    }
+                locateNpm().then(npm => {
+                    if (!npm)
+                        return fail('npm could not be found. Please install npm and try again')
 
-                    if (stderr.length > 0) {
-                        debug(stderr)
-                    }
-                    if (stdout.length > 0) {
-                        debug(stdout)
-                    }
-
-                    const sub = spawn('npm',
-                                      ['install', name, '--prod', '--no-save', '--no-shrinkwrap'],
-                                      { cwd: pluginHome })
-
-                    if (!sub) {
-                        fail('Internal Error')
-                    }
-
-                    sub.stderr.on('data', data => {
-                        const error = data.toString()
-                        if (error.indexOf('code E404') >= 0) {
-                            // the user tried to install a plugin which
-                            // doesn't exist in the npm registry
-                            sub.kill()
-                            return reject(`The plugin ${name} does not exist`)
-                        } else if (error.indexOf('ERR') >= 0) {
-                            // some other error we don't know about
-                            return reject(error)
-                        } else {
-                            debug(error)
+                    const npmpath = path.dirname(npm)
+                    const env = Object.assign({}, process.env)
+                    env.PATH = `${npmpath}${path.delimiter}${process.env.PATH}`
+                    exec(`${npm} init -y`, { cwd: pluginHome, env }, (error, stdout, stderr) => {
+                        if (error) {
+                            return fail(error)
                         }
-                    })
 
-                    sub.stdout.on('data', data => {
-                        debug(data.toString())
-                    })
-
-                    sub.on('close', code => {
-                        debug('npm install done')
-
-                        if (code !== 0) {
-                            reject()
-                        } else {
-                            //
-                            // NOTE: fs.move doesn't work on linux; fs-extra seems to do hard links?? hence the use of fs.copy
-                            //
-                            return fs.ensureDir(targetDir)
-                                .then(() => fs.copy(path.join(pluginHome, 'node_modules', name), targetDir))
-                                .then(() => fs.copy(path.join(pluginHome, 'node_modules'), path.join(targetDir, 'node_modules')))
-                                .then(() => Promise.all([compile(rootDir, true), cleanup()]))  // recompile the plugin model
-                                .then(([newCommands]) => success('installed',
-                                                                 'will be available, after reload',
-                                                                 newCommands))
-                                .then(resolve)
-                                .catch(fail)
+                        if (stderr.length > 0) {
+                            debug(stderr)
                         }
+                        if (stdout.length > 0) {
+                            debug(stdout)
+                        }
+
+                        const sub = spawn(npm,
+                                        ['install', name, '--prod', '--no-save', '--no-shrinkwrap'],
+                                        { cwd: pluginHome, env })
+
+                        if (!sub) {
+                            fail('Internal Error')
+                        }
+
+                        sub.stderr.on('data', data => {
+                            const error = data.toString()
+                            if (error.indexOf('code E404') >= 0) {
+                                // the user tried to install a plugin which
+                                // doesn't exist in the npm registry
+                                sub.kill()
+                                return reject(`The plugin ${name} does not exist`)
+                            } else if (error.indexOf('ERR') >= 0) {
+                                // some other error we don't know about
+                                return reject(error)
+                            } else {
+                                debug(error)
+                            }
+                        })
+
+                        sub.stdout.on('data', data => {
+                            debug(data.toString())
+                        })
+
+                        sub.on('close', code => {
+                            debug('npm install done')
+
+                            if (code !== 0) {
+                                reject()
+                            } else {
+                                //
+                                // NOTE: fs.move doesn't work on linux; fs-extra seems to do hard links?? hence the use of fs.copy
+                                //
+                                return fs.ensureDir(targetDir)
+                                    .then(() => fs.copy(path.join(pluginHome, 'node_modules', name), targetDir))
+                                    .then(() => fs.copy(path.join(pluginHome, 'node_modules'), path.join(targetDir, 'node_modules')))
+                                    .then(() => Promise.all([compile(rootDir, true), cleanup()]))  // recompile the plugin model
+                                    .then(([newCommands]) => success('installed',
+                                                                    'will be available, after reload',
+                                                                    newCommands))
+                                    .then(resolve)
+                                    .catch(fail)
+                            }
+                        })
                     })
                 })
             }
         })
     })
 }
+
+const locateNpm = () => new Promise((resolve) => {
+    which('npm', { nothrow: true }, (err, resolved) => {
+        if (resolved)
+            return resolve(resolved)
+
+        // Try standard locations
+        const os = require('os')
+        let path = (os.platform === 'win32') ? `C:\Program Files\nodejs` : '/usr/local/bin'
+        resolved = which.sync('npm', { path, nothrow: true })
+        if (resolved)
+            return resolve(resolved)
+
+        // TODO: eventually install npm or remove dependency on npm
+        return resolve(null)
+    })
+})
 
 module.exports = (commandTree, prequire) => {
     commandTree.listen('/plugin/install', doInstall, { docs: 'Install a Shell plugin' })
