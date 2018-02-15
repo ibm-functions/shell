@@ -600,6 +600,8 @@ const addVariantSuffix = kind => {
  *
  */
 const newAction = ({wsk, prequire, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
+    debug('newAction', op)
+
     const name = args[args.indexOf(op) + 1],
           kind = addVariantSuffix(options.kind || _kind)
 
@@ -693,7 +695,7 @@ const addWskflow = prequire => opts => {
  * the persister to use when deploying edits.
  *
  */
-const compositionOptions = (prequire, baseOptions) => {
+const compositionOptions = baseOptions => {
     return Object.assign({type: 'apps',
                           _kind: 'app',
                           placeholder: placeholders.composition,      // the placeholder impl
