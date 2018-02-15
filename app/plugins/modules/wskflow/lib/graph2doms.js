@@ -271,8 +271,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
                        $("#wskflowContainer").css({
                             "min-width": data.width,
                             "min-height": data.height,
-                            'max-width': 2.5 * data.width,
-                            'max-height': 2.5 * data.height
+                            'max-width': Math.min(width, 2.5 * data.width),
+                            'max-height': Math.min(height, 2.5 * data.height)
                         })
 
 			// with shell issue #423, we don't need to have an inititial scale or translation
