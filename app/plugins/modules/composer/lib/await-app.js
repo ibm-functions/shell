@@ -203,6 +203,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
                                                     document.body.appendChild(content)
                                                     visualize(fsm, content, undefined, 1, activations)
                                                     content.style.display = ''
+                                                    content.style.flex = 1
                                                     document.body.removeChild(content)
 
                                                     return {
