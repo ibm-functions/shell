@@ -639,7 +639,11 @@ specials.packages = {
         }
         options.name = bindingName
         if (!options.package) options.package = {}
-        options.package.binding = { namespace: parseNamespace(parentPackage) || namespace.current(), name: parseName(parentPackage) }
+        options.package.binding = { namespace: (parseNamespace(parentPackage) || namespace.current()).replace(/^\//, ''),
+                                    name: parseName(parentPackage) }
+
+        debug('package bind', options.package.binding)
+
         return {
             verb: 'update' // package bind becomes package update. nice
         }
