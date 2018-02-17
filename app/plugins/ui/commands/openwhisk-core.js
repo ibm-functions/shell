@@ -655,6 +655,14 @@ specials.rules = {
 }
 specials.triggers = {
     get: standardViewModes('parameters'),
+    invoke: (options, argv) => {
+        if (options && options.trigger && options.trigger.parameters) {
+            options.params = options.trigger && options.trigger.parameters && options.trigger.parameters.reduce((M, kv) => {
+                M[kv.key] = kv.value
+                return M
+            }, {})
+        }
+    },
     create: standardViewModes('parameters', (options, argv) => {
         if (options && options.feed) {
             // the openwhisk npm is a bit bizarre here for feed creation
