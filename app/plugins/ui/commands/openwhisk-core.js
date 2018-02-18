@@ -518,6 +518,23 @@ const standardViewModes = (defaultMode, fn) => {
 
 const actionSpecificModes = [{ mode: 'code', defaultMode: true }, { mode: 'limits' }]
 specials.actions = {
+    list: (options, argv) => {
+        if (options && options.name) {
+            const parts = (options.name.match(/\//g) || []).length
+            const names = options.name.split('/')
+            if (parts === 2 && options.name.startsWith('/')) { // /namespace/package
+                options.namespace = '/' + names[1]
+                options.id = names[2] + '/'
+            } else if (parts === 1 && options.name.startsWith('/')) { // /namespace
+                options.namespace = options.name
+            } else if (parts === 0) { // package
+                options.id = options.name + '/'
+            } else { // invalid entity
+                options.id = options.name
+            }
+            delete options.name
+        }
+    },
     get: standardViewModes(actionSpecificModes),
     create: standardViewModes(actionSpecificModes, (options, argv) => {
         if (!options) return
@@ -624,6 +641,12 @@ specials.activations = {
     get: (options, argv) => activationModes()
 }
 specials.packages = {
+    list: (options, argv) => {
+        if (options && options.name) {
+            options.namespace = options.name
+            delete options.name
+        }
+    },
     get: standardViewModes('content'),
     create: standardViewModes('content'),
     update: standardViewModes('content'),
@@ -650,6 +673,12 @@ specials.packages = {
     }
 }
 specials.rules = {
+    list: (options, argv) => {
+        if (options && options.name) {
+            options.namespace = options.name
+            delete options.name
+        }
+    },
     create: (options, argv) => {
         if (argv) {
             options.trigger = argv[0]
@@ -658,6 +687,12 @@ specials.rules = {
     }
 }
 specials.triggers = {
+    list: (options, argv) => {
+        if (options && options.name) {
+            options.namespace = options.name
+            delete options.name
+        }
+    },
     get: standardViewModes('parameters'),
     create: standardViewModes('parameters', (options, argv) => {
         if (options && options.feed) {
