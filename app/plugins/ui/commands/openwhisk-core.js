@@ -494,8 +494,8 @@ const specials = {}
 /** for parametrizable entity types, e.g. actions, packages, the standard view modes */
 const standardViewModes = (defaultMode, fn) => {
     let modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
-                   { mode: 'annotations', command: () => 'annotations' },
-                   { mode: 'raw', command: () => 'raw' }]
+                 { mode: 'annotations', command: () => 'annotations' },
+                 { mode: 'raw', command: () => 'raw' }]
 
     if (defaultMode) {
         if (!util.isArray(defaultMode)) {
@@ -510,7 +510,7 @@ const standardViewModes = (defaultMode, fn) => {
     }
 
     if (fn) {
-        return (options, argv) => Object.assign(fn(options, argv) || {}, { modes: entity => modes })
+        return (options, argv, verb) => Object.assign(fn(options, argv, verb) || {}, { modes: entity => modes })
     } else {
         return (options, argv) => ({ modes: entity => modes })
     }
@@ -519,7 +519,7 @@ const standardViewModes = (defaultMode, fn) => {
 const actionSpecificModes = [{ mode: 'code', defaultMode: true }, { mode: 'limits' }]
 specials.actions = {
     get: standardViewModes(actionSpecificModes),
-    create: standardViewModes(actionSpecificModes, (options, argv) => {
+    create: standardViewModes(actionSpecificModes, (options, argv, verb) => {
         if (!options) return
 
         if (!options.action) options.action = {}
@@ -563,8 +563,9 @@ specials.actions = {
                     })
             }
 
-        } else {
-            // action... read the input file
+        } else if (verb !== 'update' || argv[0]) {
+            // for action create, or update and the user gave a
+            // positional param... find the input file
             const filepath = ui.findFile(expandHomeDir(argv[0])),
                   isBinary = argv[0].endsWith('.zip'),
                   encoding = isBinary ? 'base64' : 'utf8'
@@ -598,6 +599,9 @@ specials.actions = {
                     }
                 }
             }
+        } else {
+            // then we must remove options.exec; the backend fails if an empty struct is passed
+            delete options.action.exec
         }
     }),
     invoke: (options, argv) => {
@@ -654,6 +658,10 @@ specials.rules = {
         if (argv) {
             options.trigger = argv[0]
             options.action = argv[1]
+        }
+
+        if (!options.name || !options.trigger || !options.action) {
+            throw new Error('Invalid argument(s). A rule, trigger and action name are required.')
         }
     }
 }
@@ -785,7 +793,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
     }
 
     if (specials[entity] && specials[entity][verb]) {
-        const res = specials[entity][verb](options, argv.slice(restIndex))
+        const res = specials[entity][verb](options, argv.slice(restIndex), verb)
         if (res && res.verb) {
             // updated verb? e.g. 'package bind' => 'package update'
             verb = res.verb
