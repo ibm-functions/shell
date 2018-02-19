@@ -94,11 +94,14 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"flex": "1",
 		"font-weight": 400,
 		"position": "relative",
+    	        "overflow": "hidden", // we'll do pan and zoom ourselves
 		"-webkit-app-region": "no-drag"
 	});
+        $("#wskflowContainer").addClass('grabbable') // we want to use grab/grabbing cursor
 
 	
 	let ssvg = d3.select("#wskflowContainer")
+        .call(zoom)
 	    .append("svg")
 	    .attr("id", "wskflowSVG")
             // we will set the viewBox below, once we know the dimensions of the graph
@@ -106,7 +109,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	    .style("flex", "1");
 
 	let container = ssvg.append('g')		
-        .call(zoom)
         .on("dblclick.zoom", null);        
    
 /*    container.append('rect')
@@ -248,7 +250,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		
 	})
 
-	
 	var root = svg.append("g");
 
 	elk.layout(JSONgraph,
@@ -264,15 +265,17 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		})
    		.then(data => {
 
-                       // shell issue #423: allow graph to auto-scale with window size
-                       $("#wskflowSVG").attr("viewBox", `0 0 ${data.width} ${data.height}`)
+                    // shell issue #423, #465: allow graph to auto-scale with window size
+                       const viewBoxWidth = Math.max(200, data.width),
+                             viewBoxHeight = Math.max(300, data.height),
+                             translateX = Math.min(0, (data.width - viewBoxWidth) / 2)
 
-                       // see shell issue #422: avoid the visualization becoming too ridiculously scaled up/blown up/zoomed in
+                       $("#wskflowSVG").attr("viewBox", `${translateX} 0 ${viewBoxWidth} ${viewBoxHeight}`)
+
+                       // see shell issue #422, #465: avoid the visualization becoming too ridiculously scaled up/blown up/zoomed in
                        $("#wskflowContainer").css({
-                            "min-width": data.width,
-                            "min-height": data.height,
-                            'max-width': Math.min(width, 2.5 * data.width),
-                            'max-height': Math.min(height, 2.5 * data.height)
+                            "min-width": 2 * viewBoxWidth,
+                            "min-height": 2 * viewBoxHeight
                         })
 
 			// with shell issue #423, we don't need to have an inititial scale or translation
@@ -1254,8 +1257,17 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 
  	// handle redraw and resetting layout. from https://github.com/OpenKieler/klayjs-d3/blob/master/examples/interactive/index.js
 	function redraw() {
-		$("#qtip").removeClass("visible")
-        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+     	       $("#qtip").removeClass("visible")
+
+            const mousePos = d3.mouse(this),
+                  centerX = mousePos[0],
+                  centerY = mousePos[1]
+
+            const translateX = -(1 - d3.event.scale) * centerX + d3.event.translate[0],
+                  translateY = -(1 - d3.event.scale) * centerY + d3.event.translate[1]
+            
+            ssvg.style('transform', `translateX(${translateX}px) translateY(${translateY}px) scale(${d3.event.scale}`)
+            ssvg.style('transition', 'transform 50ms ease-in-out')
 	}		
 
 	// check if transition is complete. from https://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
