@@ -129,7 +129,9 @@ function drawNode(id, label, isCompound, properties, w, h){
 			}
 		}
 
-		// for undeployed data
+                o.TaskIndex = fsmData.States[id].TaskIndex
+
+	        // for undeployed data
 		o.undeployed = fsmData.States[id].undeployed;
 	}
 	else{
