@@ -1564,3 +1564,11 @@ break {
 .fade-in {
     animation: fadein 1s;
 }
+
+/* grabbable elements */
+.grabbable {
+    cursor: -webkit-grab;
+}
+.grabbable:active {
+    cursor: -webkit-grabbing;
+}
