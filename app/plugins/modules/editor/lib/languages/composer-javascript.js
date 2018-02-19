@@ -19,6 +19,11 @@ const libraryName = 'composer',
       composerPattern = new RegExp(`${libraryName}\.`)
 
 const strings = {
+    if: {
+        documentation: 'Conditionally execute a task',
+        detail: 'if (condTask) thenTask; else elseTask',
+        args: ['condTask', 'thenTask', 'elseTask']
+    },
     sequence: {
         documentation: 'Sequence two or more tasks into a pipeline',
         detail: 'task1 -> task2',
