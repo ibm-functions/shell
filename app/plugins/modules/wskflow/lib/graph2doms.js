@@ -376,8 +376,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		// #1 add the nodes' groups
 		var nodeData = root.selectAll(".node")
 		.data(nodes,  function(d) { return d.id; });
-		
-		var node = nodeData.enter()
+
+                // so we can add a data-index attribute to each task node
+                let taskIndex = 0
+
+	        var node = nodeData.enter()
 		.append("g")
 			.attr("class", function(d) {
 				//console.log(d);
@@ -401,10 +404,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				return className;
 			})
 			.attr("id", function(d){return d.id})
+  		        .attr("data-task-index", ({TaskIndex}) => TaskIndex ) // add a data-task-index for every task
 			.attr("data-name", function(d){
 				if(d.Type == "Task"){
 					return d.label;
-				}				
+				}
 			})
 			.attr("data-deployed", function(d){
 				if(visited){
@@ -646,7 +650,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$("#qtip").removeClass("visible");
 							
 							if(fsm.States[d.id].act.length == 1){
-								//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
+								//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 								//let id = fsm.States[d.id].act[0].activationId;
 
 								ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
@@ -704,7 +708,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 								}, function(e){
 									$(this).css("text-decoration", "underline");
 								}).click(function(e){
-									//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
+									//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 									let id = $(this).attr("aid"), index = $(this).attr('index');
 
 									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
@@ -930,8 +934,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				}).on("click", function(d, i){
 					if(d.Type == "Task" && $('#'+d.id).attr('data-deployed') == 'deployed'){
 						if(d.name){
-							//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
-							ui.pictureInPicture(() => repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true}),
+							//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
+							ui.pictureInPicture(() => repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true}),
 	                                    d3.event.currentTarget.parentNode, // highlight this node
 	                                    $("#wskflowContainer")[0],
 	                                    'App Visualization'          // container to pip	                                    

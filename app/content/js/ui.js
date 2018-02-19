@@ -1054,6 +1054,19 @@ const ui = (function() {
         removeAllDomChildren(header.querySelector('.badges'))
     }
 
+    self.wskflow = fsm => {
+        const sidecar = document.querySelector('#sidecar')
+        const {visualize} = plugins.require('wskflow')
+        const h = document.getElementById("sidecar").getBoundingClientRect().height
+
+        sidecar.classList.add('custom-content')
+        const container = document.querySelector('#sidecar > .custom-content')
+        removeAllDomChildren(container)
+
+        visualize(fsm, container, undefined, h)
+        sidecar.setAttribute('data-active-view', '.custom-content > div')
+    }
+
     /**
      * Load the given entity into the sidecar UI
      *
@@ -1271,7 +1284,42 @@ const ui = (function() {
                 } else {
                     const extraCss = entity.exec.components.length < 5 ? 'small-node-count-canvas' : ''
                     sequence.className = `${sequence.getAttribute('data-base-class')} ${extraCss}`
-                    setTimeout(() => entity.exec.components.map(renderActionBubble(sequence)), 0)
+                    // old viz: setTimeout(() => entity.exec.components.map(renderActionBubble(sequence)), 0)
+                    
+                    const toMap = A => A.reduce((M, {key,Type,Action,TaskIndex,Next}) => {
+                        M[key] = { Type, Action, TaskIndex }
+                        if (Next) {
+                            M[key].Next = Next
+                        }
+                        return M
+                    }, {})
+
+                    // form a fake FSM, so we can use the wskflow visualization
+                    const key = idx => `action_${idx}`
+
+                    Promise.all(entity.exec.components.map((actionName,idx,A) => repl.qexec(`wsk action get "${actionName}"`)
+                                                           .then(action => {
+                                                               const anonymousCode = isAnonymousLet(action)
+                                                               if (anonymousCode) {
+                                                                   return anonymousCode
+                                                               } else {
+                                                                   return action.name
+                                                               }
+                                                           })
+                                                           .then(Action => {
+                                                               return { key: key(idx),
+                                                                        Type: 'Task',
+                                                                        Action,
+                                                                        TaskIndex: idx,
+                                                                        Next: idx < A.length - 1 && key(idx + 1) }
+                                                           })))
+                        .then(toMap)
+                        .then(States => {
+                            const fsm = { Entry: key(0), Exit: key(entity.exec.components.length - 1),
+                                          States
+                                        }
+                            ui.wskflow(fsm)
+                        })
                 }
             } else {
                 //

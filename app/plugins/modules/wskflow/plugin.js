@@ -65,7 +65,7 @@ module.exports = (commandTree, prequire) => {
                     if(fsm.States[n].Type == "Task" && fsm.States[n].Action){
                         
                         actionName.push(fsm.States[n].Action);
-                        getPromises.push(repl.qexec("wsk action get "+fsm.States[n].Action));
+                        getPromises.push(repl.qexec(`wsk action get "${fsm.States[n].Action}"`));
                                                                         
                         if(action2State[fsm.States[n].Action] == undefined)
                             action2State[fsm.States[n].Action] = [];
