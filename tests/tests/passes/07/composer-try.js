@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       actionName3 = 'foo3',
@@ -79,13 +79,12 @@ describe('Create a composer try-catch', function() {
     makeAction(actionName1, 'aa', 11, "P => { if (P.x<0) throw new Error('oops'); else return P }")
     makeAction(actionName2, 'bb', 22, "err => ({message: err})")
     
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     it('should create a composer try', () => cli.do(`recover ${actionName1} with ${actionName2}`, this.app)
 	.then(cli.expectOK)
@@ -93,11 +92,12 @@ describe('Create a composer try-catch', function() {
        .then(sidecar.expectShowing(actionName1))
        .then(sidecar.expectBadge('try-catch'))
        .catch(common.oops(this)))
-    invoke(actionName1, 'x', 3, { aa: 11 })
+    invoke(actionName1, 'x', 3, { aa: 11, x: 3 })
 
     // note that we defined actionName1 to bomb if the input x is less
     // than zero, so expect the recovery here
     invoke(actionName1, 'x', -3, {
+        aa: 11,
         "message": {
             bb: 22, // we bound bb=22 to the recovery action
             error: "An error has occurred: Error: oops"

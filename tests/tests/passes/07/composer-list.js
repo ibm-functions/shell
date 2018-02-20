@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1',
@@ -33,13 +33,12 @@ describe('Use the app list command to list the invokeable compositions', functio
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     // make an app
     it('should create a composer sequence', () => cli.do(`app create ${seqName1} ./data/fsm.json`, this.app)

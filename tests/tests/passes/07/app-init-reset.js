@@ -21,8 +21,8 @@ const fs = require('fs'),
       openwhisk = require('../../../lib/openwhisk'),
       ui = require('../../../lib/ui'),
       cli = ui.cli,
-      sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+      sidecar = ui.sidecar
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
 
 /**
  * Here starts the test
@@ -44,15 +44,13 @@ describe('app init --reset', function() {
         .then(ui.expectSubset({ redis: v1, type: v2 })) // validate redis and type fields, using the provided validators
         .catch(common.oops(this)))
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
     }
-
-    assertConfig(is(sharedURL), is('url'))
+    assertConfig(is(sharedURL), is('url'))*/
 
     /*{
         const cmd = 'app init --reset --auto'

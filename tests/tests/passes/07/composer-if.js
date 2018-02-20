@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       condition1 = 'cond1',
       condition2 = 'cond2',
       condition3 = 'cond3',
@@ -91,13 +91,13 @@ describe('Create a composer if', function() {
     makeAction(yesyes, 'yyy', 222, "x=>Object.assign(x,{message:'yes'})")
     makeAction(no, 'nn', 33, "x=>({message:'no'})")
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
         
-    }
+    }*/
 
     const ifthen1 = `if_${condition1}_then_${yes}`
     it(`should create a composer if with ${condition1} and ${yes}`, () => cli.do(`if ${condition1} then ${yes}`, this.app)

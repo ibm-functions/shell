@@ -73,18 +73,12 @@ describe('Test fancier command resolutions', function() {
        .then(ui.expectStruct({"xxx":999})))
 
     it('should create another action', () => cli.do(`let ${actionName2} = x=>x`, this.app)
-	.then(cli.expectJustOK)
+       .then(cli.expectJustOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName2)))
 
     it('should fire the trigger, even from the action context', () => cli.do(`fire ${triggerName}`, this.app)
-       .then(cli.expectOKWithCustom(cli.makeCustom('.activationId', '')))
-       .then(selector => this.app.client.getText(selector))
-       // openwhisk no longer records activation records for triggers; 20180206
-       //.then(activationId => this.app.client.click(selector)
-       //.then(() => sidecar.expectOpen(this.app))
-       //.then(sidecar.expectShowing(triggerName, activationId))))
-       .then(ui.expectValidActivationId)
+       .then(cli.expectOK)
        .catch(common.oops(this)))
 
     // packaged action

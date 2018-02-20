@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1'
@@ -54,13 +54,13 @@ describe('Use the app delete command to delete an invokeable composition', funct
            .catch(common.oops(this)))
     }
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
         
-    }
+    }*/
 
     // we have to make an app before we can delete it
     it('should create a composer sequence', () => cli.do(`letc ${seqName1} = x=>x -> x=>x`, this.app)
@@ -81,14 +81,6 @@ describe('Use the app delete command to delete an invokeable composition', funct
     // show up in the list prior to deletion
     it('should list ${seqName1} via app ls', () => cli.do(`app ls`, this.app)
 	.then(cli.expectOKWithOnly(seqName1))  // seqName1 had better still be in the list
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName1))  // and sidecar should be showing it, too
-       .then(sidecar.expectBadge('sequence'))
-       .catch(common.oops(this)))
-
-    // now the package binding should exist
-    it('should list the package binding', () => cli.do(`package ls`, this.app)
-	.then(cli.expectOKWith(`openwhisk-composer.${seqName1}`)) // package binding should be in the package list
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))  // and sidecar should be showing it, too
        .then(sidecar.expectBadge('sequence'))

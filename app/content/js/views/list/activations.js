@@ -190,8 +190,17 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 nameClick.className = 'clickable'
                 nameClick.innerText = activation.name
                 name.appendChild(nameClick)
-                if (activation.name === 'conductor' && activation.logs) {     
-                    if (activation.logs.find(_ => _.indexOf('Entering action_') >= 0)) {
+
+                // special cases for sessions; note that with composer
+                // v2, we won't be able to do isSessionRelated
+                // properly. the backend needs to store info to help
+                // us distinguish between interstitial conductor
+                // activations and top-most conductor activations; as
+                // of now, the interstitial ones don't have a
+                // conductor:true annotation
+                /*const isSessionRelated = activation.annotations && activation.annotations.find(({key, value}) => key === 'conductor' && value)
+                if (isSessionRelated && activation.logs) {
+                    if (activation.logs.find(_ => _.indexOf('Entering state') >= 0)) {
                         nameClick.innerText = 'entering next task'
                     } else if(activation.logs.findIndex(log => log.indexOf('Entering echo_') >= 0) == 0){
                         nameClick.innerText = 'entering next task'
@@ -199,14 +208,13 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                         nameClick.innerText = 'executing inline function'                        
                     } else if (activation.logs.findIndex(log => log.indexOf('Entering choice_') >= 0) == 0) {
                         nameClick.innerText = 'executing if condition'
-                    } else if (activation.logs.find(_ => _.indexOf('Entering final') >= 0)) {
+                    } else if (activation.logs.find(_ => _.indexOf('Entering final state') >= 0)) {
                         nameClick.innerText = 'finishing up'
                     } else {
                         console.error(activation.logs)
                     }
                     
                     echo = activation.logs.findIndex(log => log.indexOf('Entering echo_')>=0);
-                    
                 }
                 else if(activation.name === 'echo' && echo != -1){
                     if(echo == 0)
@@ -216,7 +224,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 }
                 else{
                     echo = -1;
-                }
+                }*/
 
 
                 // command to be executed when clicking on the entity name cell
@@ -244,10 +252,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 const success = line.insertCell(-1)
                 success.className = 'deemphasize log-field success-field'
                 success.classList.add(isSuccess ? 'green-text' : 'red-text')
-                success.innerText = activation.status === 'live' ? activation.status : isSuccess ? 'ok' : 'failed'
-                if (activation.status) {
-                    line.setAttribute('data-status', activation.status)
-                }
+                success.innerText = isSuccess ? 'ok' : 'failed'
 
                 // column 5|6?: result cell
                 if (showResult) {

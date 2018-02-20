@@ -54,7 +54,8 @@ describe('Cancel via Ctrl+C', function() {
        .then(sidecar.expectShowing(actionName)))
 
     it('should invoke the long-running action, then cancel', () => cli.do(`invoke -p name openwhisk`, this.app)
-        .then(appAndCount => this.app.client.execute('repl.doCancel()').then(() => appAndCount))
+       .then(res => new Promise(resolve => setTimeout(() => resolve(res), delay/3)))
+       .then(appAndCount => this.app.client.execute('repl.doCancel()').then(() => appAndCount))
        .then(cli.expectBlank)
        .catch(common.oops(this)))
 

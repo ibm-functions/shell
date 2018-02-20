@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       actionName3 = 'foo3',
@@ -82,13 +82,12 @@ describe('Create a composer sequence', function() {
            .catch(common.oops(this)))
     }
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     // simple sequence
     it(`should create a composer sequence ${seqName1} with anonymous functions`, () => cli.do(`letc ${seqName1} = x=>x -> x=>x -a m 4`, this.app)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const composer = require('@ibm-functions/composer'),
+const composer = require('@ibm-functions/composer')({ no_wsk: true }),
       badges = require('./badges'),
       { init, getFSM, create, handleError } = require('./composer')
 
@@ -72,7 +72,7 @@ module.exports = (commandTree, prequire) => {
                                 //
                                 // now use the composer to construct the FSM
                                 //
-                                const fsm = composer.compile(composer.sequence(...components))
+                                const fsm = composer.sequence(...components)
 
                                 //
                                 // finally, construct an invokeable entity around the FSM

@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('composer:session_get')
+debug('loading')
+
 const { init } = require('./composer'),
       messages = require('./messages.json'),
       parseDuration = require('parse-duration')
+
+debug('finished loading modules')
 
 const viewName = 'session',              // for back button and sidecar header labels
       viewNameLong = 'App Visualization',//    ... long form
@@ -92,138 +97,86 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
             reject('Timeout waiting for composer application to finish')
         } else {
             manager.get(sessionId, timeout, true)
-                .then(result => manager.trace(sessionId)
-                      .then( ({trace}) => ({result, trace})))
-                .then(({result, trace}) => {
-                    // we're done! let's update the name, to hide the conductor
+                .then(activation => {
+                    if (projection) {
+                        return resolve(projection(activation))
+                    }
 
-                    // fake it till we make it: we invoked the
-                    // conductor to get the result, but would like
-                    // to display the name of the invoked app
-                    //const { activationId, name } = splitNamedSession(sessionId)
-                    const activationId = sessionId
+                    // entity onclick handler
+                    activation.onclick = () => repl.pexec(`app get ${name}`)
 
-                    // now fetch the last activation, so we have the duration
-                    Promise.all([get(trace[0]), get(trace[trace.length - 1])])
-                        .then(([firstOne, lastOne]) => {
-                            const name = commandLineOptions.name,
-                                  path = [{key:'path', value: commandLineOptions.path}] // mimic a path annotation
+                    // add our visualization view mode
+                    if (!activation.modes) activation.modes = []
+                    activation.modes.find(({mode}) => mode === 'logs').label = 'trace'
 
-                            let namePromise = name ? Promise.resolve({name,path})      // then the user invoked from the shell, and we have the name
-                                : !firstOne.cause ? Promise.resolve({firstOne})        // bad: we have no way of getting the name
-                                : repl.qexec(`wsk activation get ${firstOne.cause}`)   // then the user is doing a session get, we need to fetch the name
+                    const path = activation.annotations.find(({key}) => key === 'path').value
 
-                            namePromise.then(namedActivation => {
-                                const $get = Object.assign({}, lastOne)
+                    const theActionItself = new Promise((resolve, reject) => { // fetch the action itself, so we have the FSM
+                        repl.qexec(`wsk action get "/${path}"`).then(data => {
+                            debug('action get call complete');
+                            resolve(data);
+                        }).catch(e => {
+                            console.error('action get call complete - action deleted');
+                            resolve({wskflowErr:e});
+                        });
+                    })
 
-                                $get.originalActivationId = $get.activationId
-                                $get.activationId = sessionId
-                                $get.response.success = result.error ? false : true
-                                $get.response.status = $get.response.success ? 'success' : 'failure'
-                                $get.response.result = result
-                                $get.name = namedActivation.name
-                                $get.logs = trace
-                                $get.prettyType = viewName
+                    const trace = new Promise((resolve, reject) => { // fetch the rest of the activations in the trace
+                        Promise.all(activation.logs.map(get)).then(data => {
+                            debug('activation get call complete');
+                            resolve(data);
+                        })
+                            .catch(e => {
+                                console.error('activation get call complete - error');
+                                resolve(e);
+                            })
+                    })
 
-                                // update path annotation
-                                const pathAnno = $get.annotations.find(_ => _.key === 'path'),
-                                      realAnno = namedActivation && namedActivation.annotations && namedActivation.annotations.find(_ => _.key === 'path')
-                                if (pathAnno && realAnno) {
-                                    pathAnno.value = realAnno.value
-                                }
+                    activation.modes.push({
+                        mode: defaultMode,
+                        label: 'Session Flow',
+                        direct: entity => {
+                            //
+                            // rendering handler for wskflow activation visualization
+                            //
+                            if (true /*!entity.visualization*/) { // cache it (disabled for now)
+                                entity.visualization = Promise.all([trace, theActionItself])
+                                    .then(data => {
+                                        debug('retrieved all data')
+                                        const { visualize } = plugins.require('wskflow'),
+                                              activations = data[0],
+                                              content = document.createElement('div')
 
-                                // entity onclick handler
-                                $get.onclick = () => repl.pexec(`app get ${name}`)
+                                        let fsm;
+                                        if (data[data.length-1].wskflowErr) {
+                                            // 1) if an app was deleted, the last promise item returns an error
+                                            console.error('app was deleted');
+                                            fsm = 'deleted';
 
-                                // $get._innerStart = $get.start
-                                // $get._innerEnd = $get.end
-                                $get.start = firstOne.start
-                                $get.end = lastOne.end
-                                $get.duration = $get.end - $get.start
-
-                                // add our visualization view mode
-                                if (!$get.modes) $get.modes = []
-                                $get.modes.find(({mode}) => mode === 'logs').label = 'trace'
-
-                                let theActionItself = new Promise((resolve, reject) => { // fetch the action itself, so we have the FSM
-                                    repl.qexec(`wsk action get ${$get.name}`).then(data => {
-                                        console.log('action get call complete');
-                                        resolve(data);
-                                    }).catch(e => {
-                                        console.error('action get call complete - action deleted');
-                                        resolve({wskflowErr:e});
-                                    });
-                                })
-
-                                let theRestOfThem = new Promise((resolve, reject) => { // fetch the rest of the activations in the trace
-                                    Promise.all($get.logs.slice(1, $get.logs.length - 1).map(get)).then(data => {
-                                        console.log('activation get call complete');
-                                        resolve(data);
-                                    })
-                                    .catch(e => {
-                                        console.error('activation get call complete - error');
-                                        resolve(e);
-                                    })
-                                })
-
-                                $get.modes.push({
-                                    mode: defaultMode,
-                                    label: 'Session Flow',
-                                    direct: entity => {
-                                        //
-                                        // rendering handler for wskflow activation visualization
-                                        //
-                                        if (true /*!entity.visualization*/) { // cache it (disabled for now)
-                                           entity.visualization = Promise.all([firstOne, theRestOfThem, lastOne, theActionItself])
-                                                .then(data => {
-
-                                                    console.log('retrieved all data')
-                                                    const {visualize} = plugins.require('wskflow'),
-                                                        activations = [].concat(data[0], data[1], data[2]),
-                                                        content = document.createElement('div');
-
-                                                    let fsm;
-                                                    // 1) if an app was deleted, the last promise item returns an error
-                                                    if(data[data.length-1].wskflowErr){
-                                                        console.error('app was deleted');
-                                                        fsm = 'deleted';
-
-                                                    }
-                                                    // 2) if an older version app generated this session 
-                                                    else if(namedActivation.version && data[data.length-1].version != namedActivation.version){
-                                                        console.error('session was generated by an older version app');
-                                                        fsm = `outdated ${data[data.length-1].version} ${namedActivation.version}`; // 'outdated appV sessionV'
-                                                    }
-                                                    // 3) show graph  
-                                                    else{                                                       
-                                                        fsm = data[data.length - 1].annotations.find(({key}) => key === 'fsm').value;  // extract the FSM
-                                                    }
-
-                                                    content.style.display = 'none'
-                                                    document.body.appendChild(content)
-                                                    visualize(fsm, content, undefined, 1, activations)
-                                                    content.style.display = ''
-                                                    content.style.flex = 1
-                                                    document.body.removeChild(content)
-
-                                                    return {
-                                                        type: 'custom',
-                                                        content
-                                                    }
-                                                })
+                                        } else {
+                                            // 2) show graph
+                                            fsm = data[data.length - 1].annotations.find(({key}) => key === 'fsm').value;  // extract the FSM
                                         }
 
-                                        return entity.visualization
-                                    }
-                                })
+                                        content.style.display = 'none'
+                                        document.body.appendChild(content)
+                                        visualize(fsm, content, undefined, 1, activations)
+                                        content.style.display = ''
+                                        content.style.flex = 1
+                                        document.body.removeChild(content)
 
-                                if (projection) {
-                                    resolve(projection($get))
-                                } else {
-                                    resolve($get)
-                                }
-                            })
-                        })
+                                        return {
+                                            type: 'custom',
+                                            content
+                                        }
+                                    })
+                            }
+
+                            return entity.visualization
+                        }
+                    })
+
+                    resolve(activation)
                 })
                 .catch(err => {
                     //
@@ -274,7 +227,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         }
 
         // overfetch, because the backend model is not sorted
-        repl.qexec(`session list --limit ${commandLineOptions.limit||100} ${commandLineOptions.skip!==undefined ? '--skip ' + commandLineOptions.skip : ''} ${lastWhat === true ? '' : '--name ' + lastWhat}`)
+        repl.qexec(`session list --limit ${commandLineOptions.limit||200} ${commandLineOptions.skip!==undefined ? '--skip ' + commandLineOptions.skip : ''} ${lastWhat === true ? '' : '--name ' + lastWhat}`)
             .then(A => {
                 if (A && A.length > 0) {
                     if (errorOnly) {

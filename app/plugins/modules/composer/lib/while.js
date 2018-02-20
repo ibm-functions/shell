@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const composer = require('@ibm-functions/composer'),
-      { fetch, create, update, moveAside } = require('./composer')
+const composer = require('@ibm-functions/composer')({ no_wsk: true }),
+      { fetch, create } = require('./composer')
 
 /**
  * Format usage message
@@ -45,7 +45,7 @@ module.exports = (commandTree, prequire) => {
         return Promise.all([fetch(wsk, taskName), fetch(wsk, conditionName)])
             .then( ([{entity:task,fsm:taskFSM}, {entity:condition,fsm:conditionFSM}]) => {
                 // make the FSM
-                const fsm = composer.compile(composer.while(conditionFSM, taskFSM))
+                const fsm = composer.while(conditionFSM, taskFSM)
 
                 // we were asked to create a new action for this FSM
                 return create({ name, fsm, wsk, commandTree, execOptions, type })

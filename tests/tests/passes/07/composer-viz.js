@@ -20,7 +20,7 @@ const fs = require('fs'),
       ui = require('../../../lib/ui'),
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       {
           input,
           composerInput,
@@ -63,7 +63,9 @@ describe('show the composer visualization without creating openwhisk assets', fu
             .then(verifyTheBasicStuff(fsm.file, 'fsm'))
            .then(verifyNodeExists('foo1'))
            .then(verifyNodeExists('foo2'))
+           .then(verifyNodeExists('foo3'))
            .then(verifyEdgeExists('foo1', 'foo2'))
+           .then(verifyEdgeExists('foo2', 'foo3'))
            .catch(common.oops(this)))
     })
 
@@ -82,7 +84,7 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .catch(common.oops(this)))
 
     /** test: ibid, but alternate placement of --fsm on command line */
-    it(`show raw FSM from FSM file ${fsm.path}`, () => cli.do(`app viz ${fsm.path} --fsm`, this.app)
+    it(`show raw FSM from FSM file ${fsm.path}, alterate option placement`, () => cli.do(`app viz ${fsm.path} --fsm`, this.app)
       .then(cli.expectOK)
       .then(sidecar.expectOpen)
       .then(sidecar.expectShowing(fsm.file))
@@ -94,13 +96,13 @@ describe('show the composer visualization without creating openwhisk assets', fu
     baseComposerInputs.forEach(input => {
         it(`show visualization from javascript source ${input.path}`, () => cli.do(`app viz ${input.path}`, this.app)
            .then(verifyTheBasicStuff(input.file, 'composerLib'))
-           .then(verifyNodeExists('RandomError'))
+           .then(verifyNodeExists('RandomError', false)) // is not deployed
            .catch(common.oops(this)))
     })
 
-    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+    /*it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
         .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     /** test: sequence js file */
     it(`show visualization from javascript source ${seq.path}`, () => cli.do(`app viz ${seq.path}`, this.app)
@@ -127,13 +129,23 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyTheBasicStuff('app.js', 'composerLib'))
        .then(verifyNodeExists('swapi', false)) // not yet deployed
        .then(verifyNodeExists('stapi', false)) // not yet deployed
+       .then(verifyNodeExists('validate-swapi', false)) // not yet deployed
+       .then(verifyNodeExists('validate-stapi', false)) // not yet deployed
+       .then(verifyNodeExists('report-swapi', false)) // not yet deployed
+       .then(verifyNodeExists('report-stapi', false)) // not yet deployed
+       .then(verifyNodeExists('report-empty', false)) // not yet deployed
        .catch(common.oops(this)))
 
     /** test: viz, then create with -r, testing for handling of implicit entity and auto-deploy */
-    it(`should create wookiechat with implicit entity`, () => cli.do('app update -r', this.app)
+    it(`should create wookiechat and dependent actions with implicit entity`, () => cli.do('app update -r', this.app)
        .then(verifyTheBasicStuff('app', 'composerLib'))   // the .replace part strips off the ".js" suffix
        .then(verifyNodeExists('swapi', true)) // expect to be deployed
        .then(verifyNodeExists('stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('validate-swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('validate-stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-empty', true)) // expect to be deployed
        .catch(common.oops(this)))
 
     /** test: if js file */

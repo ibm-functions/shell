@@ -6,7 +6,7 @@
  *
  */
 
-const composer = require('@ibm-functions/composer');
+const composer = require('@ibm-functions/composer')();
 const composer_utils = require('./composer_utils');
 
 // Actions
@@ -37,4 +37,4 @@ const app = composer.if(
   }
 );
 
-module.exports = composer.compile(app, 'start_session.js');
+module.exports = app;
