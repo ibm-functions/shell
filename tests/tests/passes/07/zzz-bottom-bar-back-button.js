@@ -26,7 +26,7 @@ const uuid = require('uuid/v4'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       actionName1 = `bottom-bar-back-button-test-${uuid()}`,
       actionName2 = `bottom-bar-back-button-test-${uuid()}`,
       seqName1 = 'seq1',
@@ -41,13 +41,12 @@ describe('Bottom bar back button functionality', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     it('should create a composer sequence', () => cli.do(`letc ${seqName1} = x=>x -> x=>x`, this.app)
         .then(cli.expectOK)
@@ -55,8 +54,8 @@ describe('Bottom bar back button functionality', function() {
        .then(sidecar.expectShowing(seqName1))
        .catch(common.oops(this)))
 
-    const node1 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .node.Task[data-deployed="deployed"]:nth-of-type(3)`,
-          node2 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .node.Task[data-deployed="deployed"]:nth-of-type(4)`
+    const node1 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .node.action[data-deployed="deployed"]:nth-of-type(3)`,
+          node2 = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .node.action[data-deployed="deployed"]:nth-of-type(4)`
     it('should click on the first node', () => {
         return this.app.client.waitForVisible(node1)
             .then(() => this.app.client.getAttribute(node1, 'data-name'))

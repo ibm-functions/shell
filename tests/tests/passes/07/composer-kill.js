@@ -24,12 +24,15 @@ const common = require('../../../lib/common'),
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1',
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       killFailure404 = 'Cannot find live session',
       purgeFailure404 = 'Cannot find session',
       genericFailureMessage = 'The requested session no longer, or has never, existed'
 
 describe('killing and purging composer invocations', function() {
+    // no more kill and purge with composer v2
+    return
+
     before(common.before(this))
     after(common.after(this))
 
@@ -152,7 +155,7 @@ describe('killing and purging composer invocations', function() {
 
     makeAction(actionName1, 'aa', 11, "x => new Promise(resolve => setTimeout(() => resolve(x), 5000))")
 
-    it('should print usage with session kill 3', () => cli.do('session kill 3', this.app)
+    /*it('should print usage with session kill 3', () => cli.do('session kill 3', this.app)
         .then(cli.expectError(0, 'Kill a live session')) // substring of usage
        .catch(common.oops(this)))
        
@@ -184,6 +187,6 @@ describe('killing and purging composer invocations', function() {
     asyncThenKill({cmd: 'session purge',                      // async, then purge the activation
                    successMessage: 'Successfully purged the given session',
                    failureMessage: purgeFailure404
-                  }, seqName1, 'x', 3, { aa: 11 })
+                  }, seqName1, 'x', 3, { aa: 11 })*/
 
 })

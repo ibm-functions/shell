@@ -19,7 +19,8 @@ const vm = require('vm'),
       path = require('path'),
       mod = require('module'),
       expandHomeDir = require('expand-home-dir'),
-      openwhiskComposer = require('@ibm-functions/composer'),
+      _openwhiskComposer = require('@ibm-functions/composer'),
+      openwhiskComposer = _openwhiskComposer({ no_wsk: true }),
       { isValidFSM, handleError } = require('./composer')
 
 //
@@ -70,14 +71,26 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                     return reject({ message: 'No code to compile', type: 'EMPTY_FILE'})
                 }
 
+                /**
+                 * The Composer constructor tries to initialize
+                 * wsk. But we may not have a wskprops, e.g. if the
+                 * user is previewing apps without any AUTH
+                 * configuration. See
+                 * tests/passes/07/composer-viz-no-auth.js
+                 *
+                 */
+                function composerOpts() {
+                    return !namespace.current() ? '{no_wsk:true}' : ''
+                }
+
                 // check to see if the source already requires the openwhisk-composer library
                 function bootstrapWithRequire() {
                     lineOffset = 1
-                    return "const composer = require('@ibm-functions/composer');" + originalCode
+                    return `const composer = require('@ibm-functions/composer')(${composerOpts()});` + originalCode
                 }
                 function bootstrapWithRequireForModule() {
                     lineOffset = 1
-                    return "const composer = require('@ibm-functions/composer');const process = module.process; const console = module.console;\n" + originalCode
+                    return `const composer = require('@ibm-functions/composer')(${composerOpts()});const process = module.process; const console = module.console;\n` + originalCode
                 }
                 function bootstrapWithModuleExports() {
                     lineOffset = 0
@@ -85,12 +98,12 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                 }
                 function bootstrapWithModuleExportsAndRequire() {
                     lineOffset = 0
-                    return "const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=" + originalCode
+                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console; module.exports=` + originalCode
                 }
                 function bootstrapWithModuleExportsAndRequireAndTrim() {
                     lineOffset = 0
                     const code = originalCode.trim().replace(/^([;\s]+)/, '') // trim leading semicolons
-                    return "const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=" + code
+                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console; module.exports=` + code
                 }
                 function bootstrapWithConstMain() {
                     lineOffset = 1
@@ -98,7 +111,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                 }
                 function bootstrapWithConstMainAndRequire() {
                     lineOffset = 1
-                    return "const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console;\n" + originalCode + "\n;module.exports=main"
+                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console;\n` + originalCode + "\n;module.exports=main"
                 }
 
                 const retryA = [bootstrapWithRequireForModule,
@@ -127,7 +140,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                                        },
                               my_require = m => {
                                   if (m === '@ibm-functions/composer') {
-                                      return openwhiskComposer
+                                      return _openwhiskComposer
                                   } else {
                                       return require(path.resolve(dir, m))
 
@@ -136,7 +149,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
 
                         const sandbox = {}
                         module.exports = {}
-                        let res = vm.runInNewContext(mod.wrap(code), { filename, lineOffset })(module.exports, my_require, module, filename, dir) || module.exports.main || module.exports || res.main
+                        let res = vm.runInNewContext(mod.wrap(code), { filename, lineOffset, console: module.console, process: module.process })(module.exports, my_require, module, filename, dir) || module.exports.main || module.exports || res.main
                         //console.error(code)
                         if (typeof res === 'function') {
                             res = res()
@@ -144,10 +157,18 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                         if (isValidFSM(res)) {
                             return res
                         } else {
-                            return openwhiskComposer.compile(res)
+                            try {
+                                // maybe the code did a console.log?
+                                const maybe = openwhiskComposer.deserialize(JSON.parse(logMessage))
+                                if (isValidFSM(maybe)) {
+                                    return maybe
+                                }
+                            } catch (e) { }
+
+                            throw new Error('Unable to compile your composition')
                         }
                     } catch (e) {
-                        // console.error(e)
+                         console.error(e)
                         errors.push(e)
                         if (retries.length > 0) {
                             return compile(retries.pop()(), retries)
@@ -162,7 +183,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                             if (isValidFSM(json)) {
                                 return json
                             } else {
-                                const maybe = openwhiskComposer.compile(json)
+                                const maybe = json
                                 console.log = log
                                 process.exit = exit
                                 return maybe
@@ -181,11 +202,10 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                                     console.log = doLog
                                     process.exit = doExit
                                     errorMessage = ''
-                                    const json = eval(bootstrapWithRequire(originalCode))
-                                    const maybe = openwhiskComposer.compile(json)
+                                    const composition = eval(bootstrapWithRequire(originalCode))
                                     console.log = log
                                     process.exit = exit
-                                    return maybe
+                                    return composition
                                     
                                 } catch (e4) {
                                     console.log = log
@@ -231,7 +251,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
 
                 if (!isValidFSM(fsm)) {
                     // still no luck? reject
-                    console.error('Error compiling app source', sandbox)
+                    console.error('Error compiling app source', fsm, sandbox)
                     reject('Your code could not be composed')
                 } else {
                     if (opts.code) {
@@ -266,13 +286,19 @@ const readJSONFromDisk = location => {
 }
 
 /**
+ * Deserialize an FSM
+ *
+ */
+exports.deserializeFSM = fsm => openwhiskComposer.deserialize(fsm)
+
+/**
  * Assemble the FSM JSON. It might be on disk, if `fsm` names a file
  * on the local filesystem.
  *
  */
 exports.readFSMFromDisk = fsm => {
     if (fsm) {
-        return readJSONFromDisk(fsm/*.substring(1)*/)
+        return exports.deserializeFSM(readJSONFromDisk(fsm))
     } else {
         return fsm
     }

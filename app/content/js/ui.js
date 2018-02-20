@@ -1055,6 +1055,7 @@ const ui = (function() {
     }
 
     self.wskflow = fsm => {
+        debug('wskflow', fsm)
         const sidecar = document.querySelector('#sidecar')
         const {visualize} = plugins.require('wskflow')
         const h = document.getElementById("sidecar").getBoundingClientRect().height
@@ -1305,21 +1306,16 @@ const ui = (function() {
                                                                } else {
                                                                    return action.name
                                                                }
-                                                           })
-                                                           .then(Action => {
+                                                           }).catch(err => actionName) // 404s
+                                                           .then(name => {
                                                                return { key: key(idx),
-                                                                        Type: 'Task',
-                                                                        Action,
+                                                                        type: 'action',
+                                                                        name,
                                                                         TaskIndex: idx,
                                                                         Next: idx < A.length - 1 && key(idx + 1) }
                                                            })))
-                        .then(toMap)
-                        .then(States => {
-                            const fsm = { Entry: key(0), Exit: key(entity.exec.components.length - 1),
-                                          States
-                                        }
-                            ui.wskflow(fsm)
-                        })
+                        .then(actions => ({ composition: actions }))
+                        .then(fsm => ui.wskflow(fsm))
                 }
             } else {
                 //

@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       openwhisk = require('../../../lib/openwhisk'),
       ui = require('../../../lib/ui'),
       path = require('path'),
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       assert = require('assert'),
       keys = ui.keys,
@@ -50,9 +50,9 @@ describe('edit compositions', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+    /*it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
        .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     it('should create an app from FSM', () => cli.do(`app create comp1 ./data/fsm.json`, this.app)
 	.then(cli.expectOK)

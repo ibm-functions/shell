@@ -15,7 +15,9 @@
  */
 
 
-const { properties } = require('./composer')
+const path = require('path'),
+      { properties } = require('./composer'),
+      package = require(path.join(__dirname, '../node_modules/@ibm-functions/composer/package.json'))
 
 const usage = cmd => `Print out the details of your configuration.
 
@@ -26,14 +28,17 @@ const getProperties = cmd => (_1, _2, _a, modules, _3, execOptions, args, option
         throw new modules.errors.usage(usage(cmd))
     }
 
-    return properties()
+    return `Composer version ${package.version}`
+    
+    // old version, where we print out the redis config
+    /*return properties()
         .then(resp => resp.message)
         .then(package => {
             //ui.showEntity(package, { show: 'parameters' })
             const config = Object.assign({}, package.parameters.find(({key}) => key === '$config').value)
             delete config.notify // don't show internal property
             return config
-        })
+        })*/
 }
 
 /**

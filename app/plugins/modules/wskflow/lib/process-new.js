@@ -22,10 +22,13 @@ function Process takes a fsm and outputs an annotated fsm that markes the states
 
 function annotateNodes(fsm, activations){
 
-	// initialize: adding an Entry state and an Exit state (for viuslaizations).
-	fsm.States.Entry = {'Type' : 'Entry', 'Next': fsm.Entry};
-	fsm.States.Exit = {'Type': 'Exit'};	
-	fsm.States[fsm.Exit].Next = 'Exit';
+        // initialize: adding an Entry state and an Exit state (for viuslaizations).
+        fsm.Entry = 'Entry'
+        fsm.Exit = 'Exit'
+	fsm.States.Entry = {'type' : 'Entry', 'Next': fsm.composition[0].id};
+        fsm.States.Exit = {'type': 'Exit'};
+        fsm.States[fsm.Exit].Next = 'Exit';
+        // we will wire up to Exit in fsm2Graph
 
 	let retry_2 = [], tryStates = [], repeat_1 = [], action2State = {}, nullStates = [];;
 	
@@ -39,9 +42,9 @@ function annotateNodes(fsm, activations){
 		fsm.States[name].display = undefined;
 		
 		if(activations){
-			if(fsm.States[name].Action){
-				let n = fsm.States[name].Action;
-				if(n.indexOf("/") != -1)
+			if(fsm.States[name].name){
+				let n = fsm.States[name].name;
+				if(n.indexOf("/") !== -1)
 					n = n.substring(n.lastIndexOf("/")+1);
 				action2State[n] = name;
 			}
@@ -54,11 +57,11 @@ function annotateNodes(fsm, activations){
 		if(state.Next){
 			fsm.States[state.Next].Pre.push({"name": name, "class": type});
 		}
-		if(type == "Try"){
+		if(type === "try"){
 			fsm.States[state.Handler].Pre.push({"name": name, "class": type});
 			tryStates.push(name);
 		}		
-		else if(type == "Choice"){
+		else if(type === "if"){
 			if(state.Then) fsm.States[state.Then].Pre.push({name: name, class: type});
 			if(state.Else) fsm.States[state.Else].Pre.push({name: name, class: type});
 			// new: not to merge choice state with previous action states - will have error if condition is a sequence. 		
@@ -80,7 +83,7 @@ function annotateNodes(fsm, activations){
 		let state = fsm.States[nullName];
 		state.Pre.forEach(p => {
 			console.log(p)
-			if(p.class == 'Choice' && fsm.States[p.name].Else == nullName){
+			if(p.class === 'if' && fsm.States[p.name].Else == nullName){
 				console.log(nullName, state);
 				state.display = 'ignore';
 			}
@@ -170,9 +173,9 @@ function annotateNodes(fsm, activations){
 	Object.keys(fsm.States).forEach(name => {
 		let state = fsm.States[name], type = state.Type;
 		
-		if(type == "Pass"){
+		if(type == "pass"){
 			// hide pass state except when it is used in try catch. 
-			if(fsm.States["catch_"+name.substring("pass_".length)] != undefined){
+			if(fsm.States["catch_"+name.substring("pass_".length)] !== undefined){
 				fsm.States["catch_"+name.substring("pass_".length)].compound = true;
 			}
 			/*else if(state.Next == "Exit"){
@@ -181,13 +184,13 @@ function annotateNodes(fsm, activations){
 
 			state.display = "ignore";
 		}
-		else if(type == "Catch"){
+		else if(type == "if"){
 			state.display = "ignore";
 		}
-		else if(type == "End"){
+		else if(type == "end"){
 			state.display = "ignore";
 		}
-		else if(type == "Push"){
+		else if(type == "push"){
 			// add this - if this push only has one prev
 			/*f(state.Pre.length == 1 && fsm.States["pop_"+name.substring("push_".length)] == undefined){
 				state.display = "ignore";
@@ -195,13 +198,13 @@ function annotateNodes(fsm, activations){
 			// ok so the only time i observed a push to be ignore is if there's a corresponding choice
 
 			// new: if it's a push that's paird to a choice, set choice property to the choice's id
-			if(fsm.States["choice_"+name.substring("push_".length)] != undefined){
+			if(fsm.States["choice_"+name.substring("push_".length)] !== undefined){
 				//state.display = "ignore";
 				state.choice = "choice_"+name.substring("push_".length);
 			}
 		}
-		else if(type == "Let"){
-			if(fsm.States[state.Next].Type == "Push"){
+		else if(type == "let"){
+			if(fsm.States[state.Next].Type == "push"){
 
 			}
 		}
@@ -228,21 +231,21 @@ function annotateNodes(fsm, activations){
 		}
 
 		activations.forEach((a, i) => {
-			if(a.name == 'conductor'){
+			if(a.name === 'conductor'){
 
 				// special case for first conductor: if log-input, first state will be an echo
-				if(i==0 && fsm.States.Entry.Next && fsm.States.Entry.Next.indexOf('echo_') != -1 && i+1<activations.length && activations[i+1].name == 'echo'){
+				if(i==0 && fsm.States.Entry.Next && fsm.States.Entry.Next.indexOf('echo_') !== -1 && i+1<activations.length && activations[i+1].name == 'echo'){
 					addAct('Entry', activations[i+1]);
 				}
 				else{
-					// looking at conductor logs for activations				
+					// looking at conductor logs for activations
 					a.logs.forEach((log, j) => {					
-						if(log.indexOf('Entering function') != -1){
+						if(log.indexOf('Entering function') !== -1){
 							// in logging mode, next state will be an echo state, next activation will be the echo activation
 							// if next is echo, put echo act in the function state's act. 
 							// otherwise, put the conductor's act in the function state's act. 
 							let state = log.substring(log.lastIndexOf(" ")+1);
-							if(fsm.States[state].Next && fsm.States[state].Next.indexOf('echo_') != -1 && i+1<activations.length && activations[i+1].name == 'echo'){
+							if(fsm.States[state].Next && fsm.States[state].Next.indexOf('echo_') !== -1 && i+1<activations.length && activations[i+1].name == 'echo'){
 								addAct(state, activations[i+1]);
 								fsm.States[state].debug = true;
 							}
@@ -250,11 +253,11 @@ function annotateNodes(fsm, activations){
 								addAct(state, a);
 
 						}						
-						else if(log.indexOf('Entering action') != -1){
+						else if(log.indexOf('Entering state') !== -1){
 							let state = log.substring(log.lastIndexOf(" ")+1);
-							if(fsm.States[state].Action){
-								let n = fsm.States[state].Action;
-								if(n.lastIndexOf("/") != -1 && n.lastIndexOf("/") < n.length-1)
+							if(fsm.States[state].name){
+								let n = fsm.States[state].name;
+								if(n.lastIndexOf("/") !== -1 && n.lastIndexOf("/") < n.length-1)
 									n = n.substring(n.lastIndexOf("/")+1);
 								if(i+1<activations.length && activations[i+1].name == n)
 									addAct(state, activations[i+1]);	
@@ -275,9 +278,9 @@ function annotateNodes(fsm, activations){
 		if(lastAct.logs && lastAct.logs.length > 0){
 			let isExit = false, isFinal = false;
 			lastAct.logs.forEach(log => {
-				if(log.indexOf("Entering final state") != -1)
+				if(log.indexOf("Entering final state") !== -1)
 					isFinal = true;
-				if(log.indexOf("Entering "+exitState) != -1)
+				if(log.indexOf("Entering "+exitState) !== -1)
 					isExit = true;
 			});
 			if(isFinal && isExit && lastAct.response.success){	// Exit state is not an action, all done here
@@ -286,9 +289,9 @@ function annotateNodes(fsm, activations){
 			else if(isFinal){
 				// if it's only the final state - previous act must be the action. check if it's succesful 
 				let lastActionAct = activations[activations.length-2];
-				let lastActionName = fsm.States[exitState].Action;
+				let lastActionName = fsm.States[exitState].name;
 				if(lastActionName){
-					if(lastActionName.lastIndexOf("/") != -1 && lastActionName.lastIndexOf("/") < lastActionName.length-1)
+					if(lastActionName.lastIndexOf("/") !== -1 && lastActionName.lastIndexOf("/") < lastActionName.length-1)
 						lastActionName = lastActionName.substring(lastActionName.lastIndexOf("/")+1);
 					if(lastActionAct.name == lastActionName && lastActionAct.response.success){
 						isExitSuccess = true;

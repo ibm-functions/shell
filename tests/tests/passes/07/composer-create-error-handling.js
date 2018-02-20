@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       isUrl = require('is-url'),
       fs = require('fs'),
       path = require('path'),
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       keys = ui.keys,
       cli = ui.cli,
@@ -44,9 +44,9 @@ describe('app create error handling and app create --dry-run', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+    /*it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
         .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     it('should 404 session get with all-numeric uuid', () => cli.do('session get 00000000000000000000000000000000 --timeout 5s', this.app)
        .then(cli.expectError(404))
@@ -71,14 +71,14 @@ describe('app create error handling and app create --dry-run', function() {
         .then(cli.expectError(0, 'Invalid memory limit: expected integer, but got nothing.'))
        .catch(common.oops(this)))
 
-    it('should fail to initialize composer, due to bogus option', () => cli.do(`app init --nope`, this.app)
+    /*it('should fail to initialize composer, due to bogus option', () => cli.do(`app init --nope`, this.app)
         .then(cli.expectError(0, 'Unexpected option nope'))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     const dryRunOk = 'data/composer-source/if.js',
           badDir = 'data/composer-source-expect-errors',
           dryRunBad = [ { input: `${badDir}/error1.js`, err: `SLACK_TOKEN required in environment.` },
-                        { input: `${badDir}/nofsm.js`, err: `Your source code did not produce a valid app.` },
+                        { input: `${badDir}/nofsm.js`, err: `Your code could not be composed` },
                         { input: `${badDir}/t2s.js`, err: `ReferenceError: slackConfig is not defined
     at t2s.js:17:19
     at t2s.js:22:3` },
@@ -96,7 +96,7 @@ SyntaxError: Unexpected token ,` }]
        .catch(common.oops(this)))
     dryRunBad.forEach( ({input, err}) => {
         it(`should dry-run check with expected error ${input} --dry-run`, () => cli.do(`app create ${input} --dry-run`, this.app)
-            .then(cli.expectError(0, err))
+           .then(cli.expectError(0, err))
            .catch(common.oops(this)))
     })
 

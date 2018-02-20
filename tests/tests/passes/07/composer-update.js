@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       appName1 = 'foo1'
 
 describe('confirm that app update preserves annotations and parameters', function() {
@@ -30,13 +30,12 @@ describe('confirm that app update preserves annotations and parameters', functio
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     it('should create an app', () => cli.do(`app create ${appName1} data/composer-source/if.js`, this.app)
         .then(cli.expectOK)

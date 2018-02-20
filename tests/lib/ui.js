@@ -43,7 +43,7 @@ selectors.SIDECAR_ACTIVATION_ID = `${selectors.SIDECAR} .sidecar-header .activat
 selectors.SIDECAR_RULE_CANVAS = `${selectors.SIDECAR} .rule-components`
 selectors.SIDECAR_RULE_CANVAS_NODES = `${selectors.SIDECAR_RULE_CANVAS} .sequence-component`,
 selectors.SIDECAR_SEQUENCE_CANVAS = `${selectors.SIDECAR} #wskflowSVG`
-selectors.SIDECAR_SEQUENCE_CANVAS_NODES = `${selectors.SIDECAR_SEQUENCE_CANVAS} .node.Task`,
+selectors.SIDECAR_SEQUENCE_CANVAS_NODES = `${selectors.SIDECAR_SEQUENCE_CANVAS} .node.action`,
 selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N = N => `${selectors.SIDECAR_SEQUENCE_CANVAS_NODES}[data-task-index="${N}"]`,
 selectors.SIDECAR_LIMIT = type => `${selectors.SIDECAR} .sidecar-header .limits .limit[data-limit-type="${type}"]`
 selectors.SIDECAR_BADGES = `${selectors.SIDECAR} .sidecar-header .badges`
@@ -233,7 +233,7 @@ exports.sidecar = {
         it('should toggle closed the sidecar', () => exports.sidecar.doClose(ctx.app))
     },
 
-    expectShowing: (expectedName, expectedActivationId, expectSubstringMatchOnName=false, expectedPackageName, expectType) => app => app.client.waitUntil(() => {
+    expectShowing: (expectedName, expectedActivationId, expectSubstringMatchOnName=false, expectedPackageName, expectType, waitThisLong=timeout) => app => app.client.waitUntil(() => {
 	// check selected name in sidecar
         return app.client.waitForVisible(`${selectors.SIDECAR}${!expectType ? '' : '.entity-is-' + expectType}`)
             .then(() => app.client.waitForText(selectors.SIDECAR_TITLE, timeout))
@@ -249,7 +249,7 @@ exports.sidecar = {
                     }
                 }
             })
-    }, timeout, `expect action name ${expectedName} in sidecar substringOk? ${expectSubstringMatchOnName}`)
+    }, waitThisLong, `expect action name ${expectedName} in sidecar substringOk? ${expectSubstringMatchOnName}`)
 	.then(() => {
 	    // check selectd activation id in sidecar
 	    if (expectedActivationId) {

@@ -18,6 +18,7 @@
 const { isValidFSM, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
       badges = require('./badges'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
+      messages = require('./messages'),
       fs = require('fs'),
       path = require('path'),
       minimist = require('minimist'),

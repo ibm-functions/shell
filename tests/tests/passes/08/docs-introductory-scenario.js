@@ -25,7 +25,7 @@ const common = require('../../../lib/common'),
       util = require('util'),
       assert = require('assert'),
       badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
@@ -58,141 +58,92 @@ const src = app => fs.readFileSync(path.join(__dirname, '../../../../app/demos/'
 // hardcode for now... we need to generate this every time
 const fsm = {
     hello: {
-        "Entry": "function_0",
-        "States": {
-            "function_0": {
-                "Type": "Task",
-                "Function": "args => ({msg: `hello ${args.name}!`})"
+        "composition": [{
+            "type": "function",
+            "exec": {
+                "kind": "nodejs:default",
+                "code": "args => ({msg: `hello ${args.name}!`})"
             }
-        },
-        "Exit": "function_0"
+        }]
     },
     if: {
-        "Entry": "push_0",
-        "States": {
-            "push_0": {
-                "Type": "Push",
-                "Next": "action_1"
-            },
-            "action_1": {
-                "Type": "Task",
-                "Action": "authenticate",
-                "Next": "choice_0"
-            },
-            "choice_0": {
-                "Type": "Choice",
-                "Then": "action_2",
-                "Else": "action_3"
-            },
-            "action_2": {
-                "Type": "Task",
-                "Action": "welcome",
-                "Next": "pass_0"
-            },
-            "action_3": {
-                "Type": "Task",
-                "Action": "login",
-                "Next": "pass_0"
-            },
-            "pass_0": {
-                "Type": "Pass"
-            }
-        },
-        "Exit": "pass_0"
+        "composition": [{
+            "type": "if",
+            "test": [{
+                "type": "action",
+                "name": "authenticate"
+            }],
+            "consequent": [{
+                "type": "action",
+                "name": "welcome"
+            }],
+            "alternate": [{
+                "type": "action",
+                "name": "login"
+            }]
+        }]
     },
     try: {
-        "Entry": "try_0",
-        "States": {
-            "try_0": {
-                "Type": "Try",
-                "Next": "action_1",
-                "Handler": "function_2"
-            },
-            "action_1": {
-                "Type": "Task",
-                "Action": "validate",
-                "Next": "catch_0"
-            },
-            "catch_0": {
-                "Type": "Catch",
-                "Next": "pass_0"
-            },
-            "function_2": {
-                "Type": "Task",
-                "Function": "args => ({ ok: false })",
-                "Next": "pass_0"
-            },
-            "pass_0": {
-                "Type": "Pass"
-            }
-        },
-        "Exit": "pass_0"
+        "composition": [{
+            "type": "try",
+            "body": [{
+                "type": "action",
+                "name": "validate"
+            }],
+            "handler": [{
+                "type": "function",
+                "exec": {
+                    "kind": "nodejs:default",
+                    "code": "args => ({ ok: false })"
+                }
+            }]
+        }]
     },
     retain: {
-        "Entry": "try_0",
-        "States": {
-            "pass_0": {
-                "Type": "Pass"
-            },
-            "function_4": {
-                "Type": "Task",
-                "Function": "args => ({ ok: false })",
-                "Next": "pass_0"
-            },
-            "catch_0": {
-                "Type": "Catch",
-                "Next": "pass_0"
-            },
-            "pop_1": {
-                "Type": "Pop",
-                "Next": "function_3"
-            },
-            "push_1": {
-                "Type": "Push",
-                "Next": "action_2"
-            },
-            "try_0": {
-                "Type": "Try",
-                "Next": "push_1",
-                "Handler": "function_4"
-            },
-            "action_2": {
-                "Type": "Task",
-                "Action": "validate",
-                "Next": "pop_1"
-            },
-            "function_3": {
-                "Type": "Task",
-                "Function": "args => ({ text: new Buffer(args.params.str, 'base64').toString() })",
-                "Next": "catch_0"
-            }
-        },
-        "Exit": "pass_0"
+        "composition": [{
+            "type": "try",
+            "body": [{
+                "type": "retain",
+                "body": [{
+                    "type": "action",
+                    "name": "validate"
+                }]
+            }, {
+                "type": "function",
+                "exec": {
+                    "kind": "nodejs:default",
+                    "code": "args => ({ text: new Buffer(args.params.str, 'base64').toString() })"
+                }
+            }],
+            "handler": [{
+                "type": "function",
+                "exec": {
+                    "kind": "nodejs:default",
+                    "code": "args => ({ ok: false })"
+                }
+            }]
+        }]
     },
-    let: {
-        "Entry": "let_0",
-        "States": {
-            "let_0": {
-                "Type": "Let",
-                "Symbol": "secret",
-                "Value": 42,
-                "Next": "function_1"
+    let: { 
+        "composition": [{
+            "type": "let",
+            "declarations": {
+                "secret": 42
             },
-            "function_1": {
-                "Type": "Task",
-                "Function": "_ => ({ ok: secret === 42 })",
-                "Next": "end_0"
-            },
-            "end_0": {
-                "Type": "End",
-                "Next": "function_2"
-            },
-            "function_2": {
-                "Type": "Task",
-                "Function": "_ => ({ ok: (typeof secret === 'undefined') })"
+            "body": [{
+                "type": "function",
+                "exec": {
+                    "kind": "nodejs:default",
+                    "code": "_ => ({ ok: secret === 42 })"
+                }
+            }]
+        }, {
+            "type": "function",
+            "exec": {
+                "kind": "nodejs:default",
+                "code": "_ => ({ ok: (typeof secret === 'undefined') })"
             }
-        },
-        "Exit": "function_2"
+        }]
     }
 }
 
@@ -211,7 +162,7 @@ const graph = {
         // here we intentionally use just expectedX, because undefined and 0 are treated the same
         return client.waitUntil(() => Promise.all([!expectedTasks ? EMPTY : client.elements('#wskflowSVG .node.Task'),
                                                    !expectedTotal ? EMPTY : client.elements('#wskflowSVG .node.leaf'),
-                                                   !expectedValues ? EMPTY : client.elements('#wskflowSVG .node.Value'),
+                                                   !expectedValues ? EMPTY : client.elements('#wskflowSVG .node.let'),
                                                    !expectedDeployed ? EMPTY : client.elements('#wskflowSVG .node.leaf[data-deployed="deployed"]')
                                                   ])
                                 .then(([{value:actualTasks}, {value:actualTotal}, {value:actualValues}, {value:actualDeployed}]) => {
@@ -229,39 +180,40 @@ const graph = {
  *
  */
 const composer = {
-    getSessions: (app, nLive, nDone, { cmd='session list', expect=[] }) => {
+    countSessions: (app, name) => {
+        return cli.do(`session list ${name}`, app)
+	    .then(cli.expectOKWithCustom({ passthrough: true }))
+            .then(N => app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name .clickable`))
+            .then(A => !A || !A.value ? 0 : A.value.length)
+    },
+    getSessions: (app, nDone, { cmd='session list', expect=[] }) => {
         return cli.do(cmd, app)
 	    .then(cli.expectOKWithCustom({ passthrough: true }))
-            .then(N => app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.live`)
-                  .then(list => {
-                      if (list.value.length !== nLive) {
-                          console.log(list.value)
-                          assert.equal(list.value.length, nLive)
-                      }
-                  })
-                  .then(() => {
-                      if (nDone > 0) {
-                          return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name .clickable`)
-                              .then(done => !util.isArray(done) ? [done] : done)      // make sure we have an array
-                              .then(done => {                                         // validate expect, which is a subset of the expected done list
-                                  return Promise.all(expect.map(e => assert.ok(done.find(d => d === e)))) // is each expected in the done list?
-                                      .then(() => done) // passthrough
-                              })
-                              .then(done => {
-                                  // validate nDone
-                                  if (done.length !== nDone) {
-                                      return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .activationId .clickable`)
-                                          .then(activationIds => {
-                                              // we have a fatal error, but first let's log some bits
-                                              console.error(done)
-                                              console.error(activationIds)
-                                              assert.equal(done.length, nDone)
-                                          })
-                                  }
-                              })
-                      }
-                  })
-                  .then(() => N)) // allow further composition using N, the command index
+            .then(N => {
+                if (nDone > 0) {
+                    return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name .clickable`)
+                        .then(done => !util.isArray(done) ? [done] : done)      // make sure we have an array
+                        .then(done => {                                         // validate expect, which is a subset of the expected done list
+                            return Promise.all(expect.map(e => assert.ok(done.find(d => d === e)))) // is each expected in the done list?
+                                .then(() => done) // passthrough
+                        })
+                        .then(done => {
+                            // validate nDone
+                            if (done.length < nDone) {
+                                return app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .activationId .clickable`)
+                                    .then(activationIds => {
+                                        // we have a fatal error, but first let's log some bits
+                                        console.error(done)
+                                        console.error(activationIds)
+                                        assert.ok(done.length >= nDone)
+                                    })
+                            }
+                        })
+                        .then(() => N) // allow further composition using N, the command index
+                }
+
+                return N // allow further composition using N, the command index
+            })
     }
 }
 
@@ -272,7 +224,7 @@ describe('Intro demo scenario', function() {
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
     // app init
-    {
+    /*{
         const cmd = `app init --url ${sharedURL}`
         it(cmd, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
@@ -285,10 +237,10 @@ describe('Intro demo scenario', function() {
         it(cmd, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-    }
+    }*/
 
     // session list, expect empty
-    const expectNoSessions = () => {
+    /*const expectNoSessions = () => {
         // expect 0 live and 0 done, since we just did an app init --cleanse
         const cmd = 'session list',
               nLive = 0,
@@ -297,36 +249,36 @@ describe('Intro demo scenario', function() {
             return composer.getSessions(this.app, nLive, nDone, { cmd })
                 .catch(common.oops(this))
         })
-    }
+    }*/
 
-    cleanseRedis()
-    expectNoSessions()
+    //cleanseRedis()
+    //expectNoSessions()
 
     // app create
     {
         const { appName:appName1 } = inputs[0]
         const cmd = `app create ${appName1} @demos/${appName1}.js -a turkey shoot`
         it(cmd, () => cli.do(cmd, this.app)
-	    .then(cli.expectOK)
+	   .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName1))
            .then(sidecar.expectBadge(badges.composerLib))
            .then(graph.hasNodes({tasks: 1, total: 3}))
 
            // switch to fsm tab
-           .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="fsm"]'))
+           .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('fsm')))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
            .then(ui.expectStruct(fsm[appName1]))
 
            // switch to annotations tab
-           .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="annotations"]'))
+           .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('annotations')))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
            .then(ui.expectSubset({"turkey": "shoot"}))
 
-           // switch to parameters tab
-           .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="parameters"]'))
+           // switch to parameters tab; in v2 this isn't relevant
+           /*.then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('parameters')))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
-           .then(ui.expectSubset({"_actions": v => util.isArray(v) && v.length>0})) // expect some list value
+           .then(ui.expectSubset({"_actions": v => util.isArray(v) && v.length>0})) // expect some list value*/
 
            .catch(common.oops(this)))
     }
@@ -344,53 +296,52 @@ describe('Intro demo scenario', function() {
     const invokeHello = () => {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
         const cmd = `app invoke ${appName1} -p name composer`
-        it(cmd, () => cli.do(cmd, this.app)
+        return cli.do(cmd, this.app)
 	    .then(cli.expectOK)
-           .then(sidecar.expectOpen)
-           .then(sidecar.expectShowing(appName1))
-           .then(app => app.client.waitUntil(() => {
-               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
-                   .then(ui.expectStruct(expectedStruct1))
-           }))
-           .catch(common.oops(this)))
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(appName1))
+            .then(app => app.client.waitUntil(() => {
+                return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                    .then(ui.expectStruct(expectedStruct1))
+            }))
+            .catch(common.oops(this))
     }
 
     // cleanse redis after the invoke, and double-check we have no sessions
-    invokeHello()
-    cleanseRedis()
-    expectNoSessions()
+    //invokeHello()
+    //cleanseRedis()
+    //expectNoSessions()
 
     // invoke hello again, and expect the session list to show just it
-    invokeHello()
     {
-        // expect 1 done session, and that the done list contain appName1
         const { appName:appName1 } = inputs[0]
-        const cmd = 'session list',
-              expected = [ appName1 ],  // appName1 had better be in the done list, because we just invoked it synchronously
-              nLive = 0,
-              nDone = 1
-        it(`should list sessions via ${cmd} nLive=${nLive} nDone=${nDone}`, () => {
-            return composer.getSessions(this.app, nLive, nDone, { cmd, expected })
-                .catch(common.oops(this))
-        })
+
+        it('should invoke hello and show one more session than before', () => composer.countSessions(this.app, appName1)
+           .then(beforeCount => invokeHello()
+                 .then(() => this.app.client.waitUntil(() => composer.countSessions(this.app, appName1)
+                                                       .then(afterCount => {
+                                                           console.error(`BEFORE=${beforeCount} AFTER=${afterCount}`)
+                                                           return afterCount === beforeCount + 1
+                                                       }))))
+           .catch(common.oops(this)))
     }
 
     // session result
     {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
-        const cmd = 'session list',
-              nLive = 0,
+        const cmd = `session list ${appName1}`,
               nDone = 1,
               testName = 'session result',
               validator = N => this.app.client.getAttribute(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-name="${appName1}"] .activationId`,
                                                             'data-activation-id')
+              .then(res => res.length === 1 ? res : res[0])
               .then(sessionId => cli.do(`${testName} ${sessionId}`, this.app))
               .then(cli.expectOKWithCustom({ selector: 'code' }))
               .then(selector => this.app.client.getText(selector))
               .then(ui.expectStruct(expectedStruct1))
               .catch(common.oops(this));
 
-        it(testName, () => composer.getSessions(this.app, nLive, nDone, { cmd, validator })
+        it(testName, () => composer.getSessions(this.app, nDone, { cmd, validator })
            .then(validator)
            .catch(common.oops(this)))
     }
@@ -422,12 +373,12 @@ describe('Intro demo scenario', function() {
     // session get
     {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
-        const cmd = 'session list',
-              nLive = 0,
+        const cmd = `session list ${appName1}`,
               nDone = 1,
               testName = 'session get',
               validator = N => this.app.client.getAttribute(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-name="${appName1}"] .activationId`,
                                                             'data-activation-id')
+              .then(res => res.length === 1 ? res : res[0])
               .then(sessionId => cli.do(`${testName} ${sessionId}`, this.app))
               .then(cli.expectOK)
               .then(sidecar.expectOpen)
@@ -438,7 +389,7 @@ describe('Intro demo scenario', function() {
               }))
               .catch(common.oops(this));
 
-        it(testName, () => composer.getSessions(this.app, nLive, nDone, { cmd, validator })
+        it(testName, () => composer.getSessions(this.app, nDone, { cmd, validator })
            .then(validator)
            .catch(common.oops(this)))
     }
@@ -531,12 +482,11 @@ describe('Intro demo scenario', function() {
         // expect 3 done sessions, and that the done list contain appName2
         const { appName:appName1 } = inputs[0]
         const { appName:appName2 } = inputs[1]
-        const cmd = 'session list',
+        const cmd = 'session list --limit 200',
               expected = [ appName1, appName2 ], // appName1 and appName2 had both better be in the list
-              nLive = 0,
               nDone = 3
-        it(`should list sessions via ${cmd} nLive=${nLive} nDone=${nDone}`, () => {
-            return composer.getSessions(this.app, nLive, nDone, { cmd, expected })
+        it(`should list sessions via ${cmd} nDone=${nDone}`, () => {
+            return composer.getSessions(this.app, nDone, { cmd, expected })
                 .catch(common.oops(this))
         })
     }
@@ -547,10 +497,9 @@ describe('Intro demo scenario', function() {
         const { appName:appName1 } = inputs[0]
         const cmd = `session list ${appName1}`,
               expected = [ appName1 ], // appName1 had better be in the list
-              nLive = 0,
               nDone = 1
-        it(`should list sessions via ${cmd} nLive=${nLive} nDone=${nDone}`, () => {
-            return composer.getSessions(this.app, nLive, nDone, { cmd, expected })
+        it(`should list sessions via ${cmd} nDone=${nDone}`, () => {
+            return composer.getSessions(this.app, nDone, { cmd, expected })
                 .catch(common.oops(this))
         })
     }
@@ -561,10 +510,9 @@ describe('Intro demo scenario', function() {
         const { appName:appName2 } = inputs[1]
         const cmd = `session list --name ${appName2}`,
               expected = [ appName2 ], // appName2 had better be in the list
-              nLive = 0,
               nDone = 2
-        it(`should list sessions via ${cmd} nLive=${nLive} nDone=${nDone}`, () => {
-            return composer.getSessions(this.app, nLive, nDone, { cmd, expected })
+        it(`should list sessions via ${cmd} nDone=${nDone}`, () => {
+            return composer.getSessions(this.app, nDone, { cmd, expected })
                 .catch(common.oops(this))
         })
     }
@@ -615,7 +563,7 @@ describe('Intro demo scenario', function() {
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName3))
            .then(sidecar.expectBadge(badges.composerLib))
-           .then(graph.hasNodes({tasks: 2, total: 4, deployed: 2})) // <---- deployed had better be 2 now
+           .then(graph.hasNodes({tasks: 2, total: 4, deployed: 1})) // <---- deployed had better be 1 now
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="fsm"]'))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
            .then(ui.expectStruct(fsm[appName3]))
@@ -681,7 +629,7 @@ describe('Intro demo scenario', function() {
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName4))
            .then(sidecar.expectBadge(badges.composerLib))
-           .then(graph.hasNodes({tasks: 3, total: 7, deployed: 3})) // <---- deployed had better be 3
+           .then(graph.hasNodes({tasks: 3, total: 7, deployed: 1})) // <---- deployed had better be 1
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="fsm"]'))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
            .then(ui.expectStruct(fsm[appName4]))

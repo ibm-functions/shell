@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       condition1 = 'cond1',
       condition2 = 'cond2',
       condition3 = 'cond3',
@@ -81,13 +81,12 @@ describe('Create a composer while', function() {
     makeAction(condition3, 'aaaa', 1111, "({$i}) => ({value: ($i||0) < 6})")
     makeAction(task1, 'bb', 22, "({$i}) => ({ $i: ($i||0) + 1 })")
 
-    {
+    /*{
         const cmd = `app init --reset --url ${sharedURL}`
         it(`should ${cmd}`, () => cli.do(cmd, this.app)
             .then(cli.expectOKWithCustom({expect: 'Successfully initialized the required services. You may now create compositions.'}))
            .catch(common.oops(this)))
-        
-    }
+    }*/
 
     const loop1 = `while_${condition1}_do_${task1}`
     it('should create a composer while with condition1 and task1', () => cli.do(`while ${condition1} do ${task1}`, this.app)
@@ -135,6 +134,7 @@ describe('Create a composer while', function() {
        .then(sidecar.expectBadge('sequence'))
        .catch(common.oops(this)))
     invoke(seqName1, 'x', 3, { $i: 1 }, true) // true means we expect just $i:1 back
+
     const loop5 = 'loopy2'
     it('should create a composer while with let, condition2 and ${seqName1}', () => cli.do(`let ${loop5} = |while ${condition2} do ${seqName1}|`, this.app)
 	.then(cli.expectOK)
