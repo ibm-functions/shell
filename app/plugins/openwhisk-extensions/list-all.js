@@ -34,7 +34,7 @@ const flatten = arrays => [].concat.apply([], arrays);
  *
  */
 const doList = (block, nextBlock, fullArgv, _, command) => {
-    const options = command.substring(command.indexOf('list') + 1),
+    const options = command.substring(command.indexOf('list') + 5),
           list = type => repl.qexec(`wsk ${type} list ${options}`)
 
     return Promise.all(types.map(list)).then(flatten)
