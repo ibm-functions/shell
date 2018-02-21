@@ -46,6 +46,32 @@ describe('wsk action update without input file', function() {
        .then(ui.expectStruct({"x":3}))
        .catch(common.oops(this)))
 
+    it('should update the action with no code via fsh action update', () => cli.do(`fsh action update ${actionName} -p y 5`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .catch(common.oops(this)))
+    it('should switch to parameters mode and verify updated params', () => cli.do('parameters', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .action-source`))
+       .then(ui.expectStruct({"y":5})) // note that the original parameter binding is expected to be overwritten
+       .catch(common.oops(this)))
+
+    it('should update the action with no code via bx wsk action update', () => cli.do(`bx wsk action update ${actionName} -p y 6`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .catch(common.oops(this)))
+    it('should switch to parameters mode and verify updated params', () => cli.do('parameters', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .then(app => app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .action-source`))
+       .then(ui.expectStruct({"y":6})) // note that the original parameter binding is expected to be overwritten
+       .catch(common.oops(this)))
+
     it('should update the action with no code', () => cli.do(`wsk action update ${actionName} -p y 4`, this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)

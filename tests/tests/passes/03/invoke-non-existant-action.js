@@ -47,6 +47,18 @@ describe('Check error handling for invoking a non-existant action', function() {
 	.then(cli.expectError(404))
        .catch(common.oops(this)))
 
+    it('invoke with a non-existant package, but existing action name, via bx wsk action invoke', () => cli.do(`bx wsk action invoke xxxxxx/${actionName}`, this.app)
+	.then(cli.expectError(404))
+       .catch(common.oops(this)))
+
+    it('invoke with a non-existant package, but existing action name, via fsh action invoke', () => cli.do(`fsh action invoke xxxxxx/${actionName}`, this.app)
+	.then(cli.expectError(404))
+       .catch(common.oops(this)))
+
+    it('invoke with a non-existant package, but existing action name, via wsk action invoke', () => cli.do(`wsk action invoke xxxxxx/${actionName}`, this.app)
+	.then(cli.expectError(404))
+       .catch(common.oops(this)))
+
     it('async with a non-existant package, but existing action name', () => cli.do(`async xxxxxx/${actionName}`, this.app)
 	.then(cli.expectError(404))
        .catch(common.oops(this)))
