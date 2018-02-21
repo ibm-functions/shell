@@ -398,6 +398,7 @@ const _read = (model, argv, contextRetry, originalArgv) => {
 }
 /** read, with retries based on the current context */
 const read = (model, argv) => {
+    if (argv[0] === 'bx' && argv[1] === 'wsk' || argv[0] === 'fsh') argv.shift()
     return _read(model, Context.current.concat(argv), Context.current.slice(0, Context.current.length - 1), argv)
 }
 const disambiguate = argv => {

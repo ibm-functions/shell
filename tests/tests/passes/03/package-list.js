@@ -50,6 +50,14 @@ describe('wsk package list tests', function() {
        .then(sidecar.expectShowing(package2))
        .catch(common.oops(this)))
 
+    it(`should list ${package} with fsh package ls`, () => cli.do(`fsh package ls`, this.app)
+       .then(cli.expectOKWith(package))
+       .catch(common.oops(this)))
+
+    it(`should list ${package} with bx wsk package ls`, () => cli.do(`bx wsk package ls`, this.app)
+       .then(cli.expectOKWith(package))
+       .catch(common.oops(this)))
+
     it(`should list ${package} with wsk package ls`, () => cli.do(`wsk package ls`, this.app)
        .then(cli.expectOKWith(package))
        .catch(common.oops(this)))
