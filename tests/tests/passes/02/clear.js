@@ -23,10 +23,12 @@ const common = require('../../../lib/common'),
       ui = require('../../../lib/ui'),
       cli = ui.cli
 
-const expectConsoleToBeClear = app => {
+const expectConsoleToBeClear = ({app}) => {
     return app.client.waitUntil(() => {
         return app.client.elements('#main-repl .repl-block')
             .then(elements => elements.value.length === 1)
+            .then(() => app.client.getAttribute('#main-repl .repl-block input', 'placeholder'))
+            .then(placeholderText => placeholderText === 'enter your command')
     })
 }
 
@@ -49,13 +51,33 @@ describe('Clear the console', function() {
     doSwitch('/wsk/activations', '/wsk/activations')
     
     it('should clear the console', () => cli.do('clear', this.app)
-        .then(() => expectConsoleToBeClear(this.app)))
+       .then(expectConsoleToBeClear)
+       .catch(common.oops(this)))
 
-    doSwitch('/wsk/actions', '/wsk/actions')
+    // get something on the screen
+    it(`should list actions again`, () => cli.do('action ls', this.app).then(cli.expectJustOK))
+
+    it('should clear the console with ctrl+l', () => cli.do('junk text that should go away', this.app, true)
+       .then(() => this.app.client.keys([ui.ctrlOrMeta, 'l']))  // use control-l to clear
+       .then(() => ({app: this.app}))
+       .then(expectConsoleToBeClear)
+       .catch(common.oops(this)))
+
+    //doSwitch('/wsk/actions', '/wsk/actions')
 
     /*it('should click to change back to /wsk/activations', () => this.app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count')
        .then(N => parseInt(N))
        .then(N => this.app.client.click(`${ui.selectors.PROMPT_BLOCK_N(N - 1)} .repl-context`).then(() => N))
        .then(N => ({ app: this.app, count: N }))
        .then(cli.expectContext('/wsk/activations')))*/
+
+    // get something on the screen
+    it(`should list actions yet again`, () => cli.do('action ls', this.app).then(cli.expectJustOK))
+
+    // see shell issue #485
+    it('should clear properly despite existing prompt', () => cli.do('wipe', this.app) // wipe will change the placeholder text
+       .then(() => this.app.client.keys([ui.ctrlOrMeta, 'l']))  // use control-l to clear
+       .then(() => ({app: this.app}))
+       .then(expectConsoleToBeClear)
+       .catch(common.oops(this)))
 })

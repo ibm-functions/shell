@@ -53,12 +53,15 @@ module.exports = (commandTree, prequire) => {
                 .then(activation => activation.message || activation)   // message if change-context wrapper
                 .then(activation => {
                     if (cmd === 'invoke' && ui.headless) {
+                        // in headless mode, print just the result
                         return activation.response.result
-                    } else {
+                    } else if (cmd === 'async') {
+                        activation.verb = 'invoke'
                         activation.sessionId = activation.activationId
                         if (!activation.name && activation.entity) activation.name = activation.entity.name
-                        if (cmd === 'async') activation.verb = 'invoke'
                         return activation
+                    } else {
+                        return repl.qfexec(`session get ${activation.activationId}`)
                     }
                 })
         }

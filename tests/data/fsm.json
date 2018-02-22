@@ -1,15 +1,12 @@
 {
-    "Entry": "action_0",
-    "States": {
-        "action_0": {
-            "Type": "Task",
-            "Action": "foo1",
-            "Next": "action_1"
-        },
-        "action_1": {
-            "Type": "Task",
-            "Action": "foo2"
-        }
-    },
-    "Exit": "action_1"
+    "composition": [{
+        "type": "action",
+        "name": "foo1"
+    }, {
+        "type": "action",
+        "name": "foo2"
+    }, {
+        "type": "action",
+        "name": "foo3"
+    }]
 }

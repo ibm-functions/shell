@@ -31,87 +31,17 @@ Options:
 `
 
 /**
- * Form e.g. -p skip 20
- *
- */
-const opt = (options, key) => options[key] ? `-p ${key} ${options[key]}` : ''
-
-/**
- * Fetch the result of the session
- *
- */
-const getResult = (sessionId, manager, status) => {
-    if (status === 'live') {
-        return Promise.resolve({ result: status })
-    } else {
-        return manager.get(sessionId, 30).catch(internalError => ({ internalError }))
-    }
-}
-
-/**
- * Get the end time from last invocation in the trace of the given session
- *
- */
-const getEndTime = (sessionId, manager, status) => status === 'live' ? Promise.resolve() : manager.trace(sessionId)
-      .then(({trace}) => repl.qexec(`wsk activation get ${trace[trace.length - 1]}`))
-      .then(({end}) => end)
-      .catch(internalError => ({ internalError }))
-
-const getNameAndStartTime = sessionId => repl.qexec(`wsk activation get ${sessionId}`)
-      .then(sessionActivation => {
-          if (sessionActivation.cause) {
-              return repl.qexec(`wsk activation get ${sessionActivation.cause}`)  // this is how we'll know the name and start
-          } else {
-              // hmm, this session came from elsewhere, not created by us
-              return { name: 'unknown', start: sessionActivation.start }
-          }
-      })
-      .catch(internalError => ({ internalError }))
-
-/**
  * Create renderable entities out of the session list data
  *
  */
-const map = (result, manager, status, statusPretty) => {
-    return Promise.all(result[status].map(sessionId => {
-        return Promise.all([getResult(sessionId, manager, status),              // fetch the session result
-                            getNameAndStartTime(sessionId),                     // fetch name of the app and the start time of the session
-                            getEndTime(sessionId, manager, status)])            // fetch last activation, so we have the end time
-            .catch(err => {
-                if (err.statusCode === 404) {
-                    // then the activation record isn't ready yet,
-                    // tell the user we're doing the best we can...
-                    const result = {},
-                          end = Date.now(),
-                          cause = { name: 'starting up', start: end }
-                    return [ result, end, cause ]
-                } else {
-                    throw err
-                }
-            })
-            .then(([ result, {name,start,internalError:nameStartInternalError}, end=start ]) => {
-               if (result && result.internalError || nameStartInternalError) {
-                   // expired session
-                   console.error(result.internalError)
-                   return
-               } else if (end.internalError) {
-                   // expired session
-                   console.error(end.internalError)
-                   return
-               }
-               return {
-                   type: 'activations',                             // this is how we want them rendered
-                   prettyType: statusPretty || 'session',           // this is how we want them identified in the views
-                   start, end, status, name, activationId:sessionId, sessionId, // these are the attributes
-                   response: {
-                       success: !result.error,
-                       result
-                   },
-                   onclick: () => repl.pexec(`app get ${name}`),
-                   onActivationClick: () => repl.pexec(`session get ${sessionId}`)
-               }
-           })
-    })).then(L => L.filter(x=>x)) // remove any undefineds due to expired sessions
+const map = (result, manager, statusPretty) => {
+    return Promise.resolve(result.map(activation => {
+        activation.sessionId = activation.activationId
+        activation.onclick = () => repl.pexec(`app get ${name}`)
+        activation.onActivationClick = () => repl.pexec(`session get ${sessionId}`)
+
+        return activation
+    }))
 }
 
 /**
@@ -155,8 +85,7 @@ const prune = options => sessions => {
  *
  */
 const formatListForUser = (options, manager) => result => {
-    return Promise.all([map(result, manager, 'live', 'live'), map(result, manager, 'done')])
-        .then(([live,done]) => live.concat(done))
+    return map(result, manager)
         .then(filter(options))
         .then(sort)
         .then(prune(options))
@@ -173,7 +102,7 @@ module.exports = (commandTree, prequire) => {
         const idx = args.indexOf(cmd) + 1,
               next = options.cursor || options.next, // this is the redis "cursor"
               skip = !options.name && options.skip,               // analogous to wsk activation list --skip
-              limit = !options.name && (options.limit||5)         // analogous to wsk activation list --limit
+              limit = !options.name && (options.limit||20)         // analogous to wsk activation list --limit
 
         // let the first argument be the name to filter by
         if (args[idx]) options.name = args[idx]

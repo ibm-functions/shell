@@ -42,9 +42,9 @@ selectors.SIDECAR_ACTIVATION_RESULT = `${selectors.SIDECAR_CONTENT} .activation-
 selectors.SIDECAR_ACTIVATION_ID = `${selectors.SIDECAR} .sidecar-header .activation-id`,
 selectors.SIDECAR_RULE_CANVAS = `${selectors.SIDECAR} .rule-components`
 selectors.SIDECAR_RULE_CANVAS_NODES = `${selectors.SIDECAR_RULE_CANVAS} .sequence-component`,
-selectors.SIDECAR_SEQUENCE_CANVAS = `${selectors.SIDECAR} .sequence-components`
-selectors.SIDECAR_SEQUENCE_CANVAS_NODES = `${selectors.SIDECAR_SEQUENCE_CANVAS} .sequence-component`,
-selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N = N => `${selectors.SIDECAR_SEQUENCE_CANVAS} .sequence-component-${N}`,
+selectors.SIDECAR_SEQUENCE_CANVAS = `${selectors.SIDECAR} #wskflowSVG`
+selectors.SIDECAR_SEQUENCE_CANVAS_NODES = `${selectors.SIDECAR_SEQUENCE_CANVAS} .node.action`,
+selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N = N => `${selectors.SIDECAR_SEQUENCE_CANVAS_NODES}[data-task-index="${N}"]`,
 selectors.SIDECAR_LIMIT = type => `${selectors.SIDECAR} .sidecar-header .limits .limit[data-limit-type="${type}"]`
 selectors.SIDECAR_BADGES = `${selectors.SIDECAR} .sidecar-header .badges`
 selectors.SIDECAR_CUSTOM_CONTENT = `${selectors.SIDECAR} .custom-content`
@@ -208,19 +208,13 @@ exports.sidecar = {
             .then(exports.expectSubset(expect))
     },
 
-    expectSequence: (A, selector=selectors.SIDECAR_SEQUENCE_CANVAS_NODES) => app => app.client.waitUntil(() => {
-        return app.client.getText(selector)
-            .then(B => {
-                // console.log('Expecting ', A, B, new Date())
-                if (B.length !== A.length) return false
-                for (let idx = 0; idx < A.length; idx++) {
-                    if (B[idx].replace(/\s+/g, '') !== A[idx].replace(/\s+/g, '')) {
-                        return false
-                    }
-                }
-                return true
-            })
-    }),
+    expectSequence: A => app => {
+        return Promise.all(A.map((component, idx) => {
+            const selector = `${selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N(idx)}[data-name="${component}"]`
+            console.error(`Waiting for ${selector}`)
+            return app.client.waitForExist(selector)
+        }))
+    },
 
     /** helper method to close the sidecar */
     doClose: function(app) {
@@ -239,7 +233,7 @@ exports.sidecar = {
         it('should toggle closed the sidecar', () => exports.sidecar.doClose(ctx.app))
     },
 
-    expectShowing: (expectedName, expectedActivationId, expectSubstringMatchOnName=false, expectedPackageName, expectType) => app => app.client.waitUntil(() => {
+    expectShowing: (expectedName, expectedActivationId, expectSubstringMatchOnName=false, expectedPackageName, expectType, waitThisLong=timeout) => app => app.client.waitUntil(() => {
 	// check selected name in sidecar
         return app.client.waitForVisible(`${selectors.SIDECAR}${!expectType ? '' : '.entity-is-' + expectType}`)
             .then(() => app.client.waitForText(selectors.SIDECAR_TITLE, timeout))
@@ -255,7 +249,7 @@ exports.sidecar = {
                     }
                 }
             })
-    }, timeout, `expect action name ${expectedName} in sidecar substringOk? ${expectSubstringMatchOnName}`)
+    }, waitThisLong, `expect action name ${expectedName} in sidecar substringOk? ${expectSubstringMatchOnName}`)
 	.then(() => {
 	    // check selectd activation id in sidecar
 	    if (expectedActivationId) {
@@ -267,7 +261,19 @@ exports.sidecar = {
 	})
 	.then(() => app)
 }
-exports.sidecar.expectRule = A => exports.sidecar.expectSequence(A, selectors.SIDECAR_RULE_CANVAS_NODES)
+exports.sidecar.expectRule = A => app => app.client.waitUntil(() => {
+    return app.client.getText(selectors.SIDECAR_RULE_CANVAS_NODES)
+        .then(B => {
+            // console.log('Expecting ', A, B, new Date())
+            if (B.length !== A.length) return false
+            for (let idx = 0; idx < A.length; idx++) {
+                if (B[idx].replace(/\s+/g, '') !== A[idx].replace(/\s+/g, '')) {
+                    return false
+                }
+            }
+            return true
+        })
+})
 
 /** is the given struct2 the same as the given struct2 (given as a string) */
 exports.expectStruct = (struct1, noParse=false) => string => {
@@ -397,3 +403,8 @@ exports.validateNamespace = observedNamespace => {
     assert.equal(observedNamespace.toLowerCase(), exports.expectedNamespace().toLowerCase())
 }
 
+/**
+ * The proper control or command modifier for the platform
+ *
+ */
+exports.ctrlOrMeta = process.platform == 'darwin' ? '\uE03D' : '\uE009'

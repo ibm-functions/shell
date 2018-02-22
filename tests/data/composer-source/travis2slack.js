@@ -40,6 +40,6 @@ composer.sequence(
   ({result, params}) => Object.assign(result, params),
   `${prefix}/format.for.slack`,
   composer.retain(
-    composer.value(slackConfig)),
+    composer.literal(slackConfig)),
   ({result, params}) => Object.assign(result, params),
   `/whisk.system/slack/post`)

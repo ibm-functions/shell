@@ -148,7 +148,7 @@ module.exports = (commandTree, prequire) => {
                 throw new Error(messages.unknownInput)
             }
 
-            const { kvOptions: { action: { annotations=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');
+            const { kvOptions: { action: { annotations=[], parameters=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');
 
             if(options['log-input'] || options['log-inline'] || options['log-all']){
                 debug('adding input logging');                
@@ -179,8 +179,8 @@ module.exports = (commandTree, prequire) => {
                         count++;
                         fsm.States[echoName] = {
                             Next: name,
-                            Type: 'Task',
-                            Action: '/whisk.system/utils/echo',
+                            type: 'action',
+                            name: '/whisk.system/utils/echo',
                             Helper: 'echo'
                         } 
                         return echoName;
@@ -236,7 +236,7 @@ module.exports = (commandTree, prequire) => {
                           : deployActions(path.dirname(localCodePath),
                                           extractActionsFromFSM(fsm))
 
-                    return deployStep.then(() => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations }))
+                    return deployStep.then(() => create({ name, fsm, wsk, commandTree, execOptions, type, cmd, annotations, parameters }))
                 }).catch(handleFailure_fsmPromise)
             }
         }

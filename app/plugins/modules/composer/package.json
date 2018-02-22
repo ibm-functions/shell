@@ -12,8 +12,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@ibm-functions/composer": "~0.1.1",
-    "chokidar": "^1.7.0",
-    "redis": "^2.8.0"
+    "@ibm-functions/composer": "git+https://github.com/starpit/composer.git#ignore_certs",
+    "chokidar": "^1.7.0"
   }
 }

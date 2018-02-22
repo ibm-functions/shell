@@ -19,6 +19,11 @@ const libraryName = 'composer',
       composerPattern = new RegExp(`${libraryName}\.`)
 
 const strings = {
+    literal: {
+        documentation: 'Inject a constant value',
+        detail: 'Inject a constant value',
+        args: ['aConstantValue']
+    },
     if: {
         documentation: 'Conditionally execute a task',
         detail: 'if (condTask) thenTask; else elseTask',
@@ -58,11 +63,6 @@ const strings = {
         documentation: 'Execute a task, then re-inject the input',
         detail: 'output=task(input); return Object.assign(output, input)',
         args: ['task']
-    },
-    value: {
-        documentation: 'You may inject primitive values or JSON values',
-        detail: 'Inject a value into a composition',
-        args: ['value']
     },
     task: {
         documentation: 'You may optionally choose to merge the task input and output (options.merge), or project a given field (options.output)',

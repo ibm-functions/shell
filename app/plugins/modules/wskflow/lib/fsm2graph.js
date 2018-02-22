@@ -25,7 +25,7 @@ let graphData, fsmData, dummyCount, isAct, visited;
 
 function drawNode(id, label, isCompound, properties, w, h){
 	let o = {id: id, label: label?label:id, ports:[], properties:{}};
-	if(id.indexOf("try_") ==-1 && id.indexOf("handler_") == -1){
+	if(id.indexOf("try_") ==-1 && id.indexOf("handler_") === -1){
 		//o.properties["de.cau.cs.kieler.portConstraints"] = "FIXED_SIDE";
 		// DO NOT TOUCH THIS. IT FIXES EVERYTHING.
 		o.properties["de.cau.cs.kieler.portConstraints"] = "FIXED_ORDER";
@@ -44,65 +44,65 @@ function drawNode(id, label, isCompound, properties, w, h){
 		o.edges = [];
 	}			
 
-	// add type == state.Type
+	// add type === state.type
 	if(fsmData.States[id] && !isCompound){
 		if(fsmData.States[id].Value != undefined){
-			o.Type = "Value";
+			o.type = "Value";
 		}
 		else{
-			o.Type = fsmData.States[id].Type;
+			o.type = fsmData.States[id].type;
 		}
-		//o.Type = fsmData.States[id].Type;
+		//o.type = fsmData.States[id].type;
 
 
-		if(o.Type == "Pass" || o.Type == "Catch"){
+		if(o.type === "Pass" || o.type === "Catch"){
 			o.width = 5;
 			o.height = 5;
 		}
-		else if(o.Type == "Entry" || o.Type == "Exit"){
+		else if(o.type === "Entry" || o.type === "Exit"){
 			o.width = 25;
 			o.height = defaultHeight;
 		}
-		/*else if(o.Type == "Choice"){
+		/*else if(o.type === "Choice"){
 			o.width = 40;
 			o.height = 20;
 		}*/
-		else if(o.Type == "Choice"){
+		else if(o.type === "if"){
 			o.width = o.label.length*3+10;
 			o.height = defaultHeight;
 		}
-		else if(o.Type == "Value"){
+		else if(o.type === "Value" || o.type === "let" || o.type === "literal"){
 			if(o.label.length>30)
 				o.width = 30*defaultCharWidth+10;
 			else
 				o.width = o.label.length*defaultCharWidth+10;
 			o.height = defaultHeight;
 		}
-		else if(o.Type == "Push" || o.Type == "Pop"){
+		else if(o.type === "retain"){
 			o.width = 5;
 			o.height = 5;
 		}	
-		else if(o.Type == "Task"){
+		else if(o.type === "action" || o.type === 'function'){
 			let label = o.label, d = o;;
 
 			if(fsmData.States[d.id]){
-				if(fsmData.States[d.id].Action){
+				if(fsmData.States[d.id].name){
 					// action node, cut down namespace 
-					if(fsmData.States[d.id].Action.lastIndexOf("/") != -1 && fsmData.States[d.id].Action.lastIndexOf("/") < fsmData.States[d.id].Action.length-1){
-						label = fsmData.States[d.id].Action.substring(fsmData.States[d.id].Action.lastIndexOf("/")+1);
+					if(fsmData.States[d.id].name.lastIndexOf("/") != -1 && fsmData.States[d.id].name.lastIndexOf("/") < fsmData.States[d.id].name.length-1){
+						label = fsmData.States[d.id].name.substring(fsmData.States[d.id].name.lastIndexOf("/")+1);
 					}
 					else{
-						label = fsmData.States[d.id].Action;
+						label = fsmData.States[d.id].name;
 					}
 				}
-				else if(fsmData.States[d.id].Function){
-					let s = fsmData.States[d.id].Function;
+				else if(o.type === 'function'){
+					let s = fsmData.States[d.id].exec.code
 					s = s.replace(/\s\s+/g, ' ');
 					if(s.length > 40)
 						label = s.substring(0, 40)+"...";
 					else
 						label = s;
-				}
+                                }
 
 			}
 
@@ -123,29 +123,31 @@ function drawNode(id, label, isCompound, properties, w, h){
 			o.height = h?h:defaultHeight;
 		}
 
-		if(o.Type == "Task"){
-			if(fsmData.States[o.id].Action){
-				o.name = fsmData.States[o.id].Action;
+		if(o.type === "action" || o.type === 'function'){
+			if(fsmData.States[o.id].name){
+				o.name = fsmData.States[o.id].name;
 			}
 		}
 
-		// for undeployed data
+                o.TaskIndex = fsmData.States[id].TaskIndex
+
+	        // for undeployed data
 		o.undeployed = fsmData.States[id].undeployed;
 	}
 	else{
 		if(o.id.indexOf("try_catch_")!= -1 || o.id.indexOf("repeat_") != -1){
-			o.Type = "try_catch";
+			o.type = "try_catch";
 		}			
 		else{
-			o.Type = o.label;
-			if(o.Type == "Dummy"){
+			o.type = o.label;
+			if(o.type === "Dummy"){
 				o.width = 4;
 				o.height = 4;
 			}
-			else if(o.Type == "condition")
-				o.Type = "try_catch";
-			else if(o.Type == "try")
-				o.Type = "Try";
+			else if(o.type === "condition")
+				o.type = "try_catch";
+//			else if(o.type === "try")
+//				o.type = "Try";
 		}
 		
 	}
@@ -163,18 +165,18 @@ function drawEdge(sourceId, targetId, layer, direction, sourcePort, targetPort){
 	//let sourcePort, targetPort
 
 	for(let i=0; i<layer.children.length; i++){
-		if(layer.children[i].id == sourceId){
+		if(layer.children[i].id === sourceId){
 			//console.log("found! "+sourceId);
 			sourcePort = sourceId+"_p";
-			//if(sourceId.indexOf("choice_") == 0){
+			//if(sourceId.indexOf("choice_") === 0){
 			if(layer.children[i].properties.choice){
 				let r = [];
 				layer.children[i].ports.forEach(p => r.push(p.id));
-				if(r.indexOf(sourceId+"_ptrue") == -1)
+				if(r.indexOf(sourceId+"_ptrue") === -1)
 					sourcePort += "true";
 				else{
 					// already has true branch
-					if(r.indexOf(sourceId+"_pfalse") == -1)
+					if(r.indexOf(sourceId+"_pfalse") === -1)
 						sourcePort += "false";
 					else
 						sourcePort += layer.children[i].ports.length;
@@ -191,7 +193,7 @@ function drawEdge(sourceId, targetId, layer, direction, sourcePort, targetPort){
 				properties: {portSide: direction ? direction : "SOUTH"}
 			});			
 		}
-		if(layer.children[i].id == targetId){
+		if(layer.children[i].id === targetId){
 			//console.log("found! "+targetId);
 			targetPort = targetId+"_p"+layer.children[i].ports.length;
 			layer.children[i].ports.push({
@@ -203,8 +205,8 @@ function drawEdge(sourceId, targetId, layer, direction, sourcePort, targetPort){
 			break;
 	}
 
-	if(sourcePort == undefined || targetPort == undefined){
-		console.log("ERROR!!!");
+	if(sourcePort === undefined || targetPort === undefined){
+		console.error("ERROR!!!");
 		console.log(sourceId, targetId, layer, graphData);
 	}
 
@@ -221,7 +223,7 @@ function drawEdge(sourceId, targetId, layer, direction, sourcePort, targetPort){
 
 function addDummy(sources, targets, obj, directionS, directionT){
 
-	if(sources.length == 0 && targets.length == 0)
+	if(sources.length === 0 && targets.length === 0)
 		return;
 
 	let dummyId = "dummy_"+dummyCount, o, port;
@@ -256,10 +258,10 @@ function addDummy(sources, targets, obj, directionS, directionT){
 function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 	let name = startName;	
 
-	if(lastNode == undefined)
+	if(lastNode === undefined)
 		lastNode = [];
 
-	while(name){		
+	while(name){
 	
 		if(fsm.States[name].stored){
 			console.log("reached a node that's already added. build the edge and then stop");
@@ -290,11 +292,11 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 		}
 
 
-		let state = fsm.States[name], Type = state.Type, next;
+		let state = fsm.States[name], Type = state.type, next;
 	
 		if(state.display != "ignore"){
 
-			if(name == "Entry"){
+			if(name === "Entry"){
 				obj.children.push(drawNode(name));
 				lastNode = ['Entry'];			
 				next = state.Next;
@@ -306,7 +308,7 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 
 
 			}
-			else if(name == "Exit"){
+			else if(name === "Exit"){
 				obj.children.push(drawNode(name));
 				//if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));	
 				lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
@@ -318,13 +320,50 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 
 				break;
 			}
-			else if(Type == "Choice"){
+		        else if(Type === "finally"){
+			    const exit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
+			    lastNode = graph(fsm, state.finalizer[0].id, state.finalizer[state.finalizer.length - 1].id, obj, exit);
+                            
+                        }
+		        else if(Type === "dowhile"){
+                            // do { state.body } while (state.test)
+                            const entry = lastNode
+			    const bodyExit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
+
+			    lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, bodyExit);
+                            const conNode = lastNode[0];
+
+			    for(var i=obj.children.length-1; i>=0; i--){
+				if(obj.children[i].id === conNode){
+				    obj.children[i].properties.choice = true;
+				    break;
+				}
+			    }
+
+			    entry.forEach(ln => obj.edges.push(drawEdge(conNode, ln, obj)));
+			}
+		        else if(Type === "while"){
+                            // while (state.test) state.body
+			    lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, lastNode);
+                            const conNode = lastNode[0];
+
+			    for(var i=obj.children.length-1; i>=0; i--){
+				if(obj.children[i].id === conNode){
+				    obj.children[i].properties.choice = true;
+				    break;
+				}
+			    }
+
+			    const exit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
+			    exit.forEach(ln => obj.edges.push(drawEdge(ln, lastNode[0], obj)));
+			}
+			else if(Type === "if"){
 				// first, push node
 				let id = name.substring("choice_".length), nodeName = name;
 				if(state.repeat){
 					// repeat label
 					let label = "Repeat ";
-					if(state.repeat == 1)
+					if(state.repeat === 1)
 						label += "1 time";
 					else
 						label += state.repeat+" times";
@@ -341,7 +380,7 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 					lastNode = [nodeName];
 
 					let repeatNode = obj.children[obj.children.length-1], connectingNode;
-					let l = graph(fsm, state.Then, "push_"+id, repeatNode);
+					let l = graph(fsm, state.consequent[0].id, "push_"+id, repeatNode);
 					if(repeatNode.children.length>0){										
 						obj.children[obj.children.length-1].edges.push(drawEdge(nodeName, repeatNode.children[0].id, repeatNode, undefined, nodeName+"_p0"));						
 					}
@@ -352,37 +391,49 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 				else{
 					// new: condition node combined with the previous node. if multiple lastNode, insert a dummy then branch out. 					
-					if(lastNode.length == 1){
+					if(lastNode.length === 1){
+						lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, lastNode);
 						// this should be the most common condition 
 						// not inserting anynode. add a property in fsm
 						let conNode = lastNode[0];
 						for(var i=obj.children.length-1; i>=0; i--){
-							if(obj.children[i].id == conNode){
+							if(obj.children[i].id === conNode){
 								obj.children[i].properties.choice = true;
 								break;
 							}
 						}
 
-						let l1 = graph(fsm, state.Then, "pass_"+id, obj, lastNode, "y");
-						let l2 = graph(fsm, state.Else, "pass_"+id, obj, lastNode, "n");	
-						
-						lastNode = l2.concat(l1);
+                                                // the "then" subgraph
+					        const thenPart = graph(fsm, state.consequent[0].id, state.consequent[state.consequent.length - 1].id, obj, lastNode, "y");
+
+                                                // the "else" subgraph
+                                                if (state.alternate.length === 0) {
+                                                    // then we have only if (cond) thenTask, i.e. no else; note here
+                                                    // that we make the condition node one of the exit nodes
+                                                    lastNode = lastNode.concat(thenPart)
+                                                    
+                                                } else {
+						    const elsePart = graph(fsm, state.alternate[0].id, state.alternate[state.alternate.length - 1].id, obj, lastNode, "n");
+						    lastNode = elsePart.concat(thenPart);
+                                                }
 					}
 					else if(lastNode.length > 1){
-						let d = addDummy(lastNode, [], obj);
+						lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, lastNode);
+
+					        let d = addDummy(lastNode, [], obj);
 						if(isAct){
 							lastNode.forEach(ln => { if(visited[ln] && visited[ln] != 'failed') visited[d] = true;});
 						}
 						obj.children[obj.children.length-1].properties.choice = true;
 
-						let l1 = graph(fsm, state.Then, "pass_"+id, obj, [d], "y");
-						let l2 = graph(fsm, state.Else, "pass_"+id, obj, [d], "n");	
+						let l1 = graph(fsm, state.consequent[0].id, "pass_"+id, obj, [d], "y");
+						let l2 = graph(fsm, state.alternate[0].id, "pass_"+id, obj, [d], "n");	
 
 						lastNode = l2.concat(l1);
 
 					}
 					else{
-						// length == 0 --> would that ever happen?
+						// length === 0 --> would that ever happen?
 						// copy the old method 
 						obj.children.push(drawNode(name, "yes/no?"));	
 
@@ -392,8 +443,8 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 						}
 						lastNode = [nodeName];
 
-						let l1 = graph(fsm, state.Then, "pass_"+id, obj, lastNode, "y");
-						let l2 = graph(fsm, state.Else, "pass_"+id, obj, lastNode, "n");	
+						let l1 = graph(fsm, state.consequent[0].id, "pass_"+id, obj, lastNode, "y");
+						let l2 = graph(fsm, state.alternate[0].id, "pass_"+id, obj, lastNode, "n");	
 
 						
 						lastNode = l2.concat(l1);
@@ -421,11 +472,10 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 				
 				
-				next = fsm.States["pass_"+id].Next;	
+				next = state.Next//fsm.States["pass_"+id].Next;
 
-			}					
-			else if(Type == "Try"){
-						
+			}
+			else if(Type === "try"){
 				let id = name.substring("try_".length), passName = "pass_"+id, handlerName = "handler_"+id, catchName = "catch_"+id, tryCatchName = "try_catch_"+id;
 				// first, the try_catch block
 				let tryLabel = "Try-Catch";
@@ -466,11 +516,11 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 
 				// draw try branch in try
-				graph(fsm, state.Next, catchName, tryNode);		
+				graph(fsm, state.body[0].id, catchName, tryNode);
 
 				if(isAct){
 					let isHandler = false;
-					tryNode.children.forEach(n => {if(visited[n.id] && visited[n.id] == 'failed') isHandler = true;});
+					tryNode.children.forEach(n => {if(visited[n.id] && visited[n.id] === 'failed') isHandler = true;});
 					if(isHandler){
 						visited[handlerNode.id] = true;						
 						visited[state.Handler] = true;						
@@ -479,18 +529,21 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 
 				//console.log(tryNode);
 				// draw handler branch in handler
-				graph(fsm, state.Handler, passName, handlerNode);
+				graph(fsm, state.handler[0].id, passName, handlerNode);
 				//console.log(handlerNode);
 
 
 				lastNode = [tryCatchName];
-				next = fsm.States[passName].Next;
+				next = state.Next//fsm.States[passName].Next;
 			}
-			else if(Type == "Task"){
-				if(state.Action)
-					obj.children.push(drawNode(name, state.Action));
-				else if(state.Function)
-					obj.children.push(drawNode(name, state.Function));
+			else if(Type === "action" || Type === "function"){
+				if(state.name)
+					obj.children.push(drawNode(name, state.name));
+			        else if(Type === "function") {
+                                        const node = drawNode(name, state.exec.code)
+   			                obj.children.push(node);
+                                        if (state.options && state.options.helper) node.isHelper = true
+                                }
 				else if(state.Value){
 					let label = "Value = "+JSON.stringify(state.Value);
 					/*if(label.length>30)
@@ -517,50 +570,60 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 
 			}
-			else if(Type == "Let"){
-				let label = state.Symbol+" = "+state.Value;
+		        else if(Type === "let"){
+                            const ws = idx => idx === 0 ? '' : ' ' // whitespace
+			    let label = Object.keys(state.declarations).reduce((label, key, idx) => `${label}${ws(idx)}${key}=${state.declarations[key]}`, '')
 				obj.children.push(drawNode(name, label));
-				//if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
 				lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
 				if(isAct){
 					lastNode.forEach(ln => {if(visited[ln] && visited[ln] != 'failed') visited[name] = true;});
 				}
-				lastNode = [name]; 
+
+			        const exit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, [name]);
+
+				lastNode = exit;
 			}
-			else if(Type == "Pop"){
-				obj.children.push(drawNode(name));
-				//if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
-				lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
-				let id = name.substring("pop_".length);
-				if(fsm.States["push_"+id]){
-					// build an extra edge from push to pop
-					obj.edges.push(drawEdge("push_"+id, name, obj, "EAST"));
+		        else if(Type === "retain"){
+				if(state.choice){
+					// delay everything to the choice node. pass to choice
+					//next = state.choice;
 				}
+			    else{
+                                        // draw the initial dot to represent the start of a forwarding edge
+                                        const origin = `${name}_origin`
+                                        fsmData.States[origin] = { type: 'retain', id: origin }
+				        obj.children.push(drawNode(origin));
+					lastNode.forEach(ln => obj.edges.push(drawEdge(ln, origin, obj)));
+					if(isAct){
+						lastNode.forEach(ln => {if(visited[ln] && visited[ln] != 'failed') visited[origin] = true;});
+					}
+					lastNode = [origin];
+
+                                        // draw the body of the retain
+				        lastNode = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
+
+                                       // draw the terminus of the forwarding
+                                       const terminus = `${name}_terminus`
+                                       fsmData.States[terminus] = { type: 'retain', id: terminus }
+                                       obj.children.push(drawNode(terminus));
+	  			       //if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
+				       lastNode.forEach(ln => obj.edges.push(drawEdge(ln, terminus, obj)));
+					// build an extra edge from push to pop
+					obj.edges.push(drawEdge(origin, terminus, obj, "EAST"));
+
 				if(isAct){
 					lastNode.forEach(ln => {if(visited[ln] && visited[ln] != 'failed') visited[name] = true;});
 					// the forwarding wont start if lastnodes are failed or not executed 
 					//if(fsm.States["push_"+id] && visited["push_"+id])
 					//	visited[name] = true;
 				}
-				lastNode = [name];				
-			}
-			else if(Type == "Push"){
-				if(state.choice){
-					// delay everything to the choice node. pass to choice
-					//next = state.choice;
-				}
-				else{
-					obj.children.push(drawNode(name));					
-					lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
-					if(isAct){
-						lastNode.forEach(ln => {if(visited[ln] && visited[ln] != 'failed') visited[name] = true;});
-					}
-					lastNode = [name]; 
+				lastNode = [terminus];
+
 				}
 			}
-			else{
-				if(name.indexOf("value") == 0) console.log(name, state);
-				obj.children.push(drawNode(name));
+		        else{
+			        if(name.indexOf("value") === 0) console.log(name, state);
+			        obj.children.push(drawNode(name, state.type === "literal" ? `${state.value}` : undefined));
 				//if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
 				lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
 
@@ -573,18 +636,18 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 		}
 		else{
 			// ignore - just do nothing
-			if(state.Type == "Choice"){
+			if(state.type === "if"){
 
 				// the only time a choice state is ignored is the retry branch. go to the Else state
-				next = state.Else;
+				next = state.alternate[0].id;
 			}
 		}
 		
 		
-		if(name == endName){
+		if(name === endName){
 			break;
 		}
-		else if(endName.indexOf("catch_") == 0 && name.indexOf("catch_") == 0){
+		else if(endName.indexOf("catch_") === 0 && name.indexOf("catch_") === 0){
 			// retry probably has bug. now for retry's try branch we stop as long as we see a catchk
 			break;
 		}
@@ -612,18 +675,18 @@ function fsm2graph(fsm, containerId, w, h, activations){
 
 	$(".wskflowWarning").remove();
 
-	if(fsm == undefined){
-		console.log("obj == undefined");
+	if(fsm === undefined){
+		console.log("obj === undefined");
 		return;
 	}		
-	else if(fsm.States == undefined){
+	else if(fsm.States === undefined){
 		console.log("obj is not a fsm");
 		return;
 	}
 
 	if(activations){
 		isAct = true;
-		visited = {};
+		visited = {}; // this will map a node id to true if the session flowed through that node
 	}
 	else
 		isAct = false;
@@ -641,7 +704,13 @@ function fsm2graph(fsm, containerId, w, h, activations){
 	
 	//console.log(JSON.stringify(fsm, null, 4));
 	console.log("[wskflow] generating graph model");
-	graph(fsm, "Entry", "Exit", graphData);
+        const lastOnes = graph(fsm, "Entry", "Exit", graphData);
+
+        // now we wire up to the Exit node
+        graphData.children.push(drawNode('Exit'))
+        if (isAct) visited['Exit'] = true
+        lastOnes.forEach(ln => graphData.edges.push(drawEdge(ln, 'Exit', graphData)));
+        
 
 	if(isAct)
 		console.log('[wskflow] visited nodes:', visited);

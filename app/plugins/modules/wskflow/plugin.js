@@ -13,19 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const $ = require('jquery');
+
+const debug = require('debug')('wskflow')
+debug('loading')
+
+const $ = require('jquery'),
+      compositionTofsm = require('./lib/composition2fsm')
+      fsm2graph = require('./lib/fsm2graph.js')
+
+debug('finished loading modules')
 
 module.exports = (commandTree, prequire) => {
     return {
-        // [required] fsm: composer-generated JSON. container: DOM selector 
-        // [optional] w & h: canvas width and height. data: activation data
+        /**
+         * Export a programmatic API to visualize a Composition
+         *
+         * [required] fsm: composer-generated JSON. container: DOM selector 
+         * [optional] w & h: canvas width and height. data: activation data
+         *
+         */
         visualize: (passedFsm, container, w, h, activations) => {
-            console.log('[wskflow] plugin called');        
-            console.log('[wskflow] fsm passed: ', passedFsm);
+            debug('visualize');
 
-            const fsm2graph = require('./lib/fsm2graph.js');                    
             if(passedFsm == undefined){
-                console.log("[wskflow] fsm is empty. return.");
+                debug("fsm is empty. return.");
                 return;
             }
             else if(activations && typeof passedFsm == 'string' && (passedFsm == 'deleted' || passedFsm.indexOf('outdated') == 0)){
@@ -43,17 +54,17 @@ module.exports = (commandTree, prequire) => {
                 return;
 
             }
-            else if(passedFsm.States == undefined){                
-                console.log("[wskflow] fsm is in a wrong format. return.");                
+            else if(passedFsm.composition === undefined){                
+                console.error("[wskflow] fsm is in a wrong format. return.");                
                 return;
             }
 
-
-            var fsm = JSON.parse(JSON.stringify(passedFsm));
+            var fsm = compositionTofsm(JSON.parse(JSON.stringify(passedFsm)));
+            debug('FSM', fsm);
 
             if(activations){   
                 // showing runtime activations
-                console.log('[wskflow] activations: ', activations);
+                debug('activations', activations);
                 //fsm2graph(fsm, container, w, h, data.wskflowData.slice(0, data.wskflowData.length-1));   
                 //fsm2graph(fsm, container, w, h, activations);   
             }
@@ -61,15 +72,17 @@ module.exports = (commandTree, prequire) => {
                 // showing the control flow
                 // collect all action name, send a get request for each             
                 let getPromises = [], actionName = [], action2State = {};
-                Object.keys(fsm.States).forEach(n => {                  
-                    if(fsm.States[n].Type == "Task" && fsm.States[n].Action){
+                Object.keys(fsm.States).forEach(id => {
+                    const state = fsm.States[id]
+
+                    if(state.type === "action" && state.name){
                         
-                        actionName.push(fsm.States[n].Action);
-                        getPromises.push(repl.qexec("wsk action get "+fsm.States[n].Action));
-                                                                        
-                        if(action2State[fsm.States[n].Action] == undefined)
-                            action2State[fsm.States[n].Action] = [];
-                        action2State[fsm.States[n].Action].push(n);
+                        actionName.push(state.name);
+                        getPromises.push(repl.qexec(`wsk action get "${state.name}"`));
+
+                        if(action2State[state.name] === undefined)
+                            action2State[state.name] = [];
+                        action2State[state.name].push(state.id);
                     }
                 });
                 //fsm2graph(fsm, container, w, h);
@@ -77,12 +90,12 @@ module.exports = (commandTree, prequire) => {
                 Promise.all(getPromises.map(p => p.catch(e => e)))
                     .then(result => {                        
                         result.forEach((r, index) => {
-                            if(r.type == "actions" && r.name){
-                                console.log(`[wskflow] action ${r.name} found`);
+                            if(r.type === "actions" && r.name){
+                                debug(`action ${r.name} is deployed`);
                             }
-                            else{                                
-                                console.log(`[wskflow] action ${actionName[index]} not deployed`);
-                                if(action2State[actionName[index]]){                                   
+                            else{
+                                debug(`action ${actionName[index]} is not deployed`);
+                                if(action2State[actionName[index]]){
                                     action2State[actionName[index]].forEach(s => {
                                         let t = setInterval(e => {
                                             if($('#'+s).length > 0){
@@ -91,7 +104,6 @@ module.exports = (commandTree, prequire) => {
                                                 $('#'+s).find('rect').css('fill', 'lightgrey');
                                             }
                                         }, 20);
-                                        //fsm.States[s].undeployed = true;
                                     });
                                    
                                 }
@@ -121,3 +133,5 @@ module.exports = (commandTree, prequire) => {
         }
     }
 }
+
+debug('finished loading')

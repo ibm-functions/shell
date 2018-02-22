@@ -376,8 +376,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		// #1 add the nodes' groups
 		var nodeData = root.selectAll(".node")
 		.data(nodes,  function(d) { return d.id; });
-		
-		var node = nodeData.enter()
+
+                // so we can add a data-index attribute to each task node
+                let taskIndex = 0
+
+	        var node = nodeData.enter()
 		.append("g")
 			.attr("class", function(d) {
 				//console.log(d);
@@ -388,23 +391,27 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				else
 					className += " leaf";
 
-				if(d.Type != undefined){
-					className += " "+d.Type;
+				if(d.type != undefined){
+					className += " "+d.type;
 				}
 				else{
 					className += " "+d.label;
 				}
 
-				if(d.label.indexOf("Try-Catch:") != -1 || d.label.indexOf("Repeat ") != -1)
+                                // for tests, it is helpful to have a single css discriminant for functions and actions
+                                if (d.type === "action" || d.type === "function") {
+                                        className += " Task"
+                                }
+
+			        if(d.label.indexOf("Try-Catch:") != -1 || d.label.indexOf("Repeat ") != -1)
 					className += " repeat";
 
 				return className;
 			})
 			.attr("id", function(d){return d.id})
+  		        .attr("data-task-index", ({TaskIndex}) => TaskIndex ) // add a data-task-index for every task
 			.attr("data-name", function(d){
-				if(d.Type == "Task"){
-					return d.label;
-				}				
+				return d.label;
 			})
 			.attr("data-deployed", function(d){
 				if(visited){
@@ -412,7 +419,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				}
 				else{
 					// only for preview graphs, not for session graphs
-					if(d.Type == "Task"){
+					if(d.type == "action"){
 						if(d.undeployed){
 							return "not-deployed";
 						}
@@ -434,13 +441,13 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				.attr("width", 0)
 				.attr("height", 0)
 				.attr("rx", function(d){
-					if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+					if(d.type == "try_catch" || d.type == "Try" || d.type == "handler")
 						return 0;
 					else
 						return 2;
 				})
 				.attr("ry", function(d){
-					if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+					if(d.type == "try_catch" || d.type == "Try" || d.type == "handler")
 						return 0;
 					else
 						return 2;
@@ -468,11 +475,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				})
 				.style("stroke", function(d){					
 					if(d.children){
-						if(d.Type == "try_catch") return wfColor.try_catch.normal;
-						else if(d.Type == "Try") return wfColor.Try.normal;
-						else if(d.Type == "handler") return wfColor.handler.normal;
+						if(d.type == "try_catch") return wfColor.try_catch.normal;
+						else if(d.type == "Try") return wfColor.Try.normal;
+						else if(d.type == "handler") return wfColor.handler.normal;
 					}
-					else if(d.Type == "Task" || d.Type == "Entry" || d.Type == "Exit" || d.Type == "Value" || d.Type == "Push" || d.Type == "Pop" || d.Type == "Dummy"){
+					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal" || d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
 						if(visited[d.id])
 							return "black";
 						else
@@ -489,14 +496,14 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					if(d.children) return 3;
 				})		
 				.style("x", function(d){
-					//if(d.Type == "Dummy") return 1;
+					//if(d.type == "Dummy") return 1;
 				})		
 				.style("cursor", function(d){
 					if(visited[d.id]){
-						//if(d.Type == "Task" && fsm.States[d.id].Function == undefined){
+						//if(d.type == "action" && fsm.States[d.id].Function == undefined){
 						if(fsm.States[d.id] && fsm.States[d.id].act && (
-							d.Type == 'Exit' || d.Type == 'Entry' || 
-							(d.Type == 'Task' && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug)))
+							d.type == 'Exit' || d.type == 'Entry' || 
+							(d.type == 'action' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug)))
 						)){
 							return "pointer";
 						}						
@@ -516,7 +523,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$(this).css("fill", wfColorAct.activeHovered);
 						}
 						
-						if(d.Type == "Task" && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug))){
+					    if(d.type == "action" || d.type === 'function' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug))){
 							let act = fsm.States[d.id].act;
 							// first, describe # activations if # > 1
 							if(act.length>1)
@@ -554,7 +561,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							});	
 
 						}
-						else if(d.Type == "Exit" || d.Type == 'Entry'){
+						else if(d.type == "Exit" || d.type == 'Entry'){
 							let act = fsm.States[d.id].act[0];
 							let start = new Date(act.start), timeString = (start.getMonth()+1)+"/"+start.getDate()+" ";		
 							timeString += start.toLocaleTimeString(undefined, { hour12: false });
@@ -562,7 +569,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							if(result.length > 40)
 								result = result.substring(0, 40) + "... ";
 
-							qtipText += `<div style='padding-bottom:2px'>${d.Type} <span style='color:${wfColorAct.active}'>${timeString}</span></div>${result}`							
+							qtipText += `<div style='padding-bottom:2px'>${d.type} <span style='color:${wfColorAct.active}'>${timeString}</span></div>${result}`							
 							
 						}
 
@@ -620,8 +627,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$("#listClose").click();
 						}
 
-						if(d.Type == "Exit" || d.Type == 'Entry'){
-							let id = fsm.States[d.Type].act[0].activationId;
+						if(d.type == "Exit" || d.type == 'Entry'){
+							let id = fsm.States[d.type].act[0].activationId;
 							//console.log(fsm.States[d.id].act[0]);
 							ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
 	                                    d3.event.currentTarget.parentNode, // highlight this node
@@ -635,7 +642,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	                                    )(d3.event)               // pass along the raw dom event							
 	                        */
 						}
-						else if(d.Type == "Task" && (fsm.States[d.id].Action || (fsm.States[d.id].Function && fsm.States[d.id].debug))){
+						else if(d.type == "action" || d.type === 'function' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug))){
 							if($(this).attr("failed")){
 								$(this).css("fill", wfColorAct.failed);
 							}
@@ -646,7 +653,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$("#qtip").removeClass("visible");
 							
 							if(fsm.States[d.id].act.length == 1){
-								//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
+								//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 								//let id = fsm.States[d.id].act[0].activationId;
 
 								ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
@@ -704,7 +711,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 								}, function(e){
 									$(this).css("text-decoration", "underline");
 								}).click(function(e){
-									//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
+									//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 									let id = $(this).attr("aid"), index = $(this).attr('index');
 
 									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
@@ -742,13 +749,13 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				.attr("width", 0)
 				.attr("height", 0)
 				.attr("rx", function(d){
-					if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+					if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 						return 0;
 					else
 						return 2;
 				})
 				.attr("ry", function(d){
-					if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+					if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 						return 0;
 					else
 						return 2;
@@ -757,13 +764,13 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					if(d.children){
 						return "transparent"
 					}
-					/*else if(d.Type == "Choice")
+					/*else if(d.type == "if")
 						return "orange";*/
-					else if(d.Type == "Value"){					
+					else if(d.type == "let" || d.type == "literal"){					
 						//return "#4E387E";
 						return wfColor.Value.normal;
 					}
-					else if(d.Type == "Task"){
+					else if(d.type == "action" || d.type === 'function'){
 						//return "#3498DB";
 						if($('#'+d.id).attr('data-deployed') === 'not-deployed'){
 							return wfColor.Task.undeployed;
@@ -773,20 +780,20 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						}
 						
 					}
-					else if(d.Type == "Exit" || d.Type == "Entry"){
+					else if(d.type == "Exit" || d.type == "Entry"){
 						return wfColor.EE.normal;
 					}
 				})
 				.style("stroke", function(d){
 					if(d.children){
-						if(d.Type == "try_catch") return wfColor.try_catch.normal;
-						else if(d.Type == "Try") return wfColor.Try.normal;
-						else if(d.Type == "handler") return wfColor.handler.normal;
+						if(d.type == "try_catch") return wfColor.try_catch.normal;
+						else if(d.type == "try") return wfColor.Try.normal;
+						else if(d.type == "handler") return wfColor.handler.normal;
 					}
-					else if(d.Type == "Task" || d.Type == "Entry" || d.Type == "Exit" || d.Type == "Value"){
+					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal"){
 						return "black";
 					}
-					else if(d.Type == "Push" || d.Type == "Pop" || d.Type == "Dummy"){
+					else if(d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
 						return wfColor.Edges.normal;
 					}
 					else{
@@ -800,21 +807,21 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					if(d.children) return 3;
 				})
 				.style("x", function(d){
-					//if(d.Type == "Dummy") return 1;
+					//if(d.type == "Dummy") return 1;
 				})	
 				.on("mouseover", function(d, i){
 					let qtipText = "";
 
 					if(d.children){
-						if(d.Type == "Try"){
+						if(d.type == "try"){
 							$(this).css("stroke", wfColor.Try.hovered);
 							qtipText = "<span style='color: "+wfColor.Try.normal+"'>Try Block</span>"
 						}
-						else if(d.Type == "handler"){
+						else if(d.type == "handler"){
 							$(this).css("stroke", wfColor.handler.hovered);
 							qtipText = "<span style='color: "+wfColor.handler.normal+"'>Handler Block</span>"
 						}
-						else if(d.Type == "try_catch"){
+						else if(d.type == "try_catch"){
 							$(this).css("stroke", wfColor.try_catch.hovered);
 							if(d.label.indexOf(":") != -1){						
 								qtipText = "Try-Catch:<span style='color: orange'>"+d.label.substring(d.label.indexOf(":")+1)+"</span>";						
@@ -833,19 +840,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						}
 
 					}
-					else if(d.Type == "Task" && $('#'+d.id).attr('data-deployed') == 'not-deployed'){
+					else if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'not-deployed'){
 						qtipText = "This action has not yet been deployed";
 					}
-					else if(d.Type == "Task"){
+					else if(d.type == "action" || d.type === 'function'){
 						$(this).css({
 							"fill": wfColor.Task.hovered,
 							"cursor": "pointer"
 						});
 						qtipText = "<span style='color: "+wfColor.Task.normal+"; padding-right:5px'>action |</span> "+d.label;							
 					}
-					else if(d.Type == "Push" || d.Type == "Pop"){
+					else if(d.type == "retain" || d.type == "Pop"){
 						let id, edgeId;
-						if(d.Type == "Push"){
+						if(d.type == "retain"){
 							id = d.id.substring("push_".length);
 						}
 						else{
@@ -858,7 +865,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							}
 						}
 						if(edgeId){
-							if(d.Type == "Push")
+							if(d.type == "retain")
 								qtipText = "<span style='color: #85C1E9'>Retain: Data forwarding</span>";
 							else
 								qtipText = "<span style='color: #85C1E9'>Retain: Data merging</span>";
@@ -866,10 +873,10 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$(".link[id='"+edgeId+"']").css("stroke", wfColor.Edges.forwarding).addClass("hover forwarding-edge");
 						}
 					}
-					else if(d.Type == "Entry" || d.Type == "Exit"){
-						qtipText = d.Type;
+					else if(d.type == "Entry" || d.type == "Exit"){
+						qtipText = d.type;
 					}
-					else if(d.Type == "Value"){					
+					else if(d.type == "let" || d.type == "literal"){					
 						qtipText = d.label;
 					}
 
@@ -914,11 +921,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					
 				}).on("mouseout", function(d, i){
 					if(d.children){
-						if(d.Type == "Try") $(this).css("stroke", wfColor.Try.normal);
-						else if(d.Type == "handler") $(this).css("stroke", wfColor.handler.normal);
-						else if(d.Type == "try_catch") $(this).css("stroke", wfColor.try_catch.normal);
+						if(d.type == "try") $(this).css("stroke", wfColor.Try.normal);
+						else if(d.type == "handler") $(this).css("stroke", wfColor.handler.normal);
+						else if(d.type == "try_catch") $(this).css("stroke", wfColor.try_catch.normal);
 					}
-					else if(d.Type == "Task" && $('#'+d.id).attr('data-deployed') == 'deployed'){
+					else if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'deployed'){
 						$(this).css("fill", wfColor.Task.normal);					
 					}
 					
@@ -928,10 +935,10 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					//$("use").attr("xlink:href", "#retryIconNormal").attr("href", "#retryIconNormal");
 					
 				}).on("click", function(d, i){
-					if(d.Type == "Task" && $('#'+d.id).attr('data-deployed') == 'deployed'){
+					if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'deployed'){
 						if(d.name){
-							//repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true});
-							ui.pictureInPicture(() => repl.exec(`wsk action get ${d.name}`, {sidecarPrevious: 'get myApp', echo: true}),
+							//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
+							ui.pictureInPicture(() => repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true}),
 	                                    d3.event.currentTarget.parentNode, // highlight this node
 	                                    $("#wskflowContainer")[0],
 	                                    'App Visualization'          // container to pip	                                    
@@ -950,14 +957,14 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		// add node labels
 		node.append("text")
 			.attr("x", function(d){
-				if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+				if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 					return 4;
 				else
 					return d.width/2;
 				
 			})
 			.attr("y", function(d){
-				if(d.Type == "try_catch" || d.Type == "Try" || d.Type == "handler")
+				if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 					return 8;
 				else
 					return d.height/2+2.5;
@@ -988,45 +995,45 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			})
 			.style("pointer-events", "none")
 			.text(function(d){
-				if(d.Type == "Push" || d.Type == "Pop" || d.Type == "Dummy"){
+				if(d.type == "retain" || d.type == "Dummy"){
 					return "";
 				}
 				else if(d.id == "root"){
 					return "";
 				}
-				else if(d.Type == "try_catch"){
+				else if(d.type == "try_catch"){
 					//return "Try Catch";
 					return d.label;
 				}
-				else if(d.Type == "Try"){
+				else if(d.type == "try"){
 					return "Try";
 				}
-				else if(d.Type == "handler"){
+				else if(d.type == "handler"){
 					return "Error Handler";
 				}
-				/*else if(d.Type == "Choice"){
+				/*else if(d.type == "if"){
 					return d.label;					
 				}	*/			
-				else if(d.Type == "Value"){
+			    else if(d.type == "let" || d.type == "literal"){
 					if(d.label.length>30)
 						return d.label.substring(0, 27)+"...";
 					else
 						return d.label;
 				}
-				else if(d.Type == "Task"){
+				else if(d.type == "action" || d.type === 'function'){
 					// new code here to hide namespace and handle multi-line functions
 					if(fsm.States[d.id]){
-						if(fsm.States[d.id].Action){
+						if(fsm.States[d.id].name){
 							// action node, cut down namespace 
-							if(fsm.States[d.id].Action.lastIndexOf("/") != -1 && fsm.States[d.id].Action.lastIndexOf("/") < fsm.States[d.id].Action.length-1){
-								return fsm.States[d.id].Action.substring(fsm.States[d.id].Action.lastIndexOf("/")+1);
+							if(fsm.States[d.id].name.lastIndexOf("/") != -1 && fsm.States[d.id].name.lastIndexOf("/") < fsm.States[d.id].name.length-1){
+								return fsm.States[d.id].name.substring(fsm.States[d.id].name.lastIndexOf("/")+1);
 							}
 							else{
-								return fsm.States[d.id].Action;
+								return fsm.States[d.id].name;
 							}
 						}
-						else if(fsm.States[d.id].Function){
-							let s = fsm.States[d.id].Function;
+						else if(fsm.States[d.id].type === 'function'){
+							let s = fsm.States[d.id].exec.code
 							s = s.replace(/\s\s+/g, ' ');
 							if(s.length > 40)
 								return s.substring(0, 40)+"...";
@@ -1083,7 +1090,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			if(d.source.indexOf("try_") == 0 && d.target.indexOf("handler_") == 0){
 				s += " TryCatchEdge";
 			}
-			if(d.source.indexOf("push_") == 0 && d.target.indexOf("pop_") == 0 && d.source.substring("push_".length) == d.target.substring("pop_".length)){
+	                if(d.source.indexOf("retain_origin") >= 0 && d.target.indexOf("retain_terminus") >= 0){
 				s += " forwardingLink";
 			}
 			//else if(d.)
@@ -1098,7 +1105,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					return wfColorAct.edgeInactive;
 			}
 			else{
-				if(d.source.indexOf("push_") == 0 && d.target.indexOf("pop_") == 0 && d.source.substring("push_".length) == d.target.substring("pop_".length)){
+ 			        if(d.source.indexOf("retain_origin") >= 0 && d.target.indexOf("retain_terminus") >= 0){
 					return wfColor.Edges.forwarding;
 				}
 				else{

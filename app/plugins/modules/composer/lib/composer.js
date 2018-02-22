@@ -20,7 +20,9 @@ debug('starting')
 const fs = require('fs'),
       path = require('path'),
       util = require('util'),
-      redis = require('redis'),
+      //redis = require('redis'),
+      _openwhiskComposer = require('@ibm-functions/composer'),
+      openwhiskComposer = _openwhiskComposer({ no_wsk: true }),
       messages = require('./messages.json'),
       { app:appBadge } = require('./badges'),
       lsKey = 'ibm.cloud.composer.storage'
@@ -33,7 +35,7 @@ const constants = {
 }
 
 // cache of init()
-let initDone, manager
+/*let initDone, manager
 const cacheIt = wsk => ({ package, message }) => {
     initDone = package
 
@@ -66,18 +68,18 @@ const cacheIt = wsk => ({ package, message }) => {
 
     return initManager()
         .then(() => ({ package, manager, message }))
-}
+}*/
 
 /**
  * Report to the user that redis is slow in coming up
  *
  */
-const slowInit = package => ({
+/*const slowInit = package => ({
     package,
     message: messages.slowInit
-})
+})*/
 
-const redisOpts = handleError => ({
+/*const redisOpts = handleError => ({
     connect_timeout: 5000,
     retry_strategy: options => {
         if (options.error && options.error.code === 'ECONNREFUSED') {
@@ -97,13 +99,13 @@ const redisOpts = handleError => ({
         // otherwise, reconnect after some time interval...
         return Math.min(options.attempt * 100, 3000);
     }
-})
+})*/
 
 /**
  * Wait till the redis service is pingable, then pass through the given res
  *
  */
-const waitTillUp = (redisURI, options={}, package) => new Promise((resolve, reject) => {
+/*const waitTillUp = (redisURI, options={}, package) => new Promise((resolve, reject) => {
     if (options.noping || options.url) {
         // don't ping if requested not to, or if the user specified a
         // direct URL; in the latter case, we assume that redis is
@@ -141,23 +143,23 @@ const waitTillUp = (redisURI, options={}, package) => new Promise((resolve, reje
         console.error(err)
         reject('Internal Error')
     }
-})
+})*/
 
 /**
  * Extract the redis uri from a service key
  *    TODO this probably belongs elsewhere, in the bluemix plugin e.g.
  *
  */
-const uri = (key, {provider}={}) => {
+/*const uri = (key, {provider}={}) => {
     if (!provider || provider === 'redis') return key.uri
     else if (provider && provider === 'rediscloud') return `redis://:${key.password}@${key.hostname}:${key.port}`
-}
+}*/
 
 /**
  * Acquire a redis instance
  *
  */
-const acquireRedis = options => {
+/*const acquireRedis = options => {
     if (options && options.url) {
         // use our shared redis instance
         return repl.qexec(`wsk package update bluemix.redis`, undefined, undefined, {
@@ -174,13 +176,13 @@ const acquireRedis = options => {
         // otherwise create a private instance
         return repl.qexec(`storage redis init --user ${constants.composerPackage}` + (options && options.provider ? ` --provider ${options.provider}` : ''))
     }
-}
+}*/
 
 /**
  * Populate the composer-conductor package
  *
  */
-const populatePackage = options => {
+/*const populatePackage = options => {
     return acquireRedis(options)
         .then( ({package}) => uri(package.parameters.find(({key})=>key==='_secrets').value.creds, options))
         .then(redis => { // this contains the redis secrets
@@ -200,13 +202,13 @@ const populatePackage = options => {
                         .then(() => waitTillUp(redis, options, composerPackage))
                 })
         })
-}
+}*/
 
 /**
  * Ignore any caches, and populate the openwhisk and redis bits
  *
  */
-const populateFromScratch = (wsk, options) => {
+/*const populateFromScratch = (wsk, options) => {
     return repl.qexec(`wsk package get ${constants.composerPackage}`)
         .catch(err => {
             if (err.statusCode !== 404) {
@@ -223,6 +225,15 @@ const populateFromScratch = (wsk, options) => {
             }
         })
         .then(() => populatePackage(options).then(cacheIt(wsk)))
+}*/
+
+/**
+ * Turn a key->value map into a '--key1 value1 --key2 value2' cli opt string
+ *
+ */
+const mapToOptions = (baseMap, overrides) => {
+    const map = Object.assign({}, baseMap, overrides)
+    return Object.keys(map).reduce((opts,key) => `${opts} --${key} ${map[key]}`, '')
 }
 
 /**
@@ -231,9 +242,37 @@ const populateFromScratch = (wsk, options) => {
  * @return { package, manager }
  *
  */
+const unsupported = () => { throw new Error('This operation is no longer supported') }
 exports.init = (wsk, options) => {
+    const manager = {
+        flush: unsupported,
+        kill: unsupported,
+        purge: unsupported,
+
+        // for now, we have to hack around the lack of a server-side conductor+topmost filter :(
+        list: options => repl.qexec(`wsk activation list ${mapToOptions(options, { limit: 200 })}`)
+            .then(activations => activations.filter(_ => {
+                return _.annotations
+                    && _.annotations.find(({key, value}) => key === 'conductor' && value)
+                    && _.annotations.find(({key, value}) => key === 'topmost' && value)
+            }))
+            .then(activations => {
+                const { skip=0, limit=activations.length } = options
+                return activations.slice(skip, limit)
+            })
+    }
+    manager.get = sessionId => repl.qexec(`wsk activation get ${sessionId}`).then(activation => {
+        activation.prettyType = 'sessions'
+        return activation
+    })
+    manager.trace = sessionId => manager.get(sessionId)
+        .then(activation => activation.logs)
+        .then(trace => ({trace})) // a list of activationIds
+
+    return Promise.resolve({ manager })
+
     // has the user asked to switch redis instances?
-    const resetRequested = options && options.reset
+    /*const resetRequested = options && options.reset
 
     if (!resetRequested && initDone) {
         // found in cache!
@@ -261,7 +300,7 @@ exports.init = (wsk, options) => {
                     }
                 })
         }
-    }
+    }*/
 }
 
 /**
@@ -269,14 +308,17 @@ exports.init = (wsk, options) => {
  *   TODO, this is a primitive form of validation, for now
  *
  */
-exports.isValidFSM = maybe => maybe && typeof maybe === 'object' && maybe.hasOwnProperty('Entry') && typeof maybe.Entry === 'string'
+exports.isValidFSM = maybe => {
+    //maybe && typeof maybe === 'object' && maybe.hasOwnProperty('Entry') && typeof maybe.Entry === 'string'
+    return maybe && maybe.constructor && maybe.constructor.name === 'Composition'
+}
 
 
 /**
  * Return the store credentials
  *
  */
-exports.properties = () => repl.qfexec(`wsk package get ${constants.composerPackage}`)
+/*exports.properties = () => repl.qfexec(`wsk package get ${constants.composerPackage}`)
     .catch(err => {
         if (err.statusCode === 404) {
             const msg = document.createElement('dom'),
@@ -295,7 +337,7 @@ exports.properties = () => repl.qfexec(`wsk package get ${constants.composerPack
         } else {
             throw err
         }
-    })
+    })*/
 
 /**
  * Extract the FSM source from the given entity
@@ -306,7 +348,7 @@ exports.getFSM = entity => {
           || entity.annotations && entity.annotations.find( ({key}) => key === 'fsm')        // or annotation?
 
     if (fsmPair) {
-        return fsmPair.value
+        return openwhiskComposer.deserialize(fsmPair.value)
     }
 }
 
@@ -336,32 +378,32 @@ exports.moveAside = (wsk, name) => repl.qexec(`mv "${name}" "${name}-orig"`)
  * Create an invokeable entity for the given fsm
  *    re: the $name, conductor offers the feature of naming sessions, we don't currently use it
  */
-const createBinding = ({wsk, appName, fsm}) => {
+/*const createBinding = ({wsk, appName, fsm}) => {
     return exports.init(wsk, { noping: true })
         .then(({package:composerPackage}) => {
             const bindName = `${composerPackage.name}.${appName}`
             return repl.qexec(`wsk package bind "${composerPackage.name}" "${bindName}"`,
                               undefined, undefined,
-                              { parameters: { $invoke: fsm, /*$name: appName*/ }
+                              { parameters: { $invoke: fsm }
                               })
         })
-}
+}*/
 
 /**
  * Delete an app-specific binding
  *
  */
-exports.deleteBinding = name => repl.qexec(`wsk package delete ${constants.composerPackage}.${name}`)
+/*exports.deleteBinding = name => repl.qexec(`wsk package delete ${constants.composerPackage}.${name}`)
     .catch(err => {
         console.error(err)
         return { error: name }
-    }).then(() => ({ ok: name }))
+    }).then(() => ({ ok: name }))*/
 
 /**
  * Merge previous and current and internal annotations
  *
  */
-const mergeAnnotations = (A1, A2, type, fsm) => {
+const mergeAnnotations = (A1=[], A2=[], type, fsm) => {
     const annotations = A1.concat(A2),
           fsmAnnotation = annotations.find(({key}) => key === 'fsm'),
           badgesAnnotation = annotations.find(({key}) => key === 'wskng.combinators'),
@@ -402,30 +444,26 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
 
     // create the binding, then create the action wrapper to give the app a name;
     // for updates, we also need to fetch the action, so we can merge the annotations and parameters
-    return Promise.all([createBinding({wsk, appName, fsm}),
-                        !packageName ? Promise.resolve() : repl.qexec(`package update "${packageName}"`),
-                        cmd === 'create' ? EMPTY : repl.qexec(`wsk action get ${fqnAppName}`).catch(err => {
+    return Promise.all([cmd === 'create' ? EMPTY : repl.qexec(`wsk action get ${fqnAppName}`).catch(err => {
                             if (err.statusCode === 404) return EMPTY
                             else throw err
-                        })
+                        }),
+                        !packageName ? Promise.resolve() : repl.qexec(`package update "${packageName}"`)
                        ])
-        .then(([binding, appPackage, currentAction]) => wsk.ow.actions[cmd](wsk.owOpts({
+        .then(([currentAction]) => {
+            // now we merge together the parameters and annotations
+            const fsmAction = fsm.named(fqnAppName).encode().actions[0].action
+            fsmAction.parameters = currentAction.parameters.concat(parameters).concat(fsmAction.parameters || []),
+            fsmAction.annotations = mergeAnnotations(currentAction.annotations, annotations.concat(fsmAction.annotations||[]), type, fsm)
+            return fsmAction
+        })
+        .then(fsmAction => wsk.owOpts({ // add common flags to the requewst
             name: fqnAppName,
-            action: {
-                exec: {
-                    kind: 'sequence',
-                    components: [`/${binding.namespace}/${binding.name}/conductor`]
-                },
-                parameters: currentAction.parameters.concat(parameters),
-                annotations: mergeAnnotations(currentAction.annotations, annotations, type, fsm),
-                limits: {
-                    timeout: 5 * 60 * 1000 // 5-minute timeout
-                }
-            }
-        })))
+            action: fsmAction
+        }))
+        .then(opts => wsk.ow.actions[cmd](opts)) // now we invoke the operation
         .then(entity => ui.headless ? Object.assign(entity, { verb: 'update', type: 'app' }) : repl.qfexec(`app get "/${entity.namespace}/${entity.name}"`))
         .catch(err => {
-            debug('@@@@@@@@@', err)
             throw err
         })
 }
@@ -577,15 +615,24 @@ exports.decorateAsApp = action => {
  * Extract the Action Tasks from a given FSM
  *
  */
-exports.extractActionsFromFSM = ({States}) => {
+exports.extractActionsFromFSM = ({composition}) => {
     const actions = []
 
-    for (let state in States) {
-        const { Action, Type } = States[state]
-        if (Type === 'Task' && Action) {
-            actions.push(Action)
+    /** recursively add actions from the given root sequence */
+    const iter = root => root.forEach(node => {
+        if (node.type === 'action') {
+            actions.push(node.name)
+        } else {
+            for (let key in node) {
+                if (util.isArray(node[key])) {
+                    iter(node[key])
+                }
+            }
         }
-    }
+    })
+
+    // start from the root
+    iter(composition)
 
     return actions
 }

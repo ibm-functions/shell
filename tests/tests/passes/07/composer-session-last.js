@@ -22,7 +22,7 @@ const common = require('../../../lib/common'),
       fs = require('fs'),
       path = require('path'),
       badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
-      sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
@@ -47,9 +47,9 @@ describe('session get --last and --last-failed', function() {
         }
     }
 
-    it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
+    /*it('should initialize composer', () => cli.do(`app init --url ${sharedURL} --cleanse`, this.app) // cleanse important here for counting sessions in `sessions`
         .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     it('create sequence that invokes without error', () => cli.do(`letc ${seqName1} = x=>x -> x=>x`, this.app)
 	.then(cli.expectOK)
@@ -73,13 +73,16 @@ describe('session get --last and --last-failed', function() {
        .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
 
-    it(`should show ${seqName1} with session get --last`, () => cli.do(`session get --last`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName1))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({xxx:333}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName1} with session get --last`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last`, this.app)
+            .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName1, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({xxx:333}))
+            .catch(common.oops(this))
+    }))
+                                                                                         
 
     it('create another sequence that invokes without error', () => cli.do(`letc ${seqName3} = x=>x -> x=>x`, this.app)
 	.then(cli.expectOK)
@@ -96,21 +99,25 @@ describe('session get --last and --last-failed', function() {
        .then(ui.expectStruct({zzz:555}))
        .catch(common.oops(this)))
 
-    it(`should show ${seqName1} with session get --last ${seqName1}`, () => cli.do(`session get --last ${seqName1}`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName1))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({xxx:333}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName1} with session get --last ${seqName1}`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last ${seqName1}`, this.app)
+	    .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName1, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({xxx:333}))
+            .catch(common.oops(this))
+    }))
 
-    it(`should show ${seqName3} with session get --last`, () => cli.do(`session get --last`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName3))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({zzz:555}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName3} with session get --last`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last`, this.app)
+	    .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName3, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({zzz:555}))
+            .catch(common.oops(this))
+    }))
 
     it(`should invoke ${seqName2}`, () => cli.do(`app invoke ${seqName2} -p yyy 444`, this.app)
 	.then(cli.expectOK)
@@ -120,21 +127,25 @@ describe('session get --last and --last-failed', function() {
        .then(ui.expectStruct({error: {yyy:444}}))
        .catch(common.oops(this)))
 
-    it(`should show ${seqName1} with session get --last ${seqName1}`, () => cli.do(`session get --last ${seqName1}`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName1))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({xxx:333}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName1} with session get --last ${seqName1}`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last ${seqName1}`, this.app)
+	    .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName1, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({xxx:333}))
+            .catch(common.oops(this))
+    }))
 
-    it(`should show ${seqName2} with session get --last-failed`, () => cli.do(`session get --last-failed`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName2))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({error: {yyy:444}}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName2} with session get --last-failed`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last-failed`, this.app)
+	    .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName2, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({error: {yyy:444}}))
+            .catch(common.oops(this))
+    }))
 
     it(`should invoke ${seqName3}`, () => cli.do(`app invoke ${seqName3} -p zzz 555`, this.app)
 	.then(cli.expectOK)
@@ -144,11 +155,13 @@ describe('session get --last and --last-failed', function() {
        .then(ui.expectStruct({zzz:555}))
        .catch(common.oops(this)))
 
-    it(`should show ${seqName2} with session get --last-failed`, () => cli.do(`session get --last-failed`, this.app)
-	.then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing(seqName2))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({error: {yyy:444}}))
-       .catch(common.oops(this)))
+    it(`should show ${seqName2} with session get --last-failed`, () => this.app.client.waitUntil(() => {
+        return cli.do(`session get --last-failed`, this.app)
+	    .then(cli.expectOK)
+            .then(sidecar.expectOpen)
+            .then(sidecar.expectShowing(seqName2, undefined, undefined, undefined, undefined, 500))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+            .then(ui.expectStruct({error: {yyy:444}}))
+            .catch(common.oops(this))
+    }))
 })
