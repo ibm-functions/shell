@@ -1017,7 +1017,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					return d.label;					
 				}	*/			
 			    else if(d.type == "let" || d.type == "literal"){
-                                console.error('@@@@@@@@@@', d)
 					if(d.label.length>30)
 						return d.label.substring(0, 27)+"...";
 					else
