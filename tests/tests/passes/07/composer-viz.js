@@ -56,6 +56,11 @@ describe('show the composer visualization without creating openwhisk assets', fu
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
+    it('should preview an empty composition', () => cli.do(`app preview data/composer-source/empty.js`, this.app)
+       .then(verifyTheBasicStuff('empty.js', 'composerLib'))
+       .then(verifyEdgeExists('Entry', 'Exit'))
+       .catch(common.oops(this)))
+
     /** test: load an FSM */
     const syns = ['preview', 'app viz', 'app preview', 'wsk app viz', 'wsk app preview']
     syns.forEach(cmd => {

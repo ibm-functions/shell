@@ -41,14 +41,20 @@ function Process takes a fsm and outputs an annotated fsm that markes the states
 */
 
 function annotateNodes(fsm, activations){
+        // does this composition have no nodes?
+        const isEmptyComposition = !fsm.composition || fsm.composition.length === 0
 
         // initialize: adding an Entry state and an Exit state (for viuslaizations).
         fsm.Entry = 'Entry'
         fsm.Exit = 'Exit'
-	fsm.States.Entry = {'type' : 'Entry', 'Next': fsm.composition[0].id};
+        fsm.States.Entry = {'type' : 'Entry'};
         fsm.States.Exit = {'type': 'Exit'};
         fsm.States[fsm.Exit].Next = 'Exit';
-        // we will wire up to Exit in fsm2Graph
+
+        // wire up Entry to the first node of the composition; we will wire up to Exit in fsm2Graph
+        if (!isEmptyComposition) {
+            fsm.States.Entry.Next = fsm.composition[0].id
+        }
 
 	let retry_2 = [], tryStates = [], repeat_1 = [], action2State = {}, nullStates = [];;
 	
