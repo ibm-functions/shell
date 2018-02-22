@@ -71,7 +71,7 @@ function drawNode(id, label, isCompound, properties, w, h){
 			o.width = o.label.length*3+10;
 			o.height = defaultHeight;
 		}
-		else if(o.type === "Value"){
+		else if(o.type === "Value" || o.type === "let" || o.type === "literal"){
 			if(o.label.length>30)
 				o.width = 30*defaultCharWidth+10;
 			else
