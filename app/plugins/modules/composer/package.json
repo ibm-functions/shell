@@ -12,7 +12,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@ibm-functions/composer": "git+https://github.com/starpit/composer.git#ignore_certs",
+    "@ibm-functions/composer": "git+https://github.com/tardieu/composer.git#ir",
     "chokidar": "^1.7.0"
   }
 }

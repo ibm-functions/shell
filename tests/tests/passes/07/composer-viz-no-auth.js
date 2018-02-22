@@ -63,9 +63,12 @@ describe('show the composer visualization with no wskauth', function() {
        .then(verifyNodeExists('seq3'))
        .then(verifyNodeExists('seq4'))
        .then(verifyNodeExists('seq5'))
+       .then(verifyEdgeExists('Entry', 'isTrue'))
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
        .then(verifyEdgeExists('seq4', 'seq5'))
+       .then(verifyEdgeExists('seq3', 'Exit'))
+       .then(verifyEdgeExists('seq5', 'Exit'))
        .then(() => this.app.client.element('body.no-auth')) // make sure we have this indicator
        .catch(common.oops(this)))
 
@@ -79,10 +82,12 @@ describe('show the composer visualization with no wskauth', function() {
        .then(verifyNodeExists('cond2'))
        .then(verifyNodeExists('cond3'))
        .then(verifyNodeExists('action4'))
+       .then(verifyEdgeExists('Entry', 'cond1'))
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
        .then(verifyEdgeExists('cond1', 'cond2'))
        .then(verifyEdgeExists('action4', 'cond3'))
+       .then(verifyEdgeExists('cond3', 'Exit'))
        .then(() => this.app.client.element('body.no-auth')) // make sure we have this indicator
        .catch(common.oops(this)))
 })

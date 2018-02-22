@@ -641,10 +641,12 @@ exports.extractActionsFromFSM = ({composition}) => {
  * Deploy a given action, if we can find the source
  *
  */
-exports.deployAction = home => actionName => new Promise((resolve, reject) => {
-
+const nsPattern = /^\/[^\/]\//
+const stripNamespace = action => action.replace(nsPattern, '')
+exports.deployAction = home => actionFQN => new Promise((resolve, reject) => {
     try {
-        const suffixes = ['.js', '.php', '.python']
+        const actionName = stripNamespace(actionFQN),
+              suffixes = ['.js', '.php', '.python']
 
         for (let idx = 0; idx < suffixes.length; idx++) {
             const suffix = suffixes[idx],
@@ -655,7 +657,7 @@ exports.deployAction = home => actionName => new Promise((resolve, reject) => {
             fs.exists(actionPath, exists => {
                 if (exists) {
                     debug('deploying action', actionName, actionPath)
-                    return repl.qexec(`wsk action update "${actionName}" "${actionPath}"`).then(resolve, reject)
+                    return repl.qexec(`wsk action update "${actionFQN}" "${actionPath}"`).then(resolve, reject)
                 }
             })
         }
