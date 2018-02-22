@@ -19,6 +19,11 @@ const libraryName = 'composer',
       composerPattern = new RegExp(`${libraryName}\.`)
 
 const strings = {
+    literal: {
+        documentation: 'Inject a constant value',
+        detail: 'Inject a constant value',
+        args: ['aConstantValue']
+    },
     if: {
         documentation: 'Conditionally execute a task',
         detail: 'if (condTask) thenTask; else elseTask',
