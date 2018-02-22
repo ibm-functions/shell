@@ -102,7 +102,7 @@ function drawNode(id, label, isCompound, properties, w, h){
 						label = s.substring(0, 40)+"...";
 					else
 						label = s;
-				}
+                                }
 
 			}
 
@@ -621,9 +621,9 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 
 				}
 			}
-			else{
-				if(name.indexOf("value") === 0) console.log(name, state);
-				obj.children.push(drawNode(name));
+		        else{
+			        if(name.indexOf("value") === 0) console.log(name, state);
+			        obj.children.push(drawNode(name, state.type === "literal" ? `${state.value}` : undefined));
 				//if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
 				lastNode.forEach(ln => obj.edges.push(drawEdge(ln, name, obj)));
 
