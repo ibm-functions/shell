@@ -481,7 +481,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						else if(d.type == "Try") return wfColor.Try.normal;
 						else if(d.type == "handler") return wfColor.handler.normal;
 					}
-					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
+					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal" || d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
 						if(visited[d.id])
 							return "black";
 						else
@@ -768,7 +768,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					}
 					/*else if(d.type == "if")
 						return "orange";*/
-					else if(d.type == "let"){					
+					else if(d.type == "let" || d.type == "literal"){					
 						//return "#4E387E";
 						return wfColor.Value.normal;
 					}
@@ -792,7 +792,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						else if(d.type == "try") return wfColor.Try.normal;
 						else if(d.type == "handler") return wfColor.handler.normal;
 					}
-					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let"){
+					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal"){
 						return "black";
 					}
 					else if(d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
@@ -878,7 +878,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					else if(d.type == "Entry" || d.type == "Exit"){
 						qtipText = d.type;
 					}
-					else if(d.type == "let"){					
+					else if(d.type == "let" || d.type == "literal"){					
 						qtipText = d.label;
 					}
 
@@ -1016,7 +1016,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				/*else if(d.type == "if"){
 					return d.label;					
 				}	*/			
-				else if(d.type == "let"){
+			    else if(d.type == "let" || d.type == "literal"){
+                                console.error('@@@@@@@@@@', d)
 					if(d.label.length>30)
 						return d.label.substring(0, 27)+"...";
 					else
