@@ -411,9 +411,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			.attr("id", function(d){return d.id})
   		        .attr("data-task-index", ({TaskIndex}) => TaskIndex ) // add a data-task-index for every task
 			.attr("data-name", function(d){
-				if(d.type == "action"){
-					return d.label;
-				}
+				return d.label;
 			})
 			.attr("data-deployed", function(d){
 				if(visited){
