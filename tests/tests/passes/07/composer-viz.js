@@ -69,8 +69,10 @@ describe('show the composer visualization without creating openwhisk assets', fu
            .then(verifyNodeExists('foo1'))
            .then(verifyNodeExists('foo2'))
            .then(verifyNodeExists('foo3'))
+           .then(verifyEdgeExists('Entry', 'foo1'))
            .then(verifyEdgeExists('foo1', 'foo2'))
            .then(verifyEdgeExists('foo2', 'foo3'))
+           .then(verifyEdgeExists('foo3', 'Exit'))
            .catch(common.oops(this)))
     })
 
@@ -102,6 +104,8 @@ describe('show the composer visualization without creating openwhisk assets', fu
         it(`show visualization from javascript source ${input.path}`, () => cli.do(`app viz ${input.path}`, this.app)
            .then(verifyTheBasicStuff(input.file, 'composerLib'))
            .then(verifyNodeExists('RandomError', false)) // is not deployed
+           .then(verifyEdgeExists('Entry', 'Try-Catch'))
+           .then(verifyEdgeExists('Try-Catch', 'Exit'))
            .catch(common.oops(this)))
     })
 
@@ -139,6 +143,9 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('report-swapi', false)) // not yet deployed
        .then(verifyNodeExists('report-stapi', false)) // not yet deployed
        .then(verifyNodeExists('report-empty', false)) // not yet deployed
+       .then(verifyEdgeExists('report-swapi', 'Exit'))
+       .then(verifyEdgeExists('report-stapi', 'Exit'))
+       .then(verifyEdgeExists('report-empty', 'Exit'))
        .catch(common.oops(this)))
 
     /** test: viz, then create with -r, testing for handling of implicit entity and auto-deploy */
@@ -161,9 +168,12 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('seq3'))
        .then(verifyNodeExists('seq4'))
        .then(verifyNodeExists('seq5'))
+       .then(verifyEdgeExists('Entry', 'isTrue'))
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
        .then(verifyEdgeExists('seq4', 'seq5'))
+       .then(verifyEdgeExists('seq3', 'Exit'))
+       .then(verifyEdgeExists('seq5', 'Exit'))
        .catch(common.oops(this)))
 
     /** test: while with nested sequence, from js file */
@@ -176,10 +186,15 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('cond2'))
        .then(verifyNodeExists('cond3'))
        .then(verifyNodeExists('action4'))
+       .then(verifyEdgeExists('Entry', 'cond1'))
+       .then(verifyEdgeExists('cond1', 'cond2'))
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
-       .then(verifyEdgeExists('cond1', 'cond2'))
+       .then(verifyEdgeExists('seq3', 'cond2'))
+       .then(verifyEdgeExists('cond2', 'cond3'))
+       .then(verifyEdgeExists('cond3', 'action4'))
        .then(verifyEdgeExists('action4', 'cond3'))
+       .then(verifyEdgeExists('cond3', 'Exit'))
        .catch(common.oops(this)))
 
     /* this one manifests a wskflow bug, disabling for now

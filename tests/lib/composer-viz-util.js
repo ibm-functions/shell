@@ -36,7 +36,8 @@ const composerInput = file => input(file, 'composer-source')
  *
  */
 const verifyNodeExists = (name, isDeployed=false) => app => {
-    const selector = `#wskflowSVG .node[data-name="${name}"][data-deployed="${isDeployed ? 'deployed' : 'not-deployed'}"]`
+    const selector = `#wskflowSVG .node[data-name="/_/${name}"][data-deployed="${isDeployed ? 'deployed' : 'not-deployed'}"]`
+    console.error(`CHECKING NODE ${name} ${selector}`)
     return app.client.elements(selector)
         .then(nodes => assert.equal(nodes.value.length, 1))
         .then(() => app)
@@ -51,15 +52,19 @@ const verifyNodeExistsById = id => app => {
  * Verify that a edge between the given action names exists on the canvas
  *
  */
-const verifyEdgeExists = (from, to) => app => app.client.elements(`#wskflowSVG path[data-from-name="${from}"][data-to-name="${to}"]`)
-      .then(edges => assert.equal(edges.value.length, 1))
-      .then(() => app)
+const verifyEdgeExists = (from, to) => app => {
+    const selector = `#wskflowSVG path[data-from-name="/_/${from}"][data-to-name="/_/${to}"]`
+    console.error(`CHECKING EDGE ${from} ${to} ${selector}`)
+    return app.client.elements(selector)
+        .then(edges => assert.equal(edges.value.length, 1))
+        .then(() => app)
+}
 
 /**
  * Verify that an outgoing edge, coming from the given from node
  *
  */
-const verifyOutgoingEdgeExists = from => app => app.client.elements(`#wskflowSVG path[data-from-name="${from}"]`)
+const verifyOutgoingEdgeExists = from => app => app.client.elements(`#wskflowSVG path[data-from-name="/_/${from}"]`)
       .then(edges => assert.equal(edges.value.length, 1))
       .then(() => app)
 

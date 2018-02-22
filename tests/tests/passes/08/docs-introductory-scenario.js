@@ -71,15 +71,15 @@ const fsm = {
             "type": "if",
             "test": [{
                 "type": "action",
-                "name": "authenticate"
+                "name": "/_/authenticate"
             }],
             "consequent": [{
                 "type": "action",
-                "name": "welcome"
+                "name": "/_/welcome"
             }],
             "alternate": [{
                 "type": "action",
-                "name": "login"
+                "name": "/_/login"
             }]
         }]
     },
@@ -88,7 +88,7 @@ const fsm = {
             "type": "try",
             "body": [{
                 "type": "action",
-                "name": "validate"
+                "name": "/_/validate"
             }],
             "handler": [{
                 "type": "function",
@@ -106,7 +106,7 @@ const fsm = {
                 "type": "retain",
                 "body": [{
                     "type": "action",
-                    "name": "validate"
+                    "name": "/_/validate"
                 }]
             }, {
                 "type": "function",
@@ -175,16 +175,37 @@ const graph = {
     }
 }
 
+/** turn array of strings into map from key:true */
+const toMap = A => A.reduce((M, item) => {
+    M[item] = true
+    return M
+}, {})
+
+/** verify that M2 contains a key not in M1 */
+const somethingNew = (M1, M2) => {
+    for (let key in M2) {
+        if (! (key in M1)) {
+            return true
+        }
+    }
+    return false
+}
+
 /**
  * Common composer operations
  *
  */
 const composer = {
+    hasSession: (app, name, sessionId) => {
+        return cli.do(`session list ${name}`, app)
+	    .then(cli.expectOKWithCustom({passthrough: true}))
+            .then(N => app.client.getText(`${ui.selectors.LIST_RESULTS_N(N)} .activationId[data-activation-id="${sessionId}"]`))
+    },
     countSessions: (app, name) => {
         return cli.do(`session list ${name}`, app)
 	    .then(cli.expectOKWithCustom({ passthrough: true }))
-            .then(N => app.client.elements(`${ui.selectors.OUTPUT_N(N)} .entity.session .entity-name .clickable`))
-            .then(A => !A || !A.value ? 0 : A.value.length)
+            .then(N => app.client.getText(`${ui.selectors.OUTPUT_N(N)} .entity.session .activationId .clickable`))
+            .then(toMap)
     },
     getSessions: (app, nDone, { cmd='session list', expect=[] }) => {
         return cli.do(cmd, app)
@@ -304,6 +325,7 @@ describe('Intro demo scenario', function() {
                 return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
                     .then(ui.expectStruct(expectedStruct1))
             }))
+            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_ID)) // return the activationId
             .catch(common.oops(this))
     }
 
@@ -316,33 +338,21 @@ describe('Intro demo scenario', function() {
     {
         const { appName:appName1 } = inputs[0]
 
-        it('should invoke hello and show one more session than before', () => composer.countSessions(this.app, appName1)
-           .then(beforeCount => invokeHello()
-                 .then(() => this.app.client.waitUntil(() => composer.countSessions(this.app, appName1)
-                                                       .then(afterCount => {
-                                                           console.error(`BEFORE=${beforeCount} AFTER=${afterCount}`)
-                                                           return afterCount === beforeCount + 1
-                                                       }))))
+        it('should invoke hello and show one more session than before', () => invokeHello()
+           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId)))
            .catch(common.oops(this)))
     }
 
     // session result
     {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
-        const cmd = `session list ${appName1}`,
-              nDone = 1,
-              testName = 'session result',
-              validator = N => this.app.client.getAttribute(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-name="${appName1}"] .activationId`,
-                                                            'data-activation-id')
-              .then(res => res.length === 1 ? res : res[0])
-              .then(sessionId => cli.do(`${testName} ${sessionId}`, this.app))
-              .then(cli.expectOKWithCustom({ selector: 'code' }))
-              .then(selector => this.app.client.getText(selector))
-              .then(ui.expectStruct(expectedStruct1))
-              .catch(common.oops(this));
 
-        it(testName, () => composer.getSessions(this.app, nDone, { cmd, validator })
-           .then(validator)
+        it(`should display result in repl with session result`, () => invokeHello()
+           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId))
+                 .then(() => cli.do(`session result ${activationId}`, this.app)))
+           .then(cli.expectOKWithCustom({ selector: 'code' }))
+           .then(selector => this.app.client.getText(selector))
+           .then(ui.expectStruct(expectedStruct1))
            .catch(common.oops(this)))
     }
 
@@ -373,24 +383,17 @@ describe('Intro demo scenario', function() {
     // session get
     {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
-        const cmd = `session list ${appName1}`,
-              nDone = 1,
-              testName = 'session get',
-              validator = N => this.app.client.getAttribute(`${ui.selectors.OUTPUT_N(N)} .entity.session[data-name="${appName1}"] .activationId`,
-                                                            'data-activation-id')
-              .then(res => res.length === 1 ? res : res[0])
-              .then(sessionId => cli.do(`${testName} ${sessionId}`, this.app))
-              .then(cli.expectOK)
-              .then(sidecar.expectOpen)
-              .then(sidecar.expectShowing(appName1))
-              .then(app => app.client.waitUntil(() => {
-                  return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
-                      .then(ui.expectStruct(expectedStruct1))
-              }))
-              .catch(common.oops(this));
 
-        it(testName, () => composer.getSessions(this.app, nDone, { cmd, validator })
-           .then(validator)
+        it(`should display result in sidecar with session get`, () => invokeHello()
+           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId))
+                 .then(() => cli.do(`session get ${activationId}`, this.app)))
+           .then(cli.expectOK)
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing(appName1))
+           .then(app => app.client.waitUntil(() => {
+               return app.client.getText(`${ui.selectors.SIDECAR_CONTENT} .activation-result`)
+                   .then(ui.expectStruct(expectedStruct1))
+           }))
            .catch(common.oops(this)))
     }
 

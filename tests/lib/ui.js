@@ -211,7 +211,7 @@ exports.sidecar = {
 
     expectSequence: A => app => {
         return Promise.all(A.map((component, idx) => {
-            const selector = `${selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N(idx)}[data-name="${component}"]`
+            const selector = `${selectors.SIDECAR_SEQUENCE_CANVAS_NODE_N(idx)}[data-name="/_/${component}"]`
             console.error(`Waiting for ${selector}`)
             return app.client.waitForExist(selector)
         }))
