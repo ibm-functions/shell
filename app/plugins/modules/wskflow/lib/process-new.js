@@ -14,6 +14,26 @@
  * limitations under the License.
  */
 
+/** flatten an array of arrays */
+const flatten = arrays => [].concat.apply([], arrays)
+
+/** remove duplicates from an array */
+const removeDuplicates = A => new Set(A)
+
+/**
+ * Turn an activation log entry "Entering state [0-9]+ at path ..."
+ * into the encoded form that we use for node ids in the graph.
+ *
+ */
+const logEntry2StateRegex = /Entering state .* at path (.*)$/
+const logEntry2State = logEntry => {
+    const match = logEntry.match(logEntry2StateRegex)
+
+    // see the Node Visitor path encoding discussion in
+    // composition2fsm.js
+    return match && match[1].replace(/\[([0-9])+\]/g, '_$1').replace(/\./g, '__')
+}
+
 /*
 function Process takes a fsm and outputs an annotated fsm that markes the states that are not printed out or printed out as smaller, non-action nodes. 
 
@@ -218,20 +238,45 @@ function annotateNodes(fsm, activations){
 	});
 
 	// new - for activations
-	if(activations){
-		activations.sort((a, b) => {
+        if(activations){
+  	        activations.sort((a, b) => {
 			return a.start - b.start;
 		});		
-		
-		let lastState, notDebug = true;
-		let addAct = (name, activation) => {
-			if(fsm.States[name].act == undefined)
-				fsm.States[name].act = [];
-			fsm.States[name].act.push(activation);
-		}
 
-		activations.forEach((a, i) => {
-			if(a.name === 'conductor'){
+                /**
+                 * Record the given activation as contributing to the
+                 * activity of the given node id ("name")
+                 *
+                 */
+	         const addActivationToNode = (activations, idx) => name => {
+                     const node = fsm.States[name]
+                           
+                     // the conductor executes functions inline, so
+                     // the current activation services the activity
+                     const activation = node.type === 'function' ? activations[idx] : activations[idx + 1]
+
+                     if (activation) {
+			 if(fsm.States[name].act === undefined)
+			     fsm.States[name].act = [];
+		         fsm.States[name].act.push(activation);
+                     }
+		 }
+
+                 // map the activations to nodes.
+                 //
+                 // Note that the logs have entries such as "Entering state x at path
+                 // fsm[0].test[0]"; we turn these into a set of visited nodes,
+                 // using the node id encoding from composition2fsm.js
+                 //
+	         activations.forEach((activation, idx) => {
+                     activation.logs.map(logEntry2State).filter(x=>x)
+                         .map(addActivationToNode(activations, idx))
+                 })
+
+
+		    /*activations.forEach((a, i) => {
+                    
+		    if(a.name === 'conductor'){
 
 				// special case for first conductor: if log-input, first state will be an echo
 				if(i==0 && fsm.States.Entry.Next && fsm.States.Entry.Next.indexOf('echo_') !== -1 && i+1<activations.length && activations[i+1].name == 'echo'){
@@ -270,7 +315,7 @@ function annotateNodes(fsm, activations){
 
 			}			
 						
-		});
+		});*/
 		
 
 		// see if exit state is visited 
