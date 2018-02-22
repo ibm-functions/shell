@@ -33,9 +33,20 @@ const flatten = arrays => [].concat.apply([], arrays);
  * The command handler
  *
  */
-const doList = (block, nextBlock, fullArgv, _, command) => {
-    const options = command.substring(command.indexOf('list') + 5),
-          list = type => repl.qexec(`wsk ${type} list ${options}`)
+const doList = (_1, _2, _3, { errors }, _5, _6, args, options) => {
+    if (options.help) {
+        throw new errors.usage(`List all entities in the current namespace
+
+    wsk list`)
+    } else if (Object.keys(options).length > 3 || (Object.keys(options).length > 1 && !options.help)) {
+        // minimist always adds options._, and repl will add both
+        // options.help and options.h if either is specified
+        throw new errors.usage(`This command accepts no optional arguments`)
+    } else if (args.length - args.indexOf('list') > 1) {
+        throw new errors.usage(`This command accepts no positional arguments`)
+    }
+
+    const list = type => repl.qexec(`wsk ${type} list`)
 
     return Promise.all(types.map(list)).then(flatten)
 }
@@ -45,5 +56,5 @@ const doList = (block, nextBlock, fullArgv, _, command) => {
  *
  */
 module.exports = (commandTree, require) => {
-    commandTree.listen(`/wsk/list`, doList, { docs: `List entities in the current namespace` })
+    commandTree.listen(`/wsk/list`, doList, { docs: 'List all entities in the current namespace' })
 }

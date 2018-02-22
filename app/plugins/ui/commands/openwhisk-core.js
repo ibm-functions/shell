@@ -629,7 +629,9 @@ specials.activations = {
 }
 specials.packages = {
     list: (options, argv) => {
-        options.namespace = options.name
+        if (options) {
+            options.namespace = options.name
+        }
     },
     get: standardViewModes('content'),
     create: standardViewModes('content'),
