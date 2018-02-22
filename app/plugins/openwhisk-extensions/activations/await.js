@@ -25,9 +25,14 @@
 const POLL_INTERVAL = process.env.POLL_INTERVAL || 1000,
       minimist = require('minimist')
 
+/** does the given activation have a truthy value for the given annotation key "anno */
+const hasTruthyAnno = (activation, anno) => activation.annotations && activation.annotations.find(({key, value}) => key === anno && value)
+
+/** was the given activation handled by the conductor */
+const isConductorActivation = activation => hasTruthyAnno(activation, 'conductor') && hasTruthyAnno(activation, 'topmost')
+
 const handleComposer = (commandTree, options) => activation => {
-    const response = activation.response
-    if (response && response.result && response.result.$session) {
+    if (isConductorActivation(activation)) {
         // then this is a conductor action, so delegate to await-app
         if (options.raw) {
             // caller asked for the raw session record, of the conductor
@@ -39,11 +44,7 @@ const handleComposer = (commandTree, options) => activation => {
             // since we have ready access to the name and path of the wrapper,
             //       pass it through, to avoid fetching it again in await-app
             //
-            const name = activation.name,
-                  pathAnnotation = activation.annotations.find(({key}) => key === 'path'),
-                  pathArg = pathAnnotation ? `--path ${pathAnnotation.value}` : ''
-            return repl.qexec(`await-app ${response.result.$session} --name ${name} ${pathArg}`)
-                .then(activation => commandTree.changeContext(`/wsk/activation`, activation.activationId)(activation))
+            return repl.qfexec(`await-app ${activation.activationId}`)
         }
     } else {
         // otherwise, this is a normal activation, so return it to the user

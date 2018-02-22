@@ -53,9 +53,9 @@ describe('app create and sessions', function() {
     }
 
     /** invoke a composition */
-    const invoke = (name, key, value, extraExpect, expectIsIt=false) => {
-        it(`should invoke the composition ${name} with ${key}=${value}`, () => cli.do(`app invoke ${name} -p ${key} ${value}`, this.app)
-	    .then(cli.expectOK)
+    const invoke = (name, key, value, extraExpect, expectIsIt=false, cmd='app invoke') => {
+        it(`should invoke via ${cmd} the composition ${name} with ${key}=${value}`, () => cli.do(`${cmd} ${name} -p ${key} ${value}`, this.app)
+	   .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(seqName1))
            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
@@ -245,6 +245,7 @@ describe('app create and sessions', function() {
     getConfig('wsk app config')
 
     invoke(seqName1, 'x', 3, { aa: 11, bb: 22, cc: 22 })
+    invoke(seqName1, 'x', 3, { aa: 11, bb: 22, cc: 22 }, false, 'invoke') // invoke via "invoke" rather than "app invoke"
     /*getSessions('session list', 0, 1) // 1 "done" session
     getSessions('session ls', 0, 1)   // 1 "done" session (testing ls alias)
     getSessions('sessions list --skip 1', 0, 0) // expect empty, if we skip 1 (since we expect 1 in total)
