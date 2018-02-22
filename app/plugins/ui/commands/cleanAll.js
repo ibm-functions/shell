@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('wipe')
 
 /**
  * This plugin introduces /wsk/wipe, which helps with removing all
@@ -27,7 +28,7 @@
  *
  */
 const logThen = f => msg => {
-    console.log(`cleanAll::retry ${msg}`)
+    debug(`retry ${msg}`)
     return f()
 }
 
@@ -64,7 +65,7 @@ const list = type => repl.qexec(`${type} list --limit 200`)
  *
  */
 const deleteAllUntilDone = type => entities => {
-    console.log(`cleanAll::deleteAllUntilDone ${type} ${entities.length}`)
+    debug(`deleteAllUntilDone ${type} ${entities.length}`)
 
     if (entities.length === 0) {
 	return Promise.resolve(true)
@@ -84,7 +85,7 @@ const clean = (type, quiet) => {
         if (ui.headless) {
             process.stdout.write('.'.random)
         } else {
-            console.log(`Cleaning ${type}`)
+            debug(`Cleaning ${type}`)
         }
     }
     return list(type).then(deleteAllUntilDone(type))
@@ -126,7 +127,7 @@ module.exports = commandTree => commandTree.listen('/wsk/wipe', (block, nextBloc
     // first, hide the sidecar
     //
     const sidecarVisibility = plugins.require('/views/sidecar/visibility')
-    sidecarVisibility.hide()
+    sidecarVisibility.hide(true) // true means clean out current selection
 
     //
     // then ask the user to confirm the dangerous operation
@@ -147,7 +148,7 @@ module.exports = commandTree => commandTree.listen('/wsk/wipe', (block, nextBloc
 	    return doWipe()
 	        .then(() => commandTree.cdToHome('Your OpenWhisk assets have been successfully removed')) // change back to the home context
                 .catch(err => {
-		    console.error(`cleanAll::oops ${err}`)
+		    console.error(`wipe::oops ${err}`)
 		    console.error(err)
 		    throw err
 	        })
