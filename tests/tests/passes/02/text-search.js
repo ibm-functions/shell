@@ -26,9 +26,7 @@ describe('Text search', function() {
     before(common.before(this))
     after(common.after(this))
 
-    const ctrlOrMeta = process.platform == 'darwin' ? '\uE03D' : '\uE009'
-
-    it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ctrlOrMeta, 'f'])
+    it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ui.ctrlOrMeta, 'f'])
        .then(() => this.app.client.isVisible('#search-bar'))
        .then(r => assert.ok(r, 'search-bar visible'))
        .catch(common.oops(this)))
@@ -49,7 +47,7 @@ describe('Text search', function() {
        .catch(common.oops(this)))
 
     // re-open, so that we can test the close button
-    it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ctrlOrMeta, 'f'])
+    it('should open the search bar when cmd+f is pressed', () => this.app.client.keys([ui.ctrlOrMeta, 'f'])
        .then(() => this.app.client.isVisible('#search-bar'))
        .then(r => assert.ok(r, 'search-bar visible'))
        .catch(common.oops(this)))
