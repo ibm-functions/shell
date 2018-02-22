@@ -403,3 +403,8 @@ exports.validateNamespace = observedNamespace => {
     assert.equal(observedNamespace.toLowerCase(), exports.expectedNamespace().toLowerCase())
 }
 
+/**
+ * The proper control or command modifier for the platform
+ *
+ */
+exports.ctrlOrMeta = process.platform == 'darwin' ? '\uE03D' : '\uE009'

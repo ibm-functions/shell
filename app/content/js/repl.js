@@ -164,7 +164,7 @@ self.formatOneListResult = formatOneListResult
 
 /** render the results of a command evaluation in the "console" */
 const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parsedOptions) => response => {
-    // console.log('repl::printResults', response)
+    //debug('repl::printResults', response)
     if (echo) ui.setStatus(block, 'valid-response')
 
     const render = response => {
@@ -284,7 +284,7 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
 }
 
 self.init = (prefs={}) => {
-    console.log('repl::init')
+    debug('init')
     ui.listen(ui.getInitialPrompt())
 
     // TODO clean up when repl becomes a module
@@ -334,6 +334,8 @@ self.eval = () => {
 
 /** prompt the user for information */
 self.prompt = (msg, block, nextBlock, options, completion) => {
+    debug('prompt')
+
     const ctx = block.querySelector('.repl-context'),
           selection = block.querySelector('.repl-selection'),
           prompt = ui.getPrompt(block),
@@ -454,7 +456,7 @@ const emptyPromise = () => {
  *
  */
 self.exec = (commandUntrimmed, execOptions) => {
-    // console.log(`repl::exec ${new Date()}`)
+    //debug(`repl::exec ${new Date()}`)
 
     const echo = !execOptions || execOptions.echo !== false
     const nested = execOptions && execOptions.noHistory
@@ -476,12 +478,17 @@ self.exec = (commandUntrimmed, execOptions) => {
         }
     }
 
+    // clone the current block so that we have one for the next
+    // prompt, when we're done evaluating the current command
     let nextBlock
     if (!execOptions || (!execOptions.noHistory && echo)) {
         // this is a top-level exec
         ui.unlisten(prompt)
         nextBlock = (execOptions && execOptions.nextBlock) || block.cloneNode(true)
+
+        // since we cloned it, make sure it's all cleaned out
         nextBlock.querySelector('input').value = ''
+        nextBlock.querySelector('input').setAttribute('placeholder', 'enter your command')
     } else {
         // qfexec with nextBlock, see rm plugin
         nextBlock = execOptions && execOptions.nextBlock
@@ -521,7 +528,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             return emptyPromise()
         }
 
-        console.log(`repl::issuing ${command} ${new Date()}`)
+        debug(`issuing ${command} ${new Date()}`)
 
         // add a history entry
         if (!execOptions || !execOptions.noHistory && history) {
@@ -556,7 +563,7 @@ self.exec = (commandUntrimmed, execOptions) => {
 
             const isPromise = !!(cmd && cmd.then)
             const cmdPromise = isPromise ? cmd : Promise.resolve(cmd)
-            //console.log(`repl::exec isPromise=${isPromise}`)
+            //debug(`repl::exec isPromise=${isPromise}`)
             return cmdPromise
                 .then(response => {
                     if (response && response.context && nextBlock) {
@@ -575,7 +582,7 @@ self.exec = (commandUntrimmed, execOptions) => {
 
                     if (block && block.isCancelled) {
                         // user cancelled the command
-                        console.log('repl::squashing output of cancelled command')
+                        debug('squashing output of cancelled command')
                         return
                     }
 
@@ -718,7 +725,7 @@ self.paste = event => {
  *
  */
 self.doCancel = () => {
-    console.log('repl::doCancel')
+    debug('doCancel')
 
     const block = ui.getCurrentProcessingBlock() || ui.getCurrentBlock(),
           nextBlock = block.cloneNode(true),
