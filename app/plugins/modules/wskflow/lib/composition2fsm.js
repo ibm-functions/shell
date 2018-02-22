@@ -24,8 +24,25 @@ const util = require('util')
 module.exports = app => {
     app.States = {}
 
-    /** node visitor */
-    const visit = (node, idx=0, path='') => {
+    /**
+     * Node Visitor
+     * 
+     * !! Important Note on path encodings !!
+     *
+     * the fsm_ part must align with the path encoding
+     * scheme used by the conductor, and manifested in the logs;
+     * e.g. "Entering state x at path fsm[0].test[0]"
+     *
+     * Since our node ids must be CSS selector compliant, we can't use
+     * brackets or dots; we represent [0] with _0, and the dot with __
+     * e.g. fsm[0].test[0] as it appears in the logs will become
+     * fsm_0__test_0 in our encoding scheme here.
+     * 
+     * This close alignment of the two facilitates mapping the trace
+     * of activations to the FSM graphical representation.
+     *
+     */
+    const visit = (node, idx=0, path='fsm_') => {
         if (util.isArray(node)) {
             // then node is a sequence
             return node.reduce((prev, node, idx, A) => {
@@ -40,7 +57,8 @@ module.exports = app => {
         }
 
         // otherwise node is a structure, e.g. if, try, etc.
-        node.id = `${path}task_${idx}_${node.type}`     // the node id is the path to this node from the root
+        //node.id = `${path}fsm_${idx}_${node.type}`     // the node id is the path to this node from the root
+        node.id = `${path}${idx}`     // the node id is the path to this node from the root
         app.States[node.id] = node
 
         for (let key in node) {
