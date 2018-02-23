@@ -258,13 +258,16 @@ const rowify = {
     actions: ({name, packageName, publish, annotations, version}) => ({name:pn(name, packageName), 'published?':pp(publish), kind:pk(annotations), version:version.dim}),
     triggers: ({name, publish}) => ({name:pn(name), 'published?':pp(publish)}),
     packages: ({name, publish, binding}) => ({name:pn(name), 'published?':pp(publish), binding}),
+    plugins: ({name, attributes}) => {
+        return {name:pn(name), version:attributes.find(({key})=>key==='version').value.dim}
+    }
 }
 
 rowify.sequence = rowify.actions  // same formatter...
 rowify.composer = rowify.sequence // same formatter...
 rowify.binding = rowify.packages  // same formatter...
 rowify.live = rowify.session // same formatter...
-rowify._default = rowify.app
+rowify._default = ({name}) => ({name:pn(name)})
 
 /**
  * Pretty print routine that dispatches to the underlying smarter
