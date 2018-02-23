@@ -86,7 +86,7 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
                 // the plugin name, so that the REPL can format them
                 //
                 return installedPlugins.map(({plugin, version}) => ({type, name: `${plugin}`,
-                                                                     attributes: [ { key: 'verison', value: version } ],
+                                                                     attributes: [ { key: 'version', value: version } ],
                                                                      onclick: () => repl.pexec(`plugin commands ${plugin}`)
                                                                     }))
             } else {
