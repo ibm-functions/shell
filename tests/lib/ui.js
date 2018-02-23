@@ -86,6 +86,7 @@ const expectOK = (appAndCount, opt) => {
 	    } else if (util.isArray(opt)) {
 		// expect several entries, of which opt is one
 		return app.client.getText(selectors.LIST_RESULTS_BY_NAME_N(N - 1))
+                    .then(name => !util.isArray(name) ? [name] : name)
 		    .then(name => assert.ok(name !== opt[0] && name.indexOf(opt[0]) >= 0))
 	    } else if (opt && (opt.selector || opt.expect)) {
 		// more custom, look for expect text under given selector

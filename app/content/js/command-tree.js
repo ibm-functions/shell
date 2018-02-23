@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('command-tree')
+debug('loading')
+
 /**
  * The command tree module
  *
@@ -25,6 +28,8 @@ const util = require('util'),
       model = newTree(),    // this is the model of registered listeners, a tree
       intentions = newTree(),    // this is the model of registered intentional listeners
       disambiguator = {}    // map from command name to disambiguations
+
+debug('finished loading modules')
 
 /** shallow array equality */
 const sameArray = (A, B) => A.length === B.length && A.every((element, idx) => element === B[idx])
@@ -362,7 +367,7 @@ const withEvents = (evaluator, leaf) => {
  */
 const _read = (model, argv, contextRetry, originalArgv) => {
     let leaf = treeMatch(model, argv, true) // true means read-only, don't modify the context model please
-    // console.log('command-tree::read', argv, contextRetry, leaf)
+    debug('read', argv, contextRetry, leaf)
 
     const evaluator = leaf && leaf.$
     if (!evaluator) {
