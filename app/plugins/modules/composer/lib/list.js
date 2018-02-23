@@ -31,8 +31,7 @@ const usage = cmd => `List deployed apps.
  *
  */
 module.exports = (commandTree, prequire) => {
-    const wsk = prequire('/ui/commands/openwhisk-core'),
-          rawList = commandTree.find('/wsk/action/list').$
+    const wsk = prequire('/ui/commands/openwhisk-core')
 
     /** command handler */
     const doList = cmd => function(_1, _2, _a, modules, fullCommand, execOptions, args, options) {
@@ -40,7 +39,7 @@ module.exports = (commandTree, prequire) => {
             throw new modules.errors.usage(usage(cmd))
         }
 
-        return repl.qexec(`wsk action list`)
+        return repl.qexec(`wsk action ${cmd}`)
             .then(actions => actions.filter(isAnApp))
             .then(apps => {
                 apps.forEach(app => {
@@ -58,6 +57,7 @@ module.exports = (commandTree, prequire) => {
     // override wsk action list
     wsk.synonyms('actions').forEach(syn => {
         wsk.synonyms('list', 'verbs').forEach(verb => {
+            const rawList = commandTree.find(`/wsk/${syn}/${verb}`).$
             commandTree.listen(`/wsk/${syn}/${verb}`, function() {
                 if (!rawList) {
                     return Promise.reject()

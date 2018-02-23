@@ -604,6 +604,24 @@ specials.actions = {
             delete options.action.exec
         }
     }),
+    list: (options, argv) => {
+        // support for `wsk action list <packageName>` see shell issue #449
+        if (options && options.name) {
+            const parts = (options.name.match(/\//g) || []).length
+            const names = options.name.split('/')
+            if (parts === 2 && options.name.startsWith('/')) { // /namespace/package
+                options.namespace = '/' + names[1]
+                options.id = names[2] + '/'
+            } else if (parts === 1 && options.name.startsWith('/')) { // /namespace
+                options.namespace = options.name
+            } else if (parts === 0) { // package
+                options.id = options.name + '/'
+            } else { // invalid entity
+                options.id = options.name
+            }
+            delete options.name
+        }
+    },
     invoke: (options, argv) => {
         if (options && options.action && options.action.parameters) {
             options.params = options.action && options.action.parameters && options.action.parameters.reduce((M, kv) => {
@@ -943,6 +961,7 @@ module.exports = (commandTree, prequire) => {
                                 commandTree.listen(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, { docs: docs(api, vvv.nickname || vvv) })
                             }
                         } else {
+                            const handler = executor(eee.name || api, verb, vvv.nickname || vvv, commandTree, preflight)
                             commandTree.synonym(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, entityAliasMaster)
                         }
 

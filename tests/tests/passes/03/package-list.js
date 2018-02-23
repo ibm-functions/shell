@@ -40,6 +40,10 @@ describe('wsk package list tests', function() {
        .then(sidecar.expectShowing(action, undefined, package))
        .catch(common.oops(this)))
 
+    it(`should list actions in ${package} with ls ${package}`, () => cli.do(`ls ${package}`, this.app)
+       .then(cli.expectOKWith(action))
+       .catch(common.oops(this)))
+
     it(`should list ${package} with wsk package list`, () => cli.do(`wsk package list`, this.app)
        .then(cli.expectOKWithOnly(package))
        .catch(common.oops(this)))
@@ -76,5 +80,25 @@ describe('wsk package list tests', function() {
 
     it(`should list ${package2} with package list /${ui.expectedNamespace()}`, () => cli.do(`package list /${ui.expectedNamespace()}`, this.app)
        .then(cli.expectOKWith(package2))
+       .catch(common.oops(this)))
+
+    it(`should list actions in ${package} with wsk action list ${package}`, () => cli.do(`wsk action list ${package}`, this.app)
+       .then(cli.expectOKWith(action))
+       .catch(common.oops(this)))
+
+    it(`should list actions in ${package} with bx wsk action list ${package}`, () => cli.do(`bx wsk action list ${package}`, this.app)
+       .then(cli.expectOKWith(action))
+       .catch(common.oops(this)))
+
+    it(`should list actions in ${package} with fsh action list ${package}`, () => cli.do(`fsh action list ${package}`, this.app)
+       .then(cli.expectOKWith(action))
+       .catch(common.oops(this)))
+
+    it(`should list actions in ${package} with action list ${package}`, () => cli.do(`action list ${package}`, this.app)
+       .then(cli.expectOKWith(action))
+       .catch(common.oops(this)))
+
+    it(`should list actions in ${package} with action ls ${package}`, () => cli.do(`action ls ${package}`, this.app)
+       .then(cli.expectOKWith(action))
        .catch(common.oops(this)))
 })
