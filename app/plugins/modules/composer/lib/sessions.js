@@ -102,7 +102,7 @@ module.exports = (commandTree, prequire) => {
         const idx = args.indexOf(cmd) + 1,
               next = options.cursor || options.next, // this is the redis "cursor"
               skip = !options.name && options.skip,               // analogous to wsk activation list --skip
-              limit = !options.name && (options.limit||20)         // analogous to wsk activation list --limit
+              limit = !options.name && (options.limit||10)        // analogous to wsk activation list --limit
 
         // let the first argument be the name to filter by
         if (args[idx]) options.name = args[idx]
