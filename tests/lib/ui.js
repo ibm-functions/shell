@@ -409,3 +409,18 @@ exports.validateNamespace = observedNamespace => {
  *
  */
 exports.ctrlOrMeta = process.platform == 'darwin' ? '\uE03D' : '\uE009'
+
+/**
+ * Wait till activation list shows the given activationId. Optionally,
+ * use an action name filter
+ *
+ */
+const waitForActivationOrSession = entityType => (app, activationId, { name='' }={}) => {
+    return app.client.waitUntil(() => {
+        return exports.cli.do(`wsk ${entityType} list ${name}`, app)
+	    .then(exports.cli.expectOKWithCustom({ passthrough: true }))
+            .then(N => app.client.getText(`${exports.selectors.LIST_RESULTS_N(N)} .activationId[data-activation-id="${activationId}"]`))
+    })
+}
+exports.waitForActivation = waitForActivationOrSession('activation')
+exports.waitForSession = waitForActivationOrSession('session')
