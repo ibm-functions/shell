@@ -18,6 +18,15 @@ const prettyPrintDuration = require('pretty-ms'),
       viewName = 'Trace View'
 
 /**
+ * Turn a key->value map into a '--key1 value1 --key2 value2' cli opt string
+ *
+ */
+const mapToOptions = (baseMap, overrides) => {
+    const map = Object.assign({}, baseMap, overrides)
+    return Object.keys(map).reduce((opts,key) => key === '_' ? opts : `${opts} --${key} ${map[key]}`, '')
+}
+
+/**
  * Fetch activation records
  *
  */
@@ -76,9 +85,8 @@ exports.render = opts => {
         console.error(err)
     }
 }
-const _render = ({entity, activationIds, container, noCrop=false, noPip=false, showResult=false, showStart=false, showTimeline=true, skip, limit}) => {
-    ui.injectCSS('https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css', true) // tooltips
-
+const _render = ({entity, activationIds, container, noCrop=false, noPip=false, showResult=false, showStart=false, showTimeline=true, skip, limit,
+                  parsedOptions}) => {
     ui.removeAllDomChildren(container)   
 
     const legendHTMLtext = `<div class='legend-stripe'><div class='legend-entry' data-legend-type='queueing-delays' data-balloon='The time this activation waited for free execution resources' data-balloon-pos='left'>Queueing Delays<div class='legend-icon is-waitTime'></div></div><div class='legend-entry' data-legend-type='container-initialization' data-balloon='The "cold start time", i.e. time spent initializing a container' data-balloon-pos='left'>Container Initialization<div class='legend-icon is-initTime'></div></div><div class='legend-entry' data-legend-type='execution-time' data-balloon='The time this activation spent executing your code' data-balloon-pos='left'>Execution Time<div class='legend-icon is-runTime'></div></div><div class='legend-entry' data-legend-type='failures' data-balloon='The activation failed to complete' data-balloon-pos='left'>Failures<div class='legend-icon is-success-false'></div></div></div>`
@@ -413,7 +421,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 next.className = 'list-paginator-button list-paginator-button-next'
 
                 // pagination click handlers
-                const goto = skip => () => repl.qexec(`wsk activation list --skip ${skip} --limit ${limit}`)
+                const goto = skip => () => repl.qexec(`wsk activation list ${mapToOptions(parsedOptions, { skip })}`)
                       .then(activationIds => {
                           if (activationIds.length === 0) {
                               // we're at the end! disable the next button
@@ -421,7 +429,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                               delete next.onclick
                           } else {
                               _render({ activationIds, container,
-                                        noCrop, noPip, showResult, showStart, showTimeline, skip, limit })
+                                        noCrop, noPip, showResult, showStart, showTimeline, skip, limit, parsedOptions })
                           }
                       })
                 if (skip === 0) {

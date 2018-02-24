@@ -196,11 +196,6 @@ const somethingNew = (M1, M2) => {
  *
  */
 const composer = {
-    hasSession: (app, name, sessionId) => {
-        return cli.do(`session list ${name}`, app)
-	    .then(cli.expectOKWithCustom({passthrough: true}))
-            .then(N => app.client.getText(`${ui.selectors.LIST_RESULTS_N(N)} .activationId[data-activation-id="${sessionId}"]`))
-    },
     countSessions: (app, name) => {
         return cli.do(`session list ${name}`, app)
 	    .then(cli.expectOKWithCustom({ passthrough: true }))
@@ -339,7 +334,7 @@ describe('Intro demo scenario', function() {
         const { appName:appName1 } = inputs[0]
 
         it('should invoke hello and show one more session than before', () => invokeHello()
-           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId)))
+           .then(activationId => ui.waitForSession(this.app, activationId, { name: appName1 }))
            .catch(common.oops(this)))
     }
 
@@ -348,7 +343,7 @@ describe('Intro demo scenario', function() {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
 
         it(`should display result in repl with session result`, () => invokeHello()
-           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId))
+           .then(activationId => ui.waitForSession(this.app, activationId, { name: appName1 })
                  .then(() => cli.do(`session result ${activationId}`, this.app)))
            .then(cli.expectOKWithCustom({ selector: 'code' }))
            .then(selector => this.app.client.getText(selector))
@@ -385,7 +380,7 @@ describe('Intro demo scenario', function() {
         const { appName:appName1, expectedStructa:expectedStruct1 } = inputs[0]
 
         it(`should display result in sidecar with session get`, () => invokeHello()
-           .then(activationId => this.app.client.waitUntil(() => composer.hasSession(this.app, appName1, activationId))
+           .then(activationId => ui.waitForSession(this.app, activationId, { name: appName1 })
                  .then(() => cli.do(`session get ${activationId}`, this.app)))
            .then(cli.expectOK)
            .then(sidecar.expectOpen)

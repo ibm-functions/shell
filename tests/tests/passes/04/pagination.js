@@ -21,7 +21,81 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
-      actionName = 'paginator-test'
+      actionName = `paginator-test-${new Date().getTime()}`,
+      actionName2 = `test-paginator-${new Date().getTime()}` // intentionally jumbled w.r.t. actionName
+
+// number of invocations; the paginator will use a limit of NN / 2, so
+// this must be a multiple of 2
+const NN = 4
+
+/**
+ * Invoke the given action NN times, each time waiting for the
+ * activationId to show up in the activation list results
+ *
+ */
+const invokeABunch = (ctx, actionName) => {
+    for (let idx = 0; idx < NN; idx++) {
+        it(`should invoke it idx=${idx}`, () => cli.do(`wsk action invoke ${actionName}`, ctx.app)
+	   .then(cli.expectJustOK)
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing(actionName))
+           .then(() => ctx.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_ID)) // get the activationId
+           .then(activationId => ui.waitForActivation(ctx.app, activationId, { name: actionName })) // wait till activation list shows it
+           .catch(common.oops(ctx)))
+    }
+}
+
+/**
+ * List activations, paginate back and forth, optionally filtering by
+ * the given action
+ *
+ */
+const testPagination = (ctx, actionName) => {
+    const { app } = ctx
+
+    const limit = NN / 2,
+          extraArgs = actionName ? `--name ${actionName}` : ''
+
+    // selector that identifies the REPL output of the command just executed
+    const lastBlock = 'repl .repl-block:nth-last-child(2)',
+          tableRows = `${lastBlock} .log-line`,
+          tableRowsFiltered = actionName ? `${tableRows}[data-name="${actionName}"]` : tableRows,
+          description = `${lastBlock} .list-paginator-description`,
+          prevButton = `${lastBlock} .list-paginator-button-prev`,
+          nextButton = `${lastBlock} .list-paginator-button-next`
+
+    return cli.do(`$ ls --limit ${limit} ${extraArgs}`, app)
+        .then(cli.expectJustOK)
+        .then(() => app.client.waitUntil(() => {
+            return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
+                .then(([paginatorText, rows]) => {
+                    return paginatorText === `Showing 1\u2013${limit}`
+                        && rows.value.length === limit
+                })
+        }))
+
+        // click next button
+        .then(() => app.client.click(nextButton))
+        .then(() => app.client.waitUntil(() => {
+            return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
+                .then(([paginatorText, rows]) => {
+                    return paginatorText === `Showing ${limit + 1}\u2013${limit + limit}`
+                        && rows.value.length === limit
+                })
+        }))
+
+        // click prev button
+        .then(() => app.client.click(prevButton))
+        .then(() => app.client.waitUntil(() => {
+            return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
+                .then(([paginatorText, rows]) => {
+                    return paginatorText === `Showing 1\u2013${limit}`
+                        && rows.value.length === limit
+                })
+        }))
+
+        .catch(common.oops(ctx))
+}
 
 describe('Activation list paginator', function() {
     before(common.before(this))
@@ -29,47 +103,20 @@ describe('Activation list paginator', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    // create an action, using the implicit entity type
-    it('should create an action', () => cli.do(`create ${actionName} ./data/foo.js`, this.app)
+    it(`should create an action ${actionName}`, () => cli.do(`create ${actionName} ./data/foo.js`, this.app)
        .then(cli.expectJustOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName)))
 
-    // create an action, using the implicit entity type
-    for (let idx = 0; idx < 10; idx++) {
-        it('should invoke it', () => cli.do(`invoke`, this.app)
-	   .then(cli.expectJustOK)
-           .then(sidecar.expectOpen)
-           .then(sidecar.expectShowing(actionName)))
-    }
-
-    // wait until activation list shows our activations
-    it(`should find the new action with "$ ls"`, () => this.app.client.waitUntil(() => {
-        return cli.do(`$ ls`, this.app).then(cli.expectOKWith(actionName))
-    }))
-
-    // now try paging
-    const limit = 5
-    it('list activations', () => cli.do(`$ ls --limit ${limit}`, this.app)
+    it(`should create an action ${actionName2}`, () => cli.do(`create ${actionName2} ./data/foo.js`, this.app)
        .then(cli.expectJustOK)
-       .then(() => this.app.client.elements(`repl .repl-block:nth-last-child(2) .log-line`))
-       .then(rows => assert.equal(rows.value.length, limit))
-       .then(() => this.app.client.getText(`repl .repl-block:nth-last-child(2) .list-paginator-description`))
-       .then(paginatorText => assert.equal(paginatorText, `Showing 1\u2013${limit}`))
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName2)))
 
-       // click next button
-       .then(() => this.app.client.click(`repl .repl-block:nth-last-child(2) .list-paginator-button-next`))
-       .then(() => this.app.client.waitUntil(() => {
-           return this.app.client.getText(`repl .repl-block:nth-last-child(2) .list-paginator-description`)
-               .then(paginatorText => paginatorText === `Showing ${limit + 1}\u2013${limit + limit}`)
-       }))
-                     
-       // click prev button
-       .then(() => this.app.client.click(`repl .repl-block:nth-last-child(2) .list-paginator-button-prev`))
-       .then(() => this.app.client.waitUntil(() => {
-           return this.app.client.getText(`repl .repl-block:nth-last-child(2) .list-paginator-description`)
-               .then(paginatorText => paginatorText === `Showing 1\u2013${limit}`)
-       }))
+    invokeABunch(this, actionName)
+    it('paginate activations without filter', () => testPagination(this))
 
-       .catch(common.oops(this)))
+    invokeABunch(this, actionName2)
+    it(`paginate activations with filter ${actionName}`, () => testPagination(this, actionName))
+    it(`paginate activations with filter ${actionName2}`, () => testPagination(this, actionName2))
 })
