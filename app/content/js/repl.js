@@ -228,7 +228,7 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
                 ui.ok(resultDom.parentNode).className = 'ok-for-list'
             }
 
-        } else if (typeof response === 'string' || (!response.type && response.message)) {
+        } else if (typeof response === 'string' || (!response.type && response.message && typeof response.message === 'string')) {
             // if either the response is a string, or it's a non-entity (no response.type) and has a message field
             //     then treat the response as a simple string response
             if (echo) {
