@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-//
-// tests wsk package bind
-//
 const common = require('../../../lib/common'),
       openwhisk = require('../../../lib/openwhisk'),
       ui = require('../../../lib/ui'),
