@@ -911,7 +911,8 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
                     && (!execOptions || !execOptions.noHistory || (execOptions && execOptions.contextChangeOK)) // don't update context for nested execs
                     && (response.verb === 'get' || response.verb === 'create' || response.verb === 'update')) {
                     const name = entity === 'activations' ? response.activationId : response.name
-                    return commandTree.changeContext(`/wsk/${entity}`, { name: name })(response)
+                    //return commandTree.changeContext(`/wsk/${entity}`, { name: name })(response)
+                    return response
                 } else {
                     return response
                 }
