@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-2018 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ const propertiesParser = require('properties-parser'),
       path = require('path'),
       util = require('util'),
       history = plugins.require('/ui/commands/history'),
+      usage = require('./openwhisk-usage'),
       isLinux = require('os').type() === 'Linux'
 
 debug('modules loaded')
@@ -47,13 +48,6 @@ try {
 }
 
 debug('wskprops loaded')
-
-//
-// Usage strings. TODO externalize
-//
-usage = {
-    bind: 'Usage: bind <packageName> <bindName> [-p key value]...'
-}
 
 //
 // docs stuff
@@ -926,17 +920,21 @@ module.exports = (commandTree, prequire) => {
     const preflight = prequire('/code/validation/preflight').preflight
 
     // for each entity type
-    const apiMaster = commandTree.subtree(`/wsk`, { docs: 'Commands that interact with OpenWhisk' })
+    const apiMaster = commandTree.subtree(`/wsk`, { docs: 'Commands that interact with OpenWhisk', usage: usage.wsk })
 
     if (!ow) {
+        // the openwhisk npm is not yet initialized; let's install
+        // some basic command handlers
         commandTree.listen('/wsk/action/get', () => Promise.resolve(false))
+        return
     }
+
     for (let api in ow) {
         const clazz = ow[api].constructor,
               props = Object.getOwnPropertyNames(clazz.prototype).concat(extraVerbs(api) || [])
         //alsoInstallAtRoot = api === 'actions'
 
-        const apiMaster = commandTree.subtree(`/wsk/${api}`, { docs: `Commands related to ${api}` })
+        const apiMaster = commandTree.subtree(`/wsk/${api}`, { docs: `Commands related to ${api}`, usage: usage[api] })
 
         // find the verbs of this entity type
         for (let idx in props) {
@@ -954,6 +952,12 @@ module.exports = (commandTree, prequire) => {
 
                     const handler = executor(eee.name || api, verb, verb, commandTree, preflight)
                     const entityAliasMaster = commandTree.listen(`/wsk/${eee.nickname || eee}/${verb}`, handler, { docs: docs(api, verb) })
+
+                    // register e.g. wsk action help; we delegate to
+                    // "wsk action", which will print out usage (this
+                    // comes as part of commandTree.subtree
+                    // registrations)
+                    commandTree.listen(`/wsk/${eee.nickname || eee}/help`, () => repl.qexec(`wsk ${eee.nickname || eee}`), { noArgs: true })
 
                     verbs.forEach(vvv => {
                         const handler = executor(eee.name || api, vvv.name || verb, vvv.nickname || vvv, commandTree, preflight)

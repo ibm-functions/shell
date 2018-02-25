@@ -559,13 +559,11 @@ self.exec = (commandUntrimmed, execOptions) => {
                 prompt.value = execOptions.placeholder
             }
 
+            //
             // the Eval part of REPL
-            let cmd = evaluator.eval(block||true, nextBlock, argv, modules, command, execOptions, argv_no_options, parsedOptions)
-
-            const isPromise = !!(cmd && cmd.then)
-            const cmdPromise = isPromise ? cmd : Promise.resolve(cmd)
-            //debug(`repl::exec isPromise=${isPromise}`)
-            return cmdPromise
+            //
+            return Promise.resolve()
+                .then(() => evaluator.eval(block||true, nextBlock, argv, modules, command, execOptions, argv_no_options, parsedOptions))
                 .then(response => {
                     if (response && response.context && nextBlock) {
                         setContextUI(response, nextBlock)

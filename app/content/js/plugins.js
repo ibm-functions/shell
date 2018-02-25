@@ -190,17 +190,20 @@ const loadPlugin = (route, pluginPath) => {
         return synonym.apply(undefined, arguments)
     }
 
-    registrar[route] = require(pluginPath)(ctree, preq)
+    const pluginLoader = require(pluginPath)
+    if (typeof pluginLoader === 'function') {
+        registrar[route] = pluginLoader(ctree, preq)
 
-    const adeps = toArray(deps)
-    if (adeps.length > 0) {
-        topological[route] = adeps
-    }
-    for (let k in cmdToPlugin) {
-        if (commandToPlugin[k]) {
-            overrides[k] = cmdToPlugin[k]
+        const adeps = toArray(deps)
+        if (adeps.length > 0) {
+            topological[route] = adeps
         }
-        commandToPlugin[k] = cmdToPlugin[k]
+        for (let k in cmdToPlugin) {
+            if (commandToPlugin[k]) {
+                overrides[k] = cmdToPlugin[k]
+            }
+            commandToPlugin[k] = cmdToPlugin[k]
+        }
     }
 }
 

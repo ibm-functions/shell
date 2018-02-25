@@ -174,6 +174,30 @@ exports.clearSelection = response => {
     return exports.changeContext(exports.currentContext(), false)(response) // false means no selection please!
 }
 
+/** 
+ * Is route (/a/b/c) exactly the same as path (['a', 'b', 'c'])
+ *
+ * @param route is a registered command handler
+ * @param path is what the user typed
+ *
+ */
+const exactlyTheSameRoute = (route, path) => {
+    const routeAsPath = route.split('/').slice(1)
+    for (let idx = 0; idx < routeAsPath.length; idx++) {
+        if (routeAsPath[idx] !== path[idx]) {
+            return false
+        }
+    }
+
+    // if we got to this point, then route is a prefix of path
+
+    if (routeAsPath.length !== path.length) {
+        return false
+    } else {
+        return true
+    }
+}
+
 /**
  * Navigate the given tree model, following the given path as [n1,n2,n3]
  *
@@ -181,7 +205,6 @@ exports.clearSelection = response => {
 const treeMatch = (model, path, readonly, hide, idxStart = 0, noWildcard) => {
     let parent = model, cur
 
-    // console.log('match', 0, path[0], cur, struct)
     for (let idx = idxStart; idx < path.length; idx++) {
         cur = parent.children && parent.children[path[idx]]
 
@@ -212,15 +235,29 @@ const treeMatch = (model, path, readonly, hide, idxStart = 0, noWildcard) => {
     if (!cur && !noWildcard) {
         // prefix match, e.g. "cleanAll !!!" should match a /cleanAll listener, as we have an implicit suffix wildcard
         // console.log('end of the line', parent)
+        // debug('match to parent', path, parent)
         cur = parent
     }
 
-    return cur
+    if (cur.options && cur.options.noArgs && !exactlyTheSameRoute(cur.route, path)) {
+        // if cur represents a command registration that has asserted
+        // it takes no extra arguments, we can fast-path this as a
+        // non-match, if cur's route doesn't contain the requested
+        // command path
+        // debug('no match', path, cur)
+        return
+    } else {
+        return cur
+    }
 }
 const match = (path, readonly) => {
     return treeMatch(model, path, readonly)
 }
 
+/**
+ * Register a subtree in the command tree
+ *
+ */
 exports.subtree = (route, options) => {
     const path = route.split('/').splice(1)
     const leaf = match(path, false, options)
@@ -232,9 +269,26 @@ exports.subtree = (route, options) => {
             leaf.options = options
         }
 
+        //
+        // also listen route e.g. /wsk, and present usage
+        //
+        exports.listen(route, (_1, _2, _3, { errors }) => {
+            // the usage message:
+            const usageMessage = options.usage || options.docs
+                  || (options.synonymFor && options.synonymFor.options &&
+                      (options.synonymFor.options.usage || options.synonymFor.options.docs))
+
+            throw new errors.usage(usageMessage)
+        }, Object.assign({}, options, { noArgs: true }))
+
         return leaf
     }
 }
+
+/**
+ * Register a synonym of a subtree
+ *
+ */
 exports.subtreeSynonym = (route, master) => {
     if (route !== master.route) {
         // don't alias to yourself!
@@ -369,10 +423,15 @@ const _read = (model, argv, contextRetry, originalArgv) => {
     let leaf = treeMatch(model, argv, true) // true means read-only, don't modify the context model please
     debug('read', argv, contextRetry, leaf)
 
-    const evaluator = leaf && leaf.$
+    let evaluator = leaf && leaf.$
     if (!evaluator) {
+        //
+        // maybe the plugin that supports this route hasn't been
+        // loaded, yet; so: invoke the plugin resolver and retry
+        //
         resolver.resolve(`/${argv.join('/')}`)
         leaf = treeMatch(model, argv, true) // true means read-only, don't modify the context model please
+        evaluator = leaf && leaf.$
     }
 
     if (!evaluator) {
@@ -406,13 +465,30 @@ const read = (model, argv) => {
     if (argv[0] === 'bx' && argv[1] === 'wsk' || argv[0] === 'fsh') argv.shift()
     return _read(model, Context.current.concat(argv), Context.current.slice(0, Context.current.length - 1), argv)
 }
-const disambiguate = argv => {
-    const resolutions = (disambiguator[argv[0]] || []).filter(isFileFilter)
-    if (resolutions.length === 1) {
+
+/**
+ * See if a command resolves unambiguously
+ *
+ */
+const disambiguate = (argv, noRetry=false) => {
+    const resolutions = (disambiguator[argv[0]] || disambiguator[argv[argv.length -1]] || []).filter(isFileFilter)
+
+    if (resolutions.length === 0 && !noRetry) {
+        // maybe we haven't loaded the plugin, yet
+        resolver.resolve(`/${argv.join('/')}`)
+        return disambiguate(argv, true)
+
+    } else if (resolutions.length === 1) {
         const leaf = resolutions[0]
+        // debug('disambiguate success', leaf.route)
         return withEvents(leaf.$, leaf)
     }
 }
+
+/**
+ * Oops, we couldn't resolve the given command
+ *
+ */
 const commandNotFoundMessage = 'Command not found'
 const commandNotFound = argv => {
     eventBus.emit('/command/resolved', {
@@ -427,7 +503,7 @@ const commandNotFound = argv => {
 
 /** here, we will use implicit context resolutions */
 exports.read = (argv, noRetry=false) => {
-    let cmd = read(model, argv)
+    let cmd = read(model, argv) || disambiguate(argv)
 
     if (cmd && resolver.isOverridden(cmd.route) && !noRetry) {
         resolver.resolve(cmd.route)
@@ -442,7 +518,7 @@ exports.read = (argv, noRetry=false) => {
     }
 
     if (!cmd) {
-        cmd = disambiguate(argv) || exports.readIntention(argv)
+        cmd = exports.readIntention(argv)
     }
 
     if (!cmd) {
