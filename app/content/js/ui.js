@@ -495,7 +495,7 @@ const ui = (function() {
             // we'll go with our formatted message
             // wrap in a span so that drag text selection works; see shell issue #249
             const span = document.createElement('span')
-            span.innerText = message
+            span.appendChild(document.createTextNode(message))
             oops.appendChild(span)
         }
         resultDom.appendChild(oops)

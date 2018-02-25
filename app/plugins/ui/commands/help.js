@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('help')
+debug('loading')
 
 /**
  * This plugin introduces /help, a help system
@@ -139,7 +141,7 @@ const makeOption = (currentSelection, method) => command => {
  *
  *    group 0: especially relevant
  *    group 1: relevant, independent of selection
- *    gruop 2: not applicable, given the current selection [not returned, i.e. these are filtered out)
+ *    group 2: not applicable, given the current selection [not returned, i.e. these are filtered out)
  *
  */
 const partitionByRelevancyTo = (currentSelection, commands) => commands.reduce((partitions, command, idx) => {
@@ -185,51 +187,22 @@ const partitionByRelevancyTo = (currentSelection, commands) => commands.reduce((
  *   - directoriesInCurrentContext
  *
  */
-const show = (model, method) => {
-    return () => {
-        const containers = [ document.createElement('div'), document.createElement('div') ]
-
-        // render the help menu into the container
-        const commands = model[method]().sort((a,b) => a.key.localeCompare(b.key)) // sort the commands
-        partitionByRelevancyTo(ui.currentSelection(), commands)
-            .map((partition, idx) => partition.map(makeOption(ui.currentSelection(), method)) // make the UI for each of the options
-                 .map(command => containers[idx].appendChild(command)))                       // add them to the dom container
-
-        // wrap the partitions into an enclosing dom container
-        const container = document.createElement('div')
-        container.style.display = 'flex'
-        container.style.flexWrap = 'wrap'
-        const titles = ['These commands are especially relevant to your current selection:', 'The following commands are relevant to your current context:']
-        containers.map((C, idx) => {
-            if (C.children.length > 0) {
-                const title = document.createElement('div')
-                title.innerText = titles[idx]
-                title.className = 'deemphasize'
-                title.style.marginTop = '1em'
-                title.style.flexBasis = '100%'
-                container.appendChild(title)
-
-                C.className = 'help-options'
-                container.appendChild(C)
-            }
-        })
-        return container
-    }
-}
+const show = (model, method) => () => repl.qexec(model.currentPrefix().join(' '), undefined, undefined, { noHistory: true })
 
 /**
  * The module. Here, we register as a listener for commands.
  *
  */
 module.exports = commandTree => {
-    const model = commandTree.getModel(),
-          help = show(model, 'everythingInCurrentContext')
+//    const model = commandTree.getModel(),
+//          help = show(model, 'everythingInCurrentContext')
           //help = show(model, 'commandsInCurrentContext'),
           //ls = show(model, 'directoriesInCurrentContext')
 
+    const help = () => 'TODO'
+
     const helpCmd = commandTree.listen('/help', help, { docs: 'Here you are!', needsUI: true })
     commandTree.synonym('/?', help, helpCmd)
-    //commandTree.catchAll('ls', ls, helpCmd)
 
     const baseMessage = 'Enter help to see your options.'
 

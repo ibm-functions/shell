@@ -230,16 +230,11 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         repl.qexec(`session list --limit ${commandLineOptions.limit||200} ${commandLineOptions.skip!==undefined ? '--skip ' + commandLineOptions.skip : ''} ${lastWhat === true ? '' : '--name ' + lastWhat}`)
             .then(A => {
                 if (A && A.length > 0) {
-                    if (errorOnly) {
-                        // --last-failed: the array is sorted from
-                        // latest to earliest, so the default array
-                        // find scan does the right thing, here; _
-                        // here is a session
-                        return Promise.all(A.map(_ => repl.qexec(`session ${cmd} ${_.sessionId}`)))
-                            .then(sessions => sessions.find(_ => !_.response.success))
+                    const idx = !errorOnly ? 0 : A.findIndex(_ => !_.statusCode !== 0)
+                    if (idx < 0) {
+                        throw new Error('No such session found')
                     } else {
-                        // --last
-                        return repl.qexec(`session ${cmd} ${A[0].sessionId} ${commandLineOptions.cli ? '--cli' : ''}`)
+                        return repl.qexec(`session ${cmd} ${A[idx].sessionId} ${commandLineOptions.cli ? '--cli' : ''}`)
                     }
                 }
             })
