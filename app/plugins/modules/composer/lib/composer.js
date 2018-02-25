@@ -371,7 +371,6 @@ exports.fetch = (wsk, name) => wsk.ow.actions.get(wsk.owOpts({ name })).then(ent
  */
 //exports.moveAside = entity => repl.qexec(`mv "/${entity.namespace}/${entity.name}" "/${entity.namespace}/${entity.name}-orig"`)
 exports.moveAside = (wsk, name) => repl.qexec(`mv "${name}" "${name}-orig"`)
-    .then(resp => resp.message) // extract the entity
     .then(entity => ({ entity, fsm: exports.maybeFSM(entity) }))
 
 /**
