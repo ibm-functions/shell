@@ -84,6 +84,12 @@ function mimicDom(app, { createWindow }, localStorage) {
             style: {},
             children: []
         }
+        obj.recursiveInnerTextLength = () => obj.innerText.length + obj.children.reduce((sum, child) => sum + child.recursiveInnerTextLength(), 0)
+        obj.hasStyle = (style, desiredValue) => {
+            const actualValue = obj.style && obj.style[style]
+            if (desiredValue) return desiredValue == actualValue // intentional double equals, so that 500=='500'
+            else return actualValue
+        }
         obj.focus = () => {}
         obj.appendChild = c => obj.children.push(c)
         obj.getAttribute = k => obj.attrs[k]
@@ -240,15 +246,18 @@ const colorMap = {
     'var(--color-support-02)': 'blue'
 }
 
-/** try to pretty print one of our fake doms */
+/**
+ * Try to pretty print one of our fake doms
+ *
+ */
 let firstPrettyDom = true // so we can avoid initial newlines for headers
-const prettyDom = (dom, logger=log, stream=process.stdout, _color) => {
+const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidths }={}) => {
     if (dom.innerText) {
         const isHeader = dom.nodeType === 'h1' || dom.nodeType === 'h2',
-              extraColor = isHeader ? 'bold' : 'reset',
-              colorCode = (dom.style && dom.style.color) || _color,
+              extraColor = isHeader ? 'bold' : dom.hasStyle('fontWeight', 500) ? 'green' : dom.hasStyle('fontSize', '0.875em') ? 'gray' : 'reset',
+              colorCode = dom.hasStyle('color') || _color,
               color = colorMap[colorCode] || colorCode
-        debug('child', dom.nodeType)
+        // debug('child', dom.nodeType)
 
         if (isHeader) {
             // an extra newline before headers
@@ -268,17 +277,42 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color) => {
         }
     }
 
+    // recurse to the children of this fake DOM
     dom.children.forEach(child => prettyDom(child, logger, stream, _color))
+
+    // handle table rows and cells:
     if (dom.rows) {
-        dom.rows.forEach(child => {
-            prettyDom(child, logger, stream, _color)
+        // scan the table for max column widths
+        const columnWidths = []
+        dom.rows.forEach(row => {
+            if (row.cells) {
+                row.cells.forEach((cell, idx) => {
+                    const length = cell.recursiveInnerTextLength()
+                    if (!columnWidths[idx]) columnWidths[idx] = length
+                    else columnWidths[idx] = Math.max(columnWidths[idx], length)
+                })
+            }
+        })
+
+        dom.rows.forEach(row => {
+            prettyDom(row, logger, stream, _color, { columnWidths })
             logger() // insert a newline after every row
         })
     }
     if (dom.cells) {
-        dom.cells.forEach(child => {
-            prettyDom(child, logger, stream, _color)
-            stream.write('\t')
+        dom.cells.forEach((cell, idx) => {
+            prettyDom(cell, logger, stream, _color)
+
+            if (columnWidths) {
+                // pad out this column to the column width
+                const slop = columnWidths[idx] - cell.recursiveInnerTextLength()
+                for (let jj = 0; jj < slop; jj++) {
+                    stream.write(' ')
+                }
+
+                // and then a few more to separate the columns
+                stream.write('  ') 
+            }
         })
     }
 
