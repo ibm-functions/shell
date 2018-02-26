@@ -169,7 +169,27 @@ function mimicDom(app, { createWindow }, localStorage) {
     }
     global.document = {
         body: dom0(),
-        createElement: type => { const element = dom0(); element.nodeType = type; return element },
+        createElement: type => {
+            const element = dom0();
+            element.nodeType = type;
+            if (type === 'table') {
+                element.rows = []
+                element.insertRow = idx => {
+                    const row = document.createElement('tr')
+                    row.cells = []
+                    row.insertCell = idx => {
+                        const cell = document.createElement('td')
+                        if (idx === -1) row.cells.push(cell)
+                        else row.cells.splice(idx, 0, cell)
+                        return cell
+                    }
+                    if (idx === -1) element.rows.push(row)
+                    else element.rows.splice(idx, 0, row)
+                    return row
+                }
+            }
+            return element
+        },
         createTextNode: text => { const element = dom0(); element.innerText = text; return element },
         querySelector: () => dom0()
     }
@@ -214,17 +234,54 @@ function mimicDom(app, { createWindow }, localStorage) {
     global.ui.startsWithVowel = startsWithVowel
 }
 
+const colorMap = {
+    'var(--color-brand-01)': 'blue',
+    'var(--color-brand-02)': 'blue',
+    'var(--color-support-02)': 'blue'
+}
+
 /** try to pretty print one of our fake doms */
-const prettyDom = (dom, logger=log, stream=process.stdout, color='reset') => {
+let firstPrettyDom = true // so we can avoid initial newlines for headers
+const prettyDom = (dom, logger=log, stream=process.stdout, _color) => {
     if (dom.innerText) {
-        stream.write(dom.innerText[color])
-        if (dom.nodeType === 'div') {
+        const isHeader = dom.nodeType === 'h1' || dom.nodeType === 'h2',
+              extraColor = isHeader ? 'bold' : 'reset',
+              colorCode = (dom.style && dom.style.color) || _color,
+              color = colorMap[colorCode] || colorCode
+        debug('child', dom.nodeType)
+
+        if (isHeader) {
+            // an extra newline before headers
+            if (firstPrettyDom) {
+                // don't emit a header margin for the very first thing
+                // we print
+                firstPrettyDom = false
+            } else {
+                logger()
+            }
+        }
+
+        stream.write(dom.innerText[extraColor][color])
+        if (dom.nodeType === 'div' || isHeader) {
             // not perfect, but treat divs as line breakers
             logger()
         }
     }
 
-    dom.children.forEach(child => prettyDom(child, logger, stream, color))
+    dom.children.forEach(child => prettyDom(child, logger, stream, _color))
+    if (dom.rows) {
+        dom.rows.forEach(child => {
+            prettyDom(child, logger, stream, _color)
+            logger() // insert a newline after every row
+        })
+    }
+    if (dom.cells) {
+        dom.cells.forEach(child => {
+            prettyDom(child, logger, stream, _color)
+            stream.write('\t')
+        })
+    }
+
 }
 
 /**
@@ -520,27 +577,24 @@ const main = (app, mainFunctions) => {
     plugins.init({app}).then(() => {
         debug('plugins initialized')
 
+        const maybeRetry = err => {
+            if (!namespace.current() || err.message === 'namespace uninitialized') {
+                debug('delayed namespace loading')
+                return namespace.init()
+                    .then(() => eval(cmd))
+                    .catch(failure)
+            } else {
+                return failure(err)
+            }
+        }
+
         //
         // execute a single command from the CLI
         //
         const cmd = argv.join(' ').trim()
         if (cmd && cmd.length > 0) {
             debug('about to execute command')
-            try {
-                return eval(cmd)
-                    .catch(err => {
-                        if (!namespace.current() || err.message === 'namespace uninitialized') {
-                            debug('delayed namespace loading')
-                            return namespace.init()
-                                .then(() => eval(cmd))
-                                .catch(failure)
-                        } else {
-                            return failure(err)
-                        }
-                    })
-            } catch(err) {
-                return failure(err)
-            }
+            return Promise.resolve().then(() => eval(cmd)).catch(maybeRetry)
 
         } else {
             debug('exiting, no command')
