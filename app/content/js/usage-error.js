@@ -31,15 +31,16 @@ const div = (str, css=undefined, tag='div') => {
     }
     return result
 }
+const span = (str, css=undefined) => div(str, css, 'span')
 
 /**
  * The start of every section, e.g. Usage:
  *
  */
 const prefix = str => {
-    const result = div(str)
+    const result = div(str, undefined, 'h2')
     result.style.fontWeight = '300'
-    result.style.marginBottom = '0.375em'
+    result.style.margin = '0 0 0.375em'
     result.style.fontSize = '1.25em'
     result.style.color = 'var(--color-brand-01)'
     sans(result)
@@ -101,11 +102,11 @@ const format = message => {
         // title
         //
         if (title) {
-            const dom = div(title)
+            const dom = div(title, undefined, 'h1')
             dom.style.fontSize = '1.629em'
             dom.style.fontWeight = 300
             dom.style.color = 'var(--color-brand-01)'
-            dom.style.marginBottom = '.3rem'
+            dom.style.margin = '0 0 .3rem'
             result.appendChild(dom)
         }
 
@@ -151,8 +152,8 @@ const format = message => {
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
-                      cmdPart = div(command),
-                      docsPart = div(docs)
+                      cmdPart = span(command),
+                      docsPart = span(docs)
 
                 row.className = 'log-line entity'
                 cmdCell.className = 'log-field'
@@ -181,9 +182,9 @@ const format = message => {
             result.appendChild(relatedPart) // note that we append to result not body; body is for the flex-wrap bits
 
             related.forEach((command, idx) => {
-                const commandPart = div(undefined, '', 'span'),
-                      commaPart = div(idx === 0 ? '' : ', ', '', 'span'),
-                      clickablePart = div(command, 'clickable', 'span')
+                const commandPart = span(undefined, ''),
+                      commaPart = span(idx === 0 ? '' : ', ', ''),
+                      clickablePart = span(command, 'clickable')
 
                 commandPart.appendChild(commaPart)
                 commandPart.appendChild(clickablePart)
