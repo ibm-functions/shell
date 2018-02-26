@@ -67,6 +67,7 @@ const smaller = div => {
 }
 /** render the given div with white space line wrapping */
 const wrap = div => {
+    div.style.display = 'block'
     div.style.whiteSpace = 'normal'
     return div
 }
