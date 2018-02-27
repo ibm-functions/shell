@@ -25,9 +25,8 @@ debug('finished loading modules')
 
 module.exports = commandTree => {
     commandTree.listen('/plugin/compile', () => {
-        const { app } = require('electron').remote
-        const rootDir = path.join(app.getPath('userData'))
-
-        return compile(rootDir, true).then(success)
+        const rootDir = ui.userDataDir()
+        return compile(rootDir, true)
+            .then(([newCommands]) => success('installed', 'will be available, after reload', newCommands))
     })
 }
