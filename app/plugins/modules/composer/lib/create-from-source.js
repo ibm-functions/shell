@@ -19,8 +19,7 @@ const vm = require('vm'),
       path = require('path'),
       mod = require('module'),
       expandHomeDir = require('expand-home-dir'),
-      _openwhiskComposer = require('@ibm-functions/composer'),
-      openwhiskComposer = _openwhiskComposer({ no_wsk: true }),
+      openwhiskComposer = require('@ibm-functions/composer'),
       { isValidFSM, handleError } = require('./composer')
 
 //
@@ -79,18 +78,15 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                  * tests/passes/07/composer-viz-no-auth.js
                  *
                  */
-                function composerOpts() {
-                    return !namespace.current() ? '{no_wsk:true}' : ''
-                }
 
                 // check to see if the source already requires the openwhisk-composer library
                 function bootstrapWithRequire() {
                     lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer')(${composerOpts()});` + originalCode
+                    return `const composer = require('@ibm-functions/composer');` + originalCode
                 }
                 function bootstrapWithRequireForModule() {
                     lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer')(${composerOpts()});const process = module.process; const console = module.console;\n` + originalCode
+                    return `const composer = require('@ibm-functions/composer')const process = module.process; const console = module.console;\n` + originalCode
                 }
                 function bootstrapWithModuleExports() {
                     lineOffset = 0
@@ -98,12 +94,12 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                 }
                 function bootstrapWithModuleExportsAndRequire() {
                     lineOffset = 0
-                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console; module.exports=` + originalCode
+                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=` + originalCode
                 }
                 function bootstrapWithModuleExportsAndRequireAndTrim() {
                     lineOffset = 0
                     const code = originalCode.trim().replace(/^([;\s]+)/, '') // trim leading semicolons
-                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console; module.exports=` + code
+                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=` + code
                 }
                 function bootstrapWithConstMain() {
                     lineOffset = 1
@@ -111,7 +107,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                 }
                 function bootstrapWithConstMainAndRequire() {
                     lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer')(${composerOpts()}); const process = module.process; const console = module.console;\n` + originalCode + "\n;module.exports=main"
+                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console;\n` + originalCode + "\n;module.exports=main"
                 }
 
                 const retryA = [bootstrapWithRequireForModule,
@@ -140,7 +136,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                                        },
                               my_require = m => {
                                   if (m === '@ibm-functions/composer') {
-                                      return _openwhiskComposer
+                                      return openwhiskComposer
                                   } else {
                                       return require(path.resolve(dir, m))
 
