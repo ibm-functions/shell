@@ -51,8 +51,11 @@ module.exports = (commandTree, prequire) => {
             })
     }
 
-    const cmd = commandTree.listen(`/wsk/app/list`, doList('list'), { docs: 'List your Composer applications' })
-    commandTree.synonym(`/wsk/app/ls`, doList('ls'), cmd)
+    const synonyms = ['wsk', 'composer']
+    synonyms.forEach(tree => {
+        const cmd = commandTree.listen(`/${tree}/app/list`, doList('list'), { docs: 'List your Composer applications' })
+        commandTree.synonym(`/${tree}/app/ls`, doList('ls'), cmd)
+    })
 
     // override wsk action list
     wsk.synonyms('actions').forEach(syn => {

@@ -29,6 +29,7 @@ const pluginRoot = path.join(__dirname, '..', '..', 'plugins'),   // filesystem 
       isSynonym = {},
       topological = {},                                           // topological sort of the plugins (order they resolved)
       overrides = {},                                             // some plugins override the behavior of others
+      usage = {},                                                 // as we scan for plugins, we'll memoize their usage models
       flat = [],
       registrar = {}                                              // this is the registrar for plugins
 
@@ -167,6 +168,7 @@ const loadPlugin = (route, pluginPath) => {
     const listen = ctree.listen,
           intention = ctree.intention,
           synonym = ctree.synonym,
+          subtree = ctree.subtree,
           subtreeSynonym = ctree.subtreeSynonym
 
     ctree.subtreeSynonym = function(route, master) {
@@ -180,6 +182,9 @@ const loadPlugin = (route, pluginPath) => {
         cmdToPlugin[commandRoute] = route
         return listen.apply(undefined, arguments)
     }
+    ctree.subtree = function(route, options) {
+        return subtree(route, Object.assign({ listen: ctree.listen }, options))
+    }
     ctree.intention = function(commandRoute) {
         cmdToPlugin[commandRoute] = route
         return intention.apply(undefined, arguments)
@@ -192,12 +197,20 @@ const loadPlugin = (route, pluginPath) => {
 
     const pluginLoader = require(pluginPath)
     if (typeof pluginLoader === 'function') {
+        // invoke the plugin loader
         registrar[route] = pluginLoader(ctree, preq)
 
+        // turn the deps map, which is a canonicalization map from
+        // module=>true (i.e. we use it to remove duplicates), into an
+        // array of the non-duplicate modules
         const adeps = toArray(deps)
         if (adeps.length > 0) {
             topological[route] = adeps
         }
+
+        // generate a mapping from commands (e.g. /wsk/action/invoke)
+        // to plugin (e.g. /ui/commands/openwhisk-core, which services
+        // the /wsk/action/invoke command)
         for (let k in cmdToPlugin) {
             if (commandToPlugin[k]) {
                 overrides[k] = cmdToPlugin[k]
@@ -295,7 +308,7 @@ exports.init = ({app = require('electron').remote.app}={}) => {
                   debug('no user-installed plugins, due to %s', err)
                   return {}
               })
-              .then(unify(builtins))
+              .then(unify(builtins))  // merge builtin plugins with user-installed plugins
               .then(_ => prescan = _) // global variable, ugh
               .then(makeResolver)
               .then(commandTree.setPluginResolver))
@@ -426,7 +439,7 @@ exports.scan = opts => {
                 }
             }
         }
-        return { commandToPlugin, topological, flat, overrides }
+        return { commandToPlugin, topological, flat, overrides, usage }
     })
 }
 
@@ -445,7 +458,8 @@ exports.require = (route, options) => {
         if (module) {
             const location = path.join(__dirname, '..', '..', 'plugins', module.path)
             // console.log(`Loading ${route}`)
-            registrar[route] = require(location)(commandTree.proxy(route), exports.require, options)
+            registrar[route] = require(location)(commandTree.proxy(route), exports.require,
+                                                 Object.assign({ usage: prescan.usage, docs: prescan.docs }, options))
             debug('prequire success %s', route)
         }
     }

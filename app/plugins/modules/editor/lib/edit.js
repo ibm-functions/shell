@@ -716,12 +716,12 @@ module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
     // command registration: edit existing action
-    commandTree.listen('/edit', edit(wsk, prequire), { docs: strings.docs.edit })
+    commandTree.listen('/editor/edit', edit(wsk, prequire), { docs: strings.docs.edit })
 
     // command registration: create new action
-    commandTree.listen('/new', newAction({wsk, prequire}), { docs: strings.docs.new })
+    commandTree.listen('/editor/new', newAction({wsk, prequire}), { docs: strings.docs.new })
 
     // command registration: create new app/composition
-    commandTree.listen('/compose', newAction(compositionOptions({ wsk, prequire, op: 'compose'})),
+    commandTree.listen('/editor/compose', newAction(compositionOptions({ wsk, prequire, op: 'compose'})),
                        { docs: strings.docs.compose })
 }

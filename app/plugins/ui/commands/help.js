@@ -18,170 +18,6 @@ const debug = require('debug')('help')
 debug('loading')
 
 /**
- * This plugin introduces /help, a help system
- *
- */
-
-/**
- * To reduce clutter, we exclude from the help menus any single-letter synonyms
- *
- */
-const singleAlphaPattern = /^\w$/
-
-/**
- * Render one help entry
- *
- * @param currentSelection the currently selected entity
- * @param command is a node in the command tree model
- *
- */
-const makeOption = (currentSelection, method) => command => {
-    if (command.options) {
-        if (!currentSelection && command.options.requireSelection) {
-            //
-            // this command only makes sense if there is a
-            // selection... and there isn't currently one, so filter this
-            // out of the help list
-            //
-            return false
-
-        } else if (currentSelection && command.options.requireSelection
-                   && command.options.filter && !command.options.filter(currentSelection)) {
-            //
-            // there is a selection, but the command requires one of a specific (and differing) type
-            //
-            return false
-
-        } else if (command.options.hide) {
-            //
-            // we were asked to make this command invisible (but still an active command)
-            //
-            return false
-        }
-    }
-
-    const option = document.createElement('div')
-    option.className = 'help-option'
-
-    //
-    // handle the main command name
-    //
-    const commandName = document.createElement('div')
-    commandName.className = 'help-option-left-column'
-    const commandNameInner = document.createElement('span')
-    commandNameInner.innerText = command.key
-    commandName.appendChild(commandNameInner)
-    option.appendChild(commandName)
-
-    {
-        const interiorNodeSuffix = document.createElement('span')
-
-        // onclick handler
-        const onclick = command.children
-              ? () => repl.pexec(`cd ${command.route}`)  // if this is a subtree, then onclick, change to that context
-              : () => repl.partial(`${command.key} `)    // otherwise, add the partial command
-
-        if (command.children) {
-            // this is a directory/subtree node
-            interiorNodeSuffix.innerText = '/'
-        }
-        interiorNodeSuffix.className = 'help-option-interior-node-designation'
-        commandName.appendChild(interiorNodeSuffix)
-
-        commandNameInner.className = `${commandNameInner.className} clickable`
-        commandNameInner.setAttribute('data-help-clickable-command', command.key)
-        commandNameInner.onclick =  onclick
-    }
-
-    //
-    // handle synonyms
-    //
-    // console.log(command)
-    const synonymsCell = document.createElement('div');
-    synonymsCell.className = 'help-option-synonyms-column';
-    option.appendChild(synonymsCell)
-
-    if (command.synonyms) {
-        const synonymsList = document.createElement('div');
-        synonymsList.className = 'help-option-synonyms-list';
-        synonymsCell.appendChild(synonymsList);
-        for (let synonymRoute in command.synonyms) {
-            const synonym = command.synonyms[synonymRoute]
-
-            // don't show /wsk/a/ls when the user is asking about /wsk/action commands
-            /*if (synonym.parent && synonym.parent.route === routePrefix)*/ {
-                if (!synonym.key.match(singleAlphaPattern)) {
-                    // for now, hide single-alphabetic-letter synonyms from the help list
-                    const synonymDom = document.createElement('div')
-                    synonymDom.className = 'help-option-synonym'
-                    synonymDom.innerText = synonym.key
-                    synonymsList.appendChild(synonymDom)
-                }
-            }
-        }
-    }
-
-    //
-    // add any docs we might have associated with the main command
-    //
-    const docsCell = document.createElement('div');
-    docsCell.className = 'help-option-docs-column';
-    option.appendChild(docsCell)
-    if (command.options && command.options.docs) {
-        docsCell.innerText = command.options.docs.summary || command.options.docs
-    }
-
-
-    return option
-}
-
-/**
- * Separate the given list of commands into three groups, based on
- * relevancy to the given currentSelection:
- *
- *    group 0: especially relevant
- *    group 1: relevant, independent of selection
- *    group 2: not applicable, given the current selection [not returned, i.e. these are filtered out)
- *
- */
-const partitionByRelevancyTo = (currentSelection, commands) => commands.reduce((partitions, command, idx) => {
-    if (command.options) {
-        if (!currentSelection && command.options.requireSelection) {
-            //
-            // this command only makes sense if there is a
-            // selection... and there isn't currently one, so filter
-            // this out of the help list
-            //
-            return partitions
-
-        } else if (currentSelection && command.options.requireSelection) {
-            if (command.options.filter && !command.options.filter(currentSelection)) {
-                //
-                // there is a selection, but the command requires one of a specific (and differing) type
-                //
-                return partitions
-            } else {
-                //
-                // otherwise, we've hit the jackpot, this is just the kind of entity the command targets
-                //
-                partitions[0].push(command)
-                return partitions
-            }
-
-        } else if (command.options.hide) {
-            //
-            // we were asked to make this command invisible (but still an active command)
-            //
-            return partitions
-        }
-    }
-
-    // otherwise, this command pertains, but is not especially relevant, to the currentSelection
-    partitions[1].push(command)
-    return partitions
-}, [[], []]) // we return two arrays of commands; they are initially empty, and the commands.reduce populates them
-
-/**
  * Show help, where model is the commandTree model, and method is either
  *   - commandsInCurrentContext
  *   - directoriesInCurrentContext
@@ -190,19 +26,71 @@ const partitionByRelevancyTo = (currentSelection, commands) => commands.reduce((
 const show = (model, method) => () => repl.qexec(model.currentPrefix().join(' '), undefined, undefined, { noHistory: true })
 
 /**
+ * Respond with a top-level usage document
+ *
+ */
+const help = (usage, docs) => (_1, _2, _3, { errors }) => {
+    if (usage) {
+        // this will be our return value
+        const topLevelUsage = {
+            title: 'Getting Started',
+            header: 'This shows a summary of top-level command structure. Select an available command to learn more.',
+            available: []
+        }
+
+        // traverse the top-level usage documents, populating topLevelUsage.available
+        for (let key in usage) {
+            const { route, usage:model } = usage[key]
+            topLevelUsage.available.push({
+                label: route.substring(1),
+                dir: true,
+                command: model.commandPrefix,
+                docs: model.title
+            })
+        }
+
+        debug('generated top-level usage model', topLevelUsage)
+        throw new errors.usage(topLevelUsage)
+
+    } else {
+        debug('no usage model')
+
+        const error = new Error('No documentation found')
+        error.code = 404
+        throw error
+    }
+}
+
+const override = (route, replacementCmd, commandTree) => {
+    const leaf = commandTree.find(route),
+          baseCmd = leaf && leaf.$,
+          path = route.split('/').slice(1)
+
+    commandTree.listen(route, function() {
+        const argv = arguments[2],
+              prefix = argv.slice(0, path.length)
+
+        if (baseCmd && prefix.length === path.length && prefix.every((element, idx) => element === path[idx])) {
+            return baseCmd.apply(undefined, arguments)
+        } else {
+            return replacementCmd.apply(undefined, arguments)
+        }
+    })
+}
+
+/**
  * The module. Here, we register as a listener for commands.
  *
  */
-module.exports = commandTree => {
-//    const model = commandTree.getModel(),
-//          help = show(model, 'everythingInCurrentContext')
-          //help = show(model, 'commandsInCurrentContext'),
-          //ls = show(model, 'directoriesInCurrentContext')
+module.exports = (commandTree, prequire, { usage, docs }={}) => {
+    const wsk = prequire('/ui/commands/openwhisk-core')
+    
+    const helpCmd = commandTree.listen('/help', help(usage, docs))
+    commandTree.synonym('/?', help(usage, docs), helpCmd)
 
-    const help = () => 'TODO'
-
-    const helpCmd = commandTree.listen('/help', help, { docs: 'Here you are!', needsUI: true })
-    commandTree.synonym('/?', help, helpCmd)
+    wsk.synonyms('actions').forEach(syn => {
+        override(`/wsk/${syn}/help`, help(usage, docs), commandTree)
+    })
 
     const baseMessage = 'Enter help to see your options.'
 

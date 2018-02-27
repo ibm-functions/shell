@@ -24,21 +24,22 @@ all.except = str => all.filter(_ => _ !== str)
 module.exports = {
     // this is the ascii art for OpenWhisk, with backslashes escaped
     wsk: { xxxheader: `        ____      ___                   _    _ _     _     _\r\n       /\\   \\    / _ \\ _ __   ___ _ __ | |  | | |__ (_)___| | __\r\n  /\\  /__\\   \\  | | | | '_ \\ / _ \\ '_ \\| |  | | '_ \\| / __| |/ /\r\n /  \\____ \\  /  | |_| | |_) |  __/ | | | |/\\| | | | | \\__ \\   <\r\n \\   \\  /  \\/    \\___/| .__/ \\___|_| |_|__/\\__|_| |_|_|___/_|\\_\\\r\n  \\___\\/ tm           |_|`,
-           title: 'OpenWhisk Operations',
+           title: 'OpenWhisk operations',
            header: 'These commands will help you work with OpenWhisk assets',
            example: 'wsk <command>',
            commandPrefix: 'wsk',
-           available: [{ command: 'action', docs: 'work with actions' },
-                       { command: 'activation', docs: 'work with activations' },
-                       { command: 'package', docs: 'work with packages' },
-                       { command: 'rule', docs: 'work with rules' },
-                       { command: 'trigger', docs: 'work with triggers' },
-                       { command: 'list', docs: 'list entities in the current namespace' }]
+           available: [{ command: 'action', docs: 'work with actions', dir: true },
+                       { command: 'activation', docs: 'work with activations', dir: true },
+                       { command: 'package', docs: 'work with packages', dir: true },
+                       { command: 'rule', docs: 'work with rules', dir: true },
+                       { command: 'trigger', docs: 'work with triggers', dir: true },
+                       { command: 'list', docs: 'list entities in the current namespace', dir: true }],
+           related: ['help']
          },
 
     bind: 'Usage: bind <packageName> <bindName> [-p key value]...',
 
-    actions: { title: 'Action Operations',
+    actions: { title: 'Action operations',
                header: 'These commands will help you to work with actions',
                example: 'wsk action <command>',
                commandPrefix: 'wsk action',
@@ -51,7 +52,7 @@ module.exports = {
                related: all.except('wsk action')
              },
 
-    rules: { title: 'Rule Operations',
+    rules: { title: 'Rule operations',
              header: 'These commands will help you to work with rules',
              example: 'wsk rule <command>',
              commandPrefix: 'wsk rule',
@@ -66,7 +67,7 @@ module.exports = {
              related: all.except('wsk rule')
            },
 
-    triggers: { title: 'Trigger Operations',
+    triggers: { title: 'Trigger operations',
                 header: 'These commands will help you to work with triggers',
                 example: 'wsk trigger <command>',
                 commandPrefix: 'wsk trigger',
@@ -79,7 +80,7 @@ module.exports = {
              related: all.except('wsk trigger')
            },
 
-    packages: { title: 'Package Operations',
+    packages: { title: 'Package operations',
                 header: 'These commands will help you to work with packages',
                 example: 'wsk package <command>',
                 commandPrefix: 'wsk package',
@@ -94,7 +95,7 @@ module.exports = {
                 related: all.except('wsk package')
               },
 
-        activations: { title: 'Activation Operations',
+        activations: { title: 'Activation operations',
                 header: 'These commands will help you to work with activations',
                 example: 'wsk activation <command>',
                 commandPrefix: 'wsk activation',

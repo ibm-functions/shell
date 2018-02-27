@@ -957,7 +957,7 @@ module.exports = (commandTree, prequire) => {
                     // "wsk action", which will print out usage (this
                     // comes as part of commandTree.subtree
                     // registrations)
-                    commandTree.listen(`/wsk/${eee.nickname || eee}/help`, () => repl.qexec(`wsk ${eee.nickname || eee}`), { noArgs: true })
+                    //commandTree.listen(`/wsk/${eee.nickname || eee}/help`, () => repl.qexec(`wsk ${eee.nickname || eee}`), { noArgs: true })
 
                     verbs.forEach(vvv => {
                         const handler = executor(eee.name || api, vvv.name || verb, vvv.nickname || vvv, commandTree, preflight)
