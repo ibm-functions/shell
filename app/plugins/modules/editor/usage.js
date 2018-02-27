@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-const usage = require('./usage')
-
 /**
- * This is the module
+ * Usage model for the editor plugin
  *
  */
-module.exports = (commandTree, prequire) => {
-    commandTree.subtree('/editor', { usage })
-    require('./lib/edit')(commandTree, prequire)
+module.exports = {
+    title: 'In-shell editing operations',
+    header: 'These commands will help you create new OpenWhisk assets from within the Shell',
+    example: 'editor <command>',
+    commandPrefix: 'editor',
+    available: [{ command: 'compose', docs: 'Begin editing a new OpenWhisk Composition' },
+                { command: 'edit', docs: 'Edit an existing OpenWhisk action' },
+                { command: 'new', docs: 'Begin editing a new Openwhisk action' }],
+    related: ['help', 'wsk', 'composer']
 }

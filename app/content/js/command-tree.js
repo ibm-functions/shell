@@ -259,6 +259,7 @@ const match = (path, readonly) => {
  *
  */
 exports.subtree = (route, options) => {
+    const listen = options.listen || exports.listen
     const path = route.split('/').splice(1)
     const leaf = match(path, false, options)
 
@@ -269,17 +270,22 @@ exports.subtree = (route, options) => {
             leaf.options = options
         }
 
-        //
-        // also listen route e.g. /wsk, and present usage
-        //
-        exports.listen(route, (_1, _2, _3, { errors }) => {
+        const help = (_1, _2, _3, { errors }) => {
+            debug('subtree help', route)
+
             // the usage message:
             const usageMessage = options.usage || options.docs
                   || (options.synonymFor && options.synonymFor.options &&
                       (options.synonymFor.options.usage || options.synonymFor.options.docs))
-
+            
             throw new errors.usage(usageMessage)
-        }, Object.assign({}, options, { noArgs: true }))
+        }
+
+        //
+        // also listen route e.g. /wsk, and present usage
+        //
+        listen(route, help, Object.assign({}, options, { noArgs: true }))
+        listen(`${route}/help`, help, Object.assign({}, options, { noArgs: true }))
 
         return leaf
     }
@@ -498,27 +504,36 @@ const commandNotFound = argv => {
         context: exports.currentContext()
     })
 
-    throw Error(commandNotFoundMessage)
+    const error = new Error(commandNotFoundMessage)
+    error.code = 404
+    throw error
 }
 
 /** here, we will use implicit context resolutions */
-exports.read = (argv, noRetry=false) => {
+exports.read = (argv, noRetry=false, noSubtreeRetry=false) => {
     let cmd = read(model, argv) || disambiguate(argv)
 
     if (cmd && resolver.isOverridden(cmd.route) && !noRetry) {
         resolver.resolve(cmd.route)
-        return exports.read(argv, true)
+        return exports.read(argv, true, noSubtreeRetry)
     }
         
     if (!cmd) {
         if (!noRetry) {
             resolver.resolve(`/${argv.join('/')}`)
-            return exports.read(argv, true)
+            return exports.read(argv, true, noSubtreeRetry)
         }
     }
 
     if (!cmd) {
-        cmd = exports.readIntention(argv)
+        try {
+            cmd = exports.readIntention(argv)
+        } catch (err) {
+            if (err.code === 404 && !noSubtreeRetry) {
+                resolver.resolve(`/${argv.join('/')}`, { subtree: true })
+                return exports.read(argv, false, true)
+            }
+        }
     }
 
     if (!cmd) {
@@ -583,30 +598,31 @@ class CommandModel {
         // we exclude synonyms from the list
         return filter(this.subTree().children, isFileFilter)
     }
+
+    /**
+     * Call the given callback function `fn` for each node in the command tree
+     *
+     */
+    forEachNode(fn) {
+        const iter = root => {
+            if (root) {
+                fn(root)
+                if (root.children) {
+                    for (let cmd in root.children) {
+                        iter(root.children[cmd])
+                    }
+                }
+            }
+        }
+        iter(model)
+    }
 }
+
 /**
  * Returns the command tree model
  *
  */
 exports.getModel = () => new CommandModel()
-
-/**
- * Call the given callback function `fn` for each node in the command tree
- *
- */
-const forEachNode = fn => {
-    const iter = root => {
-        if (root) {
-            fn(root)
-            if (root.children) {
-                for (let cmd in root.children) {
-                    iter(root.children[cmd])
-                }
-            }
-        }
-    }
-    iter(model)
-}
 
 /**
  * Print the command tree to the browser console

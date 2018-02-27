@@ -120,6 +120,85 @@ const uglify = modules => modules.flat.map(module => new Promise((resolve, rejec
         .catch(reject)
 }))
 
+/**
+ * Make a tree out of a flat map.
+ * e.g. take "/wsk" and "/wsk/actions" and make a tree out of that flat
+ * structure based on the "/path/hierarchy"
+ *
+ */
+const makeTree = (map, docs) => {
+    const keys = Object.keys(map)
+
+    // sort the keys lexicographically
+    keys.sort()
+
+    /** create new node */
+    const node = route => ({ route })
+    const inner = route => Object.assign(node(route), { children: {} })
+
+    /** get or create a subtree */
+    const getOrCreate = (tree, pathPrefix) => {
+        const entry = tree.children[pathPrefix]
+        if (!entry) {
+            return tree.children[pathPrefix] = inner(pathPrefix)
+        } else {
+            return entry
+        }
+    }
+
+    const tree = keys.reduce((tree, route) => {
+        const split = route.split(/\//)
+
+        let subtree = tree
+        for (let idx = 0; idx < split.length; idx++) {
+            const pathPrefix = split.slice(0, idx).join('/')
+            subtree = getOrCreate(subtree, pathPrefix)
+        }
+
+        if (!subtree.children) subtree.children = {}
+        const leaf = subtree.children[route] = node(route)
+        leaf.usage = map[route]
+        leaf.docs = map[route].header || docs[route]
+
+        return tree
+    }, inner('/'))
+
+    return tree.children[''].children[''].children
+}
+
+/**
+ * Scan the registered commands for usage docs, so that we can stash
+ * them away in the compiled plugin registry. This will allow us to
+ * present docs in a general way, not only in response to evaluation
+ * of commands.
+ *
+ */
+const scanForUsageDocs = modules => {
+    const commandTree = require('../../../../content/js/command-tree')
+
+    modules.docs = {}
+    modules.usage = {}
+
+    commandTree.getModel().forEachNode(({ route, options={} }) => {
+        const { usage, docs } = options
+
+        if (usage) {
+            modules.usage[route] = usage
+        }
+
+        if (docs) {
+            modules.docs[route] = docs
+        }
+    })
+
+    // modules.usage right not is flat, i.e. it may contain entries
+    // for "/wsk" and "/wsk/actions"; make a tree out of that flat
+    // structure based on the "/path/hierarchy"
+    modules.usage = makeTree(modules.usage, modules.docs)
+
+    return modules
+}
+
 module.exports = (rootDir, externalOnly, cleanup = false, reverseDiff = false) => new Promise((resolve, reject) => {
 
     /**
@@ -153,6 +232,7 @@ module.exports = (rootDir, externalOnly, cleanup = false, reverseDiff = false) =
                           path: path.relative(path.join(__dirname, '..', '..', '..'), module.path)
                       }))
                   }))
+                  .then(scanForUsageDocs)
                   .then(modules => Promise.all([writeToFile(pluginRoot, modules), ...uglify(modules)])
                         .then(() => resolve(diff(before, modules, reverseDiff)))))  // resolve with what is new
             .catch(err => reject(err))

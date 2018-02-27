@@ -103,7 +103,7 @@ const format = message => {
         // title
         //
         if (title) {
-            const dom = div(title, undefined, 'h1')
+            const dom = div(title, 'capitalize', 'h1')
             dom.style.fontSize = '1.629em'
             dom.style.fontWeight = 300
             dom.style.color = 'var(--color-brand-01)'
@@ -149,11 +149,12 @@ const format = message => {
             availablePart.appendChild(table)
             body.appendChild(availablePart)
 
-            available.forEach(({command, docs, partial=false}) => {
+            available.forEach(({command, label=command, dir:isDir=false, docs, partial=false}) => {
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
-                      cmdPart = span(command),
+                      cmdPart = span(label),
+                      dirPart = isDir && span('/'),
                       docsPart = span(docs)
 
                 row.className = 'log-line entity'
@@ -166,6 +167,7 @@ const format = message => {
                 wrap(smaller(sans(docsPart)))
 
                 cmdCell.appendChild(cmdPart)
+                if (dirPart) cmdCell.appendChild(smaller(dirPart))
                 docsCell.appendChild(docsPart)
 
                 cmdPart.onclick = partial ? () => repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)

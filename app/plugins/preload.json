@@ -3,6 +3,7 @@
         "editor-preload",
         "composer-preload",
         "offline",
+        "/ui/commands/help",
         "/ui/commands/tab-completion",
         "/ui/commands/text-search"
     ]
