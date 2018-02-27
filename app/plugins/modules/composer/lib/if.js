@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const composer = require('@ibm-functions/composer')({ no_wsk: true }),
+const composer = require('@ibm-functions/composer'),
       { fetch, create } = require('./composer')
 
 /**

@@ -16,7 +16,7 @@
 
 'use strict'
 
-const composer = require('@ibm-functions/composer')()
+const composer = require('@ibm-functions/composer')
 
 // build action composition
 const app = composer.try('RandomError', /* catch */ args => ({ message: args.error + ' is caught' }))
@@ -25,6 +25,6 @@ const app = composer.try('RandomError', /* catch */ args => ({ message: args.err
 console.log(JSON.stringify(app, null, 4))
 
 // invoke action composition
-const wsk = composer.wsk
+const wsk = composer.openwhisk({ignore_certs:true})
 function print(obj) { console.log(JSON.stringify(obj.response ? obj.response.result : obj, null, 4)) }
 wsk.actions.invoke({ name: 'conductor', params: { $run: app, n: 3, $blocking: true }, blocking: true }).then(print, console.error)
