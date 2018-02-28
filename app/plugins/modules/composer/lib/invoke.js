@@ -19,12 +19,25 @@
  *
  */
 const usageMessage = {
-    invoke: `Invoke a given app and wait for its completion. Hint: use app async to invoke asynchronously.
-\tUsage: app invoke <name> [-p key value]*`,
+    invoke: {
+        title: 'Invoke an OpenWhisk composition',
+        header: 'Invoke a given app and wait for its completion',
+        example: 'app invoke <name> [-p key value]*',
+        required: [{ name: 'name', docs: 'the name of your new app' }],
+        optional: [{ name: '-p|--param key value', docs: 'bind a variable to a value' },
+                   { name: '-P|--param-file file', docs: 'read variable bindings from a JSON file' }],
+        related: ['app async', 'app create', 'app get', 'app list']
+    },
 
-    async: `Invoke a given app asynchronously, and return a session id. Hint: use app invoke to do a blocking invoke.
-\tUsage: app async <name> [-p key value]*`
+    async: {
+        title: 'Async an OpenWhisk composition',
+        header: 'Invoke a given app asynchronously, and return a session id',
+        example: 'app async <name> [-p key value]*',
+        required: [{ name: 'name', docs: 'the name of your new app' }],
+        related: ['app create', 'app get', 'app invoke', 'app list']
+    }
 }
+
 const usage = cmd => usageMessage[cmd]
 
 /**
@@ -37,7 +50,7 @@ const usage = cmd => usageMessage[cmd]
 module.exports = (commandTree, prequire) => {
 
     /** cmd is either 'invoke' or 'async' */
-    const doInvoke = cmd => function(_1, _2, args, _3, _4, _5, argvWithoutOptions, options) {
+    const doInvoke = cmd => function(_1, _2, args, { errors }, _4, _5, argvWithoutOptions, options) {
         const delegate = commandTree.find(`/wsk/action/${cmd}`).$
 
         const idx = args.indexOf('app')
@@ -47,7 +60,7 @@ module.exports = (commandTree, prequire) => {
         const name = argvWithoutOptions[argvWithoutOptions.indexOf(cmd) + 1]
 
         if (!name || options.help) {
-            throw new Error(usage(cmd))
+            throw new errors.usage(usage(cmd))
         } else {
             return delegate.apply(undefined, arguments)
                 .then(activation => activation.message || activation)   // message if change-context wrapper

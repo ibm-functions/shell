@@ -961,10 +961,11 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     display: none;
 }
 .clickable {
-    transition: color 150ms ease-in-out;
+    transition: color 150ms ease-in-out, text-decoration-color 150ms ease-in-out;
 }
 .clickable-blatant {
     text-decoration: underline;
+    text-decoration-color: rgba(0,0,0,0.15);
 }
 .clickable:hover, .entity.actions:hover .entity-name {
     cursor: pointer;

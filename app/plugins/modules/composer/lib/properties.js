@@ -19,13 +19,15 @@ const path = require('path'),
       { properties } = require('./composer'),
       package = require(path.join(__dirname, '../node_modules/@ibm-functions/composer/package.json'))
 
-const usage = cmd => `Print out the details of your configuration.
+const usage = cmd => ({
+    title: 'Composer Configuration',
+    header: 'Print out the details of your configuration',
+    example: `app ${cmd}`
+})
 
-\tapp ${cmd}`
-
-const getProperties = cmd => (_1, _2, _a, modules, _3, execOptions, args, options) => {
+const getProperties = cmd => (_1, _2, _a, { errors }, _3, execOptions, args, options) => {
     if (options.help || args[args.indexOf(cmd) + 1] === 'help') {
-        throw new modules.errors.usage(usage(cmd))
+        throw new errors.usage(usage(cmd))
     }
 
     return `Composer version ${package.version}`
@@ -47,10 +49,13 @@ const getProperties = cmd => (_1, _2, _a, modules, _3, execOptions, args, option
  *
  */
 module.exports = (commandTree, prequire) => {
-    const cmd = commandTree.listen('/wsk/app/properties', getProperties('properties'),
-                                   { docs: 'Show the access credentials for the backing store' })
+    const synonyms = ['wsk/app', 'composer']
+    synonyms.forEach(tree => {
+        const cmd = commandTree.listen(`/${tree}/properties`, getProperties('properties'),
+                                       { docs: 'Show the access credentials for the backing store' })
 
-    // synonyms of app properties
-    commandTree.synonym('/wsk/app/props', getProperties('props'), cmd)
-    commandTree.synonym('/wsk/app/config', getProperties('config'), cmd)
+        // synonyms of app properties
+        commandTree.synonym(`/${tree}/props`, getProperties('props'), cmd)
+        commandTree.synonym(`/${tree}/config`, getProperties('config'), cmd)
+    })
 }

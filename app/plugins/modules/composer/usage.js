@@ -35,9 +35,9 @@ module.exports = {
         header: 'These commands will help you create and invoke OpenWhisk Compositions',
         example: 'wsk app <command>',
         commandPrefix: 'wsk app',
-        available: [{ command: 'create', docs: 'create a new composition', partial: '<app> <sourceFile>' },
-                    { command: 'get', docs: 'get the details of a given composition', partial: '<app>' },
-                    { command: 'invoke', docs: 'invoke a given composition', partial: '<app> -p <param> <value>' },
+        available: [{ command: 'create', docs: 'create a new composition' },
+                    { command: 'get', docs: 'get the details of a given composition' },
+                    { command: 'invoke', docs: 'invoke a given composition' },
                     { command: 'list', docs: 'list all compositions' }],
         related: ['composer', 'composer session']
     },
