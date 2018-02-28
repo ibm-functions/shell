@@ -86,7 +86,7 @@ const format = message => {
         
     } else {
         // these are the fields of the usage message
-        const { title, header, example, commandPrefix, available, related } = message
+        const { title, header, example, commandPrefix, available, related, required, optional, oneof } = message
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
@@ -138,9 +138,9 @@ const format = message => {
             textPart.style.color = 'var(--color-support-02)'
         }
 
-        if (available) {
+        const makeTable = (title, rows) => {
             const availablePart = bodyPart(),
-                  prePart = prefix('Available Commands'),
+                  prePart = prefix(title),
                   table = document.createElement('table')
 
             table.className = 'log-lines'
@@ -149,7 +149,7 @@ const format = message => {
             availablePart.appendChild(table)
             body.appendChild(availablePart)
 
-            available.forEach(({command, label=command, dir:isDir=false, docs, partial=false}) => {
+            rows.forEach(({command, name=command, label=name, dir:isDir=false, docs, partial=false}) => {
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
@@ -161,18 +161,38 @@ const format = message => {
                 cmdCell.className = 'log-field'
                 docsCell.className = 'log-field'
 
-                cmdPart.className = 'clickable'
                 cmdPart.style.fontWeight = '500'
-                //docsPart.classList.add('deemphasize')
                 wrap(smaller(sans(docsPart)))
 
                 cmdCell.appendChild(cmdPart)
                 if (dirPart) cmdCell.appendChild(smaller(dirPart))
                 docsCell.appendChild(docsPart)
 
-                cmdPart.onclick = partial ? () => repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)
-                    : () => repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${command}`)
+                if (command) {
+                    cmdPart.classList.add('clickable')
+                    cmdPart.classList.add('clickable-blatant')
+                    cmdPart.onclick = partial ? () => repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)
+                        : () => repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${command}`)
+                }
             })
+
+            return table
+        }
+
+        if (available) {
+            makeTable('Available Commands', available)
+        }
+
+        if (required) {
+            makeTable('Required Parameters', required)
+        }
+
+        if (optional) {
+            makeTable('Optional Parameters', optional)
+        }
+
+        if (oneof) {
+            makeTable('Required Parameters (choose one of the following)', oneof)
         }
 
         if (related) {

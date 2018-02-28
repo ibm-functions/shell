@@ -30,21 +30,17 @@ debug('finished loading modules')
  * Usage message
  *
  */
-const usage = cmd => `Create an app from a given source file.
-
-\tapp ${cmd} <name> <file.js|file.json>
-
-Required parameters:
-\tname           the name of your new app
-\tfile.js        a NodeJS source file; or
-\tfile.json      a pre-compiled app
-
-Options:
-\t-n|--dry-run   check the given input for validity, do not deploy it
-\t--log-input    log initial input with an echo action. App may run slower 
-\t--log-inline   log inline function output with echo actions. App may run slower
-\t--log-all      log initial input and inline function output. App may run slower
-`
+const usage = cmd => ({
+    header: 'Create an app from a given source file',
+    example: `app ${cmd} <name> <file.js|file.json>`,
+    required: [{ name: '<name>', docs: 'the name of your new app' },
+               { name: '<file.js|file.json>', docs: 'a NodeJS source file, or a pre-compiled JSON file' }],
+    optional: [{ name: '-n|--dry-run', docs: 'check the given input for validity, do not deploy it' },
+               { name: '--log-input', docs: 'log initial input with an echo action (app may run slower)' },
+               { name: '--log-inline', docs: 'log inline function output with echo actions (app may run slower)' },
+               { name: '--log-all', docs: 'log initial input and inline function output (app may run slower)' }],
+    related: ['app get', 'app invoke', 'app list']
+})
 
 /**
   * compileToFSM returns a struct as its error

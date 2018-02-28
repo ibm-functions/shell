@@ -20,15 +20,15 @@ const { init, splitNamedSession } = require('./composer')
  * Usage message
  *
  */
-const usage = () => `List recent sessions.
-
-\tsession list [--name app] [--limit N] [--skip N]
-
-Options:
-\t--name     filter sessions by name
-\t--limit N  return at most N sessions
-\t--skip S   skip S sessions
-`
+const usage = () => ({
+    title: 'List Recent Sessions',
+    header: 'Returns a list of recent composition activations (a.k.a. "sessions")',
+    example: 'session list',
+    optional: [{ name: '--name', docs: 'filter to show only a given named composition' },
+               { name: '--limit', docs: 'show at most N sessions' },
+               { name: '--skip', docs: 'skip over the most recent N sessions' }],
+    related: ['grid', 'summary']
+})
 
 /**
  * Create renderable entities out of the session list data

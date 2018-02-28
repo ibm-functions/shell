@@ -21,10 +21,17 @@ const { isAnApp, vizAndfsmViewModes, decorateAsApp } = require('./composer')
  * Usage message
  *
  */
-const flags = ui.headless ? '\n\nOptions:\n\t--cli    display the results textually; by default, the graphical shell will open' : ''
-const usage = cmd => `Displays the details of a given app.
-
-\tapp ${cmd} <appName>${flags}`
+const flags = ui.headless ? '\n\nOptions:\n\t--cli    ' : ''
+const usage = cmd => {
+    return {
+        title: 'Show an OpenWhisk composition',
+        header: 'Displays the details of a given composition',
+        example: `app ${cmd} <appName>${flags}`,
+        required: [{ name: 'appName', docs: 'the name of your composition' }],
+        optional: [{ name: '--cli', docs: 'display the results textually (headless mode only)' }],
+        related: ['app create', 'app invoke', 'app list']
+    }
+}
 
 /**
  * Here is the app get entry point. Here we register command
@@ -36,12 +43,12 @@ module.exports = (commandTree, prequire) => {
           rawGet = commandTree.find('/wsk/action/get').$
 
     /** command handler */
-    const doGet = cmd => (_1, _2, _a, modules, fullCommand, execOptions, args, options) => {
+    const doGet = cmd => (_1, _2, _a, { errors }, fullCommand, execOptions, args, options) => {
         const idx = args.indexOf(cmd),
               appName = args[idx + 1]
 
         if (!appName || options.help) {
-            throw new modules.errors.usage(usage(cmd))
+            throw new errors.usage(usage(cmd))
         }
 
         return repl.qexec(`wsk action get ${appName}`)

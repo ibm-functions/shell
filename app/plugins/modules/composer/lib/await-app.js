@@ -32,22 +32,23 @@ const viewName = 'session',              // for back button and sidecar header l
  *
  */
 const usageMessage = {
-    get: `Display the full details of a session. (Hint: use session result to see only the return value)`,
+    get: `Display the full details of a session`,
     result: `Display the return value of a session. (Hint: use session get to see the full details)`
 }
+const related = {
+    get: ['session list', 'session result'],
+    result: ['session list', 'session get']
+}
 const flags = cmd => cmd==='get' && ui.headless ? '\n\t--cli                    display the results textually; by default, the graphical shell will open' : ''
-const usage = cmd => `${usageMessage[cmd]}
-
-\tsession ${cmd} <sessionId>|--last [name]
-
-Required parameters:
-\tsessionId                a session id; or
-\t--last [appName]         show the last session; optionally the last session of the given app name
-\t--last-failed [appName]  ibid, except the last failed session
-
-Options:
-\t--skip S                 skip over S sessions
-\t--timeout 3s|5m|...      wait no more than a specified duration for the session results${flags(cmd)}`
+const usage = cmd => ({
+    title: 'Show an OpenWhisk composer session',
+    header: usageMessage[cmd],
+    example: `session ${cmd} <sessionId>`,
+    oneof: [{ name: 'sessionId', docs: 'show a specific session id' },
+            { name: '--last [appName]', docs: 'show the last session (optionally of the given app name)' },
+            { name: '--last-failed [appName]', docs: 'ibid, except the last failed session' }],
+    related: related[cmd]
+})
 
 /**
  * Get an activation

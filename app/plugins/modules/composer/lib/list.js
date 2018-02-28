@@ -21,9 +21,14 @@ const { isAnApp, decorateAsApp } = require('./composer'),
  * Usage message
  *
  */
-const usage = cmd => `List deployed apps.
-
-\tapp ${cmd}`
+const usage = cmd => ({
+    title: 'List Openwhisk Compososer apps',
+    header: 'Print a list of deployed compositions',
+    example: `app ${cmd}`,
+    optional: [{ name: '--limit', docs: 'show at most N compositions' },
+               { name: '--skip', docs: 'skip over the most first N compositions' }],
+    related: ['app create', 'app get', 'app invoke']
+})
 
 /**
  * Here is the app list entry point. Here we register command
