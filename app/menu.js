@@ -17,8 +17,15 @@ exports.install = (app, Menu, createWindow) => {
 
         const helpMenuItems = [
             {
-                label: 'Open Help Center',
-                click: () => { try { repl.qexec('help') } catch (err) { console.log(err) ;} }
+                label: 'Help with Commands',
+                click: () => {
+                    try {
+                        const { webContents } = require('electron')
+                        webContents.getFocusedWebContents().send('/repl/pexec', { command: 'help' })
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
             },
             {type: 'separator'},
             {

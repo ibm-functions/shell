@@ -288,7 +288,7 @@ const ui = (function() {
         const nyc = new (require('nyc'))(config)      // create the nyc instance
         nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
     })
-    
+
     /**
      * Send a synchronous message to the main process
      *

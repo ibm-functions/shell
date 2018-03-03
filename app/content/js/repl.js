@@ -284,9 +284,19 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
     return Promise.resolve()
 }
 
+const listenForRemoteExecs = () => {
+    const { ipcRenderer } = require('electron')
+    ipcRenderer.on('/repl/pexec', (event, {command}) => {
+        debug('remote pexec', command)
+        return repl.pexec(command)
+    })
+}
+
 self.init = (prefs={}) => {
     debug('init')
     ui.listen(ui.getInitialPrompt())
+
+    listenForRemoteExecs()
 
     // TODO clean up when repl becomes a module
     wsk = plugins.require('/ui/commands/openwhisk-core')
