@@ -190,7 +190,7 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyEdgeExists('cond1', 'cond2'))
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
-       .then(verifyEdgeExists('seq3', 'cond2'))
+       .then(verifyEdgeExists('seq3', 'cond1'))
        .then(verifyEdgeExists('cond2', 'cond3'))
        .then(verifyEdgeExists('cond3', 'action4'))
        .then(verifyEdgeExists('action4', 'cond3'))

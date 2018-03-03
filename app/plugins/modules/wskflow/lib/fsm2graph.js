@@ -78,11 +78,11 @@ function drawNode(id, label, isCompound, properties, w, h){
 				o.width = o.label.length*defaultCharWidth+10;
 			o.height = defaultHeight;
 		}
-		else if(o.type === "retain"){
+		else if(o.type === "retain" || o.type === "Dummy"){
 			o.width = 5;
 			o.height = 5;
 		}	
-		else if(o.type === "action" || o.type === 'function'){
+		else if(o.type === "action" || o.type === "function"){
 			let label = o.label, d = o;;
 
 			if(fsmData.States[d.id]){
@@ -328,8 +328,17 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 		        else if(Type === "dowhile"){
                             // do { state.body } while (state.test)
                             const entry = lastNode
+
+                            const headerNode = `${name}__headerNode`
+                            fsmData.States[headerNode] = { type: 'Dummy', id: headerNode }
+                            obj.children.push(drawNode(headerNode))
+			    lastNode.forEach(ln => obj.edges.push(drawEdge(ln, headerNode, obj)));
+                            lastNode = [headerNode]
+
+                            // render the state.body part
 			    const bodyExit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
 
+                            // render the state.test part (i.e. the condition body)
 			    lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, bodyExit);
                             const conNode = lastNode[0];
 
@@ -340,13 +349,18 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 			    }
 
-			    entry.forEach(ln => obj.edges.push(drawEdge(conNode, ln, obj)));
+			    lastNode.forEach(ln => obj.edges.push(drawEdge(ln, headerNode, obj)));
 			}
 		        else if(Type === "while"){
-                            // while (state.test) state.body
-			    lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, lastNode);
-                            const conNode = lastNode[0];
+                            // then this subgraph represents: while (state.test) state.body
 
+                            // render the state.test part (i.e. the condition body)
+			    lastNode = graph(fsm, state.test[0].id, state.test[state.test.length - 1].id, obj, lastNode);
+                            const {id:headerNode} = obj.children.find(({id}) => id === state.test[0].id)
+                            const conNode = lastNode[0]
+
+                            // make a note that the last part of the condition is a choice,
+                            // so that graph2dom can render its Y/N bits
 			    for(var i=obj.children.length-1; i>=0; i--){
 				if(obj.children[i].id === conNode){
 				    obj.children[i].properties.choice = true;
@@ -354,8 +368,11 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 			    }
 
+                            // render the state.body part
 			    const exit = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
-			    exit.forEach(ln => obj.edges.push(drawEdge(ln, lastNode[0], obj)));
+
+                            // render the loop back
+			    exit.forEach(ln => obj.edges.push(drawEdge(ln, headerNode, obj)));
 			}
 			else if(Type === "if"){
 				// first, push node
@@ -590,9 +607,11 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				}
 			    else{
                                         // draw the initial dot to represent the start of a forwarding edge
-                                        const origin = `${name}_origin`
+                                        const origin = `${name}__origin`
                                         fsmData.States[origin] = { type: 'retain', id: origin }
-				        obj.children.push(drawNode(origin));
+                                        const originNode = drawNode(origin)
+                                        originNode.properties.origin = true
+				        obj.children.push(originNode);
 					lastNode.forEach(ln => obj.edges.push(drawEdge(ln, origin, obj)));
 					if(isAct){
 						lastNode.forEach(ln => {if(visited[ln] && visited[ln] != 'failed') visited[origin] = true;});
@@ -603,9 +622,11 @@ function graph(fsm, startName, endName, obj, lastNode, whichBranch){
 				        lastNode = graph(fsm, state.body[0].id, state.body[state.body.length - 1].id, obj, lastNode);
 
                                        // draw the terminus of the forwarding
-                                       const terminus = `${name}_terminus`
+                                       const terminus = `${name}__terminus`
                                        fsmData.States[terminus] = { type: 'retain', id: terminus }
-                                       obj.children.push(drawNode(terminus));
+                                       const terminusNode = drawNode(terminus)
+                                       terminusNode.properties.terminus = true
+                                       obj.children.push(terminusNode);
 	  			       //if(lastNode) obj.edges.push(drawEdge(lastNode, name, obj));
 				       lastNode.forEach(ln => obj.edges.push(drawEdge(ln, terminus, obj)));
 					// build an extra edge from push to pop

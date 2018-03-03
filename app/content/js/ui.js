@@ -1302,7 +1302,7 @@ const ui = (function() {
                                                            .then(action => {
                                                                const anonymousCode = isAnonymousLet(action)
                                                                if (anonymousCode) {
-                                                                   return anonymousCode
+                                                                   return anonymousCode.replace(/\s/g,'')
                                                                } else {
                                                                    return action.name
                                                                }
