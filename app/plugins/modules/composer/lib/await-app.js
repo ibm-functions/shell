@@ -227,7 +227,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         repl.qexec(`session list --limit ${commandLineOptions.limit||200} ${commandLineOptions.skip!==undefined ? '--skip ' + commandLineOptions.skip : ''} ${lastWhat === true ? '' : '--name ' + lastWhat}`)
             .then(A => {
                 if (A && A.length > 0) {
-                    const idx = !errorOnly ? 0 : A.findIndex(_ => !_.statusCode !== 0)
+                    const idx = !errorOnly ? 0 : A.findIndex(_ => _.statusCode !== 0)
                     if (idx < 0) {
                         throw new Error('No such session found')
                     } else {
