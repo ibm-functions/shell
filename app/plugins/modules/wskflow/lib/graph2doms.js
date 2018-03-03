@@ -259,7 +259,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				'org.eclipse.elk.direction': 'DOWN',
 				'org.eclipse.elk.edgeRouting': "ORTHOGONAL",
 				'org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment': 'BALANCED',
-				'org.eclipse.elk.layered.cycleBreaking.strategy': "DEPTH_FIRST",				
+			        'org.eclipse.elk.layered.cycleBreaking.strategy': "DEPTH_FIRST",
 				'org.eclipse.elk.insideSelfLoops.activate': true
 			}				
 		})
@@ -389,7 +389,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				if (d.children)
 					className += " compound";
 				else
-					className += " leaf";
+					className += " leaf clickable";
 
 				if(d.type != undefined){
 					className += " "+d.type;
@@ -851,22 +851,21 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						});
 						qtipText = "<span style='color: "+wfColor.Task.normal+"; padding-right:5px'>action |</span> "+d.label;							
 					}
-					else if(d.type == "retain" || d.type == "Pop"){
-						let id, edgeId;
-						if(d.type == "retain"){
-							id = d.id.substring("push_".length);
-						}
-						else{
-							id = d.id.substring("pop_".length);
-						}
-						for(var i=0; i<links.length; i++){
-							if(links[i].source == "push_"+id && links[i].target == "pop_"+id){
+					else if(d.type == "retain"){
+					    let edgeId;
+                                            const isOrigin = d.properties.origin
+                                            const expectedSrc = isOrigin ? d.id : d.id.replace(/__terminus/,'__origin'),
+                                                  expectedTerminus = isOrigin ? d.id.replace(/__origin/,'__terminus') : d.id
+					    for(var i=0; i<links.length; i++){
+						if(links[i].source === expectedSrc
+                                                   && links[i].target === expectedTerminus){
 								edgeId = links[i].id;
 								break;
 							}
 						}
+
 						if(edgeId){
-							if(d.type == "retain")
+							if(isOrigin)
 								qtipText = "<span style='color: #85C1E9'>Retain: Data forwarding</span>";
 							else
 								qtipText = "<span style='color: #85C1E9'>Retain: Data merging</span>";
@@ -1091,7 +1090,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			if(d.source.indexOf("try_") == 0 && d.target.indexOf("handler_") == 0){
 				s += " TryCatchEdge";
 			}
-	                if(d.source.indexOf("retain_origin") >= 0 && d.target.indexOf("retain_terminus") >= 0){
+	                if(d.source.indexOf("__origin") >= 0 && d.target.indexOf("__terminus") >= 0){
 				s += " forwardingLink";
 			}
 			//else if(d.)
@@ -1106,7 +1105,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					return wfColorAct.edgeInactive;
 			}
 			else{
- 			        if(d.source.indexOf("retain_origin") >= 0 && d.target.indexOf("retain_terminus") >= 0){
+ 			        if(d.source.indexOf("__origin") >= 0 && d.target.indexOf("__terminus") >= 0){
 					return wfColor.Edges.forwarding;
 				}
 				else{

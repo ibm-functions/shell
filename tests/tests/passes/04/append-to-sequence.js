@@ -59,7 +59,7 @@ describe('Append to a sequence', function() {
     const unshift = func => app => push(func, 'unshift')(app)
     
     appends.forEach((syn, idx) => {
-        const func = `a${idx} => a${idx}`
+        const func = `a${idx}=>a${idx}`
 
         it(`append via "${syn}" with implicit action and inline function`, () => cli.do(`${syn} ${func}`, this.app)
 	    .then(cli.expectJustOK)
@@ -71,7 +71,7 @@ describe('Append to a sequence', function() {
     })
 
     prepends.forEach((syn, idx) => {
-        const func = `p${idx} => p${idx}`
+        const func = `p${idx}=>p${idx}`
 
         it(`prepend via "${syn}" with implicit action and inline function`, () => cli.do(`${syn} ${func}`, this.app)
             .then(cli.expectJustOK)
@@ -111,7 +111,7 @@ describe('Append to a sequence', function() {
        .catch(common.oops(this)))
        
     {
-        let func = 'y => y'
+        let func = 'y=>y'
         it(`append via "append" with explicit action and file action`, () => cli.do(`append ${func} to ${actionName}`, this.app)
 	    .then(cli.expectJustOK)
            .then(sidecar.expectOpen)

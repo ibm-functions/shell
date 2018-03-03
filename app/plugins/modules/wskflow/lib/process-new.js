@@ -92,14 +92,15 @@ function annotateNodes(fsm, activations){
 			if(state.Else) fsm.States[state.Else].Pre.push({name: name, class: type});
 			// new: not to merge choice state with previous action states - will have error if condition is a sequence. 		
 		}	
-		
-		if(typeof state.Helper == "string" && state.Helper.indexOf("retry_2") == 0){
+
+                const helper = state.options && state.options.helper
+		if(typeof helper === "string" && helper.indexOf("retry_2") === 0){
 			retry_2.push(name);
 		}		
-		else if(typeof state.Helper == "string" && state.Helper.indexOf("repeat_1") == 0){
+		else if(typeof helper === "string" && helper.indexOf("repeat_1") === 0){
 			repeat_1.push(name);
 		}	
-		else if(typeof state.Helper == "string" && state.Helper.indexOf("null") == 0){
+		else if(typeof helper === "string" && helper.indexOf("null") === 0){
 			nullStates.push(name);
 		}	
 
@@ -118,8 +119,8 @@ function annotateNodes(fsm, activations){
 	});
 
 
-	//retry helper - some rerouting
-	retry_2.forEach(retry2Name => {
+	//retry helper - some rerouting BROKEN
+        false&&retry_2.forEach(retry2Name => {
 		// ignore everything after the still try condition
 		fsm.States[retry2Name].display = "ignore";
 		let nextPushName = fsm.States[retry2Name].Next, pushId = nextPushName.substring("push_".length);
@@ -234,10 +235,11 @@ function annotateNodes(fsm, activations){
 
 			}
 		}
-		else if(state.Helper){
+		else if(state.options && state.options.helper){
 			//if(state.Helper == "retain_1"){
 				// retain_2 is the end of retain. retain_3 is when there's error (handler, but it goes merges to pass)
-			if(state.Helper == "retain_1" || state.Helper == "retain_2" || state.Helper.indexOf("retry_") == 0 || state.Helper == 'echo'){
+                        const helper = state.options && state.options.helper
+			if(helper === "retain_1" || helper === "retain_2" || helper.indexOf("retry_") === 0 || helper === 'echo'){
 				state.display = "ignore";			
 			}
 		}
