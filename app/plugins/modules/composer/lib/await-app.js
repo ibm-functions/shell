@@ -19,7 +19,8 @@ debug('loading')
 
 const { init } = require('./composer'),
       messages = require('./messages.json'),
-      parseDuration = require('parse-duration')
+      parseDuration = require('parse-duration'),
+      PromisePool = require('es6-promise-pool')
 
 debug('finished loading modules')
 
@@ -112,26 +113,20 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
 
                     const path = activation.annotations.find(({key}) => key === 'path').value
 
-                    const theActionItself = new Promise((resolve, reject) => { // fetch the action itself, so we have the FSM
-                        repl.qexec(`wsk action get "/${path}"`).then(data => {
-                            debug('action get call complete');
-                            resolve(data);
-                        }).catch(e => {
-                            console.error('action get call complete - action deleted');
-                            resolve({wskflowErr:e});
-                        });
-                    })
+                    // fetch the action itself, so we have the FSM
+                    const fetchTheAction = () => repl.qexec(`wsk action get "/${path}"`)
+                          .catch(err => {
+                              console.error('action get call incomplete due to error', path, err.message);
+                              return { wskflowErr: err }
+                          })
 
-                    const trace = new Promise((resolve, reject) => { // fetch the rest of the activations in the trace
-                        Promise.all(activation.logs.map(get)).then(data => {
-                            debug('activation get call complete');
-                            resolve(data);
-                        })
-                            .catch(e => {
-                                console.error('activation get call complete - error');
-                                resolve(e);
-                            })
-                    })
+                    // fetch the rest of the activations in the trace; fetch at most 2 at a time
+                    const generatePromises = function *() { // generator function
+                        for (let idx = 0; idx < activation.logs.length; idx++) {
+                            yield get(activation.logs[idx]) // yield generates one value
+                        }
+                    }
+                    const fetchTrace = () => new PromisePool(generatePromises(), 2).start() // at most 2 at a time, here
 
                     activation.modes.push({
                         mode: defaultMode,
@@ -141,24 +136,24 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
                             // rendering handler for wskflow activation visualization
                             //
                             if (true /*!entity.visualization*/) { // cache it (disabled for now)
-                                entity.visualization = Promise.all([trace, theActionItself])
-                                    .then(data => {
-                                        debug('retrieved all data')
+                                entity.visualization = Promise.all([fetchTrace(), fetchTheAction()])
+                                    .then(([activations, action]) => {
+                                        debug('retrieved all data', activations)
                                         const { visualize } = plugins.require('wskflow'),
-                                              activations = data[0],
                                               content = document.createElement('div')
 
                                         let fsm;
-                                        if (data[data.length-1].wskflowErr) {
+                                        if (action.wskflowErr) {
                                             // 1) if an app was deleted, the last promise item returns an error
                                             console.error('app was deleted');
                                             fsm = 'deleted';
 
                                         } else {
-                                            // 2) show graph
-                                            fsm = data[data.length - 1].annotations.find(({key}) => key === 'fsm').value;  // extract the FSM
+                                            // extract the FSM
+                                            fsm = action.annotations.find(({key}) => key === 'fsm').value
                                         }
 
+                                        // invoke wskflow to render the composition graph
                                         content.style.display = 'none'
                                         document.body.appendChild(content)
                                         visualize(fsm, content, undefined, 1, activations)
@@ -166,6 +161,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
                                         content.style.flex = 1
                                         document.body.removeChild(content)
 
+                                        // return to REPL
                                         return {
                                             type: 'custom',
                                             content
