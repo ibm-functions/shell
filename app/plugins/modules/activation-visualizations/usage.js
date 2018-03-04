@@ -43,7 +43,7 @@ module.exports = {
         title: 'Activation visualizations',
         header: 'These commands will help you visualize your activations',
         example: 'visualize <command>',
-        commandPrefix: 'visualize',
+        commandPrefix: '',
         available: [{ command: 'summary', docs: header.summary },
                     { command: 'timeline', docs: header.timeline },
                     { command: 'grid', docs: header.grid }],
@@ -54,7 +54,6 @@ module.exports = {
         title: 'Summarize performance',
         header: '${header.summary}.',
         example: 'summary [action|app]',
-        commandPrefix: 'visualize summary',
         optional, parents,
         related: allExcept('summary')
     },
@@ -63,7 +62,6 @@ module.exports = {
         title: 'Activity timeline',
         header: '${header.timeline}.',
         example: 'timeline [action|app]',
-        commandPrefix: 'visualize timeline',
         optional, parents,
         related: allExcept('timeline')
     },
@@ -74,7 +72,6 @@ module.exports = {
         example: 'grid [action|app]',
         detailedExample: { command: 'grid --outliers max --success',
                            docs: 'show only the worst offending successful activations' },
-        commandPrefix: 'visualize grid',
         optional, parents,
         related: allExcept('grid')
     }

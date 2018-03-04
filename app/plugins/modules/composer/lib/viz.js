@@ -37,9 +37,24 @@ const MAX_HISTORY = 10,                  // maximum number of items in the "drag
  * Usage string
  *
  */
-const usage = cmd => {
-    return `Usage: app ${cmd} </path/to/file.[js|json]>`
-}
+const usage = cmd => ({
+    title: 'Preview composition',
+    header: 'Visualize a composition, without deploying it.',
+    example: `${cmd} <sourceFile>`,
+    detailedExample: {
+        command: `${cmd} @demos/hello.js`,
+        docs: 'preview a built-in hello world demo'
+    },
+    oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file' },
+            { name: 'src.json', docs: 'ibid, but for a pre-compiled composition' }],
+    sampleInputs: [{ name: 'hello.js', docs: 'hello world', command: 'preview @demos/hello.js' },
+                   { name: 'if.js', docs: 'conditional execution', command: 'preview @demos/if.js' },
+                   { name: 'let.js', docs: 'introducing a value', command: 'preview @demos/let.js' },
+                   { name: 'retain.js', docs: 'forwarding values around untrusted code', command: 'preview @demos/retain.js' },
+                   { name: 'try.js', docs: 'try/catch', command: 'preview @demos/try.js' }],
+    parents: ['composer', { command: 'composer app' }],
+    related: ['app create']
+})
 
 /**
  * Open the visualization to the specified path on the local filesystem
@@ -247,7 +262,7 @@ const addRecentItem = file => {
      }
 
      /** command handler */
-     const doIt = cmd => (_1, _2, fullArgv, _3, _4, execOptions, _5, _options) => new Promise((resolve, reject) => {
+     const doIt = cmd => (_1, _2, fullArgv, { errors }, _4, execOptions, _5, _options) => new Promise((resolve, reject) => {
          const options = Object.assign({}, execOptions, _options, minimist(fullArgv, { boolean: [ 'fsm', 'select' ], alias: { f: 'fsm', s: 'select' } })),
                args = options._,
                idx = args.indexOf(cmd),
@@ -257,7 +272,8 @@ const addRecentItem = file => {
              // either the user asked for help, or we weren't asked to
              // render the file selector, or we weren't given a file
              // to render
-             return reject(usage(cmd))
+             //return reject(usage(cmd))
+             throw new errors.usage(usage(cmd))
          }
 
          let input = ui.findFile(args[idx + 1])

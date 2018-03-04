@@ -110,7 +110,7 @@ const format = message => {
         
     } else {
         // these are the fields of the usage message
-        const { title, breadcrumb=title, header, example, detailedExample,
+        const { title, breadcrumb=title, header, example, detailedExample, sampleInputs,
                 commandPrefix, available, parents=[], related, required, optional, oneof } = message
 
         // the return value will be `result`; we will populate it with
@@ -297,6 +297,10 @@ const format = message => {
 
         if (oneof) {
             makeTable('Required Parameters (choose one of the following)', oneof)
+        }
+
+        if (sampleInputs) {
+            makeTable('Sample Inputs', sampleInputs)
         }
 
         if (related) {
