@@ -20,8 +20,9 @@
  */
 module.exports = {
     composer: {
-        title: 'OpenWhisk composer operations',
-        header: 'These commands will help you work with OpenWhisk Compositions',
+        breadcrumb: 'Composer',
+        title: 'Create and invoke complex applications',
+        header: 'These commands will help you work with Composer applications.',
         example: 'composer <command>',
         commandPrefix: 'composer',
         available: [{ command: 'app', docs: 'create and invoke compositions', dir: true },
@@ -31,25 +32,27 @@ module.exports = {
     },
 
     app: {
-        title: 'Composer create and invoke operations',
-        header: 'These commands will help you create and invoke OpenWhisk Compositions',
+        title: 'CRUD Operations',
+        header: 'These commands will help you create and invoke Composer applications.',
         example: 'wsk app <command>',
         commandPrefix: 'wsk app',
         available: [{ command: 'create', docs: 'create a new composition' },
                     { command: 'get', docs: 'get the details of a given composition' },
                     { command: 'invoke', docs: 'invoke a given composition' },
                     { command: 'list', docs: 'list all compositions' }],
-        related: ['composer', 'composer session']
+        parents: ['composer'],
+        related: ['composer session']
     },
 
     session: {
-        title: 'Composer activation operations',
-        header: 'These commands will help you inspect the activation results of OpenWhisk Compositions',
+        title: 'Inspecting Sessions',
+        header: 'These commands will help you inspect the activation results of Composer applications.',
         example: 'wsk session <command>',
         commandPrefix: 'wsk session',
-        available: [{ command: 'get', docs: 'get the details of a given Composer activation', partial: '<sessionId>' },
+        available: [{ command: 'get', docs: 'get the details of a given Composer activation' },
                     { command: 'list', docs: 'list recent Composer activations' }],
-        related: ['composer', 'composer app']
+        parents: ['composer'],
+        related: ['composer app']
     }
 }
 

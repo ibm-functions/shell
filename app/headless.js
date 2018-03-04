@@ -261,34 +261,51 @@ const colorMap = {
  *
  */
 let firstPrettyDom = true // so we can avoid initial newlines for headers
-const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidths }={}) => {
-    if (dom.innerText) {
-        const isHeader = dom.nodeType === 'h1' || dom.nodeType === 'h2',
-              extraColor = isHeader ? 'bold' : dom.hasStyle('fontWeight', 500) ? 'green' : dom.hasStyle('fontSize', '0.875em') ? 'gray' : 'reset',
-              colorCode = dom.hasStyle('color') || _color,
-              color = colorMap[colorCode] || colorCode
-        // debug('child', dom.nodeType)
+const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidths, extraColor:_extraColor }={}) => {
+    const isHeader = dom.nodeType === 'h1' || dom.nodeType === 'h2',
+          hasMargin = dom.className.indexOf('bx--breadcrumb-item--slash') >= 0
 
-        if (isHeader) {
-            // an extra newline before headers
-            if (firstPrettyDom) {
-                // don't emit a header margin for the very first thing
-                // we print
-                firstPrettyDom = false
-            } else {
-                logger()
-            }
+    if (hasMargin) {
+        stream.write(' ')
+    }
+
+    const extraColor = isHeader ? 'bold' : dom.hasStyle('fontWeight', 500) ? 'green' : dom.hasStyle('fontSize', '0.875em') ? 'gray' : _extraColor || 'reset',
+          colorCode = dom.hasStyle('color') || _color,
+          color = colorMap[colorCode] || colorCode
+    // debug('child', dom.nodeType)
+
+    if (isHeader) {
+        // an extra newline before headers
+        if (firstPrettyDom) {
+            // don't emit a header margin for the very first thing
+            // we print
+            firstPrettyDom = false
+        } else {
+            logger()
         }
+    }
 
+    if (dom.innerText) {
         stream.write(dom.innerText[extraColor][color])
+    }
+
+    const newline = () => {
         if (dom.nodeType === 'div' || isHeader) {
             // not perfect, but treat divs as line breakers
             logger()
         }
     }
 
+    if (hasMargin) {
+        stream.write(' ')
+    }
+
+    if (dom.innerText) {
+        newline()
+    }
+
     // recurse to the children of this fake DOM
-    dom.children.forEach(child => prettyDom(child, logger, stream, _color))
+    dom.children.forEach(child => prettyDom(child, logger, stream, _color, { extraColor }))
 
     // handle table rows and cells:
     if (dom.rows) {
@@ -326,6 +343,10 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidth
         })
     }
 
+    // trailing carriage return?
+    if (isHeader && !dom.innerText) {
+        logger()
+    }
 }
 
 /**

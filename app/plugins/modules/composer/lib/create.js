@@ -26,12 +26,18 @@ const { create, isValidFSM, hasUnknownOptions, extractActionsFromFSM, deployActi
 
 debug('finished loading modules')
 
+const docs = {
+    create: 'Use this command to create a new composition from a given source file.',
+    update: 'Use this command to update an existing composition.',
+}
+
 /**
  * Usage message
  *
  */
 const usage = cmd => ({
-    header: 'Create an app from a given source file',
+    title: 'Deploy composition',
+    header: docs[cmd],
     example: `app ${cmd} <name> <file.js|file.json>`,
     required: [{ name: '<name>', docs: 'the name of your new app' },
                { name: '<file.js|file.json>', docs: 'a NodeJS source file, or a pre-compiled JSON file' }],
@@ -39,6 +45,7 @@ const usage = cmd => ({
                { name: '--log-input', docs: 'log initial input with an echo action (app may run slower)' },
                { name: '--log-inline', docs: 'log inline function output with echo actions (app may run slower)' },
                { name: '--log-all', docs: 'log initial input and inline function output (app may run slower)' }],
+    parents: ['composer', { command: 'composer app' }],
     related: ['app get', 'app invoke', 'app list']
 })
 

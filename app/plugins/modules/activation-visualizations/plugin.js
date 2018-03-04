@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
+const { toplevel:usage } = require('./usage')
+
 /**
  * This is the module
  *
  */
 module.exports = (commandTree, prequire) => {
+    // register the top-level usage handler
+    commandTree.subtree('/visualize', { usage })
+
+    // register the command handlers
     require('./lib/grid')(commandTree, prequire)
     require('./lib/timeline-histogram')(commandTree, prequire)
     require('./lib/table')(commandTree, prequire)

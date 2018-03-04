@@ -1577,3 +1577,49 @@ break {
 .capitalize {
     text-transform: capitalize;
 }
+
+/* usage */
+.bx--breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 1.25em;
+    font-family: var(--font-sans-serif);
+    margin-bottom: calc(0.875em);
+    margin-top: 0; /* override h1 defaults */
+}
+.bx--breadcrumb-item {
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    color: var(--color-brand-01);
+}
+.bx--breadcrumb-item--slash {
+    margin-left: 1rem;
+    color: var(--color-text-02);
+}
+.bx--breadcrumb--no-trailing-slash .bx--breadcrumb-item:last-child .bx--breadcrumb-item--slash {
+    display: none;
+}
+.bx--breadcrumb .bx--link:hover {
+    cursor: pointer;
+    opacity: 1;
+}
+.bx--breadcrumb .bx--link:hover, .bx--breadcrumb .bx--link:focus {
+    outline: none;
+    color: var(--color-band-01);
+    border-bottom: 1px solid var(--color-brand-01);
+}
+.bx--breadcrumb .bx--link, .bx--breadcrumb .bx--no-link {
+    border-bottom: none;
+    white-space: nowrap;
+    font-weight: 300;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: 250ms;
+}
+.bx--breadcrumb .bx--link {
+    opacity: 0.8;
+}
+.bx--breadcrumb .bx--no-link:not(.bx--link) {
+    font-weight: 400;
+}

@@ -20,12 +20,13 @@
  */
 const usageMessage = {
     invoke: {
-        title: 'Invoke an OpenWhisk composition',
+        title: 'Invoke composition',
         header: 'Invoke a given app and wait for its completion',
         example: 'app invoke <name> [-p key value]*',
-        required: [{ name: 'name', docs: 'the name of your new app' }],
-        optional: [{ name: '-p|--param key value', docs: 'bind a variable to a value' },
-                   { name: '-P|--param-file file', docs: 'read variable bindings from a JSON file' }],
+        required: [{ name: 'name', docs: 'a deployed composition' }],
+        optional: [{ name: '-p key value', docs: 'bind a variable to a value' },
+                   { name: '-P file', docs: 'read variable bindings from a JSON file' }],
+        parents: ['composer', { command: 'composer app' }],
         related: ['app async', 'app create', 'app get', 'app list']
     },
 

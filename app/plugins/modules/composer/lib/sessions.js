@@ -22,11 +22,12 @@ const { init, splitNamedSession } = require('./composer')
  */
 const usage = () => ({
     title: 'List Recent Sessions',
-    header: 'Returns a list of recent composition activations (a.k.a. "sessions")',
+    header: 'Returns a list of recent composition activations (a.k.a. "sessions").',
     example: 'session list',
     optional: [{ name: '--name', docs: 'filter to show only a given named composition' },
                { name: '--limit', docs: 'show at most N sessions' },
                { name: '--skip', docs: 'skip over the most recent N sessions' }],
+    parents: ['composer', { command: 'composer session' }],
     related: ['grid', 'summary']
 })
 

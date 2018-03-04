@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const all = ['wsk', 'wsk action', 'wsk activation', 'wsk package', 'wsk rule', 'wsk trigger' ]
+const all = ['wsk action', 'wsk activation', 'wsk package', 'wsk rule', 'wsk trigger' ]
 all.except = str => all.filter(_ => _ !== str)
 
 /**
@@ -23,9 +23,10 @@ all.except = str => all.filter(_ => _ !== str)
  */
 module.exports = {
     // this is the ascii art for OpenWhisk, with backslashes escaped
-    wsk: { xxxheader: `        ____      ___                   _    _ _     _     _\r\n       /\\   \\    / _ \\ _ __   ___ _ __ | |  | | |__ (_)___| | __\r\n  /\\  /__\\   \\  | | | | '_ \\ / _ \\ '_ \\| |  | | '_ \\| / __| |/ /\r\n /  \\____ \\  /  | |_| | |_) |  __/ | | | |/\\| | | | | \\__ \\   <\r\n \\   \\  /  \\/    \\___/| .__/ \\___|_| |_|__/\\__|_| |_|_|___/_|\\_\\\r\n  \\___\\/ tm           |_|`,
-           title: 'OpenWhisk operations',
-           header: 'These commands will help you work with OpenWhisk assets',
+    wsk: { //header: `        ____      ___                   _    _ _     _     _\r\n       /\\   \\    / _ \\ _ __   ___ _ __ | |  | | |__ (_)___| | __\r\n  /\\  /__\\   \\  | | | | '_ \\ / _ \\ '_ \\| |  | | '_ \\| / __| |/ /\r\n /  \\____ \\  /  | |_| | |_) |  __/ | | | |/\\| | | | | \\__ \\   <\r\n \\   \\  /  \\/    \\___/| .__/ \\___|_| |_|__/\\__|_| |_|_|___/_|\\_\\\r\n  \\___\\/ tm           |_|`,
+           breadcrumb: 'OpenWhisk',
+           title: 'The fundamental OpenWhisk operations',
+           header: 'These commands will help you work with OpenWhisk assets.',
            example: 'wsk <command>',
            commandPrefix: 'wsk',
            available: [{ command: 'action', docs: 'work with actions', dir: true },
@@ -34,13 +35,12 @@ module.exports = {
                        { command: 'rule', docs: 'work with rules', dir: true },
                        { command: 'trigger', docs: 'work with triggers', dir: true },
                        { command: 'list', docs: 'list entities in the current namespace', dir: true }],
-           related: ['help']
          },
 
     bind: 'Usage: bind <packageName> <bindName> [-p key value]...',
 
     actions: { title: 'Action operations',
-               header: 'These commands will help you to work with actions',
+               header: 'These commands will help you to work with actions.',
                example: 'wsk action <command>',
                commandPrefix: 'wsk action',
                available: [{ command: 'create', docs: 'create a new action', partial: '<action> <sourceFile>' },
@@ -49,11 +49,12 @@ module.exports = {
                            { command: 'get', docs: 'get the details of a given action', partial: '<action>' },
                            { command: 'delete', docs: 'delete a given action', partial: '<action>' },
                            { command: 'list', docs: 'list all actions' }],
+               parents: [{ command: 'wsk' }],                
                related: all.except('wsk action')
              },
 
     rules: { title: 'Rule operations',
-             header: 'These commands will help you to work with rules',
+             header: 'These commands will help you to work with rules.',
              example: 'wsk rule <command>',
              commandPrefix: 'wsk rule',
              available: [{ command: 'create', docs: 'create a new rule', partial: '<rule> <trigger> <action>' },
@@ -64,11 +65,12 @@ module.exports = {
                          { command: 'get', docs: 'get the details of a given rule', partial: '<rule>' },
                          { command: 'delete', docs: 'delete a given rule', partial: '<rule>' },
                          { command: 'list', docs: 'list all rules' }],
+             parents: [{ command: 'wsk' }],                
              related: all.except('wsk rule')
            },
 
     triggers: { title: 'Trigger operations',
-                header: 'These commands will help you to work with triggers',
+                header: 'These commands will help you to work with triggers.',
                 example: 'wsk trigger <command>',
                 commandPrefix: 'wsk trigger',
                 available: [{ command: 'fire', docs: 'fire trigger event', partial: '<trigger>' },
@@ -77,11 +79,12 @@ module.exports = {
                             { command: 'get', docs: 'get the details of a trigger', partial: '<trigger>' },
                             { command: 'delete', docs: 'delete a given trigger', partial: '<trigger>' },
                             { command: 'list', docs: 'list all triggers' }],
-             related: all.except('wsk trigger')
+                parents: [{ command: 'wsk' }],                
+                related: all.except('wsk trigger')
            },
 
     packages: { title: 'Package operations',
-                header: 'These commands will help you to work with packages',
+                header: 'These commands will help you to work with packages.',
                 example: 'wsk package <command>',
                 commandPrefix: 'wsk package',
                 available: [{ command: 'bind', docs: 'bind parameters to a package', partial: true },
@@ -92,11 +95,12 @@ module.exports = {
                             { command: 'list', docs: 'list all packages' },
                             //{ command: 'refresh', docs: 'refresh package bindings' }
                            ],
+                parents: [{ command: 'wsk' }],
                 related: all.except('wsk package')
               },
 
         activations: { title: 'Activation operations',
-                header: 'These commands will help you to work with activations',
+                header: 'These commands will help you to work with activations.',
                 example: 'wsk activation <command>',
                 commandPrefix: 'wsk activation',
                 available: [{ command: 'list', docs: 'list recent activations' },
@@ -105,6 +109,7 @@ module.exports = {
                             { command: 'result', docs: 'get the result, i.e. return value, of an activation', partial: '<activationId>' },
                             //{ command: 'poll', docs: 'poll continuously for log messages from currently running actions' },
                            ],
+                       parents: [{ command: 'wsk' }],
                 related: all.except('wsk activation')
               }
 }

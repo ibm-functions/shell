@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-const usage = require('./usage')
+const { toplevel:usage } = require('./usage')
 
 /**
  * This is the module
  *
  */
 module.exports = (commandTree, prequire) => {
+    // register usage handler
     commandTree.subtree('/editor', { usage })
+
+    // register editing commands
     require('./lib/edit')(commandTree, prequire)
 }

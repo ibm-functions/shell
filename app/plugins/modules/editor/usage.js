@@ -14,17 +14,53 @@
  * limitations under the License.
  */
 
+/** list of related commands */
+const all = ['compose', 'new', 'edit']
+const allExcept = cmd => all.filter(_ => _ !== cmd)
+
 /**
  * Usage model for the editor plugin
  *
  */
 module.exports = {
-    title: 'In-shell editing operations',
-    header: 'These commands will help you create new OpenWhisk assets from within the Shell',
-    example: 'editor <command>',
-    commandPrefix: 'editor',
-    available: [{ command: 'compose', docs: 'Begin editing a new OpenWhisk Composition' },
-                { command: 'edit', docs: 'Edit an existing OpenWhisk action' },
-                { command: 'new', docs: 'Begin editing a new Openwhisk action' }],
-    related: ['help', 'wsk', 'composer']
+    toplevel: {
+        title: 'In-shell editing operations',
+        header: 'These commands will help you create new OpenWhisk assets from within the Shell',
+        example: 'editor <command>',
+        commandPrefix: 'editor',
+        available: [{ command: 'compose', docs: 'Begin editing a new OpenWhisk Composition' },
+                    { command: 'edit', docs: 'Edit an existing OpenWhisk action' },
+                    { command: 'new', docs: 'Begin editing a new Openwhisk action' }],
+        related: ['wsk', 'composer']
+    },
+
+    edit: {
+        title: 'Edit action',
+        header: 'Open a given action or composition in the sidecar for editing.',
+        example: 'edit <actionName>',
+        commandPrefix: 'editor edit',
+        required: [{ name: '<actionName>', docs: 'The OpenWhisk action to edit' }],
+        parents: [{command: 'editor'}],
+        related: allExcept('edit')
+    },
+
+    compose: {
+        title: 'New composition',
+        header: 'For quick prototyping of compositions, this command opens an editor in the sidecar.',
+        example: 'compose <appName>',
+        commandPrefix: 'editor compose',
+        required: [{ name: '<appName>', docs: 'The name of your new composition' }],
+        parents: [{command: 'editor'}],
+        related: allExcept('compose')
+    },
+
+    new: {
+        title: 'New action',
+        header: 'For quick prototyping of actions, this command opens an editor in the sidecar.',
+        example: 'new <actionName>',
+        commandPrefix: 'editor new',
+        required: [{ name: '<actionName>', docs: 'The name of your new action' }],
+        parents: [{command: 'editor'}],
+        related: allExcept('new')
+    }
 }

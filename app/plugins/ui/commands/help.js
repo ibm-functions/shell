@@ -34,7 +34,7 @@ const help = (usage, docs) => (_1, _2, _3, { errors }) => {
         // this will be our return value
         const topLevelUsage = {
             title: 'Getting Started',
-            header: 'This shows a summary of top-level command structure. Select an available command to learn more.',
+            header: 'A summary of the top-level command structure. Select an available command to learn more.',
             available: []
         }
 
