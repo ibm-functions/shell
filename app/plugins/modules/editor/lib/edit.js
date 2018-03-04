@@ -19,6 +19,7 @@ const debug = require('debug')('editor')
 const path = require('path'),
       events = require('events'),
       beautify = require('js-beautify'),
+      usage = require('../usage'),
       placeholders = require('./placeholders'),
       { lockIcon } = require('./readonly')
 
@@ -565,8 +566,7 @@ const edit = (wsk, prequire) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args,
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
 
     if (!name || options.help) {
-        throw new errors.usage('edit <actionName>')
-        return
+        throw new errors.usage(usage.edit)
     }
 
     //
@@ -606,9 +606,7 @@ const newAction = ({wsk, prequire, op='new', type='actions', _kind=defaults.kind
           kind = addVariantSuffix(options.kind || _kind)
 
     if (options.help || !name) {
-        throw new errors.usage(`${strings.docs[op]}.
-
-    ${op} <actionName> ${optionalArguments[op] || ''}`)
+        throw new errors.usage(usage[op])
     }
 
     // our placeholder action

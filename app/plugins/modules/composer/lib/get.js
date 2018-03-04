@@ -24,11 +24,12 @@ const { isAnApp, vizAndfsmViewModes, decorateAsApp } = require('./composer')
 const flags = ui.headless ? '\n\nOptions:\n\t--cli    ' : ''
 const usage = cmd => {
     return {
-        title: 'Show an OpenWhisk composition',
+        title: 'Show composition',
         header: 'Displays the details of a given composition',
         example: `app ${cmd} <appName>${flags}`,
         required: [{ name: 'appName', docs: 'the name of your composition' }],
         optional: [{ name: '--cli', docs: 'display the results textually (headless mode only)' }],
+        parents: ['composer', { command: 'composer app' }],
         related: ['app create', 'app invoke', 'app list']
     }
 }

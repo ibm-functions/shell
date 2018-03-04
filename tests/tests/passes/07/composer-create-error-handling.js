@@ -64,7 +64,7 @@ describe('app create error handling and app create --dry-run', function() {
        .catch(common.oops(this)))
 
     it('should reject unknown option -m', () => cli.do('app create demos/if.js -m', this.app)
-        .then(cli.expectError(0, 'Create an app from a given source file')) // beginning of usage, because we didn't pass an app name
+        .then(cli.expectError(0, 'Use this command to create a new composition from a given source file')) // beginning of usage, because we didn't pass an app name
        .catch(common.oops(this)))
 
     it('should reject unknown option -m', () => cli.do('app create zombie demos/if.js -m', this.app)

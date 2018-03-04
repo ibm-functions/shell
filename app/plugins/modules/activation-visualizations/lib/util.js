@@ -15,6 +15,7 @@
  */
 
 const path = require('path'),
+      usage = require('../usage'),
       defaults = require('./defaults.json'),
       prettyPrintDuration = require('pretty-ms')
 
@@ -281,20 +282,7 @@ exports.visualize = (wsk, commandTree, cmd, viewName, draw, extraUsage, extraOpt
           idx2 = fullArgv.indexOf(cmd)
 
     if (options.help || argvNoOptions[idx + 1] === 'help') {
-        throw new modules.errors.usage(`Draw recent activations as an ${viewName}.
-
-\t${cmd} [appName]
-
-Example:
-\tgrid --outliers max --success  will show only the worst offending successful activations
-
-Options:
-\tappName    include only the tasks of the given app
-\t--name     include only activations of the given named package/action
-\t--success  include only successful activations
-\t--failure  include only failed activations
-\t--outliers include only outlier activations; allowed values: min,25,50,90*,95,99,max
-\t--batches  the number of 200-activation batches to fetch; default=4${extraUsage ? '\n' + extraUsage : ''}`)
+        throw new modules.errors.usage(usage[cmd])
     }
 
     if (idx < 0) {

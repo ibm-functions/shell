@@ -19,9 +19,15 @@
 /** Create an HTML DIV to wrap around the given string */
 const div = (str, css=undefined, tag='div') => {
     const result = document.createElement(tag)
+
     if (str) {
-        result.innerText = str
+        if (str.then) {
+            str.then(str => result.innerText = str)
+        } else {
+            result.innerText = str
+        }
     }
+
     if (css) {
         if (typeof css === 'string') {
             result.className = css
@@ -41,7 +47,7 @@ const prefix = str => {
     const result = div(str, undefined, 'h2')
     result.style.fontWeight = '300'
     result.style.margin = '0 0 0.375em'
-    result.style.fontSize = '1.25em'
+    result.style.fontSize = '1.125em'
     result.style.color = 'var(--color-brand-01)'
     sans(result)
     return result
@@ -73,6 +79,24 @@ const wrap = div => {
 }
 
 /**
+ * Invoke a given command, and return the raw (i.e. not formatted) usage model
+ *
+ */
+const usageFromCommand = command => repl.qexec(command)
+      .then(_ => {
+          console.error('Invalid usage model', _)
+          throw new Error('Internal Error')
+      })
+    .catch(usageError => usageError.raw)
+
+/**
+ * Invoke a given command, and extract the breadcrumb title from the resulting usage model
+ *
+ */
+const breadcrumbFromCommand = command => usageFromCommand(command)
+      .then(usage => usage.breadcrumb || usage.title)
+
+/**
  * Format the given usage message
  *
  */
@@ -86,30 +110,71 @@ const format = message => {
         
     } else {
         // these are the fields of the usage message
-        const { title, header, example, commandPrefix, available, related, required, optional, oneof } = message
+        const { title, breadcrumb=title, header, example, detailedExample,
+                commandPrefix, available, parents=[], related, required, optional, oneof } = message
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
         // content
-        const result = div(),
-              body = div()
+        const result = div(undefined, 'fade-in'),
+              body = div(),
+              left = div()  // usage and detailedExample
 
         result.style.margin = '1em calc(1ex + 1em)' // 1ex+1em try to match the '> ' bit of the REPL
-        result.style.border = '1px solid var(--color-ui-04)'
+        result.style.border = '1px solid var(--color-ui-03)'
         result.style.padding = '1em'
+        result.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.1)'
         result.style.color = 'initial'
+
+        //
+        // breadcrumb
+        //
+        {
+            const container = div(undefined, 'bx--breadcrumb bx--breadcrumb--no-trailing-slash', 'h1')
+            result.appendChild(container)
+
+            /** add a single breadcrumb to the UI; defaultCommand means use the string as a command */
+            const addBreadcrumb = (options, defaultCommand, noSlash=false) => {
+                const stringOpt = typeof options === 'string',
+                      cmd = !stringOpt ? options.command : defaultCommand && options,
+                      label = stringOpt ? options : options.label || breadcrumbFromCommand(options.command)
+
+                const item = span()
+                item.classList.add('bx--breadcrumb-item')
+                item.classList.add('capitalize')
+
+                const dom = span(label, 'bx--no-link')
+                item.appendChild(dom)
+
+                if (!noSlash) {
+                    item.appendChild(span('/', 'bx--breadcrumb-item--slash'))
+                }
+
+                container.appendChild(item)
+
+                if (cmd) {
+                    dom.classList.add('bx--link')
+                    dom.onclick = () => repl.pexec(cmd)
+                }
+            }
+
+            // now we add the breadcrumb chain to the UI
+            addBreadcrumb({ label: 'Shell Docs', command: 'help' }) // root
+            parents.forEach(_ => addBreadcrumb(_, true))            // parent path
+            addBreadcrumb(breadcrumb, undefined, true)              // this leaf we're rendering (noSlash=true)
+        }
 
         //
         // title
         //
-        if (title) {
+        /*if (title) {
             const dom = div(title, 'capitalize', 'h1')
             dom.style.fontSize = '1.629em'
             dom.style.fontWeight = 300
             dom.style.color = 'var(--color-brand-01)'
             dom.style.margin = '0 0 .3rem'
             result.appendChild(dom)
-        }
+        }*/
 
         //
         // header message
@@ -124,20 +189,42 @@ const format = message => {
 
         body.style.display = 'flex'
         body.style.flexWrap = 'wrap'
+        body.style.marginTop = '0.375em'
+        body.appendChild(left)
         result.appendChild(body)
 
+        // example command
         if (example) {
             const examplePart = bodyPart(),
                   prePart = prefix('Usage'),
                   textPart = div(example)
 
-            body.appendChild(examplePart)
+            left.appendChild(examplePart)
             examplePart.appendChild(prePart)
             examplePart.appendChild(textPart)
 
             textPart.style.color = 'var(--color-support-02)'
         }
 
+        // detailed example command
+        if (detailedExample) {
+            const examplePart = bodyPart(),
+                  prePart = prefix('Example'),
+                  textPart = div(detailedExample.command),
+                  docPart = sans(div(detailedExample.docs))
+
+            left.appendChild(examplePart)
+            examplePart.appendChild(prePart)
+            examplePart.appendChild(textPart)
+            examplePart.appendChild(smaller(docPart))
+
+            textPart.style.color = 'var(--color-support-02)'
+        }
+
+        /**
+         * Render a table of options
+         *
+         */
         const makeTable = (title, rows) => {
             const availablePart = bodyPart(),
                   prePart = prefix(title),
@@ -149,13 +236,15 @@ const format = message => {
             availablePart.appendChild(table)
             body.appendChild(availablePart)
 
-            rows.forEach(({command, name=command, label=name, dir:isDir=false, docs, partial=false}) => {
+            // render the rows
+            rows.forEach(({command, name=command, label=name, dir:isDir=false, docs, partial=false, allowed, defaultValue}) => {
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
                       cmdPart = span(label),
                       dirPart = isDir && span('/'),
-                      docsPart = span(docs)
+                      docsPart = span(docs),
+                      allowedPart = allowed && smaller(span(undefined))
 
                 row.className = 'log-line entity'
                 cmdCell.className = 'log-field'
@@ -164,15 +253,30 @@ const format = message => {
                 cmdPart.style.fontWeight = '500'
                 wrap(smaller(sans(docsPart)))
 
+                if (allowed) {
+                    allowedPart.style.color = 'var(--color-text-02)'
+                    allowedPart.appendChild(span('options: '))
+                    allowed.forEach((value, idx) => {
+                        const option = span(`${idx > 0 ? ', ' : ''}${value}${value !== defaultValue ? '' : '*'}`)
+                        allowedPart.appendChild(option)
+                    })
+                }
+
                 cmdCell.appendChild(cmdPart)
                 if (dirPart) cmdCell.appendChild(smaller(dirPart))
                 docsCell.appendChild(docsPart)
+                if (allowedPart) docsCell.appendChild(allowedPart)
 
                 if (command) {
                     cmdPart.classList.add('clickable')
                     cmdPart.classList.add('clickable-blatant')
-                    cmdPart.onclick = partial ? () => repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)
-                        : () => repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${command}`)
+                    cmdPart.onclick = () => {
+                        if (partial) {
+                            return repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)
+                        } else {
+                            return repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${command}`)
+                        }
+                    }
                 }
             })
 
@@ -225,6 +329,7 @@ module.exports = function UsageError(message, extra) {
     Error.captureStackTrace(this, this.constructor)
     this.name = this.constructor.name
     this.message = format(message)
+    this.raw = message
     this.extra = extra
 }
 

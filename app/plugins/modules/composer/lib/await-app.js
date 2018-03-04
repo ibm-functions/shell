@@ -42,12 +42,13 @@ const related = {
 }
 const flags = cmd => cmd==='get' && ui.headless ? '\n\t--cli                    display the results textually; by default, the graphical shell will open' : ''
 const usage = cmd => ({
-    title: 'Show an OpenWhisk composer session',
+    title: 'Show composer session',
     header: usageMessage[cmd],
     example: `session ${cmd} <sessionId>`,
     oneof: [{ name: 'sessionId', docs: 'show a specific session id' },
             { name: '--last [appName]', docs: 'show the last session (optionally of the given app name)' },
             { name: '--last-failed [appName]', docs: 'ibid, except the last failed session' }],
+    parents: ['composer', { command: 'composer session' }],
     related: related[cmd]
 })
 
