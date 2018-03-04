@@ -39,6 +39,7 @@ module.exports = {
         available: [{ command: 'create', docs: 'create a new composition' },
                     { command: 'get', docs: 'get the details of a given composition' },
                     { command: 'invoke', docs: 'invoke a given composition' },
+                    { command: 'preview', docs: 'visualize a composition, without deploying it' },
                     { command: 'list', docs: 'list all compositions' }],
         parents: ['composer'],
         related: ['composer session']
