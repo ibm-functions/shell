@@ -80,6 +80,16 @@ function mimicDom(app, { createWindow }, localStorage) {
             innerText: '',
             innerHTML: '',
             className: '',
+            _classList: [],
+            classList: {
+                add: _ => obj._classList.push(_),
+                remove: _ => {
+                    const idx = obj._classList.findIndex(_)
+                    if (idx >= 0) {
+                        obj._classList.splice(idx, 1)
+                    }
+                }
+            },
             attrs: {},
             style: {},
             children: []
