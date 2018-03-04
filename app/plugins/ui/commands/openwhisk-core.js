@@ -429,11 +429,11 @@ const addPrettyType = (entityType, verb, entityName) => entity => {
             entity.prettyType = 'sequence'
         }
 
-        if (entity.annotations
+        /*if (entity.annotations
             && entity.annotations.find(kv => kv.key === 'kind' && kv.value === 'sequence')) {
             // sequence activations
             entity.prettyType = 'sequence'
-        }
+        }*/
 
         if (entity.binding === true || entity.binding && entity.binding.name) {
             entity.prettyType = 'binding'
