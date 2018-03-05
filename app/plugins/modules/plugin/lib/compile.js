@@ -31,6 +31,7 @@ if (typeof global.plugins === 'undefined') {
     global.localStorage = { getItem: () => '{}' }
     global.eventBus = new events.EventEmitter()
     global.ui = {
+        headless: true,
         startsWithVowel: () => false
     }
 }
@@ -57,7 +58,7 @@ const writeToFile = (dir, modules) => new Promise((resolve, reject) => {
 })
 
 /**
- * Read the current .pre-scanned file 
+ * Read the current .pre-scanned file
  *
  */
 const readFile = dir => new Promise((resolve, reject) => {
