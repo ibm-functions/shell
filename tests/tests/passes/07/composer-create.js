@@ -53,13 +53,20 @@ describe('app create and sessions', function() {
     }
 
     /** invoke a composition */
-    const invoke = (name, key, value, extraExpect, expectIsIt=false, cmd='app invoke') => {
-        it(`should invoke via ${cmd} the composition ${name} with ${key}=${value}`, () => cli.do(`${cmd} ${name} -p ${key} ${value}`, this.app)
+    const invoke = (_name, key, value, extraExpect, expectIsIt=false, cmd='app invoke') => {
+        const name = typeof _name === 'string' ? _name : _name.action,
+              packageName = _name.package,
+              fullName = packageName ? `${packageName}/${name}` : name
+
+        it(`should invoke via ${cmd} the composition ${fullName} with ${key}=${value}`, () => cli.do(`${cmd} ${fullName} -p ${key} ${value}`, this.app)
 	   .then(cli.expectOK)
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(seqName1))
            .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
            .then(ui.expectStruct(expect(key, value, extraExpect, expectIsIt)))
+           .then(() => this.app.client.click(ui.selectors.SIDECAR_TITLE)) // click on the name part in the sidecar header
+           .then(() => this.app)
+           .then(sidecar.expectShowing(seqName1, undefined, undefined, packageName))
            .catch(common.oops(this)))
     }
 
@@ -179,6 +186,7 @@ describe('app create and sessions', function() {
        .then(sidecar.expectShowing(seqName1, undefined, undefined, packageName1))
        .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
+    invoke({package: packageName1, action: seqName1}, 'x', 3, { aa: 11, bb: 22, cc: 22 })
 
     it('should create a composer sequence via app update', () => cli.do(`app update ${seqName1} ./data/fsm.json`, this.app)
 	.then(cli.expectOK)
