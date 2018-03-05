@@ -104,8 +104,22 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
                             yield get(activation.logs[idx]) // yield generates one value
                         }
                     }
-                    const fetchTrace = () => new PromisePool(generatePromises(), 2).start() // at most 2 at a time, here
-
+                    // by default, PromisePool does not return any arguments in then, causing activations to always be undefined 
+                    // use event listeners here to access return data as described in the docs  
+                    const fetchTrace = () => new Promise((resolve, reject) => {
+                        let data = [], 
+                            pool = new PromisePool(generatePromises(), 2) // at most 2 at a time, here
+                        pool.addEventListener('fulfilled', (event) => {
+                            data.push(event.data.result);
+                        });
+                        pool.addEventListener('rejected', (event) => {
+                            data.push(event.data.error);
+                        })
+                        
+                        pool.start()
+                        .then(() => resolve(data))
+                    });                        
+                    
                     activation.modes.push({
                         mode: defaultMode,
                         label: 'Session Flow',
