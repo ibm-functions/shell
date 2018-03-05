@@ -162,15 +162,15 @@ describe('app create and sessions', function() {
        .catch(common.oops(this)))*/
 
     it('should throw a usage message for incomplete app create', () => cli.do(`app create ${seqName1}`, this.app)
-        .then(cli.expectError(0, 'app create <name> <file.js|file.json>'))
+        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
        .catch(common.oops(this)))
 
     it('should throw a usage message for incomplete app create v2', () => cli.do(`app create`, this.app)
-        .then(cli.expectError(0, 'app create <name> <file.js|file.json>'))
+        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
        .catch(common.oops(this)))
 
     it('should throw a usage message for incomplete app create v3', () => cli.do(`app create ./data/fsm.json`, this.app)
-        .then(cli.expectError(0, 'app create <name> <file.js|file.json>'))
+        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
        .catch(common.oops(this)))
 
     it('should create a composer sequence', () => cli.do(`app create ${seqName1} ./data/fsm.json`, this.app)

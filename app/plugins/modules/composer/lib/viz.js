@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-
 const { isValidFSM, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
       badges = require('./badges'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
       messages = require('./messages'),
+      sampleInputs = require('./sample-inputs'),
       fs = require('fs'),
       path = require('path'),
       minimist = require('minimist'),
@@ -47,11 +47,7 @@ const usage = cmd => ({
     },
     oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file' },
             { name: 'src.json', docs: 'ibid, but for a pre-compiled composition' }],
-    sampleInputs: [{ name: 'hello.js', docs: 'hello world', command: 'preview @demos/hello.js' },
-                   { name: 'if.js', docs: 'conditional execution', command: 'preview @demos/if.js' },
-                   { name: 'let.js', docs: 'introducing a value', command: 'preview @demos/let.js' },
-                   { name: 'retain.js', docs: 'forwarding values around untrusted code', command: 'preview @demos/retain.js' },
-                   { name: 'try.js', docs: 'try/catch', command: 'preview @demos/try.js' }],
+    sampleInputs: sampleInputs(cmd),
     parents: ['composer', { command: 'composer app' }],
     related: ['app create']
 })
