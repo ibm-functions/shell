@@ -17,7 +17,8 @@
 const path = require('path'),
       usage = require('../usage'),
       defaults = require('./defaults.json'),
-      prettyPrintDuration = require('pretty-ms')
+      prettyPrintDuration = require('pretty-ms'),
+      composer = require(path.join(__dirname, '../../composer/lib/composer'))
 
 exports.nbsp   = '\u00a0'
 exports.newline = '\u000a'
@@ -90,22 +91,8 @@ const filterOutNonActionActivations = filter => activations => {
  *
  */
 const extractTasks = app => {
-    const { name, fsm } = app
-
-    const tasks = [ name ]
-    if (fsm) {
-        // this is indeed an app; now we try to extract the named
-        // tasks in the app
-        for (let id in fsm.States || {}) {
-            const state = fsm.States[id]
-            if (state.Type === 'Task' && state.Action) {
-                // state.Action might be undefined, e.g. for inline functions
-                tasks.push(state.Action)
-            }
-        }
-    }
-
-    return tasks
+    const { namespace, name, fsm } = app
+    return [ `/${namespace}/${name}` ].concat(composer.extractActionsFromFSM(fsm))
 }
 
 /**
@@ -173,9 +160,10 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
 
     if (appName) {
         // then the user asked to filter by app tasks
-        return repl.qexec(`app get ${appName}`)
+        return repl.qexec(`app get "${appName}"`)
             .then(extractTasks)
             .then(tasks => all ? tasks.concat([appName]) : tasks) // if options.all, then add the app to the list of actions
+            .then(tasks => { console.error('@@@@@@@@@@@@@@@', tasks); return tasks })
             .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {name:task,filter,include,exclude,skip,upto,since,batchSize}))))
             .then(flatten)
             .then(filterByLatencyBucket(options))

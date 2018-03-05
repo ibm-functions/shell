@@ -613,7 +613,7 @@ exports.decorateAsApp = action => {
  * Extract the Action Tasks from a given FSM
  *
  */
-exports.extractActionsFromFSM = ({composition}) => {
+exports.extractActionsFromFSM = ({composition=[]}={}) => {
     const actions = []
 
     /** recursively add actions from the given root sequence */
