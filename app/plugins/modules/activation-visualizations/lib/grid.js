@@ -215,8 +215,12 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
         drawLegend(viewName, rightHeader, group, options)
     } else {
-        const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
-        ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
+        const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined,
+              pathComponents = (options.appName||'').split('/'),
+              packageName = pathComponents.length === 4 ? pathComponents[2] : pathComponents.length === 2 && options.appName.charAt(0) !== '/' ? pathComponents[0] : '',
+              name = pathComponents.length > 1 ? pathComponents[pathComponents.length - 1] : options.appName || titleWhenNothingSelected
+
+        ui.addNameToSidecarHeader(sidecar, name, packageName, onclick)
 
         if (groups.length > 0) {
             drawLegend(viewName, rightHeader, summary)
