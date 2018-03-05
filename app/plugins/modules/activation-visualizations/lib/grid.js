@@ -21,6 +21,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
       { modes } = require('./modes'),
+      { grid:usage } = require('../usage'),
       { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket,
         filterByOutlieriness,
         displayTimeRange, prepareHeader, visualize } = require('./util')
@@ -346,7 +347,7 @@ module.exports = (commandTree, require, options) => {
     }, { hide: true })
 
     wsk.synonyms('activations').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/grid`, fixedGrid, { docs: 'Visualize recent activations in a grid', 
+        commandTree.listen(`/wsk/${syn}/grid`, fixedGrid, { usage,
                                                             needsUI: true, viewName,
                                                             fullscreen: true, width: 800, height: 600,
                                                             placeholder: 'Loading activity grid ...'})

@@ -35,6 +35,17 @@ const common = require('../../../lib/common'),
       packageName1 = 'ppp1',
       srcDir = './data/composer-source'  // inputs for create-from-source
 
+const {
+    input,
+    composerInput,
+    verifyNodeExists,
+    verifyNodeExistsById,
+    verifyEdgeExists,
+    verifyOutgoingEdgeExists,
+    verifyNodeLabelsAreSane,
+    verifyTheBasicStuff
+} = require('../../../lib/composer-viz-util')
+
 describe('app create and sessions', function() {
     before(common.before(this))
     after(common.after(this))
@@ -162,15 +173,15 @@ describe('app create and sessions', function() {
        .catch(common.oops(this)))*/
 
     it('should throw a usage message for incomplete app create', () => cli.do(`app create ${seqName1}`, this.app)
-        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
+        .then(cli.expectError(497)) // 497 insufficient required parameters
        .catch(common.oops(this)))
 
     it('should throw a usage message for incomplete app create v2', () => cli.do(`app create`, this.app)
-        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
+       .then(cli.expectError(497)) // 497 insufficient required parameters
        .catch(common.oops(this)))
 
     it('should throw a usage message for incomplete app create v3', () => cli.do(`app create ./data/fsm.json`, this.app)
-        .then(cli.expectError(0, 'app create <name> <sourceFile>'))
+       .then(cli.expectError(497)) // 497 insufficient required parameters
        .catch(common.oops(this)))
 
     it('should create a composer sequence', () => cli.do(`app create ${seqName1} ./data/fsm.json`, this.app)
@@ -200,6 +211,18 @@ describe('app create and sessions', function() {
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName3))
        .then(sidecar.expectBadge(badges.sequence))
+       .catch(common.oops(this)))
+
+    /** test: create with -r, testing for handling of auto-deploy */
+    it(`should create wookiechat and dependent actions with implicit entity`, () => cli.do('app update -r wookie ./data/composer-wookiechat/app.js', this.app)
+       .then(verifyTheBasicStuff('wookie', 'composerLib'))   // the .replace part strips off the ".js" suffix
+       .then(verifyNodeExists('swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('validate-swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('validate-stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-swapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-stapi', true)) // expect to be deployed
+       .then(verifyNodeExists('report-empty', true)) // expect to be deployed
        .catch(common.oops(this)))
 
     /*getSessions('sessions list', 0, 0) // no sessions, yet
@@ -246,7 +269,7 @@ describe('app create and sessions', function() {
     getAction(actionName1)
 
     it('should throw a usage message for incomplete app get', () => cli.do(`app get`, this.app)
-        .then(cli.expectError(0, 'app get <appName>'))
+        .then(cli.expectError(497)) // 497 insufficient required parameters
        .catch(common.oops(this)))
 
     // mix it up!

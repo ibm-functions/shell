@@ -18,6 +18,7 @@ const debug = require('debug')('composer:session_get')
 debug('loading')
 
 const { init } = require('./composer'),
+      { session_get:usage } = require('./usage'),
       messages = require('./messages.json'),
       parseDuration = require('parse-duration'),
       PromisePool = require('es6-promise-pool')
@@ -27,30 +28,6 @@ debug('finished loading modules')
 const viewName = 'session',              // for back button and sidecar header labels
       viewNameLong = 'App Visualization',//    ... long form
       defaultMode = 'visualization'      // on open, which view mode should be selected?
-
-/**
- * Usage message
- *
- */
-const usageMessage = {
-    get: `Display the full details of a session`,
-    result: `Display the return value of a session. (Hint: use session get to see the full details)`
-}
-const related = {
-    get: ['session list', 'session result'],
-    result: ['session list', 'session get']
-}
-const flags = cmd => cmd==='get' && ui.headless ? '\n\t--cli                    display the results textually; by default, the graphical shell will open' : ''
-const usage = cmd => ({
-    title: 'Show composer session',
-    header: usageMessage[cmd],
-    example: `session ${cmd} <sessionId>`,
-    oneof: [{ name: 'sessionId', docs: 'show a specific session id' },
-            { name: '--last [appName]', docs: 'show the last session (optionally of the given app name)' },
-            { name: '--last-failed [appName]', docs: 'ibid, except the last failed session' }],
-    parents: ['composer', { command: 'composer session' }],
-    related: related[cmd]
-})
 
 /**
  * Get an activation
@@ -208,10 +185,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         }
     }
 
-    if (commandLineOptions.help) {
-        reject(new modules.errors.usage(usage(cmd)))
-
-    } else if (commandLineOptions.last || commandLineOptions['last-failed']) {
+    if (commandLineOptions.last || commandLineOptions['last-failed']) {
         //
         // then the user is asking for the last session; if last===true, this means the user didn't specify a name filter,
         // and rather just wants the last of any name
@@ -267,19 +241,17 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
-    // Install the routes
-    const docs = { docs: 'Show the result of a session' }
-
     // this one is mostly session get, but designed for internal consumption as an internal repl API
     commandTree.listen(`/wsk/app/await-app`, await(wsk, 'await-app'), { hide: true })
 
     // session get
-    commandTree.listen(`/wsk/session/get`, await(wsk, 'get'), Object.assign({}, docs, { needsUI: true,
-                                                                                        viewName,
-                                                                                        fullscreen: true, width: 800, height: 600,
-                                                                                        clearREPLOnLoad: true,
-                                                                                        placeholder: 'Fetching session results...' }))
+    commandTree.listen(`/wsk/session/get`, await(wsk, 'get'), { usage: usage('get'),
+                                                                needsUI: true,
+                                                                viewName,
+                                                                fullscreen: true, width: 800, height: 600,
+                                                                clearREPLOnLoad: true,
+                                                                placeholder: 'Fetching session results...' })
 
     // project out just the session result
-    commandTree.listen(`/wsk/session/result`, await(wsk, 'result', _ => _.response.result), docs)
+    commandTree.listen(`/wsk/session/result`, await(wsk, 'result', _ => _.response.result), { usage: usage('result') })
 }

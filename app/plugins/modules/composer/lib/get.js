@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-
-const { isAnApp, vizAndfsmViewModes, decorateAsApp } = require('./composer')
-
-/**
- * Usage message
- *
- */
-const flags = ui.headless ? '\n\nOptions:\n\t--cli    ' : ''
-const usage = cmd => {
-    return {
-        title: 'Show composition',
-        header: 'Displays the details of a given composition',
-        example: `app ${cmd} <appName>${flags}`,
-        required: [{ name: 'appName', docs: 'the name of your composition' }],
-        optional: [{ name: '--cli', docs: 'display the results textually (headless mode only)' }],
-        parents: ['composer', { command: 'composer app' }],
-        related: ['app create', 'app invoke', 'app list']
-    }
-}
+const { app_get:usage } = require('./usage'),
+      { isAnApp, vizAndfsmViewModes, decorateAsApp } = require('./composer')
 
 /**
  * Here is the app get entry point. Here we register command
@@ -48,14 +31,11 @@ module.exports = (commandTree, prequire) => {
         const idx = args.indexOf(cmd),
               appName = args[idx + 1]
 
-        if (!appName || options.help) {
-            throw new errors.usage(usage(cmd))
-        }
-
         return repl.qexec(`wsk action get ${appName}`)
     }
 
-    const cmd = commandTree.listen(`/wsk/app/get`, doGet('get'), { docs: 'Show the details of an Composer application', needsUI: true,
+    const cmd = commandTree.listen(`/wsk/app/get`, doGet('get'), { usage: usage('get'),
+                                                                   needsUI: true,
                                                                    fullscreen: true, width: 800, height: 600,
                                                                    clearREPLOnLoad: true,
                                                                    placeholder: 'Loading app details ...'})

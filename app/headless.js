@@ -263,8 +263,11 @@ const colorMap = {
 let firstPrettyDom = true // so we can avoid initial newlines for headers
 const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidths, extraColor:_extraColor }={}) => {
     const isHeader = dom.nodeType === 'h1' || dom.nodeType === 'h2',
+          capitalize = dom.className.indexOf('bx--no-link') >= 0,
           hasMargin = dom.className.indexOf('bx--breadcrumb-item--slash') >= 0
+          || dom.className.indexOf('left-pad') >= 0
 
+    //log('!!!', dom.nodeType, dom.innerText, dom._classList, capitalize)
     if (hasMargin) {
         stream.write(' ')
     }
@@ -286,7 +289,9 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidth
     }
 
     if (dom.innerText) {
-        stream.write(dom.innerText[extraColor][color])
+        const text = capitalize ? dom.innerText.charAt(0).toUpperCase() + dom.innerText.slice(1)
+              : dom.innerText
+        stream.write(text[extraColor][color])
     }
 
     const newline = () => {
@@ -420,6 +425,10 @@ const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') =
                     prettyDom(msg, logger, stream, color)
                     logger()
 
+                } else if (msg.then) {
+                    // msg is a promise; resolve it and try again
+                    msg.then(msg => print(msg, logger, stream, color, ok))
+
                 } else if (msg.message && msg.message._isFakeDom) {
                     // msg.message is a DOM facade
                     prettyDom(msg.message, logger, stream, color)
@@ -505,19 +514,10 @@ const failure = err => {
     if (!noAuth) {
         // we're not in a corner case of having no openwhisk auth, so
         // print the error
-        const msg = ui.oopsMessage(err),
-              isUsageError = err instanceof require('./content/js/usage-error')
+        const msg = ui.oopsMessage(err)
 
         if (typeof msg === 'string') {
-            if (isUsageError) {
-                error(msg.replace(/(Required parameters:)/, '$1'.blue)
-                      .replace(/(Options:)/, '$1'.blue)
-                      .replace(/(\(Hint:[^\n]+)/, '$1'.dim)
-                      .replace(/(\[EXPERIMENTAL\])/, '$1'.red)
-                      .replace(/\t([^\n]+)/, '\t' + '$1'.green))
-            } else {
-                error(msg.red)
-            }
+            error(msg.red)
         } else {
             print(msg, error, process.stderr, 'red', 'error')
         }

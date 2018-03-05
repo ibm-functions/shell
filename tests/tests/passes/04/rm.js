@@ -32,6 +32,11 @@ describe('Delete multiple actions', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
+    it('should fail with 404 to delete non-existant numeric name', () => cli.do(`rm 3`, this.app)
+       .then(cli.expectError(404))
+       .then(sidecar.expectClosed)
+       .catch(common.oops(this)))
+
     // create an action, using the implicit entity type
     it('should create an action', () => cli.do(`create ${actionName} ./data/foo.js`, this.app)
 	.then(cli.expectJustOK)

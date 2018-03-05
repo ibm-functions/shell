@@ -50,8 +50,8 @@ describe('List all entities', function() {
        .then(sidecar.expectShowing(ruleName)))
 
     // list them all
-    it('should list them all', () => cli.do('wsk list', this.app).then(cli.expectOKWith(actionName)))
-    it('should list them all', () => cli.do('wsk list', this.app).then(cli.expectOKWith(triggerName)))
-    it('should list them all', () => cli.do('wsk list', this.app).then(cli.expectOKWith(ruleName)))
-    it('should list them all', () => cli.do('wsk list', this.app).then(cli.expectOKWith(packageName)))
+    it('should list them all action', () => cli.do('wsk list', this.app).then(cli.expectOKWith(actionName)))
+    it('should list them all trigger', () => cli.do('wsk list', this.app).then(cli.expectOKWith(triggerName)))
+    it('should list them all rule', () => cli.do('wsk list', this.app).then(cli.expectOKWith(ruleName)))
+    it('should list them all package', () => cli.do('wsk list', this.app).then(cli.expectOKWith(packageName)))
 })

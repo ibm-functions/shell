@@ -24,7 +24,7 @@ const debug = require('debug')('repl')
 debug('loading')
 
 const self = {},
-      minimist = require('minimist'),
+      minimist = require('yargs-parser'),
       commandTree = require('./command-tree')
 
 debug('finished loading modules')
@@ -462,6 +462,9 @@ const emptyPromise = () => {
     return emptyPromise
 }
 
+/** turn --foo into foo and -f into f */
+const unflag = opt => opt.replace(/^[-]+/,'')
+
 /**
  * Execute the given command-line
  *
@@ -527,10 +530,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             prompt.readOnly = true
         }
 
-        const argv = split(command),//command.split(/\s+/),
-              parsedOptions = minimist(argv, { binary: 'help', alias: {h: 'help', a: 'all', q: 'quiet'} }) // encode some common aliases
-              argv_no_options = parsedOptions._ // this is a minimist thing; it stores the residual, non-opt, args in _
-
+        const argv = split(command)
         if (argv.length === 0) {
             if (block) {
                 ui.setStatus(block, 'valid-response')
@@ -558,9 +558,155 @@ self.exec = (commandUntrimmed, execOptions) => {
         const evaluator = execOptions && execOptions.intentional ? commandTree.readIntention(argv) : commandTree.read(argv)
 
         if (evaluator && evaluator.eval) {
+            const builtInOptions = [{ name: '--help', alias: '-h', hidden: true, boolean: true },
+                                    { name: '--quiet', alias: '-q', hidden: true, boolean: true }]
+
+            // here, we encode some common aliases, and then overlay any flags from the command
+            // narg: any flags that take more than one argument e.g. -p key value would have { narg: { p: 2 } }
+            const commandFlags = evaluator.options && evaluator.options.flags
+                  || (evaluator.options && evaluator.options.synonymFor
+                      && evaluator.options.synonymFor.options && evaluator.options.synonymFor.options.flags)
+                  || {}
+            const optional = builtInOptions.concat(evaluator.options && evaluator.options.usage && evaluator.options.usage.optional || [])
+            const optionalBooleans = optional && optional.filter(({boolean}) => boolean).map(_ => unflag(_.name)),
+                  optionalAliases = optional && optional.filter(({alias}) => alias).reduce((M,{name,alias}) => {
+                      M[unflag(alias)] = unflag(name)
+                      return M
+                  }, {})
+
+            const allFlags = {
+                configuration: { 'camel-case-expansion': false },
+                boolean: (commandFlags.boolean||[]).concat(optionalBooleans||[]),
+                alias: Object.assign({}, commandFlags.alias || {}, optionalAliases || {}),
+                narg: optional && optional.reduce((N, {name, alias, narg}) => {
+                    if (narg) {
+                        N[unflag(name)] = narg
+                        N[unflag(alias)] = narg
+                    }
+                    return N
+                }, {})
+            }
+
+            // now use minimist to parse the command line options
+            // minimist stores the residual, non-opt, args in _
+            const parsedOptions = minimist(argv, allFlags)
+            const argv_no_options = parsedOptions._
+
+            // if the user asked for help, and the plugin registered a
+            // usage model, we can service that here, without having
+            // to involve the plugin. this lets us avoid having each
+            // plugin check for options.help
+            if (parsedOptions.help && evaluator.options && evaluator.options.usage) {
+                return ui.oops(block, nextBlock)(new modules.errors.usage(evaluator.options.usage))
+            }
+
+            //
+            // check for argument conformance
+            //
+            const usage = evaluator.options && evaluator.options.usage
+            if (usage && usage.strict) { // strict: command wants *us* to enforce conformance
+                // required and otional parameters
+                const { strict:cmd, required=[], oneof=[], optional:_optional=[] } = usage,
+                      optLikeOneOfs = oneof.filter(({name}) => name.charAt(0) === '-'), // some one-ofs might be of the form --foo
+                      positionalConsumers = _optional.filter(({name, alias, consumesPositional}) => consumesPositional && (parsedOptions[unflag(name)] || parsedOptions[unflag(alias)])),
+                      optional = builtInOptions.concat(_optional).concat(optLikeOneOfs),
+                      positionalOptionals = optional.filter(({positional}) => positional),
+                      nPositionalOptionals = positionalOptionals.length
+
+                // just introducing a shorter variable name, here
+                const args = argv_no_options,
+                      nPositionalsConsumed = positionalConsumers.length,
+                      nRequiredArgs = required.length + (oneof.length > 0 ? 1 : 0) - nPositionalsConsumed,
+                      optLikeActuals = optLikeOneOfs.filter(({name, alias=''}) => parsedOptions.hasOwnProperty(unflag(name)) || parsedOptions.hasOwnProperty(unflag(alias))),
+                      nOptLikeActuals = optLikeActuals.length,
+                      nActualArgs = args.length - args.indexOf(cmd) - 1 + nOptLikeActuals
+
+                // did the user pass an unsupported optional parameter?
+                for (let optionalArg in parsedOptions) {
+                    // skip over minimist's _
+                    if (optionalArg !== '_'
+                        && parsedOptions[optionalArg] !== false) { // minimist nonsense
+
+                        // find a matching declared optional arg
+                        const match = optional.find(({name, alias}) => {
+                            return alias === `-${optionalArg}`
+                                || name === `--${optionalArg}`
+                        })
+
+                        if (!match) {
+                            // user passed an option, but the command doesn't accept it
+                            const message = `Unsupported optional parameter ${optionalArg}`,
+                                  err = new modules.errors.usage({ message, usage })
+                            err.code = 499
+                            debug(message, args, parsedOptions, optional)
+                            return ui.oops(block, nextBlock)(err)
+
+                        } else if (match.boolean && typeof parsedOptions[optionalArg] !== 'boolean'
+                                   || (match.booleanOK && !(typeof parsedOptions[optionalArg] === 'boolean' || typeof parsedOptions[optionalArg] === 'string'))
+                                   || match.numeric && typeof parsedOptions[optionalArg] !== 'number'
+                                   || match.narg > 1 && !Array.isArray(parsedOptions[optionalArg])
+                                   || (!match.boolean && !match.booleanOK && !match.numeric && (!match.narg || match.narg === 1)
+                                       && !(typeof parsedOptions[optionalArg] === 'string'
+                                            || typeof parsedOptions[optionalArg] === 'number'
+                                            || typeof parsedOptions[optionalArg] === 'boolean'))) {
+                            // user passed an option, but of the wrong type
+                            debug('bad value for option', optionalArg, match, parsedOptions, args, allFlags)
+                            const expectedMessage = match.boolean ? ', expected boolean'
+                                  : match.numeric ? ', expected a number' : '',
+                                  message = `Bad value for option ${optionalArg}${expectedMessage}, got ${parsedOptions[optionalArg]}`,
+                                  error = new modules.errors.usage({ message, usage })
+                            debug(message, match)
+                            error.code = 498
+                            return ui.oops(block, nextBlock)(error)
+                        }                        
+                    }
+                }
+
+                //
+                // user passed an incorrect number of positional parameters?
+                //
+                if (nActualArgs !== nRequiredArgs) {
+                    if (nActualArgs != nRequiredArgs + nPositionalOptionals) {
+                        // yup, scan for implicitOK
+                        const implicitIdx = required.findIndex(({implicitOK}) => implicitOK),
+                              selection = ui.currentSelection()
+
+                        let nActualArgsWithImplicit = nActualArgs
+
+                        if (implicitIdx >= 0 && selection && selection.type === required[implicitIdx].implicitOK) {
+                            nActualArgsWithImplicit++
+
+                            // if implicit, maybe other required parameters aren't needed
+                            const notNeededIfImplicit = required.filter(({notNeededIfImplicit}) => notNeededIfImplicit)
+                            nActualArgsWithImplicit += notNeededIfImplicit.length
+                        }
+
+                        if (nActualArgsWithImplicit !== nRequiredArgs) {
+                            // then either the command didn't specify
+                            // implicitOK, or the current selection
+                            // (or lack thereof) didn't match with the
+                            // command's typing requirement
+                            const message = nRequiredArgs === 0 ? 'This command accepts no positional arguments'
+                                  : `This command requires ${nRequiredArgs} parameter${nRequiredArgs === 1 ? '' : 's'}, but you provided ${nActualArgsWithImplicit === 0 ? 'none' : nActualArgsWithImplicit}`,
+                                  err = new modules.errors.usage({ message, usage })
+                            err.code = 497
+                            debug(message, cmd, nActualArgs, nRequiredArgs, args, optLikeActuals)
+                            return ui.oops(block, nextBlock)(err)
+
+                        } else {
+                            // ooh, then splice in the implicit parameter
+                            args.splice(implicitIdx, 0, `/${selection.namespace}/${selection.name}`)
+                            debug('spliced in implicit argument', implicitIdx, args[implicitIdx])
+                        }
+                    }
+                }
+            }
+
+            // if we don't have a head (yet), but this command
+            // requires one, then ask for a head and try again. note
+            // that we ignore this needsUI constraint if the user is
+            // asking for help
             if (ui.headless && evaluator.options && evaluator.options.needsUI && !parsedOptions.help && !parsedOptions.cli) {
-                // we don't have a head (yet) but this command requires one.
-                // note that we ignore this needsUI constraint if the user is asking for help
                 ui.createWindow(argv, evaluator.options.fullscreen, evaluator.options) // source for ths is in headless.js
                 return Promise.resolve(true)
             }

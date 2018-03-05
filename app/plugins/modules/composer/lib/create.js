@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,36 +20,12 @@ debug('loading')
 const { create, isValidFSM, hasUnknownOptions, extractActionsFromFSM, deployActions } = require('./composer'),
       badges = require('./badges'),
       messages = require('./messages.json'),
-      sampleInputs = require('./sample-inputs'),
       fs = require('fs'),
       path = require('path'),
+      { create:usage } = require('./usage'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source')
 
 debug('finished loading modules')
-
-const docs = {
-    create: 'Use this command to create a new composition from a given source file.',
-    update: 'Use this command to update an existing composition.',
-}
-
-/**
- * Usage message
- *
- */
-const usage = cmd => ({
-    title: 'Deploy composition',
-    header: docs[cmd],
-    example: `app ${cmd} <name> <sourceFile>`,
-    required: [{ name: 'name', docs: 'the name of your new app' },
-               { name: 'sourceFile', docs: 'source file or pre-compiled composition' }],
-    optional: [{ name: '-n|--dry-run', docs: 'check the given input for validity, do not deploy it' },
-               { name: '--log-input', docs: 'log initial input' },
-               { name: '--log-inline', docs: 'log inline function output' },
-               { name: '--log-all', docs: 'log initial input and inline function output' }],
-    sampleInputs: sampleInputs(sampleName => `app ${cmd} ${sampleName}`),
-    parents: ['composer', { command: 'composer app' }],
-    related: ['app get', 'app invoke', 'app list']
-})
 
 /**
   * compileToFSM returns a struct as its error
@@ -80,19 +56,20 @@ module.exports = (commandTree, prequire) => {
             input = dryRun ? name : args[idx + 1]        // input file; if dryRun, then it's the first and only non-opt arg
 
         // check for unknown options
-        hasUnknownOptions(options, [ 'n', 'dry-run', 'all',
+        /*hasUnknownOptions(options, [ 'n', 'dry-run', 'all',
                                      'h', 'help',
                                      'r', 'recursive',
                                      'a', 'annotation',
                                      'p', 'parameter', 'P', 'param-file',
                                      'm', 'memory', 'l', 'logsize', 't', 'timeout',                                     
-                                     'log-all', 'log-input', 'log-inline' ])    
+                                     'log-all', 'log-input', 'log-inline' ])*/
 
         // if the user didn't provide an input file, maybe we can
         // infer one from the current selection
         if (!input) {
             const selection = ui.currentSelection()
             if (selection && selection.fsm) {
+                debug('input from selection')
                 // then the sidecar is currently showing an app
                 if (selection.prettyType === 'preview') {
                     // then the sidecar is showing an app preview
@@ -111,11 +88,10 @@ module.exports = (commandTree, prequire) => {
             }
         }
         
-        if (!name || !input || options.help) {
-            // the user didn't supply either a name or an input file,
-            // or asked for help
-            throw new errors.usage(usage(cmd))
-
+        if (!name || !input) {
+            debug('insufficient inputs')
+            throw new errors.usage(usage(cmd), undefined, 497)
+            
         } else {
             let fsmPromise // our goal is to acquire an FSM, so that we can create an invokable OpenWhisk wrapper for it
             let type       // metadata to help with understanding how this FSM was created; 
@@ -248,8 +224,8 @@ module.exports = (commandTree, prequire) => {
     }
 
     // Install the routes
-    const cmd = commandTree.listen(`/wsk/app/create`, doCreate('create'), { docs: 'Create an invokeable composer from an FSM' })
-    commandTree.synonym(`/wsk/app/update`, doCreate('update'), cmd)
+    const cmd = commandTree.listen(`/wsk/app/create`, doCreate('create'), { usage: usage('create') })
+    commandTree.synonym(`/wsk/app/update`, doCreate('update'), cmd, { usage: usage('update') })
 }
 
 debug('finished loading')

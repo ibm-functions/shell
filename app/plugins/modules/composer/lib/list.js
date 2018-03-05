@@ -15,20 +15,8 @@
  */
 
 const { isAnApp, decorateAsApp } = require('./composer'),
+      { app_list:usage } = require('./usage'),
       { app:appBadge } = require('./badges')
-
-/**
- * Usage message
- *
- */
-const usage = cmd => ({
-    title: 'List Openwhisk Compososer apps',
-    header: 'Print a list of deployed compositions',
-    example: `app ${cmd}`,
-    optional: [{ name: '--limit', docs: 'show at most N compositions' },
-               { name: '--skip', docs: 'skip over the most first N compositions' }],
-    related: ['app create', 'app get', 'app invoke']
-})
 
 /**
  * Here is the app list entry point. Here we register command
@@ -58,19 +46,23 @@ module.exports = (commandTree, prequire) => {
 
     const synonyms = ['wsk', 'composer']
     synonyms.forEach(tree => {
-        const cmd = commandTree.listen(`/${tree}/app/list`, doList('list'), { docs: 'List your Composer applications' })
-        commandTree.synonym(`/${tree}/app/ls`, doList('ls'), cmd)
+        const cmd = commandTree.listen(`/${tree}/app/list`, doList('list'), { usage: usage('list') })
+        commandTree.synonym(`/${tree}/app/ls`, doList('ls'), cmd, { usage: usage('ls') })
     })
 
     // override wsk action list
     wsk.synonyms('actions').forEach(syn => {
         wsk.synonyms('list', 'verbs').forEach(verb => {
-            const rawList = commandTree.find(`/wsk/${syn}/${verb}`).$
+            const rawList = commandTree.find(`/wsk/${syn}/${verb}`),
+                  rawListImpl = rawList.$,
+                  rawListOptions = rawList.options.usage ? rawList.options : rawList.options && rawList.options.synonymFor && rawList.options.synonymFor.options
+
             commandTree.listen(`/wsk/${syn}/${verb}`, function() {
                 if (!rawList) {
                     return Promise.reject()
                 }
-                return rawList.apply(undefined, arguments)
+
+                return rawListImpl.apply(undefined, arguments)
                     .then(response => response.map(action => {
                         if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
                             decorateAsApp(action)
@@ -79,7 +71,7 @@ module.exports = (commandTree, prequire) => {
 
                         return action
                     }))
-            })
+            }, rawListOptions)
         })
     })
 }

@@ -25,7 +25,7 @@
  *
  */
 
-const minimist = require('minimist')
+const minimist = require('yargs-parser')
 
 /** sum of numbers in an array */
 //const arraySum = A => A.reduce((sum, c) => sum + c, 0)
@@ -125,7 +125,8 @@ module.exports = (commandTree, require) => {
      *
      */
     const rm = type => (block, nextBlock, fullArgv, _1, _2, execOptions) => {
-        const options = minimist(fullArgv, { alias: { q: 'quiet', f: 'force', r: 'recursive' }, boolean: ['quiet', 'force', 'recursive']}),
+        const options = minimist(fullArgv, { alias: { q: 'quiet', f: 'force', r: 'recursive' }, boolean: ['quiet', 'force', 'recursive'],
+                                             configuration: { 'parse-numbers': false, 'camel-case-expansion': false }}),
               argv = options._,
               toBeDeletedList = argv.slice(argv.indexOf('rm') + 1)
 

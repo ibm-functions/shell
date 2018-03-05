@@ -99,7 +99,7 @@ const expectOK = (appAndCount, opt) => {
                             if (opt.exact) assert.equal(txt, opt.expect)
                             else if (opt.expect) {
                                 if (txt.indexOf(opt.expect) < 0) {
-                                    console.error(`Expected string not found expected=${opt.expect} actual=${txt}`)
+                                    console.error(`Expected string not found expected=${opt.expect} idx=${txt.indexOf(opt.expect)} actual=${txt}`)
                                     assert.ok(txt.indexOf(opt.expect) >= 0)
                                 }
                             }

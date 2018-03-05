@@ -950,7 +950,14 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 .deemphasize.deemphasize-partial {
     opacity: 1;
 }
-.deemphasize.left-pad {
+.normal-size {
+    font-size: inherit;
+    font-weight: inherit;
+}
+.small-left-pad {
+    margin-left: 1ex;
+}
+.left-pad {
     margin-left: 1em;
 }
 .emphasize {

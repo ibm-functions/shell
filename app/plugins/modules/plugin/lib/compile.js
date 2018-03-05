@@ -138,6 +138,9 @@ const makeTree = (map, docs) => {
 
     /** get or create a subtree */
     const getOrCreate = (tree, pathPrefix) => {
+        if (!tree.children) {
+            tree.children = {}
+        }
         const entry = tree.children[pathPrefix]
         if (!entry) {
             return tree.children[pathPrefix] = inner(pathPrefix)

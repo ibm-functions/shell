@@ -40,9 +40,9 @@ describe('wsk package list tests', function() {
        .then(sidecar.expectShowing(action, undefined, package))
        .catch(common.oops(this)))
 
-    it(`should list actions in ${package} with ls ${package}`, () => cli.do(`ls ${package}`, this.app)
+    /*it(`should list actions in ${package} with ls ${package}`, () => cli.do(`ls ${package}`, this.app)
        .then(cli.expectOKWith(action))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 
     it(`should list ${package} with wsk package list`, () => cli.do(`wsk package list`, this.app)
        .then(cli.expectOKWithOnly(package))

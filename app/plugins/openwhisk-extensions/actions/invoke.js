@@ -26,11 +26,17 @@
  *
  */
 
+const path = require('path'),
+      { actions } = require(path.join(__dirname, '../../ui/commands/openwhisk-usage'))
+
 /**
  * Make a documentation struct
  *
  */
-const docs = docString => { docs: docString }
+const docs = syn => ({
+    usage: actions.available.find(({command}) => command === 'invoke')
+})
+                       
 
 /**
  * Fetch the full activation record from a partial one. Blocking
@@ -121,7 +127,7 @@ module.exports = (commandTree, require) => {
           asyncInvoke = doAsync(rawInvoke.$)                   //             ... and for async
 
     wsk.synonyms('actions').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/invoke`, syncInvoke, docs('Invoke an action'))
-        commandTree.listen(`/wsk/${syn}/async`, asyncInvoke, docs('Invoke an action asynchronously'))
+        commandTree.listen(`/wsk/${syn}/invoke`, syncInvoke, docs(syn))
+        commandTree.listen(`/wsk/${syn}/async`, asyncInvoke, { usage: 'Invoke an action asynchronously' })
     })
 }

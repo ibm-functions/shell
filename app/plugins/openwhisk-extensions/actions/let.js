@@ -31,7 +31,10 @@
  *
  */
 
-const minimist = require('minimist'),
+const debug = require('debug')('let')
+debug('loading')
+
+const minimist = require('yargs-parser'),
       fs = require('fs'),
       path = require('path'),
       url = require('url'),
@@ -42,7 +45,8 @@ const minimist = require('minimist'),
       expandHomeDir = require('expand-home-dir'),
       beautify = require('js-beautify').js_beautify,
       baseName = process.env.BASE_NAME || 'anon'
-//uuid = require('uuid')
+
+debug('finished loading modules')
 
 /**
  * Mimic the request-promise functionality, but with retry
@@ -77,12 +81,14 @@ const isRemote = url => url.protocol && url.hostname
  */
 const fetchRemote = (location, mimeType) => new Promise((resolve, reject) => {
     const locationWithoutQuotes = location.replace(patterns.quotes, '')
+    debug(`fetchRemote? ${locationWithoutQuotes}`)
+
     const parsedUrl = url.parse(locationWithoutQuotes)
     if (isRemote(parsedUrl)) {
         // then fetch it
-        console.log(`let::fetchRemote ${locationWithoutQuotes}`)
+        debug('fetching remote')
         return rp(locationWithoutQuotes).then(data => {
-            console.log(`let::fetchRemote done`)
+            debug(`fetchRemote done`)
             const extension = mimeType || parsedUrl.pathname.substring(parsedUrl.pathname.lastIndexOf('.'))
             tmp.tmpName({ postfix: extension }, (err, tmpFilePath) => {
                 if (err) {
@@ -192,7 +198,7 @@ const isManagedWebAsset = action => isWebAsset(action) && isManagedAsset(action)
 */
 const makeZipActionFromZipFile = (wsk, name, location, options, commandTree, preflight, execOptions) => new Promise((resolve, reject) => {
     try {
-        console.log('let::makeZipActionFromZipFile', name, location)
+        debug('makeZipActionFromZipFile', name, location)
 
         fs.exists(location, exists => {
             if (!exists) {
@@ -262,7 +268,7 @@ const doNpmInstall = dir => new Promise((resolve, reject) => {
  */
 const makeZipAction = (wsk, name, location, options, commandTree, preflight, execOptions) => new Promise((resolve, reject) => {
     try {
-        console.log('let::makeZipAction', location)
+        debug('makeZipAction', location)
         fs.lstat(location, (err, stats) => {
             if (err) {
                 reject(err)
@@ -493,7 +499,7 @@ module.exports = (commandTree, prequire) => {
                           .then(resource => {
                               if (location.removeWhenDone) {
                                   // we were asked to clean up when we finished with the location
-                                  console.log('let::cleaning up', location.location)
+                                  debug('cleaning up', location.location)
                                   fs.unlink(location.location, err => {
                                       if (err) {
                                           console.error(err)
@@ -513,17 +519,22 @@ module.exports = (commandTree, prequire) => {
         const furlSequenceComponent = parentActionName => (component, idx) => {
             const intentionMatch = component.match(patterns.intention.inline)
             const match = component.match(patterns.action.expr.inline)
+
             if (!intentionMatch && match && match.length === 3) {
                 // then this component is an inline function
+                debug('sequence component is inline function', match[0])
                 const body = beautify(`let main = ${match[0]}`),
                       candidateName = `${parentActionName}-${idx + 1}`
                 return createWithRetryOnName(body, parentActionName, idx, currentIter, candidateName)
+
             } else {
                 if (intentionMatch) {
+                    debug('sequence component is intention', intentionMatch[1])
                     const intention = intentionMatch[1] // e.g. |save to cloudant|
                     return repl.iexec(intention)        // this will return the name of the action that services the intent
 
                 } else if (fs.existsSync(expandHomeDir(component))) {
+                    debug('sequence component is local file', component)
                     // then we assume that the component identifies a local file
                     //    note: the first step reserves a name
                     return createWithRetryOnName('let main=x=>x', parentActionName, idx, currentIter, path.basename(component.replace(/\..*$/, '')))
@@ -531,6 +542,7 @@ module.exports = (commandTree, prequire) => {
                         .then(reservedName => maybeComponentIsFile(reservedName, undefined, component, 'let', {}, { nested: true }))
 
                 } else {
+                    debug('sequence component is named action', component)
                     // then we assume, for now, that `component` is a named action
                     return Promise.resolve(component)
                 }
@@ -540,15 +552,14 @@ module.exports = (commandTree, prequire) => {
 
         const argvWithOptions = fullArgv,
               pair = wsk.parseOptions(argvWithOptions.slice(), 'action'),
-              regularOptions = minimist(pair.argv),
+              regularOptions = minimist(pair.argv, { configuration: { 'camel-case-expansion': false } }),
               options = Object.assign({}, regularOptions, pair.kvOptions),
-              argv = regularOptions._
+              argv = options._
 
         // remove the minimist bits
         delete options._
 
-        // this is the command line, without any options
-        const command = argv.join(' ')
+        //debug('args', options, fullCommand)
 
         const actionMatch = fullCommand.match(patterns.action.expr.full),
               intentionMatch = fullCommand.match(patterns.intention.full),
@@ -557,7 +568,7 @@ module.exports = (commandTree, prequire) => {
               isSequenceMatch = sequenceMatch && components.length > 1
 
         if (intentionMatch && !isSequenceMatch) {
-            console.log('let::intentionMatch', intentionMatch)
+            debug('intentionMatch', intentionMatch)
             const letType = intentionMatch[1],
                   mimeType = cutTrailingWhitespace(intentionMatch[3]),
                   name = figureName(intentionMatch[2], mimeType),
@@ -616,7 +627,7 @@ module.exports = (commandTree, prequire) => {
             if (annotators[extension]) annotators[extension].forEach(annotator => annotator(action))
 
             const owOpts = wsk.owOpts({ name: name, action: action })
-            console.log('let::inline-function::create', owOpts, code)
+            debug('inline-function::create', owOpts, code)
             return preflight(update, owOpts)
                 .then(owOpts => wsk.ow.actions[update](owOpts)) // dangit, the openwhisk npm uses classes, so we have to do this
                 .then(wsk.addPrettyType('actions', 'create'))
@@ -624,7 +635,7 @@ module.exports = (commandTree, prequire) => {
                 .catch(packageAutoCreate(name))
         } else {
             // maybe a sequence?
-            console.log('let::sequenceMatch', sequenceMatch, components)
+            debug('sequenceMatch', sequenceMatch, components)
             if (sequenceMatch) {
                 // maybe it is a sequence!
                 const letType = sequenceMatch[1],
@@ -663,6 +674,8 @@ module.exports = (commandTree, prequire) => {
                                     extraArgs += ` --content-type ${contentType.value}`
                                 }
                             }
+
+                            debug('creating sequence', extraArgs, name, components)
                             return repl.qexec(`wsk action update --sequence ${extraArgs} "${name}" ${components.join(',')}`)
                                 .then(action => {
                                     (annotators[letType] || []).forEach(annotator => annotator(action))
@@ -707,8 +720,10 @@ module.exports = (commandTree, prequire) => {
                         .catch(packageAutoCreate(name))
                 } else {
                     // maybe from a file
+                    const command = argv.join(' ')
                     const actionFromFileMatch = command.match(patterns.action.expr.fromFileWithExtension) || command.match(patterns.action.expr.fromFile)
-                    console.log('let::fileMatch', actionFromFileMatch, command, argv)
+                    debug('fileMatch', actionFromFileMatch, command)
+
                     if (actionFromFileMatch) {
                         const letType = actionFromFileMatch[1],
                               mimeType = cutTrailingWhitespace(actionFromFileMatch[3]),
@@ -768,7 +783,7 @@ module.exports = (commandTree, prequire) => {
 
                     if (!intentionMatch && !isSequenceMatch && actionMatch) {
                         // then this is an inline anonymous function
-                        console.log('let::resolve::inline')
+                        debug('resolve::inline')
                         return createWithRetryOnName(`let main = ${expr}`, parentActionName, idx, 0)
                         
                     } else if (intentionMatch) {
@@ -790,7 +805,7 @@ module.exports = (commandTree, prequire) => {
                                       return once(iter + 1)
                                   }
                               });
-                        console.log('let::resolve::via let', baseName, parentActionName)
+                        debug('resolve::via let', baseName, parentActionName)
                         return once(0)
                     }
 
