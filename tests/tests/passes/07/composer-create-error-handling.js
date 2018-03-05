@@ -48,27 +48,27 @@ describe('app create error handling and app create --dry-run', function() {
         .then(cli.expectOKWithCustom({expect: 'Successfully initialized and reset the required services. You may now create compositions.'}))
        .catch(common.oops(this)))*/
 
-    it('should 404 session get with all-numeric uuid', () => cli.do('session get 00000000000000000000000000000000 --timeout 5s', this.app)
+    it('should 404 session get with all-numeric uuid', () => cli.do('session get 00000000000000000000000000000000', this.app)
        .then(cli.expectError(404))
        .catch(common.oops(this)))
-    it('should 404 session get with another all-numeric uuid', () => cli.do('session get 00000000000000000000000000000001 --timeout 5s', this.app)
+    it('should 404 session get with another all-numeric uuid', () => cli.do('session get 00000000000000000000000000000001', this.app)
        .then(cli.expectError(404))
        .catch(common.oops(this)))
 
     it('should reject unknown option --mojo', () => cli.do('app create demos/if.js --mojo', this.app)
-        .then(cli.expectError(0, 'Unexpected option mojo'))
+       .then(cli.expectError(499)) // 499 means unsupported optional parameter
        .catch(common.oops(this)))
 
     it('should reject unknown option --mojo', () => cli.do('app create zombie demos/if.js --mojo', this.app)
-        .then(cli.expectError(0, 'Unexpected option mojo'))
+       .then(cli.expectError(499)) // 499 means unsupported optional parameter
        .catch(common.oops(this)))
 
     it('should reject unknown option -m', () => cli.do('app create demos/if.js -m', this.app)
-        .then(cli.expectError(0, 'Use this command to create a new composition from a given source file')) // beginning of usage, because we didn't pass an app name
+        .then(cli.expectError(498)) // beginning of usage, because we didn't pass an app name
        .catch(common.oops(this)))
 
     it('should reject unknown option -m', () => cli.do('app create zombie demos/if.js -m', this.app)
-        .then(cli.expectError(0, 'Invalid memory limit: expected integer, but got nothing.'))
+        .then(cli.expectError(498))
        .catch(common.oops(this)))
 
     /*it('should fail to initialize composer, due to bogus option', () => cli.do(`app init --nope`, this.app)

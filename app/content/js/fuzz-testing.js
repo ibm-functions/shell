@@ -22,6 +22,8 @@
  *
  */
 
+const debug = require('debug')('fuzz testing')
+debug('loading')
 
 const nope = filepath => filepath.toString().indexOf('.wskprops') >= 0 || filepath.toString().indexOf('.cf/config.json') >= 0
 
@@ -33,7 +35,7 @@ const fuzzies = {
 
         fs.readFile = function(filepath, options, cb) {
             if (nope(filepath)) {
-                console.error(`fs.readFile blocked ${filepath}`)
+                debug('fs.readFile blocked', filepath)
                 rf('fjdioafjadisofjadsoifasfsdfjadisfjadisofjasifas', options ? cb : options)
             } else {
                 if (!cb) {
@@ -60,9 +62,12 @@ module.exports = fuzz => {
         fuzz = JSON.parse(fuzz)
     }
 
+    //debug('options', fuzz.rules)
+
     (fuzz.rules || []).forEach(rule => {
         // intentionally unprotected against failures, because we
         // want the test to fail
+        debug('rule', rule)
         fuzzies[rule]()
     })
 

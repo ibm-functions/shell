@@ -78,7 +78,7 @@ describe('show the composer visualization without creating openwhisk assets', fu
 
     /** test: app preview on its own should show usage */
     it(`should show usage for "app preview"`, () => cli.do('app preview', this.app)
-       .then(cli.expectError(0, 'Visualize a composition, without deploying it'))
+       .then(cli.expectError(497)) // 497 insufficient required parameters
        .catch(common.oops(this)))
 
     /** test: load an FSM, but show the raw fsm */

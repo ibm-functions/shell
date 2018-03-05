@@ -19,9 +19,10 @@ const { isValidFSM, vizAndfsmViewModes, codeViewMode, handleError } = require('.
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
       messages = require('./messages'),
       sampleInputs = require('./sample-inputs'),
+      { preview:usage } = require('./usage'),
       fs = require('fs'),
       path = require('path'),
-      minimist = require('minimist'),
+      minimist = require('yargs-parser'),
       expandHomeDir = require('expand-home-dir'),
       chokidar = require('chokidar')
 
@@ -32,25 +33,6 @@ const MAX_HISTORY = 10,                  // maximum number of items in the "drag
       lsKeys = {
           recent: 'wsk.wskflow.viz.recent'
       }
-
-/**
- * Usage string
- *
- */
-const usage = cmd => ({
-    title: 'Preview composition',
-    header: 'Visualize a composition, without deploying it.',
-    example: `${cmd} <sourceFile>`,
-    detailedExample: {
-        command: `${cmd} @demos/hello.js`,
-        docs: 'preview a built-in hello world demo'
-    },
-    oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file' },
-            { name: 'src.json', docs: 'ibid, but for a pre-compiled composition' }],
-    sampleInputs: sampleInputs(cmd),
-    parents: ['composer', { command: 'composer app' }],
-    related: ['app create']
-})
 
 /**
  * Open the visualization to the specified path on the local filesystem
@@ -258,19 +240,9 @@ const addRecentItem = file => {
      }
 
      /** command handler */
-     const doIt = cmd => (_1, _2, fullArgv, { errors }, _4, execOptions, _5, _options) => new Promise((resolve, reject) => {
-         const options = Object.assign({}, execOptions, _options, minimist(fullArgv, { boolean: [ 'fsm', 'select' ], alias: { f: 'fsm', s: 'select' } })),
-               args = options._,
-               idx = args.indexOf(cmd),
+     const doIt = cmd => (_1, _2, fullArgv, { errors }, _4, execOptions, args, options) => new Promise((resolve, reject) => {
+         const idx = args.indexOf(cmd),
                inputFile = args[idx + 1]
-
-         if (options.help || (!options.select && !inputFile)) {
-             // either the user asked for help, or we weren't asked to
-             // render the file selector, or we weren't given a file
-             // to render
-             //return reject(usage(cmd))
-             throw new errors.usage(usage(cmd))
-         }
 
          let input = ui.findFile(args[idx + 1])
 
@@ -296,12 +268,12 @@ const addRecentItem = file => {
          })
      })
 
-     const vizCmd = commandTree.listen(`/wsk/app/preview`, doIt('preview'), { docs: 'Visualize a Composer source file',
+     const vizCmd = commandTree.listen(`/wsk/app/preview`, doIt('preview'), { usage: usage('preview'),
                                                                               needsUI: true,
                                                                               viewName: viewNameLong,
                                                                               fullscreen: true, width: 800, height: 600,
                                                                               clearREPLOnLoad: true,
                                                                               noAuthOk: true,
                                                                               placeholder: 'Loading visualization ...'})
-     commandTree.synonym(`/wsk/app/viz`, doIt('viz'), vizCmd)
+     commandTree.synonym(`/wsk/app/viz`, doIt('viz'), vizCmd, { usage: usage('viz') })
 }

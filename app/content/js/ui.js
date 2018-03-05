@@ -488,6 +488,11 @@ const ui = (function() {
         if (err.message && err.message.nodeName) {
             // err.message is a DOM
             oops.appendChild(err.message)
+        } else if (err.message && err.message.then) {
+            err.message.then(message => {
+                err.message = message
+                self.oops(block, nextBlock)(err)
+            })
         } else if (err.nodeName) {
             // err is a DOM
             oops.appendChild(err)

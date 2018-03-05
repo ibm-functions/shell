@@ -358,10 +358,10 @@ exports.listen = (route, handler, options) => _listen(model, route, handler, opt
  *    master is the return value of `listen`
  *
  */
-exports.synonym = (route, handler, master) => {
+exports.synonym = (route, handler, master, options={}) => {
     if (route !== master.route) {
         // don't alias to yourself!
-        const node = exports.listen(route, handler, { synonymFor: master })
+        const node = exports.listen(route, handler, Object.assign({}, options, { synonymFor: master }))
 
         // reverse mapping from master to synonym
         if (!master.synonyms)  master.synonyms = {}

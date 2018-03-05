@@ -14,32 +14,7 @@
  * limitations under the License.
  */
 
-/**
- * Usage message
- *
- */
-const usageMessage = {
-    invoke: {
-        title: 'Invoke composition',
-        header: 'Invoke a given app and wait for its completion',
-        example: 'app invoke <name> [-p key value]*',
-        required: [{ name: 'name', docs: 'a deployed composition' }],
-        optional: [{ name: '-p key value', docs: 'bind a variable to a value' },
-                   { name: '-P file', docs: 'read variable bindings from a JSON file' }],
-        parents: ['composer', { command: 'composer app' }],
-        related: ['app async', 'app create', 'app get', 'app list']
-    },
-
-    async: {
-        title: 'Async an OpenWhisk composition',
-        header: 'Invoke a given app asynchronously, and return a session id',
-        example: 'app async <name> [-p key value]*',
-        required: [{ name: 'name', docs: 'the name of your new app' }],
-        related: ['app create', 'app get', 'app invoke', 'app list']
-    }
-}
-
-const usage = cmd => usageMessage[cmd]
+const { invoke:invokeUsage, async:asyncUsage } = require('./usage')
 
 /**
  * Here is the app invoke entry point. Here we register command
@@ -60,27 +35,23 @@ module.exports = (commandTree, prequire) => {
 
         const name = argvWithoutOptions[argvWithoutOptions.indexOf(cmd) + 1]
 
-        if (!name || options.help) {
-            throw new errors.usage(usage(cmd))
-        } else {
-            return delegate.apply(undefined, arguments)
-                .then(activation => activation.message || activation)   // message if change-context wrapper
-                .then(activation => {
-                    if (cmd === 'invoke' && ui.headless) {
-                        // in headless mode, print just the result
-                        return activation.response.result
-                    } else if (cmd === 'async') {
-                        activation.verb = 'invoke'
-                        activation.sessionId = activation.activationId
-                        if (!activation.name && activation.entity) activation.name = activation.entity.name
-                        return activation
-                    } else {
-                        return repl.qfexec(`session get ${activation.activationId}`)
-                    }
-                })
-        }
+        return delegate.apply(undefined, arguments)
+            .then(activation => activation.message || activation)   // message if change-context wrapper
+            .then(activation => {
+                if (cmd === 'invoke' && ui.headless) {
+                    // in headless mode, print just the result
+                    return activation.response.result
+                } else if (cmd === 'async') {
+                    activation.verb = 'invoke'
+                    activation.sessionId = activation.activationId
+                    if (!activation.name && activation.entity) activation.name = activation.entity.name
+                    return activation
+                } else {
+                    return repl.qfexec(`session get ${activation.activationId}`)
+                }
+            })
     }
 
-    commandTree.listen(`/wsk/app/invoke`, doInvoke('invoke'), { docs: 'Synchronously invoke a Composer application and wait for its completion' })
-    commandTree.listen(`/wsk/app/async`, doInvoke('async'), { docs: 'Asynchronously invoke a Composer application' })
+    commandTree.listen(`/wsk/app/invoke`, doInvoke('invoke'), { usage: invokeUsage })
+    commandTree.listen(`/wsk/app/async`, doInvoke('async'), { usage: asyncUsage })
 }

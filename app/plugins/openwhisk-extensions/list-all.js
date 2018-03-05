@@ -20,41 +20,38 @@
  *
  */
 
-const minimist = require('minimist'),
-      types = ['actions', 'packages', 'triggers', 'rules' ]
+const path = require('path'),
+      { wsk } = require(path.join(__dirname, '../ui/commands/openwhisk-usage'))
 
-/**
- * Flatten an array of arrays
- *
- */
+/** usage model */
+const usage = cmd => ({
+    strict: cmd,          // enforce no positional or optional arguments
+    title: 'List all',
+    header: `${wsk.available.find(({command}) => command === 'list').docs}.`,
+    example: `wsk ${cmd}`,
+    parents: [{ command: 'wsk' }]
+})
+
+/** construct a struct that informs the command tree of our usage model */
+const docs = cmd => ({ usage: usage(cmd) })
+
+/** list all of these entity types: */
+const types = ['actions', 'packages', 'triggers', 'rules' ]
+
+/** flatten an array of arrays */
 const flatten = arrays => [].concat.apply([], arrays);
 
-/**
- * The command handler
- *
- */
-const doList = (_1, _2, _3, { errors }, _5, _6, args, options) => {
-    if (options.help) {
-        throw new errors.usage(`List all entities in the current namespace
+/** list the entities of a given type */
+const list = type => repl.qexec(`wsk ${type} list`)
 
-    wsk list`)
-    } else if (Object.keys(options).length > 3 || (Object.keys(options).length > 1 && !options.help)) {
-        // minimist always adds options._, and repl will add both
-        // options.help and options.h if either is specified
-        throw new errors.usage(`This command accepts no optional arguments`)
-    } else if (args.length - args.indexOf('list') > 1) {
-        throw new errors.usage(`This command accepts no positional arguments`)
-    }
-
-    const list = type => repl.qexec(`wsk ${type} list`)
-
-    return Promise.all(types.map(list)).then(flatten)
-}
+/** the command handler */
+const doList = cmd => () => Promise.all(types.map(list)).then(flatten)
 
 /**
- * Here is the module
+ * Here is the module, where we register command handlers
  *
  */
 module.exports = (commandTree, require) => {
-    commandTree.listen(`/wsk/list`, doList, { docs: 'List all entities in the current namespace' })
+    const list = commandTree.listen(`/wsk/list`, doList('list'), docs('list'))
+    commandTree.synonym('/wsk/ls', doList('ls'), list, docs('ls'))
 }

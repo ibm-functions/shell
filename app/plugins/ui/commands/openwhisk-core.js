@@ -25,7 +25,7 @@ debug('starting')
 const propertiesParser = require('properties-parser'),
       expandHomeDir = require('expand-home-dir'),
       openwhisk = require('openwhisk'),
-      minimist = require('minimist'),
+      minimist = require('yargs-parser'),
       fs = require('fs'),
       path = require('path'),
       util = require('util'),
@@ -153,7 +153,7 @@ const synonymsFn = (type,T) => synonyms[T || 'entities'][type].concat([type]) //
 
 const booleans = {
     actions: {
-        create: ['sequence', 'copy', 'docker', 'web']
+        create: ['sequence', 'docker', 'copy', 'web']
     }
 }
 booleans.actions.update = booleans.actions.create
@@ -537,8 +537,12 @@ specials.actions = {
 
         } else if (options.copy) {
             // copying an action
+            const src = argv[argv.length - 1],
+                  dest = options.name
+            debug('action copy SRC', src, 'DEST', dest, argv)
+
             return {
-                options: ow.actions.get(owOpts({ name: argv[0] }))
+                options: ow.actions.get(owOpts({ name: src }))
                     .then(action => {
                         if (options.action.parameters && !action.parameters) {
                             action.parameters = options.action.parameters
@@ -551,7 +555,7 @@ specials.actions = {
                             action.annotations = action.annotations.concat(options.action.annotations)
                         }
                         return {
-                            name: options.name,
+                            name: dest,
                             action: action
                         }
                     })
@@ -752,13 +756,14 @@ const owOpts = (options = {}, execOptions = {}) => {
  * @param preflight the preflight module, used to validate operations
  *
  */
-const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block, nextBlock, argv_full, modules, raw, execOptions) => {
+const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block, nextBlock, argv_full, modules, raw, execOptions/*, args, options*/) => {
     let entity = _entity,
         verb = _verb
 
     const pair = parseOptions(argv_full, toOpenWhiskKind(entity)),
           regularOptions = minimist(pair.argv, { boolean: booleans[entity] && booleans[entity][verb],
-                                                 alias: aliases[verb]
+                                                 alias: aliases[verb],
+                                                 configuration: { 'camel-case-expansion': false }
                                                }),
           argv = regularOptions._
 
@@ -771,6 +776,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
           nameIndex = verbIndex + 1,
           hasName = argv[nameIndex] !== undefined,   // !== undefined important, as minimist turns all-zeroes into numeric 0 (shell #284)
           restIndex = hasName ? nameIndex + 1 : nameIndex
+
     if (hasName) {
         options.name = argv[nameIndex]
         if (typeof options.name === 'number') {
@@ -917,101 +923,6 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
 
 module.exports = (commandTree, prequire) => {
     debug('init')
-    const preflight = prequire('/code/validation/preflight').preflight
-
-    // for each entity type
-    const apiMaster = commandTree.subtree(`/wsk`, { docs: 'Commands that interact with OpenWhisk', usage: usage.wsk })
-
-    if (!ow) {
-        // the openwhisk npm is not yet initialized; let's install
-        // some basic command handlers
-        commandTree.listen('/wsk/action/get', () => Promise.resolve(false))
-        return
-    }
-
-    for (let api in ow) {
-        const clazz = ow[api].constructor,
-              props = Object.getOwnPropertyNames(clazz.prototype).concat(extraVerbs(api) || [])
-        //alsoInstallAtRoot = api === 'actions'
-
-        const docs = typeof usage[api] === 'function' ? usage[api] : () => usage[api]
-        const apiMaster = commandTree.subtree(`/wsk/${api}`, { docs: `Commands related to ${api}`, usage: docs(api) })
-
-        // find the verbs of this entity type
-        for (let idx in props) {
-            const verb = props[idx]
-            if (!ignore[verb] && (!ignore[api] || !ignore[api][verb])) {
-                // install the route handler for the main /entity/verb
-                //const handler = executor(api, verb, verb, commandTree)
-                //const master = commandTree.listen(`/wsk/${api}/${verb}`, handler, { docs: docs(api, verb) })
-
-                // install synonym route handlers
-                const entities = (synonyms.entities[api] || []).concat([api])
-                const verbs = synonyms.verbs[verb] || []
-                entities.forEach(eee => {
-                    commandTree.subtreeSynonym(`/wsk/${eee.nickname || eee}`, apiMaster, { usage: docs(eee.nickname || eee) })
-
-                    const handler = executor(eee.name || api, verb, verb, commandTree, preflight)
-                    const entityAliasMaster = commandTree.listen(`/wsk/${eee.nickname || eee}/${verb}`, handler, { docs: docs(api, verb) })
-
-                    // register e.g. wsk action help; we delegate to
-                    // "wsk action", which will print out usage (this
-                    // comes as part of commandTree.subtree
-                    // registrations)
-                    //commandTree.listen(`/wsk/${eee.nickname || eee}/help`, () => repl.qexec(`wsk ${eee.nickname || eee}`), { noArgs: true })
-
-                    verbs.forEach(vvv => {
-                        const handler = executor(eee.name || api, vvv.name || verb, vvv.nickname || vvv, commandTree, preflight)
-                        if (vvv.notSynonym || vvv === verb) {
-                            if (vvv.limitTo && vvv.limitTo[api]) {
-                                commandTree.listen(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, { docs: docs(api, vvv.nickname || vvv) })
-                            }
-                        } else {
-                            const handler = executor(eee.name || api, verb, vvv.nickname || vvv, commandTree, preflight)
-                            commandTree.synonym(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, entityAliasMaster)
-                        }
-
-                        //if (alsoInstallAtRoot) {
-                        //commandTree.synonym(`/wsk/${vvv.nickname || vvv}`, handler, master)
-                        //}
-                    })
-                })
-            }
-        }
-    }
-
-    // trigger fire special case?? hacky
-    const doFire = executor('triggers', 'invoke', 'fire', commandTree, preflight)
-    synonymsFn('triggers').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/fire`, doFire, { doc: 'Fire an OpenWhisk trigger' })
-    })
-
-    const removeTrigger = (block, nextBlock, argv, modules) => {
-        const name = argv[argv.length - 1]
-        return ow.triggers.delete(owOpts({ name: name }))
-            .then(trigger => {
-                const feedAnnotation = trigger.annotations && trigger.annotations.find(kv => kv.key === 'feed')
-                if (feedAnnotation) {
-                    // special case of feed
-                    console.log('wsk::delete feed', trigger)
-                    return ow.feeds.delete(owOpts({ feedName: feedAnnotation.value,
-                                                    trigger: name,
-                                                  }))
-                } else {
-                    return trigger
-                }
-            }).then(() => true)
-    }
-    synonyms.verbs.delete.forEach(rm => {
-        synonyms.entities.triggers.forEach(syn => {
-            commandTree.listen(`/wsk/${syn}/${rm}`, removeTrigger, { docs: 'Remove an OpenWhisk trigger' })
-        })
-    })
-
-    // namespace.current
-    synonyms.entities.namespaces.forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/current`, () => namespace.current(), { docs: 'Print the currently selected namespace' })
-    })
 
     // exported API
     self = {
@@ -1134,6 +1045,118 @@ module.exports = (commandTree, prequire) => {
             }
         }
     }
+
+        const preflight = prequire('/code/validation/preflight').preflight
+
+    // for each entity type
+    const apiMaster = commandTree.subtree(`/wsk`, { usage: usage.wsk })
+
+    if (!ow) {
+        // the openwhisk npm is not yet initialized; let's install
+        // some basic command handlers
+        debug('no openwhisk')
+        commandTree.listen('/wsk/action/get', () => Promise.resolve(false))
+        return self
+    }
+
+    for (let api in ow) {
+        const clazz = ow[api].constructor,
+              props = Object.getOwnPropertyNames(clazz.prototype).concat(extraVerbs(api) || [])
+        //alsoInstallAtRoot = api === 'actions'
+
+        /** return the usage model for the given (api, syn, verb) */
+        const docs = typeof usage[api] === 'function' ? usage[api] :
+              (syn, verb, alias) => {
+                  if (verb) {
+                      const model = usage[api] && usage[api].available.find(({command}) => command === verb)
+                      if (model && alias && typeof model.fn === 'function') {
+                          return model.fn(alias, syn)
+                      } else {
+                          return model
+                      }
+                  } else {
+                      return usage[api]
+                  }
+              }
+
+        const apiMaster = commandTree.subtree(`/wsk/${api}`, { usage: docs(api) })
+
+        // find the verbs of this entity type
+        debug('verbs')
+        for (let idx in props) {
+            const verb = props[idx]
+            if (!ignore[verb] && (!ignore[api] || !ignore[api][verb])) {
+                // install the route handler for the main /entity/verb
+                //const handler = executor(api, verb, verb, commandTree)
+                //const master = commandTree.listen(`/wsk/${api}/${verb}`, handler, { docs: docs(api, verb) })
+
+                // install synonym route handlers
+                const entities = (synonyms.entities[api] || []).concat([api])
+                const verbs = synonyms.verbs[verb] || []
+                entities.forEach(eee => {
+                    commandTree.subtreeSynonym(`/wsk/${eee.nickname || eee}`, apiMaster, { usage: docs(eee.nickname || eee) })
+
+                    const handler = executor(eee.name || api, verb, verb, commandTree, preflight)
+                    const entityAliasMaster = commandTree.listen(`/wsk/${eee.nickname || eee}/${verb}`, handler, { usage: docs(api, verb) })
+
+                    // register e.g. wsk action help; we delegate to
+                    // "wsk action", which will print out usage (this
+                    // comes as part of commandTree.subtree
+                    // registrations)
+                    //commandTree.listen(`/wsk/${eee.nickname || eee}/help`, () => repl.qexec(`wsk ${eee.nickname || eee}`), { noArgs: true })
+
+                    verbs.forEach(vvv => {
+                        const handler = executor(eee.name || api, vvv.name || verb, vvv.nickname || vvv, commandTree, preflight)
+                        if (vvv.notSynonym || vvv === verb) {
+                            if (vvv.limitTo && vvv.limitTo[api]) {
+                                commandTree.listen(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, { usage: docs(api, vvv.nickname || vvv) })
+                            }
+                        } else {
+                            const handler = executor(eee.name || api, verb, vvv.nickname || vvv, commandTree, preflight)
+                            commandTree.synonym(`/wsk/${eee.nickname || eee}/${vvv.nickname || vvv}`, handler, entityAliasMaster, { usage: docs(api, verb, vvv.nickname || vvv) })
+                        }
+
+                        //if (alsoInstallAtRoot) {
+                        //commandTree.synonym(`/wsk/${vvv.nickname || vvv}`, handler, master)
+                        //}
+                    })
+                })
+            }
+        }
+    }
+
+    // trigger fire special case?? hacky
+    const doFire = executor('triggers', 'invoke', 'fire', commandTree, preflight)
+    synonymsFn('triggers').forEach(syn => {
+        commandTree.listen(`/wsk/${syn}/fire`, doFire, { doc: 'Fire an OpenWhisk trigger' })
+    })
+
+    const removeTrigger = (block, nextBlock, argv, modules) => {
+        const name = argv[argv.length - 1]
+        return ow.triggers.delete(owOpts({ name: name }))
+            .then(trigger => {
+                const feedAnnotation = trigger.annotations && trigger.annotations.find(kv => kv.key === 'feed')
+                if (feedAnnotation) {
+                    // special case of feed
+                    console.log('wsk::delete feed', trigger)
+                    return ow.feeds.delete(owOpts({ feedName: feedAnnotation.value,
+                                                    trigger: name,
+                                                  }))
+                } else {
+                    return trigger
+                }
+            }).then(() => true)
+    }
+    synonyms.verbs.delete.forEach(rm => {
+        synonyms.entities.triggers.forEach(syn => {
+            commandTree.listen(`/wsk/${syn}/${rm}`, removeTrigger, { docs: 'Remove an OpenWhisk trigger' })
+        })
+    })
+
+    // namespace.current
+    synonyms.entities.namespaces.forEach(syn => {
+        commandTree.listen(`/wsk/${syn}/current`, () => namespace.current(), { docs: 'Print the currently selected namespace' })
+    })
 
     debug('init done')
     return self

@@ -90,15 +90,19 @@ describe('Create an action with limits, using let', function() {
        .then(sidecar.expectLimit('logs', 1))//'1 MB of logs'))
        .catch(common.oops(this)))
 
-    it('should create an action with --logs 2', () => cli.do(`let ${actionName8} = data/foo.js --logs 2`, this.app)
-	.then(cli.expectOK)
+    /*it('should fail to create an action with --logs 2', () => cli.do(`let ${actionName8} = data/foo.js --logs 2`, this.app)
+       .then(cli.expectError(499)) // unsupported optional parameter
+       .catch(common.oops(this)))*/
+
+    it('should create an action with --logsize 2', () => cli.do(`let ${actionName8} = data/foo.js --logsize 2`, this.app)
+       .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName8))
        .then(sidecar.expectLimit('logs', 2))//'2 MB of logs'))
        .catch(common.oops(this)))
 
     // updating the action8 this time
-    it('should create an action with --log 3', () => cli.do(`let ${actionName8} = data/foo.js --log 3`, this.app)
+    it('should create an action with --logsize 3', () => cli.do(`let ${actionName8} = data/foo.js --logsize 3`, this.app)
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName8))

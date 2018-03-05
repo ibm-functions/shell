@@ -16,6 +16,12 @@
 
 'use strict'
 
+const Promise_each = async function(arr, fn) { // take an array and a function
+    const result = []
+    for(const item of arr) result.push(await fn(item))
+    return result
+}
+
 /** Create an HTML DIV to wrap around the given string */
 const div = (str, css=undefined, tag='div') => {
     const result = document.createElement(tag)
@@ -87,7 +93,7 @@ const usageFromCommand = command => repl.qexec(command)
           console.error('Invalid usage model', _)
           throw new Error('Internal Error')
       })
-    .catch(usageError => usageError.raw)
+      .catch(usageError => usageError.raw)
 
 /**
  * Invoke a given command, and extract the breadcrumb title from the resulting usage model
@@ -110,16 +116,28 @@ const format = message => {
         
     } else {
         // these are the fields of the usage message
-        const { title, breadcrumb=title, header, example, detailedExample, sampleInputs,
-                commandPrefix, available, parents=[], related, required, optional, oneof } = message
+        const replWrappedAMessageString = message.message && message.usage,
+              usage = replWrappedAMessageString ? message.usage : message,
+              messageString = replWrappedAMessageString && message.message
+              
+        const { command, docs, title, breadcrumb=title||command, header=`${docs}.`, example, detailedExample, sampleInputs,
+                commandPrefix, available, parents=[], related, required, optional, oneof } = usage
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
         // content
-        const result = div(undefined, 'fade-in'),
+        const resultWrapper = div(undefined, 'fade-in'),
+              result = div(),
               body = div(),
               left = div()  // usage and detailedExample
 
+        if (messageString) {
+            // then the repl wrapped around the usage model, adding an extra message string
+            const messageDom = div(messageString, 'red-text normal-size', 'h1')
+            resultWrapper.appendChild(messageDom)
+        }
+
+        resultWrapper.appendChild(result)
         result.style.margin = '1em calc(1ex + 1em)' // 1ex+1em try to match the '> ' bit of the REPL
         result.style.border = '1px solid var(--color-ui-03)'
         result.style.padding = '1em'
@@ -129,41 +147,51 @@ const format = message => {
         //
         // breadcrumb
         //
+        let breadcrumbPromise
         {
             const container = div(undefined, 'bx--breadcrumb bx--breadcrumb--no-trailing-slash', 'h1')
             result.appendChild(container)
 
-            /** add a single breadcrumb to the UI; defaultCommand means use the string as a command */
-            const addBreadcrumb = (options, defaultCommand, noSlash=false) => {
+            /** make a single breadcrumb for the UI; defaultCommand means use the string as a command */
+            const makeBreadcrumb = (options, defaultCommand) => {
                 const stringOpt = typeof options === 'string',
                       cmd = !stringOpt ? options.command : defaultCommand && options,
                       label = stringOpt ? options : options.label || breadcrumbFromCommand(options.command)
 
-                const item = span()
-                item.classList.add('bx--breadcrumb-item')
-                item.classList.add('capitalize')
+                return Promise.resolve(label)
+                    .then(label => {
+                        const item = span()
+                        item.classList.add('bx--breadcrumb-item')
+                        item.classList.add('capitalize')
 
-                const dom = span(label, 'bx--no-link')
-                item.appendChild(dom)
+                        const dom = span(label, 'bx--no-link')
+                        item.appendChild(dom)
 
-                if (!noSlash) {
-                    item.appendChild(span('/', 'bx--breadcrumb-item--slash'))
-                }
+                        if (!options.noSlash) {
+                            item.appendChild(span('/', 'bx--breadcrumb-item--slash'))
+                        }
 
-                container.appendChild(item)
+                        if (cmd) {
+                            dom.classList.add('bx--link')
+                            dom.onclick = () => repl.pexec(cmd)
+                        }
 
-                if (cmd) {
-                    dom.classList.add('bx--link')
-                    dom.onclick = () => repl.pexec(cmd)
-                }
+                        return item
+                    })
             }
 
+            /** attach the breadcrumb to the dom */
+            const attachBreadcrumb = breadcrumb => container.appendChild(breadcrumb)
+
             // now we add the breadcrumb chain to the UI
-            addBreadcrumb({ label: 'Shell Docs', command: 'help' }) // root
-            parents.forEach(_ => addBreadcrumb(_, true))            // parent path
-            addBreadcrumb(breadcrumb, undefined, true)              // this leaf we're rendering (noSlash=true)
+            breadcrumbPromise = Promise_each([{ label: 'Shell Docs', command: 'help' }, // root
+                                              ...parents,
+                                              { label: breadcrumb, noSlash: true }
+                                             ], makeBreadcrumb)
+                .then(crumbs => crumbs.map(attachBreadcrumb))
         }
 
+        return breadcrumbPromise.then(() => {
         //
         // title
         //
@@ -237,13 +265,25 @@ const format = message => {
             body.appendChild(availablePart)
 
             // render the rows
-            rows.forEach(({command, name=command, label=name, aliases, dir:isDir=false, docs, partial=false, allowed, defaultValue}) => {
+            const renderRow = rowData => {
+                if (rowData.fn) {
+                    // then rowData is a generator for aliases
+                    return renderRow(rowData.fn(rowData.command))
+                }
+
+                const {command, name=command, label=name, alias, numeric, aliases=[alias], hidden=false, advanced=false,
+                       example=numeric&&'N', dir:isDir=false, docs, partial=false, allowed, defaultValue} = rowData
+
+                if (hidden) return
+                if (advanced) return // for now
+
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
                       cmdPart = span(label),
                       dirPart = isDir && span('/'),
-                      aliasesPart = aliases && span(undefined, 'deemphasize left-pad'),
+                      examplePart = example && span(example, 'left-pad'), // for -p key value, "key value"
+                      aliasesPart = aliases && span(undefined, 'deemphasize small-left-pad'),
                       docsPart = span(docs),
                       allowedPart = allowed && smaller(span(undefined))
 
@@ -256,8 +296,7 @@ const format = message => {
 
                 // command aliases
                 if (aliases) {
-                    // aliasesPart.appendChild(span('('))
-                    aliases.forEach(alias => {
+                    aliases.filter(x=>x).forEach(alias => {
                         const cmdCell = span(),
                               cmdPart = span(alias, 'clickable clickable-blatant'),
                               dirPart = isDir && span('/')
@@ -268,7 +307,6 @@ const format = message => {
                         cmdCell.appendChild(cmdPart)
                         if (dirPart) cmdCell.appendChild(smaller(dirPart))
                     })
-                    // aliasesPart.appendChild(span(')'))
                 }
 
                 // allowed and default values
@@ -284,6 +322,7 @@ const format = message => {
                 cmdCell.appendChild(cmdPart)
                 if (dirPart) cmdCell.appendChild(smaller(dirPart))
                 if (aliasesPart) cmdCell.appendChild(smaller(aliasesPart))
+                if (examplePart) cmdCell.appendChild(smaller(examplePart))
                 docsCell.appendChild(docsPart)
                 if (allowedPart) docsCell.appendChild(allowedPart)
 
@@ -298,8 +337,9 @@ const format = message => {
                         }
                     }
                 }
-            })
+            } /* renderRow */
 
+            rows.forEach(renderRow)
             return table
         }
 
@@ -311,12 +351,12 @@ const format = message => {
             makeTable('Required Parameters', required)
         }
 
-        if (optional) {
-            makeTable('Optional Parameters', optional)
-        }
-
         if (oneof) {
             makeTable('Required Parameters (choose one of the following)', oneof)
+        }
+
+        if (optional) {
+            makeTable('Optional Parameters', optional)
         }
 
         if (sampleInputs) {
@@ -345,16 +385,18 @@ const format = message => {
             })
         }
 
-        return result
+        return resultWrapper
+        })
     }
 }
 
-module.exports = function UsageError(message, extra) {
+module.exports = function UsageError(message, extra, code) {
     Error.captureStackTrace(this, this.constructor)
     this.name = this.constructor.name
     this.message = format(message)
     this.raw = message
     this.extra = extra
+    this.code = code
 }
 
 require('util').inherits(module.exports, Error)

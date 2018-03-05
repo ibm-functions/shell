@@ -648,14 +648,16 @@ exports.deployAction = home => actionFQN => new Promise((resolve, reject) => {
 
         for (let idx = 0; idx < suffixes.length; idx++) {
             const suffix = suffixes[idx],
-                  actionPath = path.join(home, `${actionName}${suffix}`)
+                  actionPath = path.join(home, `${actionName}${suffix}`),
+                  filepath = ui.findFile(actionPath)
 
             debug('attempting to deploy action', actionPath)
 
-            fs.exists(actionPath, exists => {
+            fs.exists(filepath, exists => {
                 if (exists) {
-                    debug('deploying action', actionName, actionPath)
-                    return repl.qexec(`wsk action update "${actionFQN}" "${actionPath}"`).then(resolve, reject)
+                    debug('deploying action', actionName, filepath)
+                    return repl.qexec(`wsk action update "${actionFQN}" "${filepath}"`)
+                        .then(resolve, reject)
                 }
             })
         }

@@ -19,11 +19,11 @@ const all = ['summary', 'timeline', 'grid']
 const allExcept = cmd => all.filter(_ => _ !== cmd)
 
 /** optional arguments */
-const optional = [{ name: 'action|app', docs: 'include only activity for the given action or composition' },
-                  { name: '--success',  docs: 'include only successful activations' },
-                  { name: '--failure', docs: 'include only failed activations' },
+const optional = [{ name: 'action|app', positional: true, docs: 'include only activity for the given action or composition' },
+                  { name: '--success', boolean: true, docs: 'include only successful activations' },
+                  { name: '--failure', boolean: true, docs: 'include only failed activations' },
                   { name: '--outliers [option]', docs: 'include only outlier activations', allowed: ['min',25,50,90,95,99,'max'], defaultValue: 90 },
-                  { name: '--batches N', docs: 'the number of 200-activation batches to fetch', allowed: [1, 2, '...', 32 ], defaultValue: 2 }]
+                  { name: '--batches', numeric: true, docs: 'the number of 200-activation batches to fetch', allowed: [1, 2, '...', 32 ], defaultValue: 2 }]
 
 /* the breadcrumb chain */
 const parents = ['visualize']
@@ -51,6 +51,7 @@ module.exports = {
     },
 
     summary: {
+        strict: 'summary',
         title: 'Summarize performance',
         header: '${header.summary}.',
         example: 'summary [action|app]',
@@ -59,6 +60,7 @@ module.exports = {
     },
 
     timeline: {
+        strict: 'timeline',
         title: 'Activity timeline',
         header: '${header.timeline}.',
         example: 'timeline [action|app]',
@@ -67,6 +69,7 @@ module.exports = {
     },
 
     grid: {
+        strict: 'grid',
         title: 'Activity grid',
         header: `${header.grid}.`,
         example: 'grid [action|app]',
