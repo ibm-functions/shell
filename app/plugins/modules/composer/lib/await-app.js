@@ -106,7 +106,7 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
                     }
 
                     // entity onclick handler
-                    activation.onclick = () => repl.pexec(`app get ${name}`)
+                    activation.onclick = () => repl.pexec(`app get "/${path}"`)
 
                     // add our visualization view mode
                     if (!activation.modes) activation.modes = []
