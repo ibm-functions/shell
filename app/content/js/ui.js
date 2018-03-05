@@ -35,7 +35,7 @@ const namespace = (function() {
                       console.error(e)
                       model = {}
                   }
-              
+
                   if (!model[host]) {
                       console.log(`ui::read no model yet for ${host}`)
                       model[host] = {}
@@ -74,7 +74,7 @@ const namespace = (function() {
         write(model)
     }))
     self.__lookup = () => wsk.apiHost.get().then(host => read().then(model => console.error(`Namespace list for ${host} is ${model.namespaces ? JSON.stringify(model.namespaces) : 'empty'}`)))*/
-    
+
     const setNamespace = namespace => {
         if (!namespace) {
             return setNeedsNamespace()
@@ -187,7 +187,7 @@ const namespace = (function() {
 
     /** switch to use the given openwhisk auth */
     self.use = auth => wsk.auth.set(auth).then(() => self.init()) // make sure init doesn't get any input
-    
+
     /** fetch the namespace details for the given namespace, by name */
     self.get = name => read().then(model => model.namespaces[name])
 
@@ -229,7 +229,7 @@ const ui = (function() {
     remote.getCurrentWindow().on('leave-full-screen', function() {
         document.body.classList.remove('fullscreen')
     })
-        
+
     // this will be cleaned up once const ui becomes a module
     let history, sidecarVisibility, wsk, isAnonymousLet
 
@@ -350,7 +350,7 @@ const ui = (function() {
         input.value = newValue
         setTimeout(() => setCaretPositionToEnd(input), 0)
     }
-    
+
     self.unlisten = prompt => prompt && (prompt.onkeypress = null)
     self.listen = prompt => {
         // console.log('repl::listen', prompt.parentNode.parentNode)
@@ -466,7 +466,7 @@ const ui = (function() {
             return 'Internal Error'
         }
     }
-    
+
     self.oops = (block, nextBlock) => err => {
         const message = self.oopsMessage(err),
               errString = err && err.toString()
@@ -508,7 +508,7 @@ const ui = (function() {
         // indicate that we've already rendered the block
         return false
     }
-    
+
     self.ok = (parentNode, suffix) => {
         const okLine = document.createElement('div')
 
@@ -547,7 +547,7 @@ const ui = (function() {
             clickable.className = 'clickable activationId'
             clickable.innerText = response.activationId
             clickable.onclick = () => {
-                const fetch = iter => 
+                const fetch = iter =>
                       repl.pexec(`await ${response.activationId}`)
                       .catch(err => {
                           if (iter < 10) {
@@ -707,7 +707,7 @@ const ui = (function() {
         container.innerText = beautify(raw, { wrap_line_length: 80 })
         setTimeout(() => hljs.highlightBlock(container), 0)
     }
-    
+
     /**
      * Beautify any kinds we know how to
      *
@@ -760,7 +760,7 @@ const ui = (function() {
                 }
             }
             return
-        }            
+        }
 
         let value = entity[field]
         if (!value || value.length === 0) {
@@ -863,7 +863,7 @@ const ui = (function() {
                     // unparseable log line, so splat out the raw text
                     lineDom.appendChild(logLine)
                 }
-                
+
             })
         } else {
             // render the value like a JSON object
@@ -1132,7 +1132,7 @@ const ui = (function() {
                 }
             }
         }
-        
+
         const thirdPartyBodyContent = sidecar.querySelector('.sidecar-content .hook-for-third-party-content')
         thirdPartyBodyContent.className = 'hook-for-third-party-content no-content'
         //removeAllDomChildren(thirdPartyBodyContent)
@@ -1225,7 +1225,7 @@ const ui = (function() {
                 }, false)
             }
         } // end of third party view mod
-            
+
         const content = sidecar.querySelector('.sidecar-content')
         if (entity.exec) {
             const kind = sidecar.querySelector('.action-content .kind')
@@ -1286,7 +1286,7 @@ const ui = (function() {
                     const extraCss = entity.exec.components.length < 5 ? 'small-node-count-canvas' : ''
                     sequence.className = `${sequence.getAttribute('data-base-class')} ${extraCss}`
                     // old viz: setTimeout(() => entity.exec.components.map(renderActionBubble(sequence)), 0)
-                    
+
                     const toMap = A => A.reduce((M, {key,Type,Action,TaskIndex,Next}) => {
                         M[key] = { Type, Action, TaskIndex }
                         if (Next) {
@@ -1334,7 +1334,7 @@ const ui = (function() {
                             //
                             // show the action's code
                             //
-                        
+
                             if (!entity.exec.binary || !(entity.annotations && entity.annotations.find(({key}) => key === 'binary'))) {
                                 //
                                 // render the textual source code
@@ -1527,7 +1527,7 @@ const ui = (function() {
 
         repl.scrollIntoView()
 
-        // 
+        //
         return Promise.resolve(responseToRepl)
     } /* showEntity */
 
@@ -1535,7 +1535,7 @@ const ui = (function() {
         document.addEventListener('dragover', event => event.preventDefault() && false, false)
         document.addEventListener('drop', event => event.preventDefault() && false, false)
     }
-        
+
     self.init = () => {
         // this will be cleaned up once ui becomes a module
         wsk = plugins.require('/ui/commands/openwhisk-core')
@@ -1626,7 +1626,7 @@ const ui = (function() {
             if (subwindow.viewName) {
                 document.body.setAttribute('data-view-name', subwindow.viewName)
             }
-            
+
             // body styling
             document.body.classList.add('subwindow')
             if (subwindow.theme) document.body.classList.add(`theme-${subwindow.theme}`)
@@ -1711,7 +1711,9 @@ const ui = (function() {
         const { app } = require('electron').remote
         return app.getPath('userData')
     }
-    
+
+    self.headless = false
+
     return self
 })()
 
