@@ -31,6 +31,7 @@ if (typeof global.plugins === 'undefined') {
     global.localStorage = { getItem: () => '{}' }
     global.eventBus = new events.EventEmitter()
     global.ui = {
+        headless = true,
         startsWithVowel: () => false
     }
 }

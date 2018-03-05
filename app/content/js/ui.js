@@ -276,6 +276,8 @@ const ui = (function() {
     }
     self.clearSelection = () => sidecarVisibility.hide(true) // true means also clear selection model
 
+    self.headless = false
+    
     const isVowel = c => c === 'a' || c === 'e' || c === 'i' || c === 'o' || c === 'u'
     const startsWithVowel = s => isVowel(s.charAt(0))
     self.startsWithVowel = startsWithVowel
