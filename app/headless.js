@@ -540,55 +540,16 @@ const failure = err => {
 const onlyOpts = argv => !argv.find(_ => _.charAt(0) !== '-')
 
 /**
+ * Insufficient arguments provided?
+ *
+ */
+const insufficientArgs = () => argv.length === 0 || onlyOpts(argv) || argv.find(_ => _ === '--help' || _ === '-h')
+
+/**
  * Print usage information, if the command line arguments are insufficient
  *
  */
-const usage = () => {
-    //
-    // Check for required arguments
-    //
-    if (argv.length === 0 || onlyOpts(argv) || argv.find(_ => _ === '--help' || _ === '-h')) {
-        console.error(`Welcome to the IBM Cloud Functions Shell`.green)
-        console.error()
-
-        console.error(`Usage information:`)
-
-        const c1 = txt => txt.reset
-        const c2 = txt => txt.dim
-        const c3 = txt => c1(`${cmd} `) + txt.blue
-        const c4 = txt => txt.green
-
-        console.error(c3('about') + c4('                                    ') + c2('[ Display version information ]'))
-        console.error(c3('help') + c4('                                     ') + c2('[ Show more detailed help, with tutorials ]'))
-        console.error(c3('shell') + c4('                                    ') + c2('[ Open graphical shell ]'))
-        console.error(c3('run') + c4(' <script.fsh>                         ') + c2('[ Execute commands from a file ]'))
-        console.error()
-        console.error(c3('app init') + c4('                                 ') + c2('[ Initialize state management ]'))
-        console.error(c3('app preview') + c4(' <file.js|file.json>          ') + c2('[ Prototype a composition, with visualization help ]'))
-        console.error(c3('app list') + c4('                                 ') + c2('[ List deployed compositions ]'))
-        console.error(c3('app create') + c4(' <name> <file.js|file.json>    ') + c2('[ Deploy a composition ]'))
-        console.error(c3('app update') + c4(' <name> <file.js|file.json>    ') + c2('[ Update or deploy composition ]'))
-        console.error(c3('app delete') + c4(' <name>                        ') + c2('[ Undeploy a composition ]'))
-        console.error(c3('app invoke') + c4(' <name>                        ') + c2('[ Invoke a composition and wait for its response ]'))
-        console.error(c3('app async') + c4(' <name>                         ') + c2('[ Asynchronously invoke a composition ]'))
-        console.error()
-        console.error(c3('session list') + c4('                             ') + c2('[ List recent app invocations ]'))
-        console.error(c3('session get') + c4(' <sessionId>                  ') + c2('[ Graphically display the result and flow of a session ]'))
-        console.error(c3('session result') + c4(' <sessionId>               ') + c2('[ Print the return value of a session ]'))
-        console.error(c3('session kill ') + c4('<sessionId>                 ') + c2('[ Kill a live session ]'))
-        console.error(c3('session purge ') + c4('<sessionId>                ') + c2('[ Purge the state of a completed session ]'))
-
-        /*console.error(`Usage information:`)
-
-        console.error(`${cmd} <script.wsk>                                                 [ Execute commands from a file ]`)
-        console.error(`${cmd} let foo = 'x=>x'                                             [ Create action from javascript code ]`)
-        console.error(`${cmd} let foo = /path/to/action/src.js                             [ Create action from source file ]`)
-        console.error(`${cmd} let foo.zip = /path/to/action/src/dir                        [ Create zip action ]`)
-        console.error(`${cmd} let foo.{html|png|svg|jpg|webjs} = /path/to/action/src.html  [ Create web page ]`)*/
-
-        return true // early exit
-    }
-}
+const usage = () => repl.qexec('help')
 
 /**
  * Initialize headless mode
@@ -599,9 +560,8 @@ const main = (app, mainFunctions) => {
 
     const { quit } = app
 
-    if (usage()) {
-        return quit()
-    }
+    // set up the fake dom
+    mimicDom(app, mainFunctions)
 
     /**
      * Evaluate the given command
@@ -609,9 +569,6 @@ const main = (app, mainFunctions) => {
      */
     const eval = cmd => repl.qexec(cmd)
           .then(success(quit))
-
-    // set up the fake dom
-    mimicDom(app, mainFunctions)
 
     console.log = function() {
         if (arguments[0] !== undefined && (!arguments[0].indexOf || (arguments[0].indexOf('::') < 0 && arguments[0].indexOf('Resolving') < 0
@@ -641,6 +598,10 @@ const main = (app, mainFunctions) => {
     debug('main::bootstrap')
     plugins.init({app}).then(() => {
         debug('plugins initialized')
+
+        if (insufficientArgs()) {
+            return eval('help')
+        }
 
         const maybeRetry = err => {
             if (!namespace.current() || err.message === 'namespace uninitialized') {
