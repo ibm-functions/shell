@@ -47,4 +47,22 @@ describe('wsk action invoke -r', function() {
        .then(selector => this.app.client.getText(selector))
        .then(ui.expectStruct({x:3}))
        .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with -r`, () => cli.do(`wsk action invoke ${actionName} --result`, this.app)
+       .then(cli.expectOKWithCustom({ selector: '.json' }))
+       .then(selector => this.app.client.getText(selector))
+       .then(ui.expectStruct({x:3}))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with -br`, () => cli.do(`wsk action invoke ${actionName} -br`, this.app)
+       .then(cli.expectOKWithCustom({ selector: '.json' }))
+       .then(selector => this.app.client.getText(selector))
+       .then(ui.expectStruct({x:3}))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with -br`, () => cli.do(`wsk action invoke ${actionName} --blocking --result`, this.app)
+       .then(cli.expectOKWithCustom({ selector: '.json' }))
+       .then(selector => this.app.client.getText(selector))
+       .then(ui.expectStruct({x:3}))
+       .catch(common.oops(this)))
 })
