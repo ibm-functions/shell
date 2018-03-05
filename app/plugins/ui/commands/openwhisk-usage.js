@@ -17,6 +17,10 @@
 const all = ['wsk action', 'wsk activation', 'wsk package', 'wsk rule', 'wsk trigger' ]
 all.except = str => all.filter(_ => _ !== str)
 
+const aliases = {
+    list: ['ls']
+}
+
 /**
  * Usage strings. TODO externalize
  *
@@ -30,11 +34,11 @@ module.exports = {
            example: 'wsk <command>',
            commandPrefix: 'wsk',
            available: [{ command: 'action', docs: 'work with actions', dir: true },
-                       { command: 'activation', docs: 'work with activations', dir: true },
+                       { command: 'activation', docs: 'work with activations', dir: true, aliases: ['$'] },
                        { command: 'package', docs: 'work with packages', dir: true },
                        { command: 'rule', docs: 'work with rules', dir: true },
                        { command: 'trigger', docs: 'work with triggers', dir: true },
-                       { command: 'list', docs: 'list entities in the current namespace', dir: true }],
+                       { command: 'list', docs: 'list entities in the current namespace', aliases: aliases.list }],
          },
 
     bind: 'Usage: bind <packageName> <bindName> [-p key value]...',
@@ -48,7 +52,7 @@ module.exports = {
                            { command: 'invoke', docs: 'invoke a given action', partial: '<action> -p param value' },
                            { command: 'get', docs: 'get the details of a given action', partial: '<action>' },
                            { command: 'delete', docs: 'delete a given action', partial: '<action>' },
-                           { command: 'list', docs: 'list all actions' }],
+                           { command: 'list', docs: 'list all actions', aliases: aliases.list }],
                parents: [{ command: 'wsk' }],                
                related: all.except('wsk action')
              },
@@ -64,7 +68,7 @@ module.exports = {
                          { command: 'update', docs: 'update an existing rule, or create one if it does not exist', partial: true },
                          { command: 'get', docs: 'get the details of a given rule', partial: '<rule>' },
                          { command: 'delete', docs: 'delete a given rule', partial: '<rule>' },
-                         { command: 'list', docs: 'list all rules' }],
+                         { command: 'list', docs: 'list all rules', aliases: aliases.list }],
              parents: [{ command: 'wsk' }],                
              related: all.except('wsk rule')
            },
@@ -78,7 +82,7 @@ module.exports = {
                             { command: 'update', docs: 'update an existing an trigger, or create one if it does not exist', partial: '<trigger>' },
                             { command: 'get', docs: 'get the details of a trigger', partial: '<trigger>' },
                             { command: 'delete', docs: 'delete a given trigger', partial: '<trigger>' },
-                            { command: 'list', docs: 'list all triggers' }],
+                            { command: 'list', docs: 'list all triggers', aliases: aliases.list }],
                 parents: [{ command: 'wsk' }],                
                 related: all.except('wsk trigger')
            },
@@ -92,24 +96,24 @@ module.exports = {
                             { command: 'update', docs: 'update an existing package, or create one if it does not exist', partial: true },
                             { command: 'get', docs: 'get the details of a given package', partial: '<package>' },
                             { command: 'delete', docs: 'delete a given package', partial: '<package>' },
-                            { command: 'list', docs: 'list all packages' },
+                            { command: 'list', docs: 'list all packages', aliases: aliases.list },
                             //{ command: 'refresh', docs: 'refresh package bindings' }
                            ],
                 parents: [{ command: 'wsk' }],
                 related: all.except('wsk package')
               },
 
-        activations: { title: 'Activation operations',
-                header: 'These commands will help you to work with activations.',
-                example: 'wsk activation <command>',
-                commandPrefix: 'wsk activation',
-                available: [{ command: 'list', docs: 'list recent activations' },
-                            { command: 'get', docs: 'get the full details of an activation', partial: '<activationId>' },
-                            { command: 'logs', docs: 'get the logs of an activation', partial: '<activationId>' },
-                            { command: 'result', docs: 'get the result, i.e. return value, of an activation', partial: '<activationId>' },
-                            //{ command: 'poll', docs: 'poll continuously for log messages from currently running actions' },
-                           ],
-                       parents: [{ command: 'wsk' }],
-                related: all.except('wsk activation')
-              }
+    activations: alias => ({ title: 'Activation operations',
+                             header: 'These commands will help you to work with activations.',
+                             example: `wsk ${alias} <command>`,
+                             commandPrefix: `wsk ${alias}`,
+                             available: [{ command: 'get', docs: 'get the full details of an activation', partial: '<activationId>' },
+                                         { command: 'list', docs: 'list recent activations', aliases: aliases.list },
+                                         { command: 'logs', docs: 'get the logs of an activation', partial: '<activationId>' },
+                                         { command: 'result', docs: 'get the result, i.e. return value, of an activation', partial: '<activationId>' },
+                                         //{ command: 'poll', docs: 'poll continuously for log messages from currently running actions' },
+                                        ],
+                             parents: [{ command: 'wsk' }],
+                             related: all.except('wsk activation')
+                           })
 }

@@ -237,12 +237,13 @@ const format = message => {
             body.appendChild(availablePart)
 
             // render the rows
-            rows.forEach(({command, name=command, label=name, dir:isDir=false, docs, partial=false, allowed, defaultValue}) => {
+            rows.forEach(({command, name=command, label=name, aliases, dir:isDir=false, docs, partial=false, allowed, defaultValue}) => {
                 const row = table.insertRow(-1),
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
                       cmdPart = span(label),
                       dirPart = isDir && span('/'),
+                      aliasesPart = aliases && span(undefined, 'deemphasize left-pad'),
                       docsPart = span(docs),
                       allowedPart = allowed && smaller(span(undefined))
 
@@ -253,6 +254,24 @@ const format = message => {
                 cmdPart.style.fontWeight = '500'
                 wrap(smaller(sans(docsPart)))
 
+                // command aliases
+                if (aliases) {
+                    // aliasesPart.appendChild(span('('))
+                    aliases.forEach(alias => {
+                        const cmdCell = span(),
+                              cmdPart = span(alias, 'clickable clickable-blatant'),
+                              dirPart = isDir && span('/')
+
+                        cmdPart.onclick = () => repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${alias}`)
+
+                        aliasesPart.appendChild(cmdCell)
+                        cmdCell.appendChild(cmdPart)
+                        if (dirPart) cmdCell.appendChild(smaller(dirPart))
+                    })
+                    // aliasesPart.appendChild(span(')'))
+                }
+
+                // allowed and default values
                 if (allowed) {
                     allowedPart.style.color = 'var(--color-text-02)'
                     allowedPart.appendChild(span('options: '))
@@ -264,6 +283,7 @@ const format = message => {
 
                 cmdCell.appendChild(cmdPart)
                 if (dirPart) cmdCell.appendChild(smaller(dirPart))
+                if (aliasesPart) cmdCell.appendChild(smaller(aliasesPart))
                 docsCell.appendChild(docsPart)
                 if (allowedPart) docsCell.appendChild(allowedPart)
 

@@ -271,7 +271,7 @@ exports.subtree = (route, options) => {
         }
 
         const help = (_1, _2, _3, { errors }) => {
-            debug('subtree help', route)
+            debug('subtree help', route, options)
 
             // the usage message:
             const usageMessage = options.usage || options.docs
@@ -295,10 +295,9 @@ exports.subtree = (route, options) => {
  * Register a synonym of a subtree
  *
  */
-exports.subtreeSynonym = (route, master) => {
-    if (route !== master.route) {
-        // don't alias to yourself!
-        const subtree = exports.subtree(route, { synonymFor: master })
+exports.subtreeSynonym = (route, master, options) => {
+    if (route !== master.route) { // <-- don't alias to yourself!
+        const subtree = exports.subtree(route, Object.assign({}, options, { synonymFor: master }))
 
         // reverse mapping from master to synonym
         if (!master.synonyms) master.synonyms = {}
