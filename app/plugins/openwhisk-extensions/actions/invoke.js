@@ -85,7 +85,7 @@ const doInvoke = rawInvoke => function() { // we'll use "arguments" to pass thro
     // later, if necessary; it's preserved in the options variable,
     // and the respond method will handle the -r there. hopefully this
     // is good enough [NMM 20170922]
-    arguments[2] = arguments[2].filter(_ => _ !== '-r' && _ !== '--result')
+    arguments[2] = arguments[2].filter(_ => _ !== '-r' && _ !== '--result' && _ != '-br')
 
     // do the invocation, then fetch the full activation record
     // (blocking invokes return incomplete records; no logs)
