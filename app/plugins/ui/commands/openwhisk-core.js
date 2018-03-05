@@ -934,7 +934,8 @@ module.exports = (commandTree, prequire) => {
               props = Object.getOwnPropertyNames(clazz.prototype).concat(extraVerbs(api) || [])
         //alsoInstallAtRoot = api === 'actions'
 
-        const apiMaster = commandTree.subtree(`/wsk/${api}`, { docs: `Commands related to ${api}`, usage: usage[api] })
+        const docs = typeof usage[api] === 'function' ? usage[api] : () => usage[api]
+        const apiMaster = commandTree.subtree(`/wsk/${api}`, { docs: `Commands related to ${api}`, usage: docs(api) })
 
         // find the verbs of this entity type
         for (let idx in props) {
@@ -948,7 +949,7 @@ module.exports = (commandTree, prequire) => {
                 const entities = (synonyms.entities[api] || []).concat([api])
                 const verbs = synonyms.verbs[verb] || []
                 entities.forEach(eee => {
-                    commandTree.subtreeSynonym(`/wsk/${eee.nickname || eee}`, apiMaster)
+                    commandTree.subtreeSynonym(`/wsk/${eee.nickname || eee}`, apiMaster, { usage: docs(eee.nickname || eee) })
 
                     const handler = executor(eee.name || api, verb, verb, commandTree, preflight)
                     const entityAliasMaster = commandTree.listen(`/wsk/${eee.nickname || eee}/${verb}`, handler, { docs: docs(api, verb) })
