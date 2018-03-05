@@ -20,6 +20,7 @@ debug('loading')
 const { create, isValidFSM, hasUnknownOptions, extractActionsFromFSM, deployActions } = require('./composer'),
       badges = require('./badges'),
       messages = require('./messages.json'),
+      sampleInputs = require('./sample-inputs'),
       fs = require('fs'),
       path = require('path'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source')
@@ -38,13 +39,14 @@ const docs = {
 const usage = cmd => ({
     title: 'Deploy composition',
     header: docs[cmd],
-    example: `app ${cmd} <name> <file.js|file.json>`,
-    required: [{ name: '<name>', docs: 'the name of your new app' },
-               { name: '<file.js|file.json>', docs: 'a NodeJS source file, or a pre-compiled JSON file' }],
+    example: `app ${cmd} <name> <sourceFile>`,
+    required: [{ name: 'name', docs: 'the name of your new app' },
+               { name: 'sourceFile', docs: 'source file or pre-compiled composition' }],
     optional: [{ name: '-n|--dry-run', docs: 'check the given input for validity, do not deploy it' },
-               { name: '--log-input', docs: 'log initial input with an echo action (app may run slower)' },
-               { name: '--log-inline', docs: 'log inline function output with echo actions (app may run slower)' },
-               { name: '--log-all', docs: 'log initial input and inline function output (app may run slower)' }],
+               { name: '--log-input', docs: 'log initial input' },
+               { name: '--log-inline', docs: 'log inline function output' },
+               { name: '--log-all', docs: 'log initial input and inline function output' }],
+    sampleInputs: sampleInputs(sampleName => `app ${cmd} ${sampleName}`),
     parents: ['composer', { command: 'composer app' }],
     related: ['app get', 'app invoke', 'app list']
 })
