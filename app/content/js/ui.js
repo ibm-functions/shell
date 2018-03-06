@@ -1039,6 +1039,8 @@ const ui = (function() {
         badges.appendChild(badge)
         return badge
     }
+    self.addBadge = addBadge
+    
     const addVersionBadge = (action, {clear=false}={}) => {
         if (clear) {
             self.clearBadges()
