@@ -82,7 +82,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
-
+	
 	$("#wskflowContainer").remove();
 	$(containerId).append("<div id='wskflowContainer'></div>");	
 
@@ -94,28 +94,24 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		"flex": "1",
 		"font-weight": 400,
 		"position": "relative",
-    	        "overflow": "hidden", // we'll do pan and zoom ourselves
-		"-webkit-app-region": "no-drag"
+    	"overflow": "hidden", // we'll do pan and zoom ourselves
+		"-webkit-app-region": "no-drag",
+		"width": '100%',
+		"height": '100%'
 	});
-        $("#wskflowContainer").addClass('grabbable') // we want to use grab/grabbing cursor
+    $("#wskflowContainer").addClass('grabbable') // we want to use grab/grabbing cursor
 
 	
-	let ssvg = d3.select("#wskflowContainer")
-        .call(zoom)
+	let ssvg = d3.select("#wskflowContainer")        
 	    .append("svg")
 	    .attr("id", "wskflowSVG")
-            // we will set the viewBox below, once we know the dimensions of the graph
-	    .attr("preserveAspectRatio", "xMidYMin")
-	    .style("flex", "1");
+	    .style('width', '100%')	// svg width and height changes with the size of the container 
+	    .style('height', '100%')
+	    .style("flex", "1")
+	    .call(zoom);
 
 	let container = ssvg.append('g')		
-        .on("dblclick.zoom", null);        
-   
-/*    container.append('rect')
-    	.attr('width', width)
-    	.attr('height', height)
-    	.style('fill', 'none')
-    	.style("pointer-events", "all");*/
+        .on("dblclick.zoom", null);
 
 	let svg = container
 		.append("g")
@@ -251,7 +247,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	})
 
 	var root = svg.append("g");
-
+	let elkData;
 	elk.layout(JSONgraph,
 		{	
 			layoutOptions:{
@@ -264,29 +260,12 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			}				
 		})
    		.then(data => {
+   			elkData = data;           
 
-                    // shell issue #423, #465: allow graph to auto-scale with window size
-                       const viewBoxWidth = Math.max(200, data.width),
-                             viewBoxHeight = Math.max(300, data.height),
-                             translateX = Math.min(0, (data.width - viewBoxWidth) / 2)
-
-                       $("#wskflowSVG").attr("viewBox", `${translateX} 0 ${viewBoxWidth} ${viewBoxHeight}`)
-
-                       // see shell issue #422, #465: avoid the visualization becoming too ridiculously scaled up/blown up/zoomed in
-                       $("#wskflowContainer").css({
-                            "min-width": 2 * viewBoxWidth,
-                            "min-height": 2 * viewBoxHeight
-                        })
-
-			// with shell issue #423, we don't need to have an inititial scale or translation
-   		        let initScale = 1;
-  		        let initTransX = 0;
-			let initTransY = 0; 
-
-			container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);
+   			// by default, the graph resizes to fit the size of the container i.e. zoom-to-fit, showing the entire graph. This solves #582. 
+			resizeToFit(width, height);
 
 			console.log(`[wskflow] svg canvas width=${width}, height=${height}`);
-			console.log(`[wskflow] initial scaling and translate: matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY}`);
 
 
 		    let getNodes = function(graph) {
@@ -1261,23 +1240,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
    		$("#wskflowContainer").css("display", "flex");
  	} 		
 
-
- 	// handle redraw and resetting layout. from https://github.com/OpenKieler/klayjs-d3/blob/master/examples/interactive/index.js
-	function redraw() {
-     	       $("#qtip").removeClass("visible")
-
-            const mousePos = d3.mouse(this),
-                  centerX = mousePos[0],
-                  centerY = mousePos[1]
-
-            const translateX = -(1 - d3.event.scale) * centerX + d3.event.translate[0],
-                  translateY = -(1 - d3.event.scale) * centerY + d3.event.translate[1]
-            
-            ssvg.style('transform', `translateX(${translateX}px) translateY(${translateY}px) scale(${d3.event.scale}`)
-            ssvg.style('transition', 'transform 50ms ease-in-out')
-	}		
-
-	// check if transition is complete. from https://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
+ 	// check if transition is complete. from https://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
 	function endall(transition, callback) { 
 	    if (typeof callback !== "function") throw new Error("Wrong callback in endall");
 	    if (transition.size() === 0) { callback() }
@@ -1287,6 +1250,75 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	        .each("end", function() { if (!--n) callback.apply(this, arguments); }); 
 	 }	
 
+	/*
+		After many tests, this is the right way to manually adjust values for `transform` without introducing unwanted behavior when zooming by mouse scrolling using d3's zoom feature.
+		We have to set d3's zoom variable to have the same values as the values we'd like for `transform`. So when d3 calculates the values for event.translate/scale, it takes our manual adjustments into account. 		
+	*/
+
+	let applyAutoScale = true;	// if resizing the window will resize the graph. true by default. 
+	
+	function resizeToFit(w, h){	// resizeToFit implements a zoom-to-fit behavior. 
+		width = w;
+		height = h;
+		let initScale = Math.min(width/elkData.width, height/elkData.height, 2),
+			initTransX = Math.max(width/2 - elkData.width*initScale/2, 0),
+			initTransY = 0;
+		zoom.translate([initTransX, initTransY]); 
+		zoom.scale(initScale);
+		container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);		
+	}
+
+	function pan(w, h){			// pan implements a behavior that zooms in the graph by 2x. 
+		width = w;
+		height = h;
+		let initScale = 2,
+			initTransX = width/2 - elkData.width*initScale/2,
+			initTransY = 0; 
+		zoom.translate([initTransX, initTransY]); 
+		zoom.scale(initScale);
+		container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);
+	}
+
+ 	/* 
+ 		from https://github.com/OpenKieler/klayjs-d3/blob/master/examples/interactive/index.js 	
+ 		redraw is called by d3. d3.event.translate and d3.event.scale handle moving the graph and zooming. Note that when zooming, both event.translate and event.scale change to let the zoom center be the mouse cursor. Adding ohter values to event.translate and event.scale is likely to cause unwanted behaviors. 
+ 	*/
+	function redraw() {		
+		if(applyAutoScale){	// exit zoom-to-fit mode when the user uses the mouse to move or zoom the graph 
+			applyAutoScale = false;
+			$('#zoomToFitButton').css('color', 'lightgrey');	
+		}
+     	$("#qtip").removeClass("visible") 
+        container.attr('transform', `translate(${d3.event.translate}) scale(${d3.event.scale})`);
+	}	
+
+	// add a zoom-to-fit button. #422
+	$('#wskflowContainer').append('<div id="zoomToFitButton" style="width:35px; height: 35px; border: solid 1px black; border-radius: 5px; padding: 4px; position:absolute; top: 10px; right: 10px; background-color:var(--color-stripe-02); color:mediumspringgreen; cursor:pointer;"><i class="fas fa-expand-arrows-alt" style="width: 100%; height:100%;"></i></div>');
+
+	// zoom-to-fit button behavior
+	$('#zoomToFitButton').click(() => {
+		applyAutoScale = !applyAutoScale;	// toggle applyAotuScale
+		if(applyAutoScale){
+			// when clicking to switch from inactive to active, it resizes the graph to fit the window. #422
+			$('#zoomToFitButton').css('color', 'mediumspringgreen');
+			resizeToFit($('#wskflowSVG').width(), $('#wskflowSVG').height());
+		}
+		else{
+			// when clicking to switch from active to inactive, it resizes the graph to zoom in at graph entry by 2x. 
+			$('#zoomToFitButton').css('color', 'lightgrey');
+			pan($('#wskflowSVG').width(), $('#wskflowSVG').height());
+		}
+	});
+
+	// when zoom-to-fit is active, the graph resizes as the window resizes. #422
+	$(window).unbind('resize').resize(() => {
+	 	// auto-resize with window size works when the user haven't adjusted the zooming manually with scrolling. 
+	 	if(applyAutoScale){
+	 		resizeToFit($('#wskflowSVG').width(), $('#wskflowSVG').height());
+	 	}	 	
+	 	
+	});
+	
 		 
 }
 
