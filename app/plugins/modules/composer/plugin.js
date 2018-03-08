@@ -46,7 +46,7 @@ module.exports = (commandTree, prequire) => {
 
     // combinator commands
     require('./lib/if')(commandTree, prequire)
-    require('./lib/await-app')(commandTree, prequire)
+    require('./lib/await-app').cmds(commandTree, prequire)
     require('./lib/sequence')(commandTree, prequire)
     require('./lib/try')(commandTree, prequire)
     require('./lib/while')(commandTree, prequire)
