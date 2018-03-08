@@ -78,7 +78,7 @@ const wfColorAct = {
 }
 
 // need to fix center
-function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
+function graph2doms(JSONgraph, containerId, width, height, activations){
 
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
@@ -223,7 +223,7 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 	$("#wskflowContainer").append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
 
 
-	if(visited){
+	if(activations){
 		$("#wskflowContainer").append("<div id='actList' style='position: absolute; display:none; background-color: rgba(0, 0, 0, 0.8); color: white; font-size: 0.75em; padding: 1ex; width:225px; right: 5px; top: 5px;'></div>");		
 	}
 	$("#qtip").css({
@@ -377,9 +377,6 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		var nodeData = root.selectAll(".node")
 		.data(nodes,  function(d) { return d.id; });
 
-                // so we can add a data-index attribute to each task node
-                let taskIndex = 0
-
 	        var node = nodeData.enter()
 		.append("g")
 			.attr("class", function(d) {
@@ -403,19 +400,19 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
                                         className += " Task"
                                 }
 
-			        if(d.label.indexOf("Try-Catch:") != -1 || d.label.indexOf("Repeat ") != -1)
+			        if(d.retryCount || d.repeatCount)
 					className += " repeat";
 
 				return className;
 			})
 			.attr("id", function(d){return d.id})
-  		        .attr("data-task-index", ({TaskIndex}) => TaskIndex ) // add a data-task-index for every task
+  		        .attr("data-task-index", d => d.taskIndex) // add a data-task-index for every task. taskIndex is maintained at the graph model level
 		        .attr("data-name", function(d){
                             // make sure we obey the `/namespace/name` format
 			    return d.label.charAt(0) !== '/' ? `/_/${d.label}` : d.label;
 			})
 			.attr("data-deployed", function(d){
-				if(visited){
+				if(activations){
 					
 				}
 				else{
@@ -435,88 +432,116 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 
 		// add representing boxes for nodes
 		let box;
-		if(visited){		
-			console.log("[wskflow] draw session graph");
-			box = node.append("rect")
-				.attr("class", "atom")
-				.attr("width", 0)
-				.attr("height", 0)
-				.attr("rx", function(d){
-					if(d.type == "try_catch" || d.type == "Try" || d.type == "handler")
-						return 0;
-					else
-						return 2;
-				})
-				.attr("ry", function(d){
-					if(d.type == "try_catch" || d.type == "Try" || d.type == "handler")
-						return 0;
-					else
-						return 2;
-				})
-				.style("fill", function(d){
-					if(d.children){
-						return "transparent"
+
+		box = node.append("rect")
+			.attr("class", "atom")
+			.attr("width", 0)
+			.attr("height", 0)
+			.attr("rx", function(d){
+				if(d.children)
+					return 0;
+				else
+					return 2;
+			})
+			.attr("ry", function(d){
+				if(d.children)
+					return 0;
+				else
+					return 2;
+			})
+			.style("fill", function(d){
+				if(d.children){
+					return "transparent"
+				}
+				else{
+					if(activations){
+						// session
+						if(d.visited){
+							let failed = true;	// assumption: all fail is fail. if one succes, we count it as success
+							d.visited.forEach(i => {
+								if(activations[i].response.success)
+									failed = false;
+							});
+							if(failed){
+								$(this).attr("failed", true);
+								$(`#${d.id}`).attr('data-status', 'failed');
+								return wfColorAct.failed;
+							}
+							else{
+								$(`#${d.id}`).attr('data-status', 'success');
+								return wfColorAct.active;
+							}
+						}					
+						else{
+							$(`#${d.id}`).attr('data-status', 'not-run');
+							return wfColorAct.inactive;
+						}
+
 					}
-					else if(visited[d.id]){
-						if(visited[d.id] == 'failed'){
-							$(this).attr("failed", true);
-							$(`#${d.id}`).attr('data-status', 'failed');
-							return wfColorAct.failed;
+					else{
+						// app
+						if(d.type == "let" || d.type == "literal"){					
+							//return "#4E387E";
+							return wfColor.Value.normal;
+						}
+						else if(d.type == "Exit" || d.type == "Entry"){
+							return wfColor.EE.normal;
+						}
+						else if(d.type === 'retain' || d.type === 'Dummy'){
+							return 'black';
 						}
 						else{
-							$(`#${d.id}`).attr('data-status', 'success');
-							return wfColorAct.active;
+							return wfColor.EE.normal;
 						}
-					}					
-					else{
-						$(`#${d.id}`).attr('data-status', 'not-run');
-						return wfColorAct.inactive;
+
 					}
-					
-				})
-				.style("stroke", function(d){					
-					if(d.children){
-						if(d.type == "try_catch") return wfColor.try_catch.normal;
-						else if(d.type == "Try") return wfColor.Try.normal;
-						else if(d.type == "handler") return wfColor.handler.normal;
-					}
-					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal" || d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
-						if(visited[d.id])
-							return "black";
-						else
-							return wfColorAct.inactiveBorder;
-					}					
-					else{
-						return "transparent";
-					}
-				})
-				.style("stroke-width", function(d){
-					if(d.children) return 1;
-				})
-				.style("stroke-dasharray", function(d){
-					if(d.children) return 3;
-				})		
-				.style("x", function(d){
-					//if(d.type == "Dummy") return 1;
-				})		
-				.style("cursor", function(d){
-					if(visited[d.id]){
-						//if(d.type == "action" && fsm.States[d.id].Function == undefined){
-						if(fsm.States[d.id] && fsm.States[d.id].act && (
-							d.type == 'Exit' || d.type == 'Entry' || 
-							(d.type == 'action' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug)))
-						)){
-							return "pointer";
-						}						
-						else{
-							return "normal";
-						}
-					}
-				})
-				.on("mouseover", function(d, i){
-					let qtipText = "";
-					
-					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block"){					
+				}
+				
+			})
+			.style("stroke", function(d){					
+				if(d.children){
+					if(d.type == "try_catch") return wfColor.try_catch.normal;
+					else if(d.type == "try") return wfColor.Try.normal;
+					else if(d.type == "handler") return wfColor.handler.normal;
+					else if(d.id !== 'root') return 'black';
+					else return 'transparent';
+				}
+				else{
+					if(activations && d.visited == undefined)
+						return wfColorAct.inactiveBorder;
+					else
+						return 'black';
+				}				
+			})
+			.style("stroke-width", function(d){
+				if(d.children) return 1;
+			})
+			.style("stroke-dasharray", function(d){
+				if(d.children) return 3;
+			})		
+			.style("x", function(d){
+				if(d.type === 'retain') return 1;
+				if(d.type === 'Dummy') return 1;
+			})		
+			.style("cursor", function(d){
+				if(activations){
+					if(d.visited && d.type === 'action')
+						return 'pointer';
+					else
+						return 'normal';
+				}
+				else{
+					if(d.type === 'action')
+						return 'pointer';
+					else
+						return 'normal';
+				}
+			})
+			.on("mouseover", function(d, i){
+				let qtipText = "";
+				
+				if(activations){
+					if(d.children === undefined && d.visited && $("#actList").css("display") != "block"){					
 						if($(this).attr("failed")){
 							$(this).css("fill", wfColorAct.failedHovered);
 						}
@@ -524,15 +549,18 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							$(this).css("fill", wfColorAct.activeHovered);
 						}
 						
-					    if(d.type == "action" || d.type === 'function' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug))){
-							let act = fsm.States[d.id].act;
+					    if(d.type == "action"){					
 							// first, describe # activations if # > 1
-							if(act.length>1)
+							if(d.visited.length>1)
 								qtipText += ("<div style='padding-bottom:2px;'>"+act.length+" activations</div>");
+
 							let date;
-							act.forEach(a => {										
+							d.visited.forEach(i => {										
 								// first part: time
-								let start = new Date(a.start), timeString = "";		
+								let a = activations[i],
+									start = new Date(a.start),
+									timeString = "";		
+
 								if(date == undefined || date != (start.getMonth()+1)+"/"+start.getDate()){
 									date = (start.getMonth()+1)+"/"+start.getDate();
 									timeString += date + " ";
@@ -558,12 +586,12 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 
 								qtipText = "<div style='padding-bottom:2px;'>"+qtipText+"</div>";
 
-
 							});	
 
 						}
-						else if(d.type == "Exit" || d.type == 'Entry'){
-							let act = fsm.States[d.id].act[0];
+						//else if(d.type == "Exit" || d.type == 'Entry'){
+						else if(d.type === 'Exit'){
+							let act = activations[d.visited[0]];
 							let start = new Date(act.start), timeString = (start.getMonth()+1)+"/"+start.getDate()+" ";		
 							timeString += start.toLocaleTimeString(undefined, { hour12: false });
 							let result = JSON.stringify(act.response.result)								
@@ -574,245 +602,9 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							
 						}
 
-					}									
-
-					if(qtipText.length != 0){
-						$("#qtipContent").html(qtipText);
-
-						$("#qtip").addClass("visible");
-
-						let qtipX = $(this).offset().left+$(this)[0].getBoundingClientRect().width - $("#wskflowContainer").offset().left;
-						let qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2 - $("#wskflowContainer").offset().top
-						if($("#wskflowContainer").hasClass("picture-in-picture")){
-							// currentScale: 0.25
-							let scaleString = $("#wskflowContainer").css("transform"), scale;
-							try{
-								scale = parseFloat(scaleString.substring("matrix(".length, scaleString.indexOf(",")));
-							}
-							catch(e){
-								console.log(e);
-								console.log(scaleString);
-								scale = 0.25
-							}												
-
-							qtipX /= scale;
-							qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2*scale - $("#wskflowContainer").offset().top;
-							qtipY /= scale;
-						}
-						$("#qtip").css({						
-							"left": qtipX,
-							"top": qtipY,
-						});
-					}
-					
-				}).on("mouseout", function(d, i){
-					if(fsm.States[d.id] && fsm.States[d.id].act && $("#actList").css("display") != "block"){
-						if($(this).attr("failed")){
-							$(this).css("fill", wfColorAct.failed);			
-						}
-						else{
-							$(this).css("fill", wfColorAct.active);			
-						}
-									
-					}
-					else{
-
-					}					
-					
-					$(".link").removeClass("hover");
-					$("#qtip").removeClass("visible");
-					
-				}).on("click", function(d, i){
-					if(fsm.States[d.id] && fsm.States[d.id].act){
-						if($("#actList").css("display") != "block"){
-							$("#listClose").click();
-						}
-
-						if(d.type == "Exit" || d.type == 'Entry'){
-							let id = fsm.States[d.type].act[0].activationId;
-							//console.log(fsm.States[d.id].act[0]);
-							ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
-	                                    d3.event.currentTarget.parentNode, // highlight this node
-	                                    $("#wskflowContainer")[0],
-	                                    'App Visualization'          // container to pip
-	                                    )(d3.event)
-							/*ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
-	                                    d3.event.currentTarget.parentNode, // highlight this node
-	                                    $("#wskflowContainer")[0],
-	                                    'App Visualization'          // container to pip
-	                                    )(d3.event)               // pass along the raw dom event							
-	                        */
-						}
-						else if(d.type == "action" || d.type === 'function' && (fsm.States[d.id].name || (fsm.States[d.id].type === 'function' && fsm.States[d.id].debug))){
-							if($(this).attr("failed")){
-								$(this).css("fill", wfColorAct.failed);
-							}
-							else{
-								$(this).css("fill", wfColorAct.active);
-							}
-							
-							$("#qtip").removeClass("visible");
-							
-							if(fsm.States[d.id].act.length == 1){
-								//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
-								//let id = fsm.States[d.id].act[0].activationId;
-
-								ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[0]),
-		                                    d3.event.currentTarget.parentNode, // highlight this node
-		                                    $("#wskflowContainer")[0],
-		                                    'App Visualization'          // container to pip		                                 
-		                                    )(d3.event)               // pass along the raw dom event
-							}
-							else{
-								let act = fsm.States[d.id].act;
-								let actListContent = "<div style='padding-bottom:5px'>Click on an activation here to view details</div>";
-								actListContent += `<div>${d.label}<break</break>${act.length} activations, ordered by start time: </div>`; 
-								actListContent += "<ol style='padding-left: 15px;'>";
-								let date;
-								act.forEach((a, i) => {										
-									// first part: time
-									let start = new Date(a.start), timeString = "", lis = "";		
-									if(date == undefined || date != (start.getMonth()+1)+"/"+start.getDate()){
-										date = (start.getMonth()+1)+"/"+start.getDate();
-										timeString += date + " ";
-									}
-									
-									timeString += start.toLocaleTimeString(undefined, { hour12: false });
-									
-									let duration = a.duration, unit = "ms";
-									if(duration > 1000){
-										duration = (duration/1000).toFixed(2);
-										unit = "s";
-									}								
-									let c;
-									if(a.response.success)
-										c = wfColorAct.active;
-									else
-										c = wfColorAct.failed;
-
-									lis += `<span class='actItem' style='color:${c}; text-decoration:underline; cursor: pointer;' aid='${a.activationId}' index=${i}>${timeString}</span> (${duration+unit})<break></break>`;
-									
-									let result = JSON.stringify(a.response.result);							
-									if(result.length > 40)
-										result = result.substring(0, 40) + "... ";
-									lis += result;
-
-									actListContent += "<li>"+lis+"</li>";
-
-								});	
-
-								actListContent += "</ol>";
-
-								actListContent = "<div id='listClose' style='font-size:14px; color:lightgrey; display:inline-block; float:right; cursor:pointer; padding-right:5px;'>✖</div>"+actListContent;
-
-								$("#actList").html(actListContent).css("display", "block");
-
-								$(".actItem").hover(function(e){
-									$(this).css("text-decoration", "none");
-								}, function(e){
-									$(this).css("text-decoration", "underline");
-								}).click(function(e){
-									//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
-									let id = $(this).attr("aid"), index = $(this).attr('index');
-
-									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
-									ui.pictureInPicture(() => ui.showEntity(fsm.States[d.id].act[index]),
-			                                    $(this).parent()[0], // highlight this node
-			                                    $("#wskflowContainer")[0],
-			                                    'App Visualization'          // container to pip			                                    
-			                                    )(e)               // pass along the raw dom event
-								})
-
-								$("#listClose").click(function(e){
-									$("#actList").css("display", "none");
-									$("#"+d.id).children("rect").css("fill", wfColorAct.active);
-									$(this).css("fill", wfColorAct.activeHovered);
-								});
-
-								$("#qtip").removeClass("visible");
-
-
-							}
-						}
-
-					}
-
-
-					
-				});
-
-		}
-		// static
-		else{
-			console.log("[wskflow] draw app graph")
-			box = node.append("rect")
-				.attr("class", "atom")
-				.attr("width", 0)
-				.attr("height", 0)
-				.attr("rx", function(d){
-					if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
-						return 0;
-					else
-						return 2;
-				})
-				.attr("ry", function(d){
-					if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
-						return 0;
-					else
-						return 2;
-				})
-				.style("fill", function(d){				
-					if(d.children){
-						return "transparent"
-					}
-					/*else if(d.type == "if")
-						return "orange";*/
-					else if(d.type == "let" || d.type == "literal"){					
-						//return "#4E387E";
-						return wfColor.Value.normal;
-					}
-					else if(d.type == "action" || d.type === 'function'){
-						//return "#3498DB";
-						if($('#'+d.id).attr('data-deployed') === 'not-deployed'){
-							return wfColor.Task.undeployed;
-						}
-						else{
-							return wfColor.Task.normal;
-						}
-						
-					}
-					else if(d.type == "Exit" || d.type == "Entry"){
-						return wfColor.EE.normal;
-					}
-				})
-				.style("stroke", function(d){
-					if(d.children){
-						if(d.type == "try_catch") return wfColor.try_catch.normal;
-						else if(d.type == "try") return wfColor.Try.normal;
-						else if(d.type == "handler") return wfColor.handler.normal;
-					}
-					else if(d.type == "action" || d.type === 'function' || d.type == "Entry" || d.type == "Exit" || d.type == "let" || d.type == "literal"){
-						return "black";
-					}
-					else if(d.type == "retain" || d.type == "Pop" || d.type == "Dummy"){
-						return wfColor.Edges.normal;
-					}
-					else{
-						return "transparent";
-					}
-				})
-				.style("stroke-width", function(d){
-					if(d.children) return 1;
-				})
-				.style("stroke-dasharray", function(d){
-					if(d.children) return 3;
-				})
-				.style("x", function(d){
-					//if(d.type == "Dummy") return 1;
-				})	
-				.on("mouseover", function(d, i){
-					let qtipText = "";
-
+					}			
+				}
+				else{
 					if(d.children){
 						if(d.type == "try"){
 							$(this).css("stroke", wfColor.Try.hovered);
@@ -845,15 +637,11 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 						qtipText = "This action has not yet been deployed";
 					}
 					else if(d.type == "action" || d.type === 'function'){
-						$(this).css({
-							"fill": wfColor.Task.hovered,
-							"cursor": "pointer"
-						});
-						qtipText = "<span style='color: "+wfColor.Task.normal+"; padding-right:5px'>action |</span> "+d.label;							
+						qtipText = `<span style="color:${wfColor.Task.normal}; padding-right:5px; ">${d.type} |</span> ${d.label}`;						
 					}
 					else if(d.type == "retain"){
 					    let edgeId;
-                                            const isOrigin = d.properties.origin
+                                            const isOrigin = d.id.indexOf('__origin') > -1 ? true : false;
                                             const expectedSrc = isOrigin ? d.id : d.id.replace(/__terminus/,'__origin'),
                                                   expectedTerminus = isOrigin ? d.id.replace(/__origin/,'__terminus') : d.id
 					    for(var i=0; i<links.length; i++){
@@ -883,58 +671,189 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					if(d.properties && d.properties.choice){
 						if(qtipText.length != 0)
 								qtipText += "<break></break>"
-						qtipText += "<span style='color: orange;'>yes</span> / <span style='color: #DC7633;'>no</span>?";						
+						//qtipText += "<span style='color: orange;'>yes</span> / <span style='color: #DC7633;'>no</span>?";						
 
 						// also highlight the edges
 						$(".link[source='"+(d.id+"_ptrue")+"']").css("stroke", wfColor.reOrCon.trueBranch).addClass("hover true-branch");
 						$(".link[source='"+(d.id+"_pfalse")+"']").css("stroke", wfColor.reOrCon.falseBranch).addClass("hover false-branch");
 					}				
 
-					if(qtipText.length != 0){
-						$("#qtipContent").html(qtipText);
+				}
+										
 
-						$("#qtip").addClass("visible");
+				if(qtipText.length != 0){
+					$("#qtipContent").html(qtipText);
 
-						let qtipX = $(this).offset().left+$(this)[0].getBoundingClientRect().width - $("#wskflowContainer").offset().left;
-						let qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2 - $("#wskflowContainer").offset().top
-						if($("#wskflowContainer").hasClass("picture-in-picture")){
-							// currentScale: 0.25
-							let scaleString = $("#wskflowContainer").css("transform"), scale;
-							try{
-								scale = parseFloat(scaleString.substring("matrix(".length, scaleString.indexOf(",")));
-							}
-							catch(e){
-								console.log(e);
-								console.log(scaleString);
-								scale = 0.25
-							}												
+					$("#qtip").addClass("visible");
 
-							qtipX /= scale;
-							qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2*scale - $("#wskflowContainer").offset().top;
-							qtipY /= scale;
+					let qtipX = $(this).offset().left+$(this)[0].getBoundingClientRect().width - $("#wskflowContainer").offset().left;
+					let qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2 - $("#wskflowContainer").offset().top
+					if($("#wskflowContainer").hasClass("picture-in-picture")){
+						// currentScale: 0.25
+						let scaleString = $("#wskflowContainer").css("transform"), scale;
+						try{
+							scale = parseFloat(scaleString.substring("matrix(".length, scaleString.indexOf(",")));
 						}
-						$("#qtip").css({						
-							"left": qtipX,
-							"top": qtipY,
-						});
+						catch(e){
+							console.log(e);
+							console.log(scaleString);
+							scale = 0.25
+						}												
+
+						qtipX /= scale;
+						qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2*scale - $("#wskflowContainer").offset().top;
+						qtipY /= scale;
 					}
-					
-				}).on("mouseout", function(d, i){
+					$("#qtip").css({						
+						"left": qtipX,
+						"top": qtipY,
+					});
+				}
+				
+			}).on("mouseout", function(d, i){
+				if(activations){
+					if(d.children == undefined && d.visited && $("#actList").css("display") != "block"){
+						if($(this).attr("failed")){
+							$(this).css("fill", wfColorAct.failed);			
+						}
+						else{
+							$(this).css("fill", wfColorAct.active);			
+						}								
+					}
+				}
+				else{
 					if(d.children){
 						if(d.type == "try") $(this).css("stroke", wfColor.Try.normal);
 						else if(d.type == "handler") $(this).css("stroke", wfColor.handler.normal);
 						else if(d.type == "try_catch") $(this).css("stroke", wfColor.try_catch.normal);
-					}
-					else if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'deployed'){
+					}					
+					else if(d.type == "action" && $('#'+d.id).attr('data-deployed') !== 'not-deployed'){
 						$(this).css("fill", wfColor.Task.normal);					
 					}
-					
 					$(".link").not(".forwardingLink").css("stroke", "grey");
-					$(".link").removeClass("hover");
-					$("#qtip").removeClass("visible");
-					//$("use").attr("xlink:href", "#retryIconNormal").attr("href", "#retryIconNormal");
-					
-				}).on("click", function(d, i){
+				}					
+				
+				$(".link").removeClass("hover");
+				$("#qtip").removeClass("visible");
+				
+			}).on("click", function(d, i){
+				if(activations){
+					if(d.visited){
+						if($("#actList").css("display") != "block"){
+							$("#listClose").click();
+						}
+
+						//if(d.type == "Exit" || d.type == 'Entry'){
+						if(d.type === 'Exit'){
+							//console.log(fsm.States[d.id].act[0]);
+							ui.pictureInPicture(() => ui.showEntity(activations[d.visited[0]]),
+	                                    d3.event.currentTarget.parentNode, // highlight this node
+	                                    $("#wskflowContainer")[0],
+	                                    'App Visualization'          // container to pip
+	                                    )(d3.event)
+							/*ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+	                                    d3.event.currentTarget.parentNode, // highlight this node
+	                                    $("#wskflowContainer")[0],
+	                                    'App Visualization'          // container to pip
+	                                    )(d3.event)               // pass along the raw dom event							
+	                        */
+						}
+						else if(d.type == "action"){
+							if($(this).attr("failed")){
+								$(this).css("fill", wfColorAct.failed);
+							}
+							else{
+								$(this).css("fill", wfColorAct.active);
+							}
+							
+							$("#qtip").removeClass("visible");
+							
+							if(d.visited.length == 1){
+								//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
+								//let id = fsm.States[d.id].act[0].activationId;
+
+								ui.pictureInPicture(() => ui.showEntity(activations[d.visited[0]]),
+		                                    d3.event.currentTarget.parentNode, // highlight this node
+		                                    $("#wskflowContainer")[0],
+		                                    'App Visualization'          // container to pip		                                 
+		                                    )(d3.event)               // pass along the raw dom event
+							}
+							else{
+								//let act = fsm.States[d.id].act;
+								let actListContent = "<div style='padding-bottom:5px'>Click on an activation here to view details</div>";
+								actListContent += `<div>${d.label}<break</break>${d.visited.length} activations, ordered by start time: </div>`; 
+								actListContent += "<ol style='padding-left: 15px;'>";
+								let date;
+								d.visited.forEach((n, i) => {										
+									// first part: time
+									let a = activations[n];
+									let start = new Date(a.start), timeString = "", lis = "";		
+									if(date == undefined || date != (start.getMonth()+1)+"/"+start.getDate()){
+										date = (start.getMonth()+1)+"/"+start.getDate();
+										timeString += date + " ";
+									}
+									
+									timeString += start.toLocaleTimeString(undefined, { hour12: false });
+									
+									let duration = a.duration, unit = "ms";
+									if(duration > 1000){
+										duration = (duration/1000).toFixed(2);
+										unit = "s";
+									}								
+									let c;
+									if(a.response.success)
+										c = wfColorAct.active;
+									else
+										c = wfColorAct.failed;
+
+									lis += `<span class='actItem' style='color:${c}; text-decoration:underline; cursor: pointer;' aid='${a.activationId}' index=${n}>${timeString}</span> (${duration+unit})<break></break>`;
+									
+									let result = JSON.stringify(a.response.result);							
+									if(result.length > 40)
+										result = result.substring(0, 40) + "... ";
+									lis += result;
+
+									actListContent += "<li>"+lis+"</li>";
+
+								});	
+
+								actListContent += "</ol>";
+
+								actListContent = "<div id='listClose' style='font-size:14px; color:lightgrey; display:inline-block; float:right; cursor:pointer; padding-right:5px;'>✖</div>"+actListContent;
+
+								$("#actList").html(actListContent).css("display", "block");
+
+								$(".actItem").hover(function(e){
+									$(this).css("text-decoration", "none");
+								}, function(e){
+									$(this).css("text-decoration", "underline");
+								}).click(function(e){
+									//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
+									let id = $(this).attr("aid"), index = $(this).attr('index');
+
+									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+									ui.pictureInPicture(() => ui.showEntity(activations[index]),
+			                                    $(this).parent()[0], // highlight this node
+			                                    $("#wskflowContainer")[0],
+			                                    'App Visualization'          // container to pip			                                    
+			                                    )(e)               // pass along the raw dom event
+								})
+
+								$("#listClose").click(function(e){
+									$("#actList").css("display", "none");
+									$("#"+d.id).children("rect").css("fill", wfColorAct.active);
+									$(this).css("fill", wfColorAct.activeHovered);
+								});
+
+								$("#qtip").removeClass("visible");
+
+
+							}
+						}
+
+					}
+				}
+				else{
 					if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'deployed'){
 						if(d.name){
 							//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
@@ -949,22 +868,22 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 							console.log(`[wskflow] clicking on an inline function: ${d.label}`);
 						}
 					}
-				});
-
-
-		}
-
+				}				
+			});
+		
 		// add node labels
 		node.append("text")
 			.attr("x", function(d){
-				if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
+				//if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
+				if(d.children)
 					return 4;
 				else
 					return d.width/2;
 				
 			})
 			.attr("y", function(d){
-				if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
+				//if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
+				if(d.children)
 					return 8;
 				else
 					return d.height/2+2.5;
@@ -1000,16 +919,17 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 				}
 				else if(d.id == "root"){
 					return "";
-				}
-				else if(d.type == "try_catch"){
-					//return "Try Catch";
-					return d.label;
-				}
+				}				
 				else if(d.type == "try"){
 					return "Try";
 				}
 				else if(d.type == "handler"){
 					return "Error Handler";
+				}
+				//else if(d.type == "try_catch" || d.type === 'retry'){
+				else if(d.children){
+					//return "Try Catch";
+					return d.label;
 				}
 				/*else if(d.type == "if"){
 					return d.label;					
@@ -1020,33 +940,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 					else
 						return d.label;
 				}
-				else if(d.type == "action" || d.type === 'function'){
-					// new code here to hide namespace and handle multi-line functions
-					if(fsm.States[d.id]){
-						if(fsm.States[d.id].name){
-							// action node, cut down namespace 
-							if(fsm.States[d.id].name.lastIndexOf("/") != -1 && fsm.States[d.id].name.lastIndexOf("/") < fsm.States[d.id].name.length-1){
-								return fsm.States[d.id].name.substring(fsm.States[d.id].name.lastIndexOf("/")+1);
-							}
-							else{
-								return fsm.States[d.id].name;
-							}
-						}
-						else if(fsm.States[d.id].type === 'function'){
-							let s = fsm.States[d.id].exec.code
-							s = s.replace(/\s\s+/g, ' ');
-							if(s.length > 40)
-								return s.substring(0, 40)+"...";
-							else
-								return s;
-						}
-
-					}
-					/*if(d.label.length>40){
-						return d.label.substring(0, 37)+"...";
-					}
-					else
-						return d.label;*/
+				else if(d.type == "action" || d.type === 'function'){					
+					return d.label					
 				}
 				else{
 					let t = d.label;
@@ -1074,11 +969,8 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 		.attr("id", function(d){return d.id;})
 		.attr("d", "M0 0")
 		.attr("marker-end", function(d){
-			if(visited){
-				if(visited[d.source] && visited[d.target])
-					return "url(#greenEnd)";
-				else
-					return "url(#end)";
+			if(d.visited){
+				return "url(#greenEnd)";
 			}
 			else{
 				return "url(#end)";
@@ -1097,9 +989,9 @@ function graph2doms(JSONgraph, containerId, width, height, fsm, visited){
 			return s;
 		})
 		.attr("source", function(d){return d.sourcePort})
-		.style("stroke", function(d){
-			if(visited){
-				if(visited[d.source] && visited[d.target])
+		.style("stroke", function(d){			
+			if(activations){
+				if(d.visited)
 					return wfColorAct.active;
 				else
 					return wfColorAct.edgeInactive;
