@@ -1296,6 +1296,7 @@ const ui = (function() {
                     }, {})
 
                     // form a fake FSM, so we can use the wskflow visualization
+                    // wskflw now use the IR, so we have to fake a IR instead of a FSM
                     const key = idx => `action_${idx}`
 
                     Promise.all(entity.exec.components.map((actionName,idx,A) => repl.qexec(`wsk action get "${actionName}"`)
@@ -1308,11 +1309,11 @@ const ui = (function() {
                                                                }
                                                            }).catch(err => actionName) // 404s
                                                            .then(name => {
-                                                               return { key: key(idx),
-                                                                        type: 'action',
-                                                                        name,
-                                                                        TaskIndex: idx,
-                                                                        Next: idx < A.length - 1 && key(idx + 1) }
+                                                                return {
+                                                                    type: 'action',
+                                                                    name: actionName.indexOf('/') === -1 ? `/_/${actionName}` : actionName,
+                                                                    displayLabel: name                                                                    
+                                                                }
                                                            })))
                         .then(actions => ({ composition: actions }))
                         .then(fsm => ui.wskflow(fsm))
