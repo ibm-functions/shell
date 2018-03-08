@@ -166,7 +166,6 @@ self.formatOneListResult = formatOneListResult
 const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parsedOptions) => response => {
     //debug('repl::printResults', response)
     if (echo) ui.setStatus(block, 'valid-response')
-
     const render = response => {
     if (response && response !== true) {
         if (response.map) {
@@ -248,7 +247,15 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
 
         } else if (response.type === 'activations') {
             // activation response
-            ui.showActivation(response, resultDom)
+            if(response.annotations && response.annotations.find(e => e.key === 'conductor' && e.value === true)){                
+                try{
+                    response = require('../../plugins/modules/composer/lib/await-app.js').printSession(response);
+                }            
+                catch(e){
+                    // no composer plugin installed. show as plain activation                     
+                }
+            }
+            ui.showActivation(response, resultDom)    
 
         } else if (response.verb === 'delete') {
             if (echo) ui.ok(resultDom.parentNode)
