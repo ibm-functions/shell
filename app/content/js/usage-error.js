@@ -62,7 +62,7 @@ const prefix = str => {
 /** A part of the main body of the usage message */
 const bodyPart = () => {
     const result = div()
-    result.style.margin = '1.5em 3em 0 0'
+    result.style.margin = '2em 0em 0 0'
     return result
 }
 
@@ -127,21 +127,51 @@ const format = message => {
         // those fields now; `body` is the flex-wrap portion of the
         // content
         const resultWrapper = div(undefined, 'fade-in'),
-              result = div(),
+              result = div(undefined, 'hideable'),
               body = div(),
-              left = div()  // usage and detailedExample
+              left = div(),  // usage and detailedExample
+              right = div()  // required and optional parameters
+
+        left.style.marginRight = '3em'
 
         if (messageString) {
             // then the repl wrapped around the usage model, adding an extra message string
-            const messageDom = div(messageString, 'red-text normal-size', 'h1')
+            const messageDom = div(undefined, 'normal-size', 'h1'),
+                  prefacePart = span('error: ', 'red-text'),
+                  messagePart = span(`${messageString}.`, 'normal-size')
+
+            result.classList.add('hidden')
+
+            messageDom.appendChild(prefacePart)
+            messageDom.appendChild(messagePart)
             resultWrapper.appendChild(messageDom)
+
+            if (!ui.headless) {
+                const usagePart = div(undefined, 'small-top-pad hideable'),
+                      frontPart = span('Click '),
+                      clickyPart = span('here', 'clickable clickable-blatant'),
+                      restPart = span(' for usage information.')
+
+                usagePart.appendChild(frontPart)
+                usagePart.appendChild(clickyPart)
+                usagePart.appendChild(restPart)
+                messageDom.appendChild(usagePart)
+
+                clickyPart.onclick = () => {
+                    result.classList.remove('hidden')
+                    usagePart.classList.add('hidden')
+                }
+            }
+
+            //return resultWrapper
         }
 
         resultWrapper.appendChild(result)
         result.style.margin = '1em calc(1ex + 1em)' // 1ex+1em try to match the '> ' bit of the REPL
-        result.style.border = '1px solid var(--color-ui-03)'
-        result.style.padding = '1em'
+        result.style.border = '1px solid var(--color-ui-04)'
+        result.style.padding = '1em 2em'
         result.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.1)'
+        result.style.background = 'var(--color-ui-02)'
         result.style.color = 'initial'
 
         //
@@ -153,10 +183,10 @@ const format = message => {
             result.appendChild(container)
 
             /** make a single breadcrumb for the UI; defaultCommand means use the string as a command */
-            const makeBreadcrumb = (options, defaultCommand) => {
-                const stringOpt = typeof options === 'string',
-                      cmd = !stringOpt ? options.command : defaultCommand && options,
-                      label = stringOpt ? options : options.label || breadcrumbFromCommand(options.command)
+            const makeBreadcrumb = options => {
+                const stringLabel = typeof options.label === 'string',
+                      cmd = options.commandFromLabel ? stringLabel ? options.label : options.label.command : options.command,
+                      label = stringLabel ? options.label : breadcrumbFromCommand(options.label.command)
 
                 return Promise.resolve(label)
                     .then(label => {
@@ -185,7 +215,7 @@ const format = message => {
 
             // now we add the breadcrumb chain to the UI
             breadcrumbPromise = Promise_each([{ label: 'Shell Docs', command: 'help' }, // root
-                                              ...parents,
+                                              ...parents.map(label => ({ label, commandFromLabel: true })),
                                               { label: breadcrumb, noSlash: true }
                                              ], makeBreadcrumb)
                 .then(crumbs => crumbs.map(attachBreadcrumb))
@@ -219,6 +249,7 @@ const format = message => {
         body.style.flexWrap = 'wrap'
         body.style.marginTop = '0.375em'
         body.appendChild(left)
+        body.appendChild(right)
         result.appendChild(body)
 
         // example command
@@ -253,7 +284,7 @@ const format = message => {
          * Render a table of options
          *
          */
-        const makeTable = (title, rows) => {
+        const makeTable = (title, rows, parent=right) => {
             const availablePart = bodyPart(),
                   prePart = prefix(title),
                   table = document.createElement('table')
@@ -261,8 +292,20 @@ const format = message => {
             table.className = 'log-lines'
 
             availablePart.appendChild(prePart)
-            availablePart.appendChild(table)
-            body.appendChild(availablePart)
+            parent.appendChild(availablePart)
+
+            // make the table scrollable, showing only a max number of rows at a time:
+            // 5 rows, plus a bit for the bottom border; the 3em part
+            // must .log-line's height in ui.css
+            const nRowsInViewport = 3
+            if (rows.length > nRowsInViewport) {
+                const tableScrollable = div(undefined, 'scrollable')
+                tableScrollable.style.maxHeight = `calc(${nRowsInViewport} * 3em + 1px)`
+                tableScrollable.appendChild(table)
+                availablePart.appendChild(tableScrollable)
+            } else {
+                availablePart.appendChild(table)
+            }
 
             // render the rows
             const renderRow = rowData => {
@@ -290,6 +333,9 @@ const format = message => {
                 row.className = 'log-line entity'
                 cmdCell.className = 'log-field'
                 docsCell.className = 'log-field'
+
+                cmdCell.style.background = 'white'
+                docsCell.style.background = 'white'
 
                 cmdPart.style.fontWeight = '500'
                 wrap(smaller(sans(docsPart)))
@@ -340,6 +386,7 @@ const format = message => {
             } /* renderRow */
 
             rows.forEach(renderRow)
+
             return table
         }
 
@@ -360,7 +407,8 @@ const format = message => {
         }
 
         if (sampleInputs) {
-            makeTable('Sample Inputs', sampleInputs)
+            // attach this to the left side, along with usage
+            makeTable('Sample Inputs', sampleInputs, left)
         }
 
         if (related) {
