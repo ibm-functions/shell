@@ -464,6 +464,7 @@ function fsm2graph(ir, containerId, w, h, acts){
 	//console.log(ir, containerId, w, h, act);
 	taskIndex = 0;
 	activations = acts;
+        visited = undefined; // see shell issue #602
 	dummyCount = 0;
 	graphData = {
 		id: 'root',
