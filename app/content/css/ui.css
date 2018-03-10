@@ -951,8 +951,15 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     opacity: 1;
 }
 .normal-size {
+    color: var(--color-text-01);
     font-size: inherit;
     font-weight: inherit;
+}
+.small-top-pad {
+    margin-top: 1ex;
+}
+.top-pad {
+    margin-top: 1em;
 }
 .small-left-pad {
     margin-left: 1ex;
@@ -996,6 +1003,27 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 .toggle-visibility-on-hover:hover .visible-on-hover {
     opacity: 0.5;
 }
+.hideable {
+    transition: all 150ms ease-in-out;
+}
+.hidden {
+    opacity: 0;
+    height: 0;
+    flex: 0 0 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+.scrollable {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.scrollable::-webkit-scrollbar { width: 6px; }
+/* Track */
+.scrollable::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); -webkit-border-radius: 10px; border-radius: 10px; }
+/* Handle */
+.scrollable::-webkit-scrollbar-thumb { -webkit-border-radius: 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.3); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }
+/*.scrollable::-webkit-scrollbar-thumb:window-inactive { background: rgba(0, 0, 0, .3); }*/
 
 /* highlight.js tweaks */
 .hljs {
