@@ -20,17 +20,10 @@ debug('loading')
 const path = require('path'),
       { remove } = require('fs-extra'),
       { success } = require('./util'),
+      { remove:usage } = require('../usage'),
       compile = require('./compile')
 
 debug('finished module imports')
-
-/**
- * Format usage message
- *
- */
-const usage = `Remove installed shell plugin
-
-\tplugin remove <plugin-name>`
 
 const doRemove = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     debug('command execution started')
@@ -38,9 +31,6 @@ const doRemove = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWi
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('remove') + 1)
 
     const name = argvWithoutOptions.shift()
-    if (!name || dashOptions['help']) {
-        throw new errors.usage(usage)
-    }
 
     const rootDir = ui.userDataDir()
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
@@ -55,7 +45,7 @@ const doRemove = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWi
 }
 
 module.exports = (commandTree, prequire) => {
-    const cmd = commandTree.listen('/plugin/remove', doRemove, { docs: 'Remove installed shell plugin' })
+    const cmd = commandTree.listen('/plugin/remove', doRemove, { usage })
     commandTree.synonym('/plugin/uninstall', doRemove, cmd)
 }
 

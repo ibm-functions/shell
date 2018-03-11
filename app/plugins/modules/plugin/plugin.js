@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,34 @@
  * limitations under the License.
  */
 
+const usagePerCommand = require('./usage')
+
+const toUsage = (models, { commandPrefix, title, docs, breadcrumb=title }) => {
+    const usage = {
+        breadcrumb,
+        title,
+        docs,
+        example: `${commandPrefix} <command>`,
+        commandPrefix,
+        available: [],
+        nRowsInViewport: 4 // the default is 3, but we have 4, so just show them all
+    }
+
+    for (let command in models) {
+        usage.available.push(models[command])
+    }
+
+    return usage
+}
+
 module.exports = ((commandTree, prequire) => {
-    commandTree.subtree('/plugin', { docs: 'Manage shell plugins' })
+    commandTree.subtree('/plugin', {
+        usage: toUsage(usagePerCommand, {
+            commandPrefix: 'plugin',
+            title: 'Plugin management',
+            docs: 'Commands for managing installed plugins',
+        })
+    })
 
     require('./lib/commands')(commandTree, prequire)
     require('./lib/compile-command')(commandTree, prequire)

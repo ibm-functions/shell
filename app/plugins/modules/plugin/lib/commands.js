@@ -19,27 +19,16 @@ debug('loading')
 
 const fs = require('fs-extra'),
       path = require('path'),
+      { commands:usage } = require('../usage'),
       { success } = require('./util')
 
 debug('finished loading modules')
-
-/**
- * Format usage message
- *
- */
-const usage = `List commands offered by a previously installed shell plugin
-
-\tplugin commands <plugin>`
 
 const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     const { app } = require('electron').remote
     const prescanned = path.join(app.getPath('userData'), 'plugins', '.pre-scanned')
 
     const plugin = argvWithoutOptions[argvWithoutOptions.indexOf('commands') + 1]
-
-    if (dashOptions['help'] || !plugin) {
-        throw new modules.errors.usage(usage)
-    }
 
     return fs.readFile(prescanned)
         .then(JSON.parse)
@@ -71,5 +60,5 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
 }
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/plugin/commands', doList, { docs: 'List commands offered by an installed shell plugin' })
+    commandTree.listen('/plugin/commands', doList, { usage })
 }

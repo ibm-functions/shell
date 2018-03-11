@@ -21,18 +21,11 @@ const tmp = require('tmp'),
       fs = require('fs-extra'),
       { exec, spawn } = require('child_process'),
       compile = require('./compile'),
-      { success } = require('./util')
+      { success } = require('./util'),
+      { install:usage } = require('../usage'),
       which = require('which')
 
 debug('finished module imports')
-
-/**
- * Format usage message
- *
- */
-const usage = `Install shell plugin
-
-\tplugin install <plugin-name>`
 
 const doInstall = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     debug('command execution started')
@@ -40,9 +33,6 @@ const doInstall = (_a, _b, fullArgv, { ui, errors }, rawCommandString, _2, argvW
     argvWithoutOptions = argvWithoutOptions.slice(argvWithoutOptions.indexOf('install') + 1)
 
     const name = argvWithoutOptions.shift()
-    if (!name || dashOptions['help']) {
-        throw new errors.usage(usage)
-    }
 
     const rootDir = ui.userDataDir()
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
@@ -155,7 +145,7 @@ const locateNpm = () => new Promise((resolve) => {
 })
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/plugin/install', doInstall, { docs: 'Install a Shell plugin' })
+    commandTree.listen('/plugin/install', doInstall, { usage })
 }
 
 debug('loading done')
