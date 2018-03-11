@@ -763,14 +763,16 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
     const pair = parseOptions(argv_full, toOpenWhiskKind(entity)),
           regularOptions = minimist(pair.argv, { boolean: booleans[entity] && booleans[entity][verb],
                                                  alias: aliases[verb],
-                                                 configuration: { 'camel-case-expansion': false }
+                                                 configuration: { 'camel-case-expansion': false,
+                                                                  'duplicate-arguments-array': false // see shell issue #616
+                                                                }
                                                }),
           argv = regularOptions._
 
     let options = Object.assign({}, regularOptions, pair.kvOptions)
     delete options._
 
-    // console.log('wsk::exec', entity, verb, argv, options)
+    // debug('exec', entity, verb, argv, options)
 
     const verbIndex = argv.findIndex(arg => arg === verbSynonym),
           nameIndex = verbIndex + 1,
@@ -811,7 +813,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
                 }
             }
 
-            console.log('wsk::exec using implicit entity name', options.name)
+            debug('using implicit entity name', options.name)
         }
     }
 
@@ -848,7 +850,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
     // this will format a prettyType for the given type. e.g. 'sequence' for actions of kind sequence
     const pretty = addPrettyType(entity, verb, options.name)
 
-    console.log(`wsk::calling openwhisk ${entity} ${verb} ${options.name}`, options)
+    debug(`calling openwhisk ${entity} ${verb} ${options.name}`, options)
 
     // amend the history entry with the details
     if (execOptions && execOptions.history) {
@@ -964,7 +966,7 @@ module.exports = (commandTree, prequire) => {
                 localStorage.setItem(localStorageKey, new_host)  // remember the choice in localStorage
                 localStorage.setItem(localStorageKeyIgnoreCerts, userRequestedIgnoreCerts)
                 initOW()                                         // re-initialize the openwhisk npm
-                console.log(`wsk::apiHost::set ${apiHost}`)
+                debug('apiHost::set', apiHost)
                 return Promise.resolve(new_host)
             }
         },
@@ -977,7 +979,7 @@ module.exports = (commandTree, prequire) => {
             set: new_auth => {
                 auth = new_auth
                 initOW()
-                console.log(`wsk::auth::set ${auth}`)
+                debug('auth::set', auth)
                 return Promise.resolve(true)
             }
         },
@@ -1002,7 +1004,7 @@ module.exports = (commandTree, prequire) => {
                 namespace: entity.namespace
             })
             options[toOpenWhiskKind(entity.type)] = entity
-            console.log('wsk::update', options)
+            debug('update', options)
             try {
                 return ow[entity.type].update(options)
                     .then(addPrettyType(entity.type, 'update', entity.name))
@@ -1138,7 +1140,7 @@ module.exports = (commandTree, prequire) => {
                 const feedAnnotation = trigger.annotations && trigger.annotations.find(kv => kv.key === 'feed')
                 if (feedAnnotation) {
                     // special case of feed
-                    console.log('wsk::delete feed', trigger)
+                    debug('delete feed', trigger)
                     return ow.feeds.delete(owOpts({ feedName: feedAnnotation.value,
                                                     trigger: name,
                                                   }))

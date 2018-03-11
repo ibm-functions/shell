@@ -48,7 +48,7 @@ describe('wsk action invoke -r', function() {
        .then(ui.expectStruct({x:3}))
        .catch(common.oops(this)))
 
-    it(`should invoke ${actionName} with -r`, () => cli.do(`wsk action invoke ${actionName} --result`, this.app)
+    it(`should invoke ${actionName} with --result`, () => cli.do(`wsk action invoke ${actionName} --result`, this.app)
        .then(cli.expectOKWithCustom({ selector: '.json' }))
        .then(selector => this.app.client.getText(selector))
        .then(ui.expectStruct({x:3}))
@@ -60,7 +60,13 @@ describe('wsk action invoke -r', function() {
        .then(ui.expectStruct({x:3}))
        .catch(common.oops(this)))
 
-    it(`should invoke ${actionName} with -br`, () => cli.do(`wsk action invoke ${actionName} --blocking --result`, this.app)
+    it(`should invoke ${actionName} with -rb`, () => cli.do(`wsk action invoke ${actionName} -rb`, this.app)
+       .then(cli.expectOKWithCustom({ selector: '.json' }))
+       .then(selector => this.app.client.getText(selector))
+       .then(ui.expectStruct({x:3}))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with --blocking --result`, () => cli.do(`wsk action invoke ${actionName} --blocking --result`, this.app)
        .then(cli.expectOKWithCustom({ selector: '.json' }))
        .then(selector => this.app.client.getText(selector))
        .then(ui.expectStruct({x:3}))
