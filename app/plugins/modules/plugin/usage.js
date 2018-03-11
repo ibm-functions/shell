@@ -15,7 +15,7 @@
  */
 
 /** breadcrumb parents */
-const parents = ['plugin']
+const parents = [{ command: 'plugin' }]
 
 /** required parameter: name of installed plugin */
 const installedPlugin = [{ name: 'plugin', docs: 'the name of an installed plugin' }]
