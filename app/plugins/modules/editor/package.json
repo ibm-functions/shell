@@ -7,6 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
+    "postinstall": "rm -rf node_modules/monaco-editor/dev node_modules/monaco-editor/min-maps",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
