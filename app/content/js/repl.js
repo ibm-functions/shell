@@ -673,7 +673,7 @@ self.exec = (commandUntrimmed, execOptions) => {
 
                         let nActualArgsWithImplicit = nActualArgs
 
-                        if (implicitIdx >= 0 && selection && selection.type === required[implicitIdx].implicitOK) {
+                        if (implicitIdx >= 0 && selection && required[implicitIdx].implicitOK.find(_ => _ === selection.type)) {
                             nActualArgsWithImplicit++
 
                             // if implicit, maybe other required parameters aren't needed

@@ -42,7 +42,7 @@ exports.create = cmd => ({
     title: 'Deploy composition',
     header: strings[cmd],
     example: `app ${cmd} <name> <sourceFile>`,
-    required: [{ name: 'name', docs: 'the name of your new app', implicitOK: 'actions' },
+    required: [{ name: 'name', docs: 'the name of your new app', implicitOK: ['actions'] },
                { name: 'sourceFile', docs: 'source file or pre-compiled composition', notNeededIfImplicit: true }],
     optional: actionsUsage[cmd].optional.concat([
         { name: '--recursive', alias: '-r', boolean: true, docs: 'also deploy any referenced actions' },
