@@ -24,7 +24,7 @@ const aliases = {
 
 /** required action parameter */
 const action = [{ name: 'action', docs: 'an action name' }],
-      actionImplicitOK = [ Object.assign({}, action[0], { implicitOK: 'actions' }) ]
+      actionImplicitOK = [ Object.assign({}, action[0], { implicitOK: ['actions', 'activations'] }) ]
 
 /** required activationId parameter */
 const activationID = [{ name: 'activationId', docs: 'an activation ID' }]
