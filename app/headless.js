@@ -567,7 +567,7 @@ const main = (app, mainFunctions) => {
      * Evaluate the given command
      *
      */
-    const eval = cmd => repl.qexec(cmd)
+    const eval = cmd => Promise.resolve(repl.qexec(cmd))
           .then(success(quit))
 
     console.log = function() {
@@ -604,7 +604,7 @@ const main = (app, mainFunctions) => {
         }
 
         const maybeRetry = err => {
-            if (!namespace.current() || err.message === 'namespace uninitialized') {
+            if (/*!namespace.current() ||*/ err.message === 'namespace uninitialized') {
                 debug('delayed namespace loading')
                 return namespace.init()
                     .then(() => eval(cmd))
