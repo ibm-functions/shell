@@ -19,17 +19,10 @@ debug('loading')
 
 const path = require('path'),
       fs = require('fs-extra'),
+      { list:usage } = require('../usage'),
       util = require('util')
 
 debug('finished module imports')
-
-/**
- * Format usage message
- *
- */
-const usage = `List installed shell plugins
-
-\tplugin list`
 
 /**
  * Flatten an array of arrays
@@ -63,10 +56,6 @@ const getVersions = moduleDir => installedPlugins => Promise.all(installedPlugin
 
 const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOptions, dashOptions) => {
     debug('command execution started')
-
-    if (dashOptions['help']) {
-        throw new modules.errors.usage(usage)
-    }
 
     const rootDir = ui.userDataDir()
     const moduleDir = path.join(rootDir, 'plugins', 'modules')
@@ -107,7 +96,7 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
 }
 
 module.exports = (commandTree, prequire) => {
-    commandTree.listen('/plugin/list', doList, { docs: 'List installed shell plugins' })
+    commandTree.listen('/plugin/list', doList, { usage })
 }
 
 debug('loading done')

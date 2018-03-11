@@ -132,13 +132,11 @@ const format = message => {
               left = div(),  // usage and detailedExample
               right = div()  // required and optional parameters
 
-        left.style.marginRight = '3em'
-
         if (messageString) {
             // then the repl wrapped around the usage model, adding an extra message string
             const messageDom = div(undefined, 'normal-size', 'h1'),
-                  prefacePart = span('error: ', 'red-text'),
-                  messagePart = span(`${messageString}.`, 'normal-size')
+                  prefacePart = span(''),
+                  messagePart = span(`${messageString}.`, 'red-text')
 
             result.classList.add('hidden')
 
@@ -167,7 +165,7 @@ const format = message => {
         }
 
         resultWrapper.appendChild(result)
-        result.style.margin = '1em calc(1ex + 1em)' // 1ex+1em try to match the '> ' bit of the REPL
+        result.style.margin = '1em 0'
         result.style.border = '1px solid var(--color-ui-04)'
         result.style.padding = '1em 2em'
         result.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.1)'
@@ -184,6 +182,7 @@ const format = message => {
 
             /** make a single breadcrumb for the UI; defaultCommand means use the string as a command */
             const makeBreadcrumb = options => {
+                console.error('@@@@', options)
                 const stringLabel = typeof options.label === 'string',
                       cmd = options.commandFromLabel ? stringLabel ? options.label : options.label.command : options.command,
                       label = stringLabel ? options.label : breadcrumbFromCommand(options.label.command)
@@ -258,6 +257,7 @@ const format = message => {
                   prePart = prefix('Usage'),
                   textPart = div(example)
 
+            left.style.marginRight = '3em'
             left.appendChild(examplePart)
             examplePart.appendChild(prePart)
             examplePart.appendChild(textPart)
@@ -294,10 +294,11 @@ const format = message => {
             availablePart.appendChild(prePart)
             parent.appendChild(availablePart)
 
-            // make the table scrollable, showing only a max number of rows at a time:
-            // 5 rows, plus a bit for the bottom border; the 3em part
-            // must .log-line's height in ui.css
-            const nRowsInViewport = 3
+            // make the table scrollable, showing only a max number of
+            // rows at a time: e.g. 5 rows, plus a bit (1px) for the
+            // bottom border; the 3em part must .log-line's height in
+            // ui.css
+            const nRowsInViewport = message.nRowsInViewport || 3
             if (rows.length > nRowsInViewport) {
                 const tableScrollable = div(undefined, 'scrollable')
                 tableScrollable.style.maxHeight = `calc(${nRowsInViewport} * 3em + 1px)`

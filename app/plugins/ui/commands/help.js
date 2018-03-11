@@ -34,8 +34,9 @@ const help = (usage, docs) => (_1, _2, _3, { errors }) => {
         // this will be our return value
         const topLevelUsage = {
             title: 'Getting Started',
-            header: 'A summary of the top-level command structure. Select an available command to learn more.',
-            available: []
+            header: 'A summary of the top-level command structure.',
+            available: [],
+            nRowsInViewport: 8 // show a few more rows for top-level help
         }
 
         // traverse the top-level usage documents, populating topLevelUsage.available
@@ -101,8 +102,8 @@ module.exports = (commandTree, prequire, { usage, docs }={}) => {
          */
         show: (block, nextBlock, msg) =>{
             return ui.oops(block, nextBlock)({
-            // if the message says command not found, then add on the "enter help to see your options" as a suffix
-            error: msg ? msg : baseMessage
+                // if the message says command not found, then add on the "enter help to see your options" as a suffix
+                error: msg ? msg : baseMessage
             }) && false }
     }
 }
