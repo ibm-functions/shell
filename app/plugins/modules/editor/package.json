@@ -13,8 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "install": "^0.10.4",
-    "monaco-editor": "^0.10.1",
-    "npm": "^5.6.0"
+    "monaco-editor": "^0.10.1"
   }
 }
