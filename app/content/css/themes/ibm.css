@@ -257,10 +257,10 @@ body.subwindow sidecar {
 #wskflowSVG .node.leaf rect {
     stroke: var(--color-text-01) !important;
 }
-#wskflowSVG .action[data-deployed="deployed"] rect, #wskflowSVG .function rect {
+#wskflowSVG .action[data-deployed="deployed"] rect, #wskflowSVG .function:not([data-status]) rect {
     fill: hsla(210, 94%, 67%, 1) !important;
 }
-#wskflowSVG .action[data-deployed="deployed"] rect:hover, #wskflowSVG .function rect:hover {
+#wskflowSVG .action[data-deployed="deployed"] rect:hover, #wskflowSVG .function:not([data-status]) rect:hover {
     fill: hsla(210, 94%, 57%, 1) !important;
 }
 #wskflowSVG .action[data-deployed="not-deployed"] rect {
