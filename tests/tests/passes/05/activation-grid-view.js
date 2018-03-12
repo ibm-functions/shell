@@ -30,9 +30,6 @@ const uuid = require('uuid').v4,
       randomGarbage = `activation-grid-garbage-${uuid()}` // some unique name
 
 describe('Activation grid visualization', function() {
-    // disabled until the bluewhisk views finish updating 20170927
-    return;
-
     before(common.before(this))
     after(common.after(this))
 
@@ -79,18 +76,24 @@ describe('Activation grid visualization', function() {
         
     const openGridExpectCountOf = (expectedCount, expectedErrorCount, cmd, name=actionName, expectedTotalCount) => {
         const once = (iter, resolve, reject) => cli.do(cmd, this.app)
-            .then(cli.expectOK)
-              .then(sidecar.expectOpen)
-              .then(verifyGrid(expectedCount, expectedErrorCount, name, expectedTotalCount))
-              .then(resolve)
-              .catch(err => {
-                  if (iter < 10) {
-                      console.error('retry!')
-                      setTimeout(() => once(iter + 1, resolve, reject), 5000)
+              .then(_ => {
+                  if (expectedCount === 0 && expectedErrorCount === 0) {
+                      return cli.expectError(404)(_).then(resolve, reject)
                   } else {
-                      common.oops(this)(err)
+                      return cli.expectOK(_)
+                          .then(sidecar.expectOpen)
+                          .then(verifyGrid(expectedCount, expectedErrorCount, name, expectedTotalCount))
+                          .then(resolve)
+                          .catch(err => {
+                              if (iter < 10) {
+                                  console.error('retry!')
+                                  setTimeout(() => once(iter + 1, resolve, reject), 1000)
+                              } else {
+                                  common.oops(this)(err)
+                              }
+                          })
                   }
-              });
+              })
         
         it(`open activation grid, with name=${name} ${cmd} ec=${expectedCount} eec=${expectedErrorCount} etc=${expectedTotalCount}`, () => {
             return new Promise((resolve, reject) => once(0, resolve, reject))
@@ -107,32 +110,55 @@ describe('Activation grid visualization', function() {
 
     // invoke with positive number, expect count of 1 in the table
     notbomb()
-    openGridExpectCountOf(1, 0, `grid --batches ${N} -a`)
-    openGridExpectCountOf(1, 0, `grid --batches ${N} -a --name ${actionName}`, actionName, 1)
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, actionName, 0)     // expect 0 cells, for a random action name
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)  // either way, there should be nothing
+    openGridExpectCountOf(1, 0, `grid --batches ${N}`)
+    openGridExpectCountOf(1, 0, `grid --batches ${N} ${actionName}`, actionName, 1)
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, actionName, 0)     // expect 0 cells, for a random action name
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)  // either way, there should be nothing
 
+    /** switch between tabs */
+    const icon = `${ui.selectors.SIDECAR} .sidecar-header-icon-wrapper .sidecar-header-icon`
+    const switchTo = tab => {
+        it(`should switch to ${tab}`, () => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON(tab))
+           .then(() => this.app.client.waitForText(icon, tab))
+           /*.then(() => this.app.client.waitUntil(() => {
+               return this.app.client.waitForExist(icon)
+                   .then(this.app.client.getText(icon))
+                   .then(text => text === tab)
+           }))*/
+           .catch(common.oops(this)))
+    }        
+    const switcheroo = () => {
+        switchTo('summary')
+        switchTo('grid')
+        switchTo('timeline')
+        switchTo('grid')
+    }
+
+    switcheroo()
+    
     // invoke again with positive, and then look for a count of 2
     notbomb()
-    openGridExpectCountOf(0, 0, `$ grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)  // expect 0 cells, for a random action name
-    openGridExpectCountOf(2, 0, `$ grid --batches ${N} -a`)
+    openGridExpectCountOf(0, 0, `$ grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)  // expect 0 cells, for a random action name
+    openGridExpectCountOf(2, 0, `$ grid --batches ${N}`)
     notbomb()
-    openGridExpectCountOf(3, 0, `$ grid --batches ${N} -a --name ${actionName}`, actionName, 3)
+    openGridExpectCountOf(3, 0, `$ grid --batches ${N} ${actionName}`, actionName, 3)
 
     // invoke again with positive, and then look for a count of 3
     notbomb()
-    openGridExpectCountOf(4, 0, `wsk activation grid --batches ${N} -a`)
-    openGridExpectCountOf(0, 0, `wsk activation grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)  // expect 0 cells, for a random action name
+    openGridExpectCountOf(4, 0, `wsk activation grid --batches ${N}`)
+    openGridExpectCountOf(0, 0, `wsk activation grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)  // expect 0 cells, for a random action name
     bomb()
-    openGridExpectCountOf(4, 1, `wsk activation grid --batches ${N} -a --name ${actionName}`, actionName, 5)
+    openGridExpectCountOf(4, 1, `wsk activation grid --batches ${N} ${actionName}`, actionName, 5)
 
     // invoke again with negative, and then look for a count of 4, and error rate of 0.25
     bomb()
-    openGridExpectCountOf(4, 2, `grid --batches ${N} -a`)
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)
+    openGridExpectCountOf(4, 2, `grid --batches ${N}`)
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)
+
+    switcheroo()
 
     // click on grid cell
-    openGridExpectCountOf(4, 2, `grid --batches ${N} -a --name ${actionName}`)
+    openGridExpectCountOf(4, 2, `grid --batches ${N} ${actionName}`)
     it('should drill down to activation when grid cell is clicked', () => this.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} .grid:first-child`, 'data-action-name')
        .then(actionName => this.app.client.click(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} .grid-cell:first-child`)
              .then(() => this.app)
@@ -144,7 +170,7 @@ describe('Activation grid visualization', function() {
              .then(verifyGrid(4, 2)))
        .catch(common.oops(this)))
 
-    const tableTest = (iter, resolve, reject) => cli.do(`table -a --name ${actionName}`, this.app)
+    /*const tableTest = (iter, resolve, reject) => cli.do(`table ${actionName}`, this.app)
         .then(cli.expectOK)
           .then(sidecar.expectOpen)
           .then(() => this.app.client.click(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-label.clickable`))
@@ -160,7 +186,7 @@ describe('Activation grid visualization', function() {
                   common.oops(this)(err)
               }
           });
-    it(`should open table view, click on table row, and observe switch to grid view actionName=${actionName}`, () => new Promise((resolve, reject) => tableTest(0, resolve, reject)))
+    it(`should open table view, click on table row, and observe switch to grid view actionName=${actionName}`, () => new Promise((resolve, reject) => tableTest(0, resolve, reject)))*/
 
     it(`should create a second action ${actionName2} that bombs if the input value is negative`, () => cli.do(`let ${actionName2} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
         .then(cli.expectOK)
@@ -169,15 +195,17 @@ describe('Activation grid visualization', function() {
        .catch(common.oops(this)))
 
     notbomb(actionName2)
-    openGridExpectCountOf(1, 0, `grid --batches ${N} -a`, actionName2)
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)
+    openGridExpectCountOf(1, 0, `grid --batches ${N}`, actionName2)
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)
 
     bomb(actionName2)
-    openGridExpectCountOf(1, 1, `grid --batches ${N} -a`, actionName2)
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)
+    openGridExpectCountOf(1, 1, `grid --batches ${N}`, actionName2)
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)
 
-    openGridExpectCountOf(1, 1, `grid --batches ${N} -a`, actionName2)
-    openGridExpectCountOf(0, 0, `grid --batches ${N} -a --name ${randomGarbage}`, randomGarbage, 0)
+    openGridExpectCountOf(1, 1, `grid --batches ${N}`, actionName2)
+    openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)
+
+    switcheroo()
 
     // purposefully reuse actionName2, but within a package
     it(`should create a packaged action ${packageName}/${actionName2} that bombs if the input value is negative`, () => cli.do(`let ${packageName}/${actionName2} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
@@ -191,8 +219,8 @@ describe('Activation grid visualization', function() {
     // and expect 1 success cell
     notbomb(actionName2, packageName)
     notbomb(actionName2)
-    openGridExpectCountOf(3, 1, `grid --batches 2 -a`, actionName2) // it was 1,1 last time, and we did one notbomb against actionName2 and one against packaged actionName2, hence 3,1
-    openGridExpectCountOf(2, 1, `grid --batches 2 -a --name ${actionName2}`, actionName2) // it was 1,1 last time, and we did one notbomb, so expect 2,1 now
+    openGridExpectCountOf(3, 1, `grid --batches 2`, actionName2) // it was 1,1 last time, and we did one notbomb against actionName2 and one against packaged actionName2, hence 3,1
+    openGridExpectCountOf(2, 1, `grid --batches 2 ${actionName2}`, actionName2) // it was 1,1 last time, and we did one notbomb, so expect 2,1 now
     notbomb(actionName2, packageName)
-    openGridExpectCountOf(2, 0, `grid --batches 2 -a --name ${packageName}/${actionName2}`, actionName2) // we've done two notbombs against the packaged actionName2, hence 2,0
+    openGridExpectCountOf(2, 0, `grid --batches 2 ${packageName}/${actionName2}`, actionName2) // we've done two notbombs against the packaged actionName2, hence 2,0
 })
