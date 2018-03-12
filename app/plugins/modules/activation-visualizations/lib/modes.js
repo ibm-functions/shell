@@ -26,7 +26,7 @@ const { optionsToString } = require('./util')
  */
 const mode = mode => options => ({
     mode,
-    direct: entity => repl.qexec(`${mode} ${optionsToString(options)}${entity && entity.name ? ' ' + entity.name : ''}`)
+    direct: entity => repl.qexec(`${mode} ${optionsToString(options)}${entity && entity.name ? ' ' + entity.name : options.name ? ' ' + options.name : ''}`)
 })
 
 /**

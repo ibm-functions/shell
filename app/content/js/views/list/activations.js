@@ -239,8 +239,8 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 const path = activation.annotations && activation.annotations.find(({key}) => key === 'path'),
                       gridCommand = activation.sessionId
                       ? `grid "${activation.name}"` // for apps, the activation.name field is the app name
-                      : !path ? `grid --name /${activation.namespace}/${activation.name}`   // triggers, at least, have no path annotation
-                      : `grid --name "/${path.value}"`
+                      : !path ? `grid "/${activation.namespace}/${activation.name}"`   // triggers, at least, have no path annotation
+                      : `grid "/${path.value}"`
 
                 nameClick.onclick = pip(() => repl.pexec(gridCommand),
                                         undefined, logTable, viewName, { parent: container })

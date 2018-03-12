@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('activation visualization utils')
+debug('loading')
+
 const path = require('path'),
       usage = require('../usage'),
       defaults = require('./defaults.json'),
@@ -128,7 +131,7 @@ const filterBySuccess = ({success, failure}) => activations => {
  *
  */
 const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
-    const {appName,path,filter,include,exclude,skip=0,batchSize=defaults.batchSize,all} = options
+    const {nocrawl=false, path,filter,include,exclude,skip=0,batchSize=defaults.batchSize,all} = options
     let {name=''} = options
 
     // see if the user requested a time range
@@ -158,22 +161,45 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
               return []
           })
 
-    if (appName) {
-        // then the user asked to filter by app tasks
-        return repl.qexec(`app get "${appName}"`)
+    debug('name filter', nameFilter || 'none')
+    debug('upto', uptoArg || 'none')
+    debug('since', sinceArg || 'none')
+
+    /** fetch activations without an app/composer filter */
+    const fetchNonApp = () => Promise.all(new Array(N).fill(0).map((_, idx) => fetch(idx * batchSize)))
+          .then(flatten)
+          .then(filterByLatencyBucket(options))
+          .then(filterBySuccess(options))
+          .then(filterOutNonActionActivations(path||filter||include ? makeFilter(path||filter||include, exclude) : name ? makeFilter(amendWithNamespace(name), exclude) : acceptAnything))
+          .then(activations => {
+              if (name && activations.length === 0) {
+                  // user asked to filter by name, and we found nothing. error out
+                  const err = new Error(`No activations of ${name} found`)
+                  err.code = 404
+                  throw err
+              } else {
+                  return activations
+              }
+          })
+
+    if (name && !nocrawl) {
+        // then the user asked to filter; first see if this is an app
+        return repl.qexec(`app get "${name}"`)
             .then(extractTasks)
-            .then(tasks => all ? tasks.concat([appName]) : tasks) // if options.all, then add the app to the list of actions
-            .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {name:task,filter,include,exclude,skip,upto,since,batchSize}))))
+            .then(tasks => all ? tasks.concat([name]) : tasks) // if options.all, then add the app to the list of actions
+            .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {nocrawl:true, name:task,filter,include,exclude,skip,upto,since,batchSize}))))
             .then(flatten)
             .then(filterByLatencyBucket(options))
             .then(filterBySuccess(options))
+            .catch(err => {
+                if (err.statusCode !== 404) {
+                    console.error(err)
+                }
+                return fetchNonApp()
+            })
+    } else {
+        return fetchNonApp()
     }
-
-    return Promise.all(new Array(N).fill(0).map((_, idx) => fetch(idx * batchSize)))
-        .then(flatten)
-        .then(filterByLatencyBucket(options))
-        .then(filterBySuccess(options))
-        .then(filterOutNonActionActivations(path||filter||include ? makeFilter(path||filter||include, exclude) : name ? makeFilter(amendWithNamespace(name), exclude) : acceptAnything))
 }
 //exports.fetchActivationDataFromBackend = fetchActivationDataFromBackend
 
@@ -296,7 +322,7 @@ exports.visualize = (wsk, commandTree, cmd, viewName, draw, extraUsage, extraOpt
         if (N > defaults.maxN) {
             throw new Error(`Please provide a maximum value of ${defaults.maxN}`)
         }
-        return fetchActivationData(wsk, N, Object.assign(options, { appName }), fullArgv.slice(idx2 + 1)/*, timeRange*/)
+        return fetchActivationData(wsk, N, Object.assign(options, { name: appName }), fullArgv.slice(idx2 + 1)/*, timeRange*/)
             /*.then(data => {
                 if (!isRedraw) {
                     // remember the time range, so that the redraw can
@@ -368,7 +394,7 @@ exports.optionsToString = options => {
     let str = ''
     for (let key in options) {
         // underscore comes from minimist
-        if (key !== '_' && options[key] !== undefined && key !== 'appName') {
+        if (key !== '_' && options[key] !== undefined && key !== 'name') {
             const dash = key.length === 1 ? '-' : '--',
                   prefix = options[key] === false ? 'no-' : '', // e.g. --no-help
                   value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
