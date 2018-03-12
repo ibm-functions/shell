@@ -135,7 +135,30 @@ describe('Activation grid visualization', function() {
     }
 
     switcheroo()
-    
+
+    // activation list, click on activationId and action name; the latter should open the grid
+    it(`should find an activation of ${actionName} in activation list`, () => cli.do('$ ls', this.app)
+       .then(cli.expectOKWithCustom({ passthrough: true }))
+       .then(N => {
+           const row = `${ui.selectors.OUTPUT_N(N)} .log-line[data-name="${actionName}"]`,
+                 activationIdSelector = `${row} .activationId .clickable`,
+                 actionNameSelector = `${row} .entity-name .clickable`
+
+           // first click on activationId, and expect sidecar to be showing that activation
+           return this.app.client.getText(activationIdSelector)
+               .then(activationId => this.app.client.click(activationIdSelector)
+                     .then(() => this.app)
+                     .then(sidecar.expectOpen)
+                     .then(sidecar.expectShowing(actionName, activationId)))
+           // now click on the action name, and expect grid
+               .then(() => this.app.client.click(actionNameSelector))
+               .then(() => this.app)
+               .then(sidecar.expectOpen)
+               .then(sidecar.expectShowing(actionName))
+               .then(() => this.app.client.waitForText(icon, 'grid'))
+       })
+       .catch(common.oops(this)))
+
     // invoke again with positive, and then look for a count of 2
     notbomb()
     openGridExpectCountOf(0, 0, `$ grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)  // expect 0 cells, for a random action name
