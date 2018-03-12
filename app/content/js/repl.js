@@ -638,7 +638,7 @@ self.exec = (commandUntrimmed, execOptions) => {
                             const message = `Unsupported optional parameter ${optionalArg}`,
                                   err = new modules.errors.usage({ message, usage })
                             err.code = 499
-                            debug(message, args, parsedOptions, optional)
+                            debug(message, args, parsedOptions, optional, argv) // args is argv with options stripped
                             return ui.oops(block, nextBlock)(err)
 
                         } else if (match.boolean && typeof parsedOptions[optionalArg] !== 'boolean'

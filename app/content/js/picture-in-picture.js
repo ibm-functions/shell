@@ -68,7 +68,6 @@ const restore = (pippedContainer, sidecarClass, capturedHeaders, highlightThis, 
     if (pippedContainer !== true) {
         if (pippedContainer.parentNode) pippedContainer.parentNode.removeChild(pippedContainer)
         parent.appendChild(pippedContainer)
-        console.error('!!!!!!!!!!!!!!',parent, pippedContainer, capturedHeaders)
     }
         //pippedContainer.onclick = null
 //}, 300)

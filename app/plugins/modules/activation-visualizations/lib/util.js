@@ -163,7 +163,6 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
         return repl.qexec(`app get "${appName}"`)
             .then(extractTasks)
             .then(tasks => all ? tasks.concat([appName]) : tasks) // if options.all, then add the app to the list of actions
-            .then(tasks => { console.error('@@@@@@@@@@@@@@@', tasks); return tasks })
             .then(tasks => Promise.all(tasks.map(task => fetchActivationData(wsk, N, {name:task,filter,include,exclude,skip,upto,since,batchSize}))))
             .then(flatten)
             .then(filterByLatencyBucket(options))
@@ -369,10 +368,14 @@ exports.optionsToString = options => {
     let str = ''
     for (let key in options) {
         // underscore comes from minimist
-        if (key !== '_' && options[key] !== undefined) {
+        if (key !== '_' && options[key] !== undefined && key !== 'appName') {
             const dash = key.length === 1 ? '-' : '--',
+                  prefix = options[key] === false ? 'no-' : '', // e.g. --no-help
                   value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
-            str = `${str} ${dash}${key}${value}`
+            if (! (dash === '-' && options[key] === false)) {
+                // avoid -no-q, i.e. single dash
+                str = `${str} ${dash}${prefix}${key}${value}`
+            }
         }
     }
 
