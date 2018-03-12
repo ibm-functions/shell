@@ -182,7 +182,6 @@ const format = message => {
 
             /** make a single breadcrumb for the UI; defaultCommand means use the string as a command */
             const makeBreadcrumb = options => {
-                console.error('@@@@', options)
                 const stringLabel = typeof options.label === 'string',
                       cmd = options.commandFromLabel ? stringLabel ? options.label : options.label.command : options.command,
                       label = stringLabel ? options.label : breadcrumbFromCommand(options.label.command)

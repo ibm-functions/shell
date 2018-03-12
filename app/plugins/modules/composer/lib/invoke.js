@@ -38,7 +38,10 @@ module.exports = (commandTree, prequire) => {
         return delegate.apply(undefined, arguments)
             .then(activation => activation.message || activation)   // message if change-context wrapper
             .then(activation => {
-                if (cmd === 'invoke' && ui.headless) {
+                if (options.r || options.result) {
+                    // activation is just the result part
+                    return activation
+                } else if (cmd === 'invoke' && ui.headless) {
                     // in headless mode, print just the result
                     return activation.response.result
                 } else if (cmd === 'async') {

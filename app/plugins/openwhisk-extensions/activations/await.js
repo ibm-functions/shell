@@ -23,7 +23,7 @@
  */
 
 const POLL_INTERVAL = process.env.POLL_INTERVAL || 1000,
-      minimist = require('minimist')
+      minimist = require('yargs-parser')
 
 /** does the given activation have a truthy value for the given annotation key "anno */
 const hasTruthyAnno = (activation, anno) => activation.annotations && activation.annotations.find(({key, value}) => key === anno && value)
@@ -48,7 +48,7 @@ const handleComposer = (commandTree, options) => activation => {
         }
     } else {
         // otherwise, this is a normal activation, so return it to the user
-        return commandTree.changeContext(`/wsk/activation`, activation.activationId)(activation)
+        return activation//commandTree.changeContext(`/wsk/activation`, activation.activationId)(activation)
     }
 }
 
