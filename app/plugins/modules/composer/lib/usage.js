@@ -64,7 +64,7 @@ exports.invoke = {
     title: 'Invoke composition',
     header: 'Invoke a given app and wait for its completion',
     example: 'app invoke <name> [-p key value]*',
-    required: [{ name: 'name', docs: 'a deployed composition' }],
+    required: [{ name: 'name', docs: 'a deployed composition', implicitOK: ['actions', 'activations'] }],
     optional: actionsUsage.invoke.optional,
     parents: ['composer', { command: 'composer app' }],
     related: ['app async', 'app create', 'app get', 'app list']
