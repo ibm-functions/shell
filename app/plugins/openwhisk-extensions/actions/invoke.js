@@ -65,9 +65,10 @@ const respond = options => response => {
         return true
     } else {
         if (options.result || options.r) {
-            response.message = response.message.response.result
+            return response.response.result
+        } else {
+            return response
         }
-        return response
     }
 }
 
