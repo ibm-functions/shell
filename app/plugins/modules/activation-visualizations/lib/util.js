@@ -141,7 +141,8 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
           since = (timeRange && timeRange.since) || options.since  // ibid...
 
     // name queries can only specify package/action or action; let's check for conformance
-    let nameSplit = name.split(/\//)
+    const nameStr = '' + name // in case name is an number or boolean; yargs-parser converts them
+    let nameSplit = nameStr.split(/\//)
     if (nameSplit.length === 4 && nameSplit[0].length === 0) {
         // then the pattern is /a/b/c, which split will return as ['', 'a', 'b', 'c']
         // the backend doesn't yet support namespace filters, so strip that off, too
@@ -150,6 +151,8 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
         // the name query is /ns/action, where ns is the current
         // namespace; as above, we need to strip off ns
         name = nameSplit[2]
+    } else {
+        name = nameStr // make sure it's a string going forwards
     }
 
     const nameFilter = name ? `--name ${name}` : '',
