@@ -82,7 +82,7 @@ function graph2doms(JSONgraph, containerId, width, height, activations){
 
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
-	
+
 	$("#wskflowContainer").remove();
 	$(containerId).append("<div id='wskflowContainer'></div>");	
 
@@ -1147,12 +1147,13 @@ function graph2doms(JSONgraph, containerId, width, height, activations){
 		We have to set d3's zoom variable to have the same values as the values we'd like for `transform`. So when d3 calculates the values for event.translate/scale, it takes our manual adjustments into account. 		
 	*/
 
-	let applyAutoScale = true;	// if resizing the window will resize the graph. true by default. 
+        let applyAutoScale = true,	// if resizing the window will resize the graph. true by default.
+            customZoom = false
 	
 	function resizeToFit(w, h){	// resizeToFit implements a zoom-to-fit behavior. 
 		width = w;
 		height = h;
-		let initScale = Math.min(width/elkData.width, height/elkData.height, 2),
+		let initScale = Math.min(width/elkData.width, height/elkData.height, 4),
 			initTransX = Math.max(width/2 - elkData.width*initScale/2, 0),
 			initTransY = 0;
 		zoom.translate([initTransX, initTransY]); 
@@ -1171,36 +1172,45 @@ function graph2doms(JSONgraph, containerId, width, height, activations){
 		container.attr('transform', `matrix(${initScale}, 0, 0, ${initScale}, ${initTransX}, ${initTransY})`);
 	}
 
+        // any interested parties for zoom events
+        // and notify interested parties that we entered custom mode
+        const handlers = []
+        const notify = () => handlers.forEach(_ =>  _( { applyAutoScale, customZoom }))
+
+        /**
+         * Zoom-to-fit button behavior
+         *
+         * @param useThisValue set a value, otherwise toggle the current value
+         *
+         */
+        const zoomToFit = useThisValue => {
+	        applyAutoScale = useThisValue !== undefined ? useThisValue : !applyAutoScale;	// toggle applyAutoScale
+                customZoom = false
+            notify()
+            console.error('ZTF', applyAutoScale, customZoom)
+		if(applyAutoScale){
+			// when clicking to switch from inactive to active, it resizes the graph to fit the window. #422
+			resizeToFit($('#wskflowSVG').width(), $('#wskflowSVG').height());
+		}
+		else{
+			// when clicking to switch from active to inactive, it resizes the graph to zoom in at graph entry by 2x. 
+			pan($('#wskflowSVG').width(), $('#wskflowSVG').height());
+		}
+	}
+
  	/* 
  		from https://github.com/OpenKieler/klayjs-d3/blob/master/examples/interactive/index.js 	
  		redraw is called by d3. d3.event.translate and d3.event.scale handle moving the graph and zooming. Note that when zooming, both event.translate and event.scale change to let the zoom center be the mouse cursor. Adding ohter values to event.translate and event.scale is likely to cause unwanted behaviors. 
  	*/
 	function redraw() {		
-		if(applyAutoScale){	// exit zoom-to-fit mode when the user uses the mouse to move or zoom the graph 
-			applyAutoScale = false;
-			$('#zoomToFitButton').css('color', 'lightgrey');	
+		if(applyAutoScale || !customZoom){	// exit zoom-to-fit mode when the user uses the mouse to move or zoom the graph 
+		    applyAutoScale = false;
+                    customZoom = true
+                    notify()
 		}
      	$("#qtip").removeClass("visible") 
         container.attr('transform', `translate(${d3.event.translate}) scale(${d3.event.scale})`);
 	}	
-
-	// add a zoom-to-fit button. #422
-	$('#wskflowContainer').append('<div id="zoomToFitButton" style="width:35px; height: 35px; border: solid 1px black; border-radius: 5px; padding: 4px; position:absolute; top: 10px; right: 10px; background-color:var(--color-stripe-02); color:mediumspringgreen; cursor:pointer;"><i class="fas fa-expand-arrows-alt" style="width: 100%; height:100%;"></i></div>');
-
-	// zoom-to-fit button behavior
-	$('#zoomToFitButton').click(() => {
-		applyAutoScale = !applyAutoScale;	// toggle applyAotuScale
-		if(applyAutoScale){
-			// when clicking to switch from inactive to active, it resizes the graph to fit the window. #422
-			$('#zoomToFitButton').css('color', 'mediumspringgreen');
-			resizeToFit($('#wskflowSVG').width(), $('#wskflowSVG').height());
-		}
-		else{
-			// when clicking to switch from active to inactive, it resizes the graph to zoom in at graph entry by 2x. 
-			$('#zoomToFitButton').css('color', 'lightgrey');
-			pan($('#wskflowSVG').width(), $('#wskflowSVG').height());
-		}
-	});
 
 	// when zoom-to-fit is active, the graph resizes as the window resizes. #422
 	$(window).unbind('resize').resize(() => {
@@ -1211,7 +1221,13 @@ function graph2doms(JSONgraph, containerId, width, height, activations){
 	 	
 	});
 	
-		 
+
+    // exported API
+    return {
+        register: callback => handlers.push(callback),
+        zoomToFit: () => zoomToFit(true),
+        zoom1to1: () => zoomToFit(false)
+    }
 }
 
 

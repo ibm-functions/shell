@@ -32,7 +32,7 @@ module.exports = (commandTree, prequire) => {
          *
          */
         visualize: (passedFsm, container, w, h, activations) => {
-            debug('visualize');
+            debug('visualize', passedFsm);
             if(passedFsm == undefined || passedFsm.composition == undefined || !Array.isArray(passedFsm.composition)){
                 debug('fsm is not in the right format. return.');
                 return true;
@@ -50,9 +50,7 @@ module.exports = (commandTree, prequire) => {
             }
             height = $('#sidecar').height()-$('.sidecar-header').height()-$('.sidecar-bottom-stripe').height()-2;
 
-            fsm2graph(ir, container, width, height, activations); 
-           
-            return true;
+            return fsm2graph(ir, container, width, height, activations); 
         }
     }
 }

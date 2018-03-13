@@ -442,7 +442,7 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
 
     // create the binding, then create the action wrapper to give the app a name;
     // for updates, we also need to fetch the action, so we can merge the annotations and parameters
-    return Promise.all([cmd === 'create' ? EMPTY : repl.qexec(`wsk action get ${fqnAppName}`).catch(err => {
+    return Promise.all([cmd === 'create' ? EMPTY : repl.qexec(`wsk action get "${fqnAppName}"`).catch(err => {
                             if (err.statusCode === 404) return EMPTY
                             else throw err
                         }),
@@ -562,12 +562,72 @@ exports.handleError = (err, reject) => {
 }
 
 /**
+ * Render the wskflow visualization for the given fsm
+ *
+ * @return { view, controller } where controller is the API exported by graph2doms
+ */
+exports.wskflow = (visualize, viewName, { fsm, input, name, packageName }) => {
+    const view = document.createElement('div')
+    const h = document.getElementById("sidecar").getBoundingClientRect().height
+    view.style.flex = 1
+    view.style.display = 'flex'
+
+    // wskflow uses jquery, and assumes that the view is attached to the document;
+    // we have to fake it out, by attaching to document.body, then removing
+    document.body.appendChild(view)
+    const controller = visualize(fsm, view, undefined, h)
+    document.body.removeChild(view)
+
+    const onclick = undefined
+    ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
+                              'This is a preview of your app, it is not yet deployed')
+
+    return { view, controller }
+}
+
+/**
+ * Zoom to fit buttons
+ *
+ */
+exports.zoomToFitButtons = controller => {
+    const events = require('events'),
+          zoom1to1Bus = new events.EventEmitter(),
+          zoomToFitBus = new events.EventEmitter()
+
+    const listener = event => {
+        zoom1to1Bus.emit('change', event.applyAutoScale === false && !event.customZoom)
+        zoomToFitBus.emit('change', event.applyAutoScale === true && !event.customZoom)
+    }
+    controller.register(listener)
+
+    return [
+        { label: '1:1', actAsButton: true, flush: 'right', balloon: 'Use a fixed-size canvas', selected: false,
+          selectionController: zoom1to1Bus,
+          direct: () => {
+              controller.zoom1to1()
+          }
+        },
+        { fontawesome: 'fas fa-expand', actAsButton: true, flush: 'right', balloon: 'Use a zoom to fit canvas', selected: true,
+          selectionController: zoomToFitBus,
+          direct: () => {
+              controller.zoomToFit()
+          }
+        }
+    ]
+}
+
+/**
  * Entity view modes
  *
  */
-exports.vizAndfsmViewModes = (defaultMode='visualization') => [
-    { mode: 'visualization', defaultMode: defaultMode==='visualization', direct: ui.showEntity },
-    { mode: 'fsm', label: 'JSON', defaultMode: defaultMode==='fsm', direct: entity => ui.showEntity(entity, { show: 'fsm' }) }
+exports.vizAndfsmViewModes = (visualize, commandPrefix, defaultMode='visualization') => [
+    { mode: 'visualization', defaultMode: defaultMode==='visualization', direct: entity => {
+        return repl.qexec(`${commandPrefix} "${entity.input}"`)
+    } },
+    { mode: 'fsm', label: 'JSON', defaultMode: defaultMode==='fsm', direct: entity => {
+        entity.type = 'actions'
+        ui.showEntity(entity, { show: 'fsm' })
+    } }
 ]
 
 /**
@@ -575,7 +635,10 @@ exports.vizAndfsmViewModes = (defaultMode='visualization') => [
  *
  */
 exports.codeViewMode = {
-    mode: 'source', label: 'code', direct: entity => ui.showEntity(entity, { show: 'source' })
+    mode: 'source', label: 'code', direct: entity => {
+        entity.type = 'actions'
+        return ui.showEntity(entity, { show: 'source' })
+    }
 }
 
 /**
@@ -597,16 +660,26 @@ exports.hasUnknownOptions = (options, expected) => {
  * like an app
  *
  */
-exports.decorateAsApp = action => {
+exports.decorateAsApp = ({action, visualize, viewName='app', commandPrefix='app get', doVisualize}) => {
     action.prettyType = appBadge
     action.fsm = action.annotations.find(({key}) => key === 'fsm').value
-    action.modes = (action.modes||[]).filter(_ => _.mode !== 'code').concat(exports.vizAndfsmViewModes())
 
     if (action.exec) {
         action.exec.prettyKind = 'app'
     }
 
-    return action
+    if (doVisualize) {
+        const { view, controller } = exports.wskflow(visualize, viewName, action)
+
+        action.modes = (action.modes||[]).filter(_ => _.mode !== 'code')
+            .concat(exports.vizAndfsmViewModes(visualize, commandPrefix))
+            .concat(exports.zoomToFitButtons(controller))
+
+        return view
+
+    } else {
+        return action
+    }
 }
 
 /**

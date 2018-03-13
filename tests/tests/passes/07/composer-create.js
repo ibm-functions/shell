@@ -243,7 +243,7 @@ describe('app create and sessions', function() {
        .then(sidecar.expectShowing(seqName1))
        .then(sidecar.expectBadge(badges.fsm))
        .then(() => this.app.client.getText(`${ui.selectors.SIDECAR_MODE_BUTTONS}`))
-       .then(buttons => buttons.length > 0 && buttons.reduce((M, button) => {
+       .then(buttons => buttons.length > 0 && buttons.filter(x=>x).reduce((M, button) => { // filter removes blanks due to image icons
            if (M[button]) {
                // duplicate button!!
                assert.fail('Duplicate mode button ' + button)

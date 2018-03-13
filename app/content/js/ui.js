@@ -888,13 +888,32 @@ const ui = (function() {
         }
     }
 
+    const addWebBadge = action => {
+        const isWebExported = action.annotations && action.annotations.find(kv => kv.key === 'web-export' && kv.value)
+        if (isWebExported) {
+            const anchor = document.createElement('a'),
+                  urlText = formatWebActionURL(action)
+
+            const badge = addBadge(anchor)
+            badge.classList.add('clickable')
+            anchor.classList.add('entity-web-export-url')
+            anchor.classList.add('has-url')
+            anchor.innerText = 'web accessible'
+            anchor.classList.add('plain-anchor')
+            anchor.setAttribute('href', urlText)
+            anchor.setAttribute('target', '_blank')
+
+            return { anchor, urlText }
+        }
+    }
+
     /**
      * Show custom content in the sidecar
      *
      */
     self.showCustom = (custom, options) => {
         if (!custom.content) return
-        console.log('ui::showCustom', custom)
+        debug('showCustom', custom, options)
 
         const sidecar = document.querySelector('#sidecar')
 
@@ -921,6 +940,27 @@ const ui = (function() {
             })
         }
 
+        if (custom && custom.isEntity) {
+            const entity = custom
+            sidecar.entity = entity
+
+            // render badges
+            addVersionBadge(entity, { clear: true })
+            addWebBadge(entity)
+            sidecar.classList.add('entity-has-badges')
+            const combinatorArtifacts = entity.annotations && entity.annotations.find( ({key}) => key === 'wskng.combinators')
+            if (combinatorArtifacts && combinatorArtifacts.value) {
+                const annotations = util.isArray(combinatorArtifacts.value) ? combinatorArtifacts.value : [combinatorArtifacts.value]
+                annotations.forEach(annotation => {
+
+                    if (annotation.badge && annotation.badge !== 'web') {
+                        // render a badge, if we have one; we render web badges specially, with maybeAddWebBadge
+                        addBadge(annotation.badge)
+                    }
+                })
+            }
+        }
+
         const replView = document.querySelector('#main-repl')
         replView.className = `sidecar-visible ${(replView.getAttribute('class') || '').replace(/sidecar-visible/g, '')}`
 
@@ -933,7 +973,7 @@ const ui = (function() {
      * Given an entity name and an optional packageName, decorate the sidecar header
      *
      */
-    self.addNameToSidecarHeader = (sidecar=document.querySelector('#sidecar'), name, packageName='', onclick, viewName) => {
+    self.addNameToSidecarHeader = (sidecar=document.querySelector('#sidecar'), name, packageName='', onclick, viewName, subtext) => {
         const nameDom = sidecar.querySelector('.sidecar-header-name-content')
         nameDom.className = nameDom.getAttribute('data-base-class')
         nameDom.querySelector('.package-prefix').innerText = packageName
@@ -953,6 +993,12 @@ const ui = (function() {
 
         if (viewName) {
             sidecar.querySelector('.sidecar-header-icon').innerText = viewName
+        }
+
+        if (subtext) {
+            const sub = sidecar.querySelector('.sidecar-header-secondary-content .custom-header-content')
+            ui.removeAllDomChildren(sub)
+            sub.innerText = subtext
         }
 
         return nameDom
@@ -1079,8 +1125,13 @@ const ui = (function() {
      * Load the given entity into the sidecar UI
      *
      */
-    self.showEntity = (entity, options, block, nextBlock) => {
-        console.log('ui::showEntity', entity, options)
+    self.showEntity = (entity, options={}, block, nextBlock) => {
+        debug('showEntity', entity, options)
+
+        if (entity.renderAs === 'custom' && !options.show) {
+            return self.showCustom(entity, options)
+        }
+
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header')
 
@@ -1117,22 +1168,12 @@ const ui = (function() {
         const nameDom = self.addNameToSidecarHeader(sidecar, entity.name, entity.packageName)
 
         ui.clearBadges()
-        const maybeAddWebBadge = action => {
-            const isWebExported = action.annotations && action.annotations.find(kv => kv.key === 'web-export' && kv.value)
-            if (isWebExported) {
-                const anchor = document.createElement('a'),
-                      urlText = formatWebActionURL(action)
-
-                const badge = addBadge(anchor)
-                badge.classList.add('clickable')
-                anchor.classList.add('entity-web-export-url')
-                anchor.classList.add('has-url')
-                anchor.innerText = 'web accessible'
-                anchor.classList.add('plain-anchor')
-                anchor.setAttribute('href', urlText)
-                anchor.setAttribute('target', '_blank')
-
+        const maybeAddWebBadge = entity => {
+            const badge = addWebBadge(entity)
+            if (badge) {
                 if (!options || options.show === 'code' || options.show === 'default') {
+                    const { anchor, urlText } = badge
+
                     responseToRepl = anchor.cloneNode(true)
                     responseToRepl.classList.remove('plain-anchor')
                     responseToRepl.innerText = urlText
@@ -1183,17 +1224,6 @@ const ui = (function() {
                             } else {
                                 addThirdPartyMessage('Unable to locate the index.js file in the zip file')
                             }
-                        } else if (annotation.type === 'composition') {
-                            // special decorations for compositions TODO move to plugin
-                            const fsm = entity.annotations && entity.annotations.find(({key}) => key === 'fsm')
-                            const {visualize} = plugins.require('wskflow')
-                            const h = document.getElementById("sidecar").getBoundingClientRect().height
-                            // visualize(fsm, containerSelector, width, height)
-                            sidecar.classList.add('custom-content')
-                            const container = document.querySelector('#sidecar > .custom-content')
-                            removeAllDomChildren(container)
-                            visualize(fsm.value, container, undefined, h)
-                            sidecar.setAttribute('data-active-view', '.custom-content > div')
 
                         } else if (annotation.contentType === 'html') {
                             const frame = document.createElement('iframe'),

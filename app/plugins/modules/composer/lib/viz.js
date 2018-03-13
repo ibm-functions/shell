@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { isValidFSM, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
+const { isValidFSM, wskflow, zoomToFitButtons, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
       badges = require('./badges'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
       messages = require('./messages'),
@@ -34,7 +34,9 @@ const viewName = 'preview',               // for back button and sidecar header 
  * handlers.
  *
  */
- module.exports = (commandTree, prequire) => {
+module.exports = (commandTree, prequire) => {
+    const {visualize} = prequire('wskflow')
+
      const render = (input, options) => new Promise((resolve, reject) => {
          let fsmPromise, type, extraModes=[]
 
@@ -56,20 +58,26 @@ const viewName = 'preview',               // for back button and sidecar header 
              reject(messages.unknownInput)
          }
 
+         const name = path.basename(input)
+
          // create a fake action/entity record
-         const formatForUser = defaultMode => ({fsm,code}) => {            
-             resolve({
-                 verb: 'get',
-                 type: 'actions',
+         const formatForUser = defaultMode => ({fsm,code}) => {
+             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name })
+             extraModes = extraModes.concat(zoomToFitButtons(controller))
+
+             const entity = {
+                 isEntity: true,
+                 type: 'custom',
                  prettyType: viewName,
-                 name: path.basename(input),
-                 show: (options.fsm || defaultMode === 'fsm') && 'fsm',
+                 name,
                  fsm,
+                 input,
+                 content: view,
                  source: code,
                  exec: {
                      kind: 'source'
                  },
-                 modes: vizAndfsmViewModes(defaultMode).concat(extraModes),
+                 modes: vizAndfsmViewModes(visualize, viewName, defaultMode).concat(extraModes),
                  annotations: [
                      { key: 'wskng.combinators',
                        value: [{ role: 'replacement', type: 'composition', badge: type } ]
@@ -78,7 +86,16 @@ const viewName = 'preview',               // for back button and sidecar header 
                      { key: 'code', value: code },
                      { key: 'file', value: input }
                  ]
-             })
+             }
+             
+             if (options.fsm || defaultMode === 'fsm') {
+                 // then the user asked to see the fsm
+                 entity.verb = 'get'
+                 entity.show = 'fsm'
+                 entity.type = 'actions'
+             }
+
+             resolve(entity)
          }
          fsmPromise.then(formatForUser(defaultMode))
              .catch(err => {

@@ -21,12 +21,13 @@ const css = {
     modeContainer: '#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits .sidecar-bottom-stripe-mode-bits',
     button: 'sidecar-bottom-stripe-button',
     buttonActingAsButton: 'sidecar-bottom-stripe-button-as-button',
-    active: 'sidecar-bottom-stripe-button-active'
+    active: 'sidecar-bottom-stripe-button-active',
+    selected: 'selected'
 }
 exports.css = css
 
 const addModeButton = (bottomStripe, opts, entity, show) => {
-    const {mode, label, fontawesome, balloon, balloonLength, data, command=()=>mode, direct, defaultMode, actAsButton, echo=false, noHistory=true} = opts
+    const {mode, label, flush, selected, selectionController, fontawesome, balloon, balloonLength, data, command=()=>mode, direct, defaultMode, actAsButton, echo=false, noHistory=true} = opts
 
     // create the button dom, and attach it
     const button = document.createElement('div')
@@ -36,6 +37,18 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
         // some plugins want to add buttons, not mode-switchers to the bottom bar
         // let's make them behave a bit more like buttons
         button.classList.add(css.buttonActingAsButton)
+
+        if (selected) {
+            button.classList.add(css.selected)
+        }
+
+        if (selectionController) {
+            selectionController.on('change', selected => {
+                console.error('!!!!!!!!!', label || fontawesome, selected)
+                const op = selected ? 'add' : 'remove'
+                button.classList[op](css.selected)
+            })
+        }
     }
 
     
@@ -43,7 +56,6 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
         button.classList.add(css.active)
     }
     button.setAttribute('data-mode', mode)
-    bottomStripe.appendChild(button)
 
     if (data) {
         // we were asked to add some data attributes
@@ -61,6 +73,18 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
     } else {
         button.innerText = label || mode
     }
+
+    let container = bottomStripe
+    if (flush === 'right') {
+        let fillContainer = bottomStripe.querySelector('.fill-container.flush-right')
+        if (!fillContainer) {
+            fillContainer = document.createElement('div')
+            fillContainer.className = 'fill-container flush-right'
+        }
+        container.appendChild(fillContainer)
+        container = fillContainer
+    }
+    container.appendChild(button)
 
     if (balloon) {
         button.setAttribute('data-balloon', balloon)
@@ -86,6 +110,12 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
                     currentActive.classList.remove(css.active)
                 }
                 button.classList.add(css.active)
+            } else if (actAsButton && selected !== undefined) {
+                const currentSelected = bottomStripe.querySelector(`.${css.selected}`)
+                if (currentSelected) {
+                    currentSelected.classList.remove(css.selected)
+                }
+                button.classList.add(css.selected)
             }
 
             // execute the command

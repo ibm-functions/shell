@@ -240,7 +240,7 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
                 ui.ok(resultDom.parentNode).className = 'ok-for-list'
             }
 
-        } else if (response.type === 'custom') {
+        } else if (response.type === 'custom' || response.renderAs == 'custom') {
             if (echo) {
                 ui.showCustom(response)
                 ui.ok(resultDom.parentNode)
@@ -678,7 +678,8 @@ self.exec = (commandUntrimmed, execOptions) => {
 
                         let nActualArgsWithImplicit = nActualArgs
 
-                        if (implicitIdx >= 0 && selection && required[implicitIdx].implicitOK.find(_ => _ === selection.type)) {
+                        if (implicitIdx >= 0 && selection && required[implicitIdx].implicitOK.find(_ => _ === selection.type
+                                                                                                   || _ === selection.prettyType)) {
                             nActualArgsWithImplicit++
 
                             // if implicit, maybe other required parameters aren't needed
