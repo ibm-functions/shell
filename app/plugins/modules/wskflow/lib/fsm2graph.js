@@ -551,7 +551,7 @@ function fsm2graph(ir, containerId, w, h, acts){
 	
 	console.log('[wskflow] inserting DOM, calling graph2doms');
 
-	graph2doms(graphData, containerId, w, h, activations);
+	return graph2doms(graphData, containerId, w, h, activations);
 
 }
 

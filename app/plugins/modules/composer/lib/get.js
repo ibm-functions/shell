@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('app get')
+debug('loading')
+
 const { app_get:usage } = require('./usage'),
-      { isAnApp, vizAndfsmViewModes, decorateAsApp } = require('./composer')
+      { isAnApp, decorateAsApp } = require('./composer')
+
+const viewName = 'app'
 
 /**
  * Here is the app get entry point. Here we register command
@@ -23,6 +28,7 @@ const { app_get:usage } = require('./usage'),
  *
  */
 module.exports = (commandTree, prequire) => {
+    const {visualize} = prequire('wskflow')
     const wsk = prequire('/ui/commands/openwhisk-core'),
           rawGet = commandTree.find('/wsk/action/get').$
 
@@ -31,7 +37,7 @@ module.exports = (commandTree, prequire) => {
         const idx = args.indexOf(cmd),
               appName = args[idx + 1]
 
-        return repl.qexec(`wsk action get ${appName}`)
+        return repl.qexec(`wsk action get "${appName}"`, undefined, undefined, { override: true })
     }
 
     const cmd = commandTree.listen(`/wsk/app/get`, doGet('get'), { usage: usage('get'),
@@ -46,14 +52,33 @@ module.exports = (commandTree, prequire) => {
             if (!rawGet) {
                 return Promise.reject()
             }
+
+            debug('rendering')
             return rawGet.apply(undefined, arguments)
                 .then(response => {
-                    const action = response.message || response
-                    if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
-                        decorateAsApp(action)
-                    }
+                    debug('response', response)
 
-                    return response
+                    const action = response.message || response,
+                          execOptions = arguments[5]
+
+                    if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
+                        const doVisualize = execOptions.override || !execOptions.nested,
+                              content = decorateAsApp({ action, visualize, doVisualize }),
+                              input = `/${response.namespace}/${response.name}`
+
+                        if (doVisualize) {
+                            return Object.assign(action, {
+                                renderAs: 'custom',
+                                content,
+                                input,
+                                isEntity: true
+                            })
+                        } else {
+                            return response
+                        }
+                    } else {
+                        return response
+                    }
                 })
         })
     })

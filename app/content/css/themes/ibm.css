@@ -145,7 +145,7 @@ badge.clickable:hover {
 .sidecar-bottom-stripe .sidecar-bottom-stripe-button.sidecar-bottom-stripe-button-active {
     border-bottom-color: var(--color-brand-02);
 }
-.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover {
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover, .sidecar-bottom-stripe-button-as-button.selected {
     color: var(--color-brand-02);
 }
 

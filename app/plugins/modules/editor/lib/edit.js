@@ -151,6 +151,7 @@ const persisters = {
                             return repl.qexec(`app update "${app.name}" "${path}" -r`)
                                 .then(app => {
                                     cleanup()
+                                    console.error('#####', app)
                                     resolve(app)
                                 })
                         }

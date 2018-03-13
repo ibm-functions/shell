@@ -603,7 +603,7 @@ body.sidecar-full-screen #sidecar .sidecar-bottom-stripe-maximize .maximize-butt
 body.os-win32 #sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-close.hover .sidecar-bottom-stripe-close-icon, body.os-win32 #sidecar .sidecar-bottom-stripe-button-container:hover .sidecar-bottom-stripe-close-icon {
     letter-spacing: -1px; /* windows is different here */
 }
-#sidecar .sidecar-bottom-stripe-back-bits {
+#sidecar .sidecar-bottom-stripe-back-bits, .sidecar-bottom-stripe .fill-container {
     /* back button in sidecar bottom stripe */
     border-right: 1px dotted hsla(240, 2%, 90%, 0.5);
     padding-right: 1em;
@@ -628,7 +628,7 @@ body.os-win32 #sidecar .sidecar-bottom-stripe-close:hover .sidecar-bottom-stripe
 }
 
 /* custom content */
-body.no-sidecar-header .sidecar-header, #sidecar.no-sidecar-header .sidecar-header, sidecar.custom-content .sidecar-content, sidecar:not(.custom-content) .custom-content, sidecar.custom-content .sidecar-header-secondary-content .limits, sidecar:not(.custom-content) .custom-header-content {
+body.no-sidecar-header .sidecar-header, #sidecar.no-sidecar-header .sidecar-header, sidecar.custom-content .sidecar-content, sidecar:not(.custom-content) .custom-content, sidecar.custom-content .sidecar-header-secondary-content .limits, sidecar:not(.custom-content) .custom-header-content, sidecar.custom-content .sidecar-header-secondary-content .action-content {
     /* custom content rules */
     display: none;
 }
@@ -713,6 +713,9 @@ sidecar .sidecar-header-name {
 sidecar .sidecar-header .entity-name-line {
     display: flex;
     align-items: center;
+}
+sidecar.entity-has-badges .sidecar-header .header-right-bits .action-content {
+    display: flex;
 }
 sidecar .sidecar-header .badges {
     margin-left: 1rem;
@@ -1343,6 +1346,15 @@ body.subwindow.sidecar-full-screen #sidecar .sidecar-bottom-stripe .sidecar-bott
     /* hide the close button in the sidecar bottom stripe when in sidecar-full-screen mode */
     display: none;
 }
+/* used by bottom-stripe to flush-right buttons */
+.fill-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+.fill-container.flush-right {
+    justify-content: flex-end;
+}
 .sidecar-bottom-stripe .graphical-icon {
     /* font awesome icons in the bottom stripe */
     font-size: 1.25rem;
@@ -1580,6 +1592,9 @@ break {
 #sidecar.minimized .sidecar-bottom-stripe-button.sidecar-bottom-stripe-close {
     margin: 0;
     text-align: center;
+}
+.sidecar-bottom-stripe-button-as-button {
+    font-weight: bold;
 }
 #sidecar.minimized .graphical-icon {
     justify-content: center;
