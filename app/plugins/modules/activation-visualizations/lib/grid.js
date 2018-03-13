@@ -23,7 +23,6 @@ const prettyPrintDuration = require('pretty-ms'),
       { modes } = require('./modes'),
       { grid:usage } = require('../usage'),
       { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket,
-        filterByOutlieriness,
         displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Grid'

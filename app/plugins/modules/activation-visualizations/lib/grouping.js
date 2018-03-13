@@ -18,39 +18,6 @@ const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = req
       prettyPrintDuration = require('pretty-ms')
 
 /**
- * Create a table of rows
- *
- */
-const tableOf = rows => {
-    const table = document.createElement('div')
-    rows.forEach(({content, title}={}) => {
-        if (content) {
-            const row = document.createElement('span')
-            row.classList.add('graphical-clickable')
-            row.style.paddingLeft = '0.5ex'
-            table.appendChild(row)
-            row.innerText = content
-            row.title = title
-        }
-    })
-    return table
-}
-
-/**
- * Render an explanation of an increase in latency
- *
- */
-const maybe = (reason, shorthand, disparity, cover) => {
-    if (cover > 0.01) {
-        const pretty = prettyPrintDuration(disparity)
-        return {
-            content: `${shorthand}+${pretty}`,
-            title: `${reason} increased by ${pretty}`
-        }
-    }
-}
-
-/**
  * Compute statistical properties of a given group of activations
  *
  */
@@ -377,69 +344,6 @@ exports.groupByAction = (activations, options) => {
 }
 
 /**
- * Group the given activations by time
- *
- */
-exports.groupByTimeBucket = (activations, options) => {
-    // commenting out the bizarre filter. see shell issue #120
-    /*if (!options.all) {
-        activations = activations.filter(activation => {
-            const path = pathOf(activation)
-            return !(path.match && path.match(isUUIDPattern)) && !activation.cause
-        })
-    }*/
-
-    // first, sort the activations by increasing start time, to help
-    // with bucketing
-    activations.sort((a,b) => a.start - b.start)
-
-    // compute bucket properties
-    const nBuckets = options.buckets || 46,
-          first = activations[0],
-          last = activations[activations.length - 1],
-          minTime = first && first.start,
-          maxTime = last && last.start,
-          timeRangeInMillis = maxTime - minTime + 1,
-          bucketWidthInMillis = timeRangeInMillis / nBuckets,
-          totals = { minTime: undefined, maxTime: undefined, totalCount: 0},
-          grouper = addToGroup(options, totals)
-
-    const buckets = activations.reduce((bucketArray, activation) => {
-        const bucketIdx = ~~( (activation.start - minTime) / bucketWidthInMillis)
-        grouper(bucketArray[bucketIdx], activation)
-        return bucketArray
-    }, new Array(nBuckets).fill(0).map(_ => ({}) )) // an array of length nBuckets, of {} -- these will be activation groups, for each timeline bucket
-
-
-    // the buckets.map turns each timeline bucket, which right now is
-    // a map from action path to action, into an array -- for easier
-    // consumption
-    return Object.assign(totals, {
-        bucketWidthInMillis,
-        buckets: buckets.map(bucketMap => {
-            const bucket = toArray(bucketMap, options)
-            return {
-                bucket,
-                summary: summarizeWhole(bucket, options)
-            }
-        }),
-        summary: summarizeWhole2(activations, options)  // a "statData" object, for all activations
-    })
-}
-
-/**
- * Return the keys of a given object
- *
- */
-const keys = M => {
-    const A = []
-    for (let key in M) {
-        A.push(key)
-    }
-    return A
-}
-
-/**
  * User asked to filter based on outlier-iness. This must have a
  * grouping. the {activations,statData} is a group from grouping.js
  *
@@ -457,7 +361,7 @@ const filterByOutlieriness = options => ({activations,statData}) => {
         // check that the user passed a supported options.outliers parameter
         if (typeof options.outliers !== true && threshold === undefined) {
             // then the user specified an undefined threhsold
-            throw new Error(`Unsupported threhsold. Supported threhsolds: ${keys(statData.n)}`)
+            throw new Error(`Unsupported threhsold. Supported threhsolds: ${Object.keys(statData.n)}`)
         }
 
         return activations.filter(activation => {
