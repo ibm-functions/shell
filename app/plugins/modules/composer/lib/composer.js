@@ -450,7 +450,7 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
                        ])
         .then(([currentAction]) => {
             // now we merge together the parameters and annotations
-            const fsmAction = fsm.named(fqnAppName).encode().actions[0].action
+            const fsmAction = fsm.encode(fqnAppName).actions[0].action
             fsmAction.parameters = currentAction.parameters.concat(parameters).concat(fsmAction.parameters || []),
             fsmAction.annotations = mergeAnnotations(currentAction.annotations, annotations.concat(fsmAction.annotations||[]), type, fsm)
             return fsmAction
