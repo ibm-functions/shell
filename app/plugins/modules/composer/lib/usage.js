@@ -47,9 +47,9 @@ exports.create = cmd => ({
     optional: actionsUsage[cmd].optional.concat([
         { name: '--recursive', alias: '-r', boolean: true, docs: 'also deploy any referenced actions' },
         { name: '--dry-run', consumesPositional: 1, alias: '-n', boolean: true, advanced: true, docs: 'only check the given input for validity' },
-        { name: '--log-input', boolean: true, advanced: true, docs: 'log initial input' },
+        /*{ name: '--log-input', boolean: true, advanced: true, docs: 'log initial input' },
         { name: '--log-inline', boolean: true, advanced: true, docs: 'log inline function output' },
-        { name: '--log-all', boolean: true, advanced: true, docs: 'log initial input and inline function output' }]),
+        { name: '--log-all', boolean: true, advanced: true, docs: 'log initial input and inline function output' }*/]),
     sampleInputs: sampleInputs(sampleName => `app ${cmd} -r ${sampleName}`),
     parents: ['composer', { command: 'composer app' }],
     related: ['app get', 'app invoke', 'app list']

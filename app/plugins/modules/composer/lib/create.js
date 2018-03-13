@@ -131,7 +131,7 @@ module.exports = (commandTree, prequire) => {
 
             const { kvOptions: { action: { annotations=[], parameters=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');
 
-            if(options['log-input'] || options['log-inline'] || options['log-all']){
+            /*if(options['log-input'] || options['log-inline'] || options['log-all']){
                 debug('adding input logging');                
                 //let index = annotations.findIndex(element => element.key == 'log'), logType;
                 let logType;
@@ -197,10 +197,10 @@ module.exports = (commandTree, prequire) => {
                 }).catch(handleFailure_fsmPromise)
 
             }
-            else {
-                let index = annotations.findIndex(element => element.key == 'log');
-                if(index != -1) annotations.splice(index, 1);
-                else annotations.push({key: 'log', value: false});
+            else*/ {
+                /*let index = annotations.findIndex(element => element.key === 'log');
+                if(index !== -1) annotations.splice(index, 1);
+                else annotations.push({key: 'log', value: false});*/
                 //console.log('app create no logging', index, annotations);
                 // great, we now have a valid FSM!                    
                 return fsmPromise.then(({fsm,code,localCodePath}) => {
