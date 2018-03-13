@@ -19,6 +19,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { groupByAction } = require('./grouping'),
       { sort, numericalGroupKeySorter:defaultSorter } = require('./sorting'),
       { modes } = require('./modes'),
+      { timeline:usage } = require('../usage'),
       { ready, transparent, optionsToString, titleWhenNothingSelected, latencyBucket, latencyBucketRange, nLatencyBuckets, displayTimeRange, visualize } = require('./util')
 
 const viewName = 'Timeline'
@@ -353,7 +354,7 @@ module.exports = (commandTree, prequire) => {
     }, { hide: true })
 
     wsk.synonyms('activations').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/timeline`, timelineIt, { docs: 'Visualize recent activations in a timeline', needsUI: true,
+        commandTree.listen(`/wsk/${syn}/timeline`, timelineIt, { usage, needsUI: true,
                                                                  viewName,
                                                                  fullscreen: true, width: 800, height: 600,
                                                                  placeholder: 'Loading activity timeline ...'})
