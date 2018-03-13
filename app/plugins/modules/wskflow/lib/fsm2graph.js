@@ -15,8 +15,7 @@
  */
 
 'use strict'
-const processNodes = require('./process-new.js'),
-graph2doms = require('./graph2doms.js'),
+const graph2doms = require('./graph2doms.js'),
 $ = require('jquery'),
 defaultWidth = 40, defaultHeight = 21, defaultCharWidth = 4;
 
