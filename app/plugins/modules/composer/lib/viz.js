@@ -22,71 +22,12 @@ const { isValidFSM, vizAndfsmViewModes, codeViewMode, handleError } = require('.
       { preview:usage } = require('./usage'),
       fs = require('fs'),
       path = require('path'),
-      minimist = require('yargs-parser'),
       expandHomeDir = require('expand-home-dir'),
       chokidar = require('chokidar')
 
-const MAX_HISTORY = 10,                  // maximum number of items in the "drag here" selector history
-      viewName = 'preview',              // for back button and sidecar header labels
-      viewNameLong = 'App Visualization',//    ... long form
-      defaultMode = 'visualization',     // on open, which view mode should be selected?
-      lsKeys = {
-          recent: 'wsk.wskflow.viz.recent'
-      }
-
-/**
- * Open the visualization to the specified path on the local filesystem
- *
- */
-const show = path => {
-    document.body.classList.remove('no-sidecar-header')
-    document.querySelector('.wskflow-drag-area').classList.add('dragover')
-    document.querySelector('.wskflow-drag-area-text').style.display = 'none'
-    setTimeout(() => repl.pexec(`wsk app viz ${path}`), 150)
-}
-
-/**
- * Return the model of recently "app viz'd" files: a list of {name,path}
- *
- */
-const getRecentItems = () => {
-    const list = localStorage.getItem(lsKeys.recent)
-    if (!list) {
-        return []
-    } else {
-        try {
-            return JSON.parse(list)
-        } catch (e) {
-            console.error(e)
-            return []
-        }
-    }
-}
-
-/**
- * Add a recently "app viz'd" path to the persistence model. The input
- * is a {name,path} structure.
- *
- */
-const addRecentItem = file => {
-    const listStr = localStorage.getItem(lsKeys.recent),
-          list = !listStr ? [] : JSON.parse(listStr)
-
-    // add a date stamp (marking when we added this entry to the
-    // model), and push to the list model
-    file.addedOn = Date.now()
-    list.push(file)
-
-    // prune to MAX_HISTORY
-    list.sort((a,b) => b.addedOn - a.addedOn) // sort with most recently added first
-    if (list.length > MAX_HISTORY) {
-        localStorage.setItem(JSON.stringify(list.slice(0, MAX_HISTORY)))
-    } else {
-        localStorage.setItem(lsKeys.recent, JSON.stringify(list))
-    }
-
-    return path
-}
+const viewName = 'preview',               // for back button and sidecar header labels
+      viewNameLong = 'App Visualization', //    ... long form
+      defaultMode = 'visualization'       // on open, which view mode should be selected?
 
 /**
  * Here is the app kill entry point. Here we register command
@@ -167,89 +108,12 @@ const addRecentItem = file => {
              })
      })
 
-     /**
-      * Create a div and optionally attach it to a given parent
-      *
-      */
-     const div = (css,parent,text) => {
-         const element = document.createElement('div')
-         element.className = css
-         if (parent) parent.appendChild(element)
-         if (text) element.innerText = text
-         return element
-     }
-
-     /**
-      * Render the file selector (drag and drop) widget
-      *
-      */
-     const renderSelect = () => {
-         ui.injectCSS(path.join(__dirname, '..', 'web', 'css', 'viz.css'))
-
-         const selector = div('wskflow-file-selector fullsize'),
-               dragArea = div('wskflow-drag-area fullsize', selector),
-               dragIcon = div('wskflow-drag-area-icon fullsize ok-text-on-dragover oops-text-on-oops', dragArea),
-               dragIcon1 = div('wskflow-drag-area-icon-1', dragIcon),
-               dragIcon2 = div('wskflow-drag-area-icon-2', dragIcon),
-               dragText = div('wskflow-drag-area-text', dragArea, 'Drag a source or FSM file'),
-               recentItems = div('wskflow-recent-items', selector)
-
-         getRecentItems().forEach(({name,path}, idx) => {
-             if (idx < 5) {
-                 const recentItem = div('wskflow-recent-item', recentItems),
-                       icon = div('wskflow-recent-item-icon', recentItem),
-                       label = div('wskflow-recent-item-label deemphasize', recentItem, name)
-
-                 recentItem.onclick = () => show(path)
-             }
-         })
-
-         dragArea.addEventListener('dragover', event => {
-             dragArea.classList.add('dragover')
-         })
-         dragArea.addEventListener('dragleave', event => {
-             dragArea.classList.remove('dragover')
-         })
-         dragArea.addEventListener('drop', event => {
-             event.preventDefault()
-
-             for (let f of event.dataTransfer.files) {
-                  if (! (f.path.endsWith('.js') || f.path.endsWith('.json') || f.path.endsWith('.fsm'))) {
-                      dragArea.classList.remove('dragover')
-                      dragArea.classList.add('oops')
-
-                      const curText = dragText.innerText
-                      dragText.innerText = 'Unsupported format'
-                      setTimeout(() => {
-                          dragText.innerText = curText
-                          dragArea.classList.remove('oops')
-                      }, 4000)
-                  } else {
-                      addRecentItem({name: f.name, path: f.path})
-                      show(f.path)
-                      break
-                  }
-              }
-         })
-
-         return Promise.resolve({
-             type: 'custom',
-             content: selector,
-             sidecarHeader: false
-         })
-     }
-
      /** command handler */
      const doIt = cmd => (_1, _2, fullArgv, { errors }, _4, execOptions, args, options) => new Promise((resolve, reject) => {
          const idx = args.indexOf(cmd),
                inputFile = args[idx + 1]
 
          let input = ui.findFile(args[idx + 1])
-
-         if (options.select || !input) {
-             // render the file selector
-             return renderSelect().then(resolve, reject)
-         }
 
          fs.exists(expandHomeDir(input), exists => { 
              if (!exists) {
