@@ -18,14 +18,15 @@
  * Milliseconds to wait between queries to the OpenWhisk backend
  *
  */
-const politeWait = 100,
+/*const politeWait = 100,
       quiesceWait = 4000  // if we found nothing, in the poller, wait a bit longer
+*/
 
 /**
  * Variables to help with managing cancellation requests
  *
  */
-let currentBackgroundWorker, killRequested
+/*let currentBackgroundWorker, killRequested*/
 
 /**
   * Ingest the given list of activations. The termination condition is
@@ -34,7 +35,7 @@ let currentBackgroundWorker, killRequested
   * parsing out the error message. Hence the errorPattern, here.
   *
   */
-const errorPattern = {
+/*const errorPattern = {
     pattern: /(\d+) of (\d+) operations/,
     nUnsuccessful: match => match[1],
     nTotal: match => match[2]
@@ -61,21 +62,21 @@ const ingest = (store, activations, keepAlive) => {
                 }
             }
         })
-}
+}*/
 
 /**
  * Return the localStorage key for the given attribute
  *
  */
-const lsKey = attr => `wsk.activation-viz-plugin.mirror.${namespace.current()}.${attr}`
+/*const lsKey = attr => `wsk.activation-viz-plugin.mirror.${namespace.current()}.${attr}`
 const lsSince = () => lsKey('since')
-const lsUpto = () => lsKey('upto')
+const lsUpto = () => lsKey('upto')*/
 
 /**
  * Purge all database contents
  *
  */
-const purge = (_1, _2) => {
+/*const purge = (_1, _2) => {
     localStorage.removeItem(lsSince())
     localStorage.removeItem(lsUpto())
 
@@ -94,13 +95,13 @@ const purge = (_1, _2) => {
                 .then(() => true)
         }
     })
-}
+}*/
 
 /**
  * Initialize the dexie db
  *
  */
-const init = () => {
+/*const init = () => {
     const Dexie = require('dexie'),
           ns = namespace.current(),
           db = new Dexie(ns),
@@ -110,48 +111,48 @@ const init = () => {
 
     db.version(1).stores(store)
     return db.activations
-}
+}*/
 
 /**
  * Command handler for mirror stop
  *
  */
-const kill = (_1,_2,argv) => {
+/*const kill = (_1,_2,argv) => {
     if (currentBackgroundWorker) {
         clearTimeout(currentBackgroundWorker)
         currentBackgroundWorker = false
         killRequested = true
     }
     return true
-}
+}*/
 
 /**
  * (1) Kill the background task, and (2) notify the user that we're done mirroring.
  *
  */
-const doneWithMirror = store => {
+/*const doneWithMirror = store => {
     kill()             // (1)
     stats(store)()     // (2)
         .then(body => new Notification('OpenWhisk Activation Mirroring Complete', { body }))
-}
+}*/
 
 /**
  * Command handler for mirror stats
  *
  */
-const stats = store => (_1,_2,argv) => {
+/*const stats = store => (_1,_2,argv) => {
     const count = store.count()
     return Promise.all([count])
         .then( ([count]) => {
             return `Your local mirror contains ${count} activations`
         })
-}
+}*/
 
 /**
  * Query the mirror
  *
  */
-const query = store => ({argv, options}) => {
+/*const query = store => ({argv, options}) => {
     const idx = argv.indexOf('query') + 1,
           A = argv[idx],
           B = argv[idx + 1],
@@ -168,14 +169,6 @@ const query = store => ({argv, options}) => {
         from = startOfToday - oneDay
         to = startOfToday
         prettyPrintedRange = A
-    /*} else if (A === 'prior') {
-        const N = B
-        const unit = argv[idx + 2]
-        to = now
-        if (N
-        if (N === 'day' || unit === 'days' || unit === 'day') {
-            from = now - N * oneDay
-            } else if (unit === 'we*/
     } else if (B === 'month' || B === 'months') {
         if (A === 'this') {
             from = new Date(y, m, 1).getTime()
@@ -257,13 +250,13 @@ const query = store => ({argv, options}) => {
     } else {
         throw new Error('Please specify a time range or "last/this week/month/year"')
     }
-}
+}*/
 
 /**
  * Poll for new activations
  *
  */
-const poll = (wsk, store) => {
+/*const poll = (wsk, store) => {
     const { fetchActivationDataFromBackend } = require('./util'),
           parallelism = 1
 
@@ -315,13 +308,13 @@ const poll = (wsk, store) => {
     currentBackgroundWorker = setTimeout(() => once(since), 0)
 
     return 'Activation poller active'
-}
+}*/
 
 /**
  * Command handler for mirror
  *
  */
-const mirror = wsk => (_1,_2,_3,_4,_5,_6,argv,options) => {
+/*const mirror = wsk => (_1,_2,_3,_4,_5,_6,argv,options) => {
     const { fetchActivationDataFromBackend } = require('./util'),
           parallelism = 4,
           store = init(),
@@ -384,17 +377,17 @@ const mirror = wsk => (_1,_2,_3,_4,_5,_6,argv,options) => {
     currentBackgroundWorker = setTimeout(() => once(upto), 0)
 
     return 'Mirroring commenced'
-}
+}*/
 
 /**
  * This is the module
  *
  */
-module.exports = (commandTree, require, options) => {
+/*module.exports = (commandTree, require, options) => {
     const wsk = require('/ui/commands/openwhisk-core'),
           doMirror = mirror(wsk)
 
     wsk.synonyms('activations').forEach(syn => {
         commandTree.listen(`/wsk/${syn}/mirror`, doMirror, { docs: 'Mirror activations locally' })
     })
-}
+}*/

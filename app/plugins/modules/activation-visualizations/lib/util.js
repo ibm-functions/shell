@@ -207,11 +207,11 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
  * Fetch the activation data from our local mirror
  *
  */
-const fetchActivationDatas = (wsk, _1, _2, rest, fixedTimeRange) => {
+/*const fetchActivationDatas = (wsk, _1, _2, rest, fixedTimeRange) => {
     // --raw means return the raw collection, not a repl result
     // --fixedTimeRange will help us in keeping a fixed window of time across redraws
     return repl.qexec(`mirror query ${rest.join(' ')} --raw --fixedTimeRange ${fixedTimeRange||false}`)
-}
+}*/
 exports.fetchActivationData = fetchActivationData
 
 /**
@@ -344,9 +344,9 @@ exports.visualize = (wsk, commandTree, cmd, viewName, draw, extraUsage, extraOpt
             .then(draw(options, exports.prepareHeader(isRedraw)))
     }
 
-    if (extraOptions && extraOptions.live) {
+    /*if (extraOptions && extraOptions.live) {
         eventBus.on('/mirror/update', () => fetchAndDraw(true))
-    }
+    }*/
 
     return fetchAndDraw().then(response => {
             // alter the sidecar header only once the rendering is done

@@ -28,16 +28,5 @@ module.exports = (commandTree, prequire) => {
     require('./lib/grid')(commandTree, prequire)
     require('./lib/timeline-histogram')(commandTree, prequire)
     require('./lib/table')(commandTree, prequire)
-    require('./lib/mirror')(commandTree, prequire)
-
-    // exported API
-    const { injectContent } = require('./lib/util'),
-          { renderCell } = require('./lib/cell')
-   
-    return {
-        renderCell: function() {
-            injectContent()
-            return renderCell.apply(undefined, arguments)
-        }
-    }
+    //require('./lib/mirror')(commandTree, prequire)
 }
