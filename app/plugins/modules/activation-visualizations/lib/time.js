@@ -58,36 +58,36 @@ exports.range = options => {
         if (N === 'day' || unit === 'days' || unit === 'day') {
             since = now - N * oneDay
             } else if (unit === 'we*/
-    } else if (options['this-month'] || options.m) {
+    } else if (options.this === 'month') {
         since = new Date(y, m, 1).getTime()
         upto = new Date(y, m + 1, 0).getTime()
 
-    } else if (options['last-month'] || options.l) {
+    } else if (options.last === 'month') {
             since = new Date(y, m - 1, 1).getTime()
             upto = new Date(y, m, 0).getTime()
 
-    } else if (options['months-ago']) {
+    /*} else if (options['months-ago']) {
         const n = parseInt(options['months-ago'])
         since = new Date(y, m - n, 1).getTime()
-        upto = new Date(y, m - n + 1, 0).getTime()
+        upto = new Date(y, m - n + 1, 0).getTime()*/
 
-    } else if (options['this-year']) {
+    } else if (options.this === 'year') {
         since = new Date(y, 0, 1).getTime()
         upto = new Date(y, 12, 0).getTime()
 
-    } else if (options['last-year']) {
+    } else if (options.last === 'year') {
         since = new Date(y - 1, 0, 1).getTime()
         upto = new Date(y, 0, 0).getTime()
 
-    } else if (options['this-week']) {
+    } else if (options.this === 'week') {
         since = startOfWeek
         upto = now
 
-    } else if (options['last-week']) {
+    } else if (options.last === 'week') {
         since = startOfWeek - 7 * oneDay
         upto = startOfWeek
 
-    } else if (options['weeks-ago']) {
+    /*} else if (options['weeks-ago']) {
         const n = parseInt(options['weeks-ago'])
         since = startOfWeek - n * 7 * oneDay
         upto = startOfWeek - (n - 1) * 7 * oneDay
@@ -100,7 +100,7 @@ exports.range = options => {
     } else if (options['hours-ago']) {
         const n = parseInt(options['hours-ago'])
         since = now - n * oneHour
-        upto = now
+        upto = now*/
 
     } else {
         return

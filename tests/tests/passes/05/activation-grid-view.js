@@ -115,6 +115,37 @@ describe('Activation grid visualization', function() {
     openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, actionName, 0)     // expect 0 cells, for a random action name
     openGridExpectCountOf(0, 0, `grid --batches ${N} ${randomGarbage}`, randomGarbage, 0)  // either way, there should be nothing
 
+    it('should fail with a bad this query', () => cli.do('grid --this', this.app)
+       .then(cli.expectError(498))
+       .catch(common.oops(this)))
+
+    it('should fail with a bad last query', () => cli.do('grid --last', this.app)
+       .then(cli.expectError(498))
+       .catch(common.oops(this)))
+
+    //
+    // time range queries
+    //
+    const whens = ['week', 'month', 'year'],
+          intervals = ['this', 'last'],
+          days = ['today', 'yesterday']
+    days.forEach(day => {
+        it(`should show ${day}`, () => cli.do(`grid --${day}`, this.app)
+           .then(cli.expectOK)
+           .then(sidecar.expectOpen)
+           .then(() => this.app.client.waitForText(icon, 'grid'))
+           .catch(common.oops(this)))
+    })
+    whens.forEach(when => {
+        intervals.forEach(interval => {
+            it(`should show ${interval} ${when}`, () => cli.do(`grid --${interval} ${when}`, this.app)
+               .then(cli.expectOK)
+               .then(sidecar.expectOpen)
+               .then(() => this.app.client.waitForText(icon, 'grid'))
+               .catch(common.oops(this)))
+        })
+    })
+
     /** switch between tabs */
     const icon = `${ui.selectors.SIDECAR} .sidecar-header-icon-wrapper .sidecar-header-icon`
     const switchTo = tab => {

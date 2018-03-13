@@ -48,7 +48,7 @@ const limits = timeout.concat([
 
 /** common action parameters */
 const actionMix = params.concat(annotations).concat(limits).concat([
-    { name: '--kind', allowed: ['nodejs', 'python', 'swift', 'php'], defaultValue: 'nodejs', docs: 'the action runtime' },
+    { name: '--kind', allowed: ['nodejs', 'python', 'swift', 'php'], allowedIsPrefixMatch: true, defaultValue: 'nodejs', docs: 'the action runtime' },
     { name: '--sequence', boolean: true, example: 'a1,a2,a3', docs: 'create a sequence of the given actions' },
     { name: '--copy', boolean: true, advanced: true, docs: 'copy the action named by the second parameter to a new action named by the first' },
     { name: '--web', boolean: true, docs: 'web export the action' },

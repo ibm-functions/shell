@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+/** how many options to show at a time, i.e. before scrolling */
+const nRowsInViewport = 4
+
 /** list of related commands */
 const all = ['summary', 'timeline', 'grid']
 const allExcept = cmd => all.filter(_ => _ !== cmd)
@@ -22,7 +25,11 @@ const allExcept = cmd => all.filter(_ => _ !== cmd)
 const optional = [{ name: 'action|app', positional: true, docs: 'include only activity for the given action or composition' },
                   { name: '--success', boolean: true, docs: 'include only successful activations' },
                   { name: '--failure', boolean: true, docs: 'include only failed activations' },
-                  { name: '--outliers [option]', docs: 'include only outlier activations', allowed: ['min',25,50,90,95,99,'max'], defaultValue: 90 },
+                  { name: '--outliers', docs: 'include only outlier activations', allowed: ['min',25,50,90,95,99,'max'], defaultValue: 90 },
+                  { name: '--today', docs: 'show only activations from today'},
+                  { name: '--yesterday', docs: 'show only activations from yesterday'},
+                  { name: '--this', docs: 'time filter, e.g. --this week', allowed: ['week','month','year']},
+                  { name: '--last', docs: 'time filter, e.g. --last week', allowed: ['week','month','year']},
                   { name: '--batches', numeric: true, docs: 'the number of 200-activation batches to fetch', allowed: [1, 2, '...', 32 ], defaultValue: 2 }]
 
 /* the breadcrumb chain */
@@ -52,6 +59,7 @@ module.exports = {
 
     summary: {
         strict: 'summary',
+        nRowsInViewport,
         title: 'Summarize performance',
         header: '${header.summary}.',
         example: 'summary [action|app]',
@@ -61,6 +69,7 @@ module.exports = {
 
     timeline: {
         strict: 'timeline',
+        nRowsInViewport,
         title: 'Activity timeline',
         header: '${header.timeline}.',
         example: 'timeline [action|app]',
@@ -70,6 +79,7 @@ module.exports = {
 
     grid: {
         strict: 'grid',
+        nRowsInViewport,
         title: 'Activity grid',
         header: `${header.grid}.`,
         example: 'grid [action|app]',

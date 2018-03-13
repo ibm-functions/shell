@@ -20,6 +20,7 @@ debug('loading')
 const path = require('path'),
       usage = require('../usage'),
       defaults = require('./defaults.json'),
+      { range:rangeParser } = require('./time'),
       prettyPrintDuration = require('pretty-ms'),
       composer = require(path.join(__dirname, '../../composer/lib/composer'))
 
@@ -135,7 +136,7 @@ const fetchActivationData/*FromBackend*/ = (wsk, N, options) => {
     let {name=''} = options
 
     // see if the user requested a time range
-    const timeRange = require('./time').range(options),
+    const timeRange = rangeParser(options),
           upto = (timeRange && timeRange.upto) || options.upto,    // either something like --yesterday, or an explicit --upto
           since = (timeRange && timeRange.since) || options.since  // ibid...
 
