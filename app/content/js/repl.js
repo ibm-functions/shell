@@ -648,17 +648,21 @@ self.exec = (commandUntrimmed, execOptions) => {
                                    || (!match.boolean && !match.booleanOK && !match.numeric && (!match.narg || match.narg === 1)
                                        && !(typeof parsedOptions[optionalArg] === 'string'
                                             || typeof parsedOptions[optionalArg] === 'number'
-                                            || typeof parsedOptions[optionalArg] === 'boolean'))) {
+                                            || typeof parsedOptions[optionalArg] === 'boolean'))
+
+                                   // is the given option not one of the allowed options
+                                   || (match.allowed && !match.allowed.find(_ => _ === parsedOptions[optionalArg]
+                                                                           || match.allowedIsPrefixMatch && parsedOptions[optionalArg].indexOf(_) === 0))) {
                             // user passed an option, but of the wrong type
                             debug('bad value for option', optionalArg, match, parsedOptions, args, allFlags)
                             const expectedMessage = match.boolean ? ', expected boolean'
                                   : match.numeric ? ', expected a number' : '',
-                                  message = `Bad value for option ${optionalArg}${expectedMessage}, got ${parsedOptions[optionalArg]}`,
+                                  message = `Bad value for option ${optionalArg}${expectedMessage},${typeof parsedOptions[optionalArg] === 'boolean' ? '' : ' got ' + parsedOptions[optionalArg]}${match.allowed ? ' expected one of: ' + match.allowed.join(', ') : ''}`
                                   error = new modules.errors.usage({ message, usage })
                             debug(message, match)
                             error.code = 498
                             return ui.oops(block, nextBlock)(error)
-                        }                        
+                        }
                     }
                 }
 
