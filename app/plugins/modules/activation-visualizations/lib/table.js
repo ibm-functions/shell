@@ -20,6 +20,7 @@ const prettyPrintDuration = require('pretty-ms'),
       { sort, nameSorter, stringSorter, versionSorter, statDataSorter, numericalSorter } = require('./sorting'),
       { groupByAction } = require('./grouping'),
       { modes } = require('./modes'),
+      { summary:usage } = require('../usage'),
       { leftArrowHead, rightArrowHead, newline, enDash, emDash, optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
       defaultBottom = 25, defaultTop = 75,         // default range to show in summary
       defaultSorter = statDataSorter(defaultTop)   // sort by the default top of the range
@@ -108,6 +109,7 @@ const addRangeSelector = (container, eventBus, defaultBottom, defaultTop, groupD
     choices.forEach((choice, idx) => {
         const {bottom, top, text=`${bottom}th-${top}th`} = choice,
               dom = document.createElement('li')
+        dom.setAttribute('data-choice', choice)
         choice.dom = dom
         dom.idx = idx
         list.appendChild(dom)
@@ -122,6 +124,7 @@ const addRangeSelector = (container, eventBus, defaultBottom, defaultTop, groupD
 
     // render the animate button
     const animate = document.createElement('li')
+    animate.setAttribute('data-choice', 'animate')
     list.appendChild(animate)
     animate.innerText = 'Animate'
     const auto = () => {
@@ -163,6 +166,7 @@ const addRangeSelector = (container, eventBus, defaultBottom, defaultTop, groupD
 
     // render the outliers button
     const outliers = document.createElement('li')
+    outliers.setAttribute('data-choice', 'outliers')
     list.appendChild(outliers)
     outliers.innerText = 'Outliers'
     if (options.outliers) {
@@ -668,13 +672,15 @@ module.exports = (commandTree, require) => {
           tableIt = cmd => visualize(wsk, commandTree, cmd, 'summary', drawTable,
                                      '\t-w|--w     wider action name column\n\t--ww       even wider action name column')
 
+    const opts = { usage,
+                   needsUI: true, viewName,
+                   fullscreen: true, width: 800, height: 600,
+                   placeholder: 'Loading activity summary ...'}
+    
     wsk.synonyms('activations').forEach(syn => {
-        const cmd = commandTree.listen(`/wsk/${syn}/table`, tableIt('table'), { docs: 'Visualize recent activations in a table',
-                                                                                needsUI: true, viewName,
-                                                                                fullscreen: true, width: 800, height: 600,
-                                                                                placeholder: 'Loading activity summary ...'})
+        const cmd = commandTree.listen(`/wsk/${syn}/table`, tableIt('table'), opts)
 
-        commandTree.listen(`/wsk/${syn}/summary`, tableIt('summary'), cmd)
-        commandTree.synonym(`/wsk/${syn}/tab`, tableIt('tab'), cmd)
+        commandTree.listen(`/wsk/${syn}/summary`, tableIt('summary'), opts)
+        commandTree.synonym(`/wsk/${syn}/tab`, tableIt('tab'), cmd, opts)
     })
 }

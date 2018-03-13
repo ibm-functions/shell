@@ -63,7 +63,10 @@ module.exports = {
         title: 'Summarize performance',
         header: '${header.summary}.',
         example: 'summary [action|app]',
-        optional, parents,
+        optional: optional.concat([
+            { name: '--auto', docs: 'Start animation immediately' }
+        ]),
+        parents,
         related: allExcept('summary')
     },
 

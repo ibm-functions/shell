@@ -652,7 +652,8 @@ self.exec = (commandUntrimmed, execOptions) => {
 
                                    // is the given option not one of the allowed options
                                    || (match.allowed && !match.allowed.find(_ => _ === parsedOptions[optionalArg]
-                                                                           || match.allowedIsPrefixMatch && parsedOptions[optionalArg].indexOf(_) === 0))) {
+                                                                            || _ === '...'
+                                                                            || match.allowedIsPrefixMatch && parsedOptions[optionalArg].indexOf(_) === 0))) {
                             // user passed an option, but of the wrong type
                             debug('bad value for option', optionalArg, match, parsedOptions, args, allFlags)
                             const expectedMessage = match.boolean ? ', expected boolean'

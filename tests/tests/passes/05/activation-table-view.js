@@ -34,18 +34,39 @@ const parsesAsInteger = str => {
 }
 const isInteger = str => typeof str === 'number' || parsesAsInteger(str)
 
-const openTableExpectCountOf = (expectedCount, expectedErrorRate, cmd) => {
-    const once = (iter, resolve, reject) => cli.do(cmd, this.app)
+const openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, cmd) {
+    const view = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .activation-viz-plugin`,
+          row = `${view} tr[data-action-name="${actionName}"]`,
+          successCell = `${row} .cell-successes.cell-hide-when-outliers-shown`,
+          failureCell = `${row} .cell-failures.cell-hide-when-outliers-shown`,
+          bar = `${row} .stat-bar`,
+          focusLabel = `${view} .table-header .x-axis-focus-label`,
+          outliersButton = `${view} li[data-choice="outliers"]`,
+          outlierDots = `${view} .outlier-dot`
+
+    const once = (iter, resolve, reject) => cli.do(cmd, ctx.app)
         .then(cli.expectOK)
           .then(sidecar.expectOpen)
-          .then(() => this.app.client.getText(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-count`))
+          .then(() => ctx.app.client.getText(successCell))
           .then(actualCount => assert.equal(actualCount, expectedCount))
 
-          .then(() => this.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-errorRate`, 'data-value'))
+          .then(() => ctx.app.client.getAttribute(failureCell, 'data-failures'))
           .then(actualErrorRate => assert.equal(actualErrorRate, expectedErrorRate))
 
-          .then(() => this.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-stat`, 'data-value'))
-          .then(stats => assert.equal(stats.length, 5) && stats.reduce((okSoFar,stat) => ok && isInteger(stat), true))
+          // hover over a bar, expect focus labels
+          .then(() => ctx.app.client.moveToObject(bar, 5, 5))
+          .then(() => ctx.app.client.waitForVisible(focusLabel))
+
+          // click outliers button
+          .then(() => ctx.app.client.click(outliersButton))
+          .then(() => {
+              if (expectedCount > 8) {
+                  return ctx.app.client.waitForVisible(outlierDots)
+              }
+          })
+
+          /*.then(() => ctx.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-stat`, 'data-value'))
+          .then(stats => assert.equal(stats.length, 5) && stats.reduce((okSoFar,stat) => ok && isInteger(stat), true))*/
 
     // return the selector
           .then(() => `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"]`)
@@ -54,7 +75,7 @@ const openTableExpectCountOf = (expectedCount, expectedErrorRate, cmd) => {
               if (iter < 10) {
                   setTimeout(() => once(iter + 1, resolve, reject), 1000)
               } else {
-                  common.oops(this)(err)
+                  common.oops(ctx)(err)
               }
           });
 
@@ -63,9 +84,6 @@ const openTableExpectCountOf = (expectedCount, expectedErrorRate, cmd) => {
 exports.openTableExpectCountOf = openTableExpectCountOf
 
 describe('Activation table visualization', function() {
-    // disabled until the bluewhisk views finish updating 20170927
-    return;
-
     before(common.before(this))
     after(common.after(this))
 
@@ -84,7 +102,7 @@ describe('Activation table visualization', function() {
     const notbomb = () => invoke(+1)
     const bomb = () => invoke(-1)
 
-    const openSplitTableExpectCountsOf = (expectedCountA, expectedErrorRateA,
+    /*const openSplitTableExpectCountsOf = (expectedCountA, expectedErrorRateA,
                                           expectedCountB, expectedErrorRateB,
                                           cmd) => {
         it(`open activation table, with ${cmd}`, () => cli.do(cmd, this.app)
@@ -101,11 +119,11 @@ describe('Activation table visualization', function() {
            .then(() => this.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName} v0.0.2"] .cell-errorRate`, 'data-value'))
            .then(actualErrorRateB => assert.equal(actualErrorRateB, expectedErrorRateB))
            .catch(common.oops(this)))
-    }
+    }*/
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    it('should create the action that bombs if the input value is negative', () => cli.do(`let ${actionName} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
+    it(`should create the action that bombs if the input value is negative ${actionName}`, () => cli.do(`let ${actionName} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
         .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName))
@@ -113,23 +131,24 @@ describe('Activation table visualization', function() {
 
     // invoke with positive number, expect count of 1 in the table
     notbomb()
-    openTableExpectCountOf(1, 0, '$ table -a')
-    openTableExpectCountOf(1, 0, '$ table 2 -a --batchSize 10')
+    openTableExpectCountOf(this, 1, 0, 'summary')
+    openTableExpectCountOf(this, 1, 0, 'summary --auto')
+    openTableExpectCountOf(this, 1, 0, 'summary --batches 10')
 
     // invoke again with positive, and then look for a count of 2
     notbomb()
-    openTableExpectCountOf(2, 0, '$ tab -a')
-    openTableExpectCountOf(2, 0, '$ tab 2 -a --batchSize 10')
+    openTableExpectCountOf(this, 2, 0, 'summary')
+    openTableExpectCountOf(this, 2, 0, 'summary --batches 10')
 
     // invoke again with positive, and then look for a count of 3
     notbomb()
-    openTableExpectCountOf(3, 0, 'wsk activation table -a')
-    openTableExpectCountOf(3, 0, 'wsk activation table 2 -a --batchSize 10')
+    openTableExpectCountOf(this, 3, 0, 'summary')
+    openTableExpectCountOf(this, 3, 0, 'summary --batches 10')
 
     // invoke again with negative, and then look for a count of 4, and error rate of 0.25
     bomb()
-    openTableExpectCountOf(4, 0.25, 'wsk activation tab -a')
-    openTableExpectCountOf(4, 0.25, 'wsk activation tab 2 -a --batchSize 10')
+    openTableExpectCountOf(this, 3, 1, 'summary')
+    openTableExpectCountOf(this, 3, 1, 'summary --batches 10')
 
     // force a version update
     it('should create the action that bombs if the input value is negative', () => cli.do(`let ${actionName} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
@@ -144,9 +163,13 @@ describe('Activation table visualization', function() {
     bomb()
     bomb()
     bomb()
-    openTableExpectCountOf(10, 0.4, `wsk activation table -a --name ${actionName}`) // 10 total activations, 4 of which failed
-    openSplitTableExpectCountsOf(4, 0.25, // the previous version counts should not be changed from when we last checked
+    openTableExpectCountOf(this, 6, 4, `summary ${actionName}`) // 10 total activations, 4 of which failed
+    /*openSplitTableExpectCountsOf(4, 0.25, // the previous version counts should not be changed from when we last checked
                                  6, 0.5,  // we've made 6 invocations against the new version, 3 of which failed
-                                 `wsk activation table -a --split --name ${actionName}`)
+                                 `summary -a --split --name ${actionName}`)*/
+
+    it(`should load test ${actionName}`, () => cli.do(`lt ${actionName}`, this.app)
+       .catch(common.oops(this)))
     
+    openTableExpectCountOf(this, 46, 4, `summary ${actionName}`) // 46 successful activations, 4 of which failed
 })
