@@ -438,7 +438,7 @@ const format = message => {
     }
 }
 
-module.exports = function UsageError(message, extra, code) {
+module.exports = function UsageError(message, extra, code=450) {
     Error.captureStackTrace(this, this.constructor)
     this.name = this.constructor.name
     this.message = format(message)

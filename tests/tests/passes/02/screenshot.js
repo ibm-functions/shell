@@ -49,7 +49,7 @@ describe('Take screenshot', function() {
        .then(cli.expectError(0, 'You requested to screenshot the last REPL output, but this is the first command')))
 
     it('should fail to take screenshot with bogus arg', () => cli.do(`screenshot goober`, this.app)
-       .then(cli.expectError(0, 'Capture a screenshot to the clipboard'))) // part of the usage message
+       .then(cli.expectError(450, 'Capture a screenshot to the clipboard'))) // part of the usage message
 
     it('should take screenshot with no arguments', () => takeScreenshot(this))
     it('should take screenshot full', () => takeScreenshot(this, 'full'))
