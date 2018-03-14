@@ -14,56 +14,25 @@
  * limitations under the License.
  */
 
-const { init, hasUnknownOptions } = require('./composer')
-
 /**
- * Format usage message
- *
- */
-const usage = cmd => `Initialize and manage the prerequisite services.
-
-\tapp ${cmd} --url|--auto [--cleanse]
-
-Required parameters:
-\t--url      if you have an existing service instance, provide its access URL here; or
-\t--auto     provision an instance now [EXPERIMENTAL]
-
-Options:
-\t--cleanse  wipe out all session records
-\t--reset    add this option if you want to do a forced switch from a previous configuration`
-
-/**
- * Here is the app create module entry point. Here we register command
- * handlers.
+ * This command is no longer needed. See shell issue #662. We leave a
+ * bit of a welcome mat in its place.
  *
  */
 module.exports = (commandTree, prequire) => {
-    const wsk = prequire('/ui/commands/openwhisk-core')
-
-    const doInit = cmd => function(_1, _2, _a, modules, fullCommand, execOptions, args, options) {
-        const idx = args.indexOf(cmd) + 1
-
-        // check for unknown options
-        hasUnknownOptions(options, ['h', 'help', 'cleanse', 'auto', 'url', 'reset', 'noping'])
-
-        if (options.help || !(options.auto || options.url)) {
-            throw new modules.errors.usage(usage(cmd))
-        }
-
-        return init(wsk, options)
-            .then(({manager, message}={}) => {
-                if (options.cleanse) {
-                    console.log('app init cleanse requested')
-                    return manager.flush().then(() => ({ message }))
-                } else {
-                    return { message } 
-                }
-            })
-            .then(({message}) => message || `Successfully initialized${options.cleanse ? ' and reset' : ''} the required services. You may now create compositions.`)
-    }
-
     // Install the routes
-    commandTree.listen(`/wsk/app/init`, doInit('init'), { docs: 'Set up the preconditions for creating compositions',
-                                                          okOptions: ['url', 'auto' ] // ok to log these options
-                                                        })
+    commandTree.listen(`/wsk/app/init`, () => {
+        const msg = document.createElement('div'),
+              clicky = document.createElement('span')
+
+        msg.appendChild(document.createTextNode('Welcome to Composer. To begin, you can try '))
+
+        clicky.innerText = 'app create'
+        clicky.className = 'clickable clickable-blatant'
+        msg.appendChild(clicky)
+
+        msg.appendChild(document.createTextNode(' and select one of the samples.'))
+
+        return msg
+    })
 }
