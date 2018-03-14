@@ -56,8 +56,15 @@ describe('Install and remove plugins', function() {
        .then(cli.expectOK)
        .catch(common.oops(this)))
 
-    it('should show available commands with "plugin commands shell-sample-plugin"', () => cli.do('plugin commands shell-sample-plugin', this.app)
-       .then(cli.expectOKWithCustom({expect: 'hello'}))
+    it('should show the sample plugin via plugin list', () => cli.do('plugin list', this.app)
+       .then(cli.expectOKWith('shell-sample-plugin'))
+       .catch(common.oops(this)))
+
+    it('should show available commands with "plugin commands shell-sample-plugin", then click on a command', () => cli.do('plugin commands shell-sample-plugin', this.app)
+       .then(cli.expectOKWithCustom({expect: 'hello', passthrough: true}))
+       .then(N => this.app.client.click(`${ui.selectors.OUTPUT_N(N)} .entity[data-name="hello"]`)
+             .then(() => this.app.client.getText(ui.selectors.OUTPUT_N(N + 1))))
+       .then(txt => assert.equal(txt, 'hello world'))
        .catch(common.oops(this)))
 
     it('should remove shell-sample-plugin', () => cli.do('plugin remove shell-sample-plugin', this.app)
@@ -74,5 +81,9 @@ describe('Install and remove plugins', function() {
 
     it('should try "sample hi" and fail', () => cli.do('sample hi', this.app)
        .then(cli.expectError(0, 'Command not found'))
+       .catch(common.oops(this)))
+
+    it('should successfully execute plugin compile', () => cli.do('plugin compile', this.app)
+       .then(cli.expectOK)
        .catch(common.oops(this)))
 })
