@@ -113,7 +113,7 @@ const pip = (container, capturedHeaders, highlightThis, returnTo, options) => {
  *
  *
  */ 
-const pipViaShrink = (container, capturedHeaders, highlightThis) => {
+/*const pipViaShrink = (container, capturedHeaders, highlightThis) => {
     const sidecar = document.getElementById('sidecar'),
           sidecarClass = sidecar.className
 
@@ -138,7 +138,7 @@ const pipViaShrink = (container, capturedHeaders, highlightThis) => {
     }
 
     container.onclick = restoreFn
-}
+}*/
 
 /**
  * Capture and clone the given selector
@@ -182,14 +182,14 @@ module.exports = (command, highlightThis, container, returnTo, options) => event
         // make the transition
         pip(container, [capturedHeader, capturedHeader2, capturedHeader3, capturedHeader4, capturedFooter], highlightThis, returnTo, options)
 
-    } else if (alreadyPipped) {
+    /*} else if (alreadyPipped) {
         // for real pip... if the transition has already been made
         const currentHighlightThis = alreadyPipped.querySelectorAll('.picture-in-picture-highlight')
         if (currentHighlightThis) {
             for (let idx = 0; idx < currentHighlightThis.length; idx++) {
                 dehighlight(currentHighlightThis[idx])
             }
-        }
+        }*/
     }
 
     highlight(highlightThis)
