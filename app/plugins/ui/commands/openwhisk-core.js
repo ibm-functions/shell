@@ -681,7 +681,7 @@ specials.rules = {
             options.action = argv[1]
         }
 
-        if (!options.name || !options.trigger || !options.action) {
+        if (options && (!options.name || !options.trigger || !options.action)) {
             throw new Error('Invalid argument(s). A rule, trigger and action name are required.')
         }
     }

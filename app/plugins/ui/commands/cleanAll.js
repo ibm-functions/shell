@@ -43,9 +43,9 @@ const deleteAllOnce = entities =>
 	  // with retries...
 	  return tryDelete()
               .catch(err => {
-                  console.error('yoyo', err.statusCode)
                   if (err.statusCode === 404) {
                       // ignore 404s, since we're deleting
+                      debug('concurrent deletion')
                   } else {
                       throw err
                   }
