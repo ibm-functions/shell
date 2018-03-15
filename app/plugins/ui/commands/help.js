@@ -18,14 +18,6 @@ const debug = require('debug')('help')
 debug('loading')
 
 /**
- * Show help, where model is the commandTree model, and method is either
- *   - commandsInCurrentContext
- *   - directoriesInCurrentContext
- *
- */
-const show = (model, method) => () => repl.qexec(model.currentPrefix().join(' '), undefined, undefined, { noHistory: true })
-
-/**
  * Respond with a top-level usage document
  *
  */
@@ -42,12 +34,14 @@ const help = (usage, docs) => (_1, _2, _3, { errors }) => {
         // traverse the top-level usage documents, populating topLevelUsage.available
         for (let key in usage) {
             const { route, usage:model } = usage[key]
-            topLevelUsage.available.push({
-                label: route.substring(1),
-                dir: true,
-                command: model.commandPrefix,
-                docs: model.title
-            })
+            if (model) {
+                topLevelUsage.available.push({
+                    label: route.substring(1),
+                    dir: true,
+                    command: model.commandPrefix,
+                    docs: model.title
+                })
+            }
         }
 
         debug('generated top-level usage model', topLevelUsage)

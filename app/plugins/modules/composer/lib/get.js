@@ -68,7 +68,8 @@ module.exports = (commandTree, prequire) => {
 
                         if (doVisualize) {
                             return Object.assign(action, {
-                                renderAs: 'custom',
+                                type: 'custom',
+                                viewName: action.type,
                                 content,
                                 input,
                                 isEntity: true

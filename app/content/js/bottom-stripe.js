@@ -22,13 +22,21 @@ const css = {
     button: 'sidecar-bottom-stripe-button',
     buttonActingAsButton: 'sidecar-bottom-stripe-button-as-button',
     active: 'sidecar-bottom-stripe-button-active',
-    selected: 'selected'
+    selected: 'selected',
+    hidden: 'hidden'
 }
 exports.css = css
 
 const addModeButton = (bottomStripe, opts, entity, show) => {
-    const {mode, label, flush, selected, selectionController, fontawesome, balloon, balloonLength, data, command=()=>mode, direct, defaultMode, actAsButton, echo=false, noHistory=true} = opts
+    const {mode, label, flush, selected, selectionController, visibleWhen,
+           fontawesome, balloon, balloonLength, data, command=()=>mode, direct,
+           defaultMode, actAsButton, echo=false, noHistory=true} = opts
 
+    if (visibleWhen && visibleWhen !== show) {
+        // only visible when a specific mode is active!
+        return
+    }
+    
     // create the button dom, and attach it
     const button = document.createElement('div')
 
@@ -44,14 +52,12 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
 
         if (selectionController) {
             selectionController.on('change', selected => {
-                console.error('!!!!!!!!!', label || fontawesome, selected)
                 const op = selected ? 'add' : 'remove'
                 button.classList[op](css.selected)
             })
         }
     }
 
-    
     if ( ( ((!show||show==='default') && defaultMode) || show === mode) && !actAsButton ) {
         button.classList.add(css.active)
     }
@@ -110,6 +116,21 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
                     currentActive.classList.remove(css.active)
                 }
                 button.classList.add(css.active)
+
+                // visible when
+                /*buttons.forEach(button => {
+                    const visibleWhen = button.getAttribute('visible-when')
+                    if (visibleWhen) {
+                        if (visibleWhen !== (mode||label)) {
+                            console.error('!!!!!!!!!!!', button)
+                            button.classList.add(css.hidden)
+                        } else {
+                            console.error('@@@@@@@@@@@', button)
+                            button.classList.remove(css.hidden)
+                        }
+                    }
+                })*/
+
             } else if (actAsButton && selected !== undefined) {
                 const currentSelected = bottomStripe.querySelector(`.${css.selected}`)
                 if (currentSelected) {
@@ -122,18 +143,20 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
             if (direct) {
                 const view = direct(entity)
                 if (view && view.then && !actAsButton) {
-                    view.then(custom => ui.showCustom(custom, { leaveBottomStripeAlone: true }))
+                    view.then(custom => ui.showCustom(custom, { leaveBottomStripeAlonex: true }))
                 }
             } else {
-                repl.pexec(command(entity), { leaveBottomStripeAlone: true, echo, noHistory })
+                repl.pexec(command(entity), { leaveBottomStripeAlonex: true, echo, noHistory })
             }
         }
     }
+
+    return button
 }
 
 exports.addModeButton = (mode, entity) => {
     const bottomStripe = document.querySelector(css.modeContainer)
-    addModeButton(bottomStripe, mode, entity)
+    return addModeButton(bottomStripe, mode, entity)
 }
 
 exports.addModeButtons = (modes, entity, options) => {
@@ -163,5 +186,7 @@ exports.addModeButtons = (modes, entity, options) => {
         }
     }
 
-    bottomStripe.addModeButtons(modes, entity, options && options.show)
+    const defaultMode = modes && modes.find(({defaultMode}) => defaultMode),
+          show = options && options.show || (defaultMode && (defaultMode.mode || defaultMode.label))
+    bottomStripe.addModeButtons(modes, entity, show)
 }

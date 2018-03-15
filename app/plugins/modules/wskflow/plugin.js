@@ -17,12 +17,14 @@
 const debug = require('debug')('wskflow')
 debug('loading')
 
-const $ = require('jquery'),
-      fsm2graph = require('./lib/fsm2graph.js')
+const visualize = require('./lib/visualize'),
+      flowCommand = require('./lib/flowCommand')
 
 debug('finished loading modules')
 
 module.exports = (commandTree, prequire) => {
+    flowCommand(commandTree, prequire)
+
     return {
         /**
          * Export a programmatic API to visualize a Composition
@@ -31,27 +33,7 @@ module.exports = (commandTree, prequire) => {
          * [optional] w & h: canvas width and height. data: activation data
          *
          */
-        visualize: (passedFsm, container, w, h, activations) => {
-            debug('visualize', passedFsm);
-            if(passedFsm == undefined || passedFsm.composition == undefined || !Array.isArray(passedFsm.composition)){
-                debug('fsm is not in the right format. return.');
-                return true;
-            }
-
-            let ir = JSON.parse(JSON.stringify(passedFsm)), // create a copy - all annotations make by wskflow will not affect the original object.
-                width, 
-                height;
-
-            if($('body').hasClass('sidecar-full-screen')){   
-                width = $(window).width()-2;               
-            }
-            else{   // not full screen
-                width = $(window).width()*0.6-2;                 
-            }
-            height = $('#sidecar').height()-$('.sidecar-header').height()-$('.sidecar-bottom-stripe').height()-2;
-
-            return fsm2graph(ir, container, width, height, activations); 
-        }
+        visualize
     }
 }
 

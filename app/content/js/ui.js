@@ -943,21 +943,29 @@ const ui = (function() {
         if (custom && custom.isEntity) {
             const entity = custom
             sidecar.entity = entity
+            sidecar.entity.type = sidecar.entity.viewName
+
+            self.addNameToSidecarHeader(sidecar, entity.name, entity.packageName, undefined,
+                                        entity.prettyType || entity.type, undefined, entity)
 
             // render badges
-            addVersionBadge(entity, { clear: true })
-            addWebBadge(entity)
-            sidecar.classList.add('entity-has-badges')
-            const combinatorArtifacts = entity.annotations && entity.annotations.find( ({key}) => key === 'wskng.combinators')
-            if (combinatorArtifacts && combinatorArtifacts.value) {
-                const annotations = util.isArray(combinatorArtifacts.value) ? combinatorArtifacts.value : [combinatorArtifacts.value]
-                annotations.forEach(annotation => {
+            if (!entity.activationId) {
+                addVersionBadge(entity, { clear: true })
+                addWebBadge(entity)
 
-                    if (annotation.badge && annotation.badge !== 'web') {
-                        // render a badge, if we have one; we render web badges specially, with maybeAddWebBadge
-                        addBadge(annotation.badge)
-                    }
-                })
+                sidecar.classList.add('entity-has-badges')
+
+                const combinatorArtifacts = entity.annotations && entity.annotations.find( ({key}) => key === 'wskng.combinators')
+                if (combinatorArtifacts && combinatorArtifacts.value) {
+                    const annotations = util.isArray(combinatorArtifacts.value) ? combinatorArtifacts.value : [combinatorArtifacts.value]
+                    annotations.forEach(annotation => {
+
+                        if (annotation.badge && annotation.badge !== 'web') {
+                            // render a badge, if we have one; we render web badges specially, with maybeAddWebBadge
+                            addBadge(annotation.badge)
+                        }
+                    })
+                }
             }
         }
 
@@ -973,7 +981,7 @@ const ui = (function() {
      * Given an entity name and an optional packageName, decorate the sidecar header
      *
      */
-    self.addNameToSidecarHeader = (sidecar=document.querySelector('#sidecar'), name, packageName='', onclick, viewName, subtext) => {
+    self.addNameToSidecarHeader = (sidecar=document.querySelector('#sidecar'), name, packageName='', onclick, viewName, subtext, entity) => {
         const nameDom = sidecar.querySelector('.sidecar-header-name-content')
         nameDom.className = nameDom.getAttribute('data-base-class')
         nameDom.querySelector('.package-prefix').innerText = packageName
@@ -992,13 +1000,36 @@ const ui = (function() {
         }
 
         if (viewName) {
-            sidecar.querySelector('.sidecar-header-icon').innerText = viewName
+            sidecar.querySelector('.sidecar-header-icon').innerText = viewName.replace(/s$/,'')
         }
 
         if (subtext) {
             const sub = sidecar.querySelector('.sidecar-header-secondary-content .custom-header-content')
             ui.removeAllDomChildren(sub)
             sub.innerText = subtext
+        }
+
+        if (entity && entity.activationId) {
+            sidecar.classList.add('entity-is-activations')
+            sidecar.querySelector('.sidecar-header-name-content .activation-content.activation-id').innerText = entity.activationId
+
+            // start time
+            sidecar.querySelector('.activation-start').innerText = self.prettyPrintTime(entity.start)
+
+            // duration
+            if (entity.end) { // rule activations don't have an end time
+                const duration = entity.end - entity.start
+                sidecar.querySelector('.activation-duration').innerText = prettyPrintDuration(duration)
+
+                const entityLimitsAnnotation = entity.annotations.find(kv => kv.key === 'limits')
+                if (!entityLimitsAnnotation) {
+                    sidecar.classList.add('no-limits-data')
+                } else {
+                    // if we have BOTH a duration and limits data, then also show estimated cost
+                    sidecar.querySelector('.activation-estimated-cost').innerText = ((entityLimitsAnnotation.value.memory/1024) * (Math.ceil(duration/100)/10) * 0.000017 * 1000000).toFixed(2)
+                }
+            }
+
         }
 
         return nameDom
@@ -1127,10 +1158,6 @@ const ui = (function() {
      */
     self.showEntity = (entity, options={}, block, nextBlock) => {
         debug('showEntity', entity, options)
-
-        if (entity.renderAs === 'custom' && !options.show) {
-            return self.showCustom(entity, options)
-        }
 
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header')
