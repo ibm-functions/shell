@@ -23,6 +23,7 @@ body {
     --color-support-03: #efc100;
     --color-support-04: #5aaafa;
     --color-brand-01: #3d70b2;
+    --color-brand-01-10: hsla(214, 49%, 47%, 0.1); /* 10% opacity */
     --color-brand-02: #5596e6;
     --color-ui-01: #fff;
     --color-ui-02: #f5f7fa;

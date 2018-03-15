@@ -1737,7 +1737,7 @@ const ui = (function() {
             // ui.js is in the root /app directory already
             return require('path').join(__dirname, filepath.substring(1))
         } else {
-            return filepath
+            return require('expand-home-dir')(filepath)
         }
     }
 

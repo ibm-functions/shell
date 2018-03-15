@@ -45,7 +45,7 @@ describe('Tab completion', function() {
                 .then(() => app.client.keys('Tab'))
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
-                .then(() => app.client.click(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable[data-value="${expected[choiceIdx]}"]`))
+                .then(() => app.client.click(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary > div[data-value="${expected[choiceIdx]}"] .clickable`))
                 .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true)) // wait for non-existence of the temporary
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), full)))
           .then(() => cli.do('', app))
@@ -75,7 +75,7 @@ describe('Tab completion', function() {
                       'composer-source-expect-errors/',
                       'composer-wookiechat/']
 
-    // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list \\\\
+    // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list
     it('should tab complete with options', () => tabbyWithOptions(this.app, 'lls data/com',
                                                                   expected,
                                                                   1, // click on the second entry
