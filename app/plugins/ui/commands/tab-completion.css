@@ -1,0 +1,40 @@
+.tab-completion-temporary {
+    display: inline-block;
+    background: var(--color-brand-01-10);
+    flex-direction: column;
+    max-height: calc(10 * 1.75em);
+    max-width: 15em;
+    overflow-y: auto;
+}
+
+.tab-completion-temporary > div {
+    color: var(--color-stripe-01);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.75em;
+    font-size: 0.75em;
+    padding: 0 0.5ex;
+}
+
+.tab-completion-temporary .clickable {
+    border-bottom: 1px solid transparent;
+    text-decoration: none;
+    transition: 250ms;
+}
+
+/* selection */
+.tab-completion-temporary > div.selected {
+    background: var(--color-ui-04);
+}
+.tab-completion-temporary:hover > div.selected:not(:hover) .clickable {
+    border-bottom-color: transparent;
+    color: inherit;
+}
+.tab-completion-temporary > div.selected .clickable {
+    color: var(--color-brand-01);
+}
+.tab-completion-temporary > div:hover .clickable {
+    border-bottom-color: var(--color-support-04);
+}
