@@ -36,7 +36,8 @@ module.exports = (commandTree, prequire) => {
         const idx = args.indexOf(cmd),
               appName = args[idx + 1]
 
-        return repl.qexec(`wsk action get "${appName}"`, undefined, undefined, { override: true })
+        return repl.qexec(`wsk action get "${appName}"`, undefined, undefined,
+                          Object.assign({}, execOptions, { override: true }))
     }
 
     const cmd = commandTree.listen(`/wsk/app/get`, doGet('get'), { usage: usage('get'),

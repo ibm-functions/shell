@@ -453,6 +453,7 @@ const patterns = {
     quotes: /^"(.*)"$/g
 }
 const split = str => str.match(patterns.split).map(s => s.replace(patterns.quotes, '$1'))
+self.split = split
 
 /** an empty promise, for blank lines */
 const emptyPromise = () => {
@@ -554,7 +555,8 @@ self.exec = (commandUntrimmed, execOptions) => {
         }
 
         // the Read part of REPL
-        const evaluator = execOptions && execOptions.intentional ? commandTree.readIntention(argv) : commandTree.read(argv)
+        const argvNoOptions = argv.filter(_ => _.charAt(0) !== '-')
+        const evaluator = execOptions && execOptions.intentional ? commandTree.readIntention(argvNoOptions) : commandTree.read(argvNoOptions)
 
         if (evaluator && evaluator.eval) {
             const builtInOptions = [{ name: '--help', alias: '-h', hidden: true, boolean: true },
@@ -596,13 +598,20 @@ self.exec = (commandUntrimmed, execOptions) => {
             // to involve the plugin. this lets us avoid having each
             // plugin check for options.help
             if (parsedOptions.help && evaluator.options && evaluator.options.usage) {
-                return ui.oops(block, nextBlock)(new modules.errors.usage(evaluator.options.usage))
+                if (execOptions && execOptions.failWithUsage) {
+                    return evaluator.options.usage
+                } else {
+                    return ui.oops(block, nextBlock)(new modules.errors.usage(evaluator.options.usage))
+                }
             }
 
             //
             // check for argument conformance
             //
-            const usage = evaluator.options && evaluator.options.usage
+            const _usage = evaluator.options && evaluator.options.usage,
+                  usage = _usage && _usage.fn ? _usage.fn(_usage.command) : _usage
+            debug('usage', usage, evaluator)
+
             if (usage && usage.strict) { // strict: command wants *us* to enforce conformance
                 // required and otional parameters
                 const { strict:cmd, required=[], oneof=[], optional:_optional=[] } = usage,
@@ -696,7 +705,12 @@ self.exec = (commandUntrimmed, execOptions) => {
                                   err = new modules.errors.usage({ message, usage })
                             err.code = 497
                             debug(message, cmd, nActualArgs, nRequiredArgs, args, optLikeActuals)
-                            return ui.oops(block, nextBlock)(err)
+
+                            if (execOptions && execOptions.nested) {
+                                return err
+                            } else {
+                                return ui.oops(block, nextBlock)(err)
+                            }
 
                         } else {
                             // ooh, then splice in the implicit parameter

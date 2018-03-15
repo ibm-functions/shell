@@ -298,10 +298,16 @@ exports.expectSubset = struct1 => string => {
 
 /** is the given actual array the same as the given expected array? */
 exports.expectArray = expected => actual => {
-    return assert.ok(actual.length === expected.length
-              && actual.every(function(u, i) {
-                  return u === expected[i]
-              }))
+    const ok = actual.length === expected.length
+          && actual.every(function(u, i) {
+              return u === expected[i]
+          })
+
+    if (!ok) {
+        console.error(`array mismatch; expected=${expected} actual=${actual}`)
+    }
+
+    assert.ok(ok)
 }
 
 /**

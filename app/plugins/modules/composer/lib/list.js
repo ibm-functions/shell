@@ -32,7 +32,7 @@ module.exports = (commandTree, prequire) => {
             throw new modules.errors.usage(usage(cmd))
         }
 
-        return repl.qexec(`wsk action ${cmd}`)
+        return repl.qexec(`wsk action ${cmd}`, undefined, undefined, execOptions)
             .then(actions => actions.filter(isAnApp))
             .then(apps => {
                 apps.forEach(app => {
