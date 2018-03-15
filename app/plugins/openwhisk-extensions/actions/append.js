@@ -23,15 +23,14 @@
 const currentSelection = () => document.querySelector('#sidecar').entity
 
 const matchers = [
-    { pattern: /(->|\+=|append|prepend|then|unshift)\s+(.*)\s+to\s+([^\|]*)\s*$/, amendment: 2, amendee: match => match[3] },
-    { pattern: /(->|\+=|append|prepend|then|unshift)\s+(.*)\s*$/, amendment: 2, amendee: currentSelection }
+    { pattern: /(\+=|append|prepend|then|unshift)\s+(.*)\s+to\s+([^\|]*)\s*$/, amendment: 2, amendee: match => match[3] },
+    { pattern: /(\+=|append|prepend|then|unshift)\s+(.*)\s*$/, amendment: 2, amendee: currentSelection }
 ]
 
 const intent = {
     append: 'append',
     then: 'append',
     '+=': 'append',
-    '->': 'append',
 
     prepend: 'prepend',
     unshift: 'prepend'

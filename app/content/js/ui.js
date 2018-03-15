@@ -493,6 +493,7 @@ const ui = (function() {
                 err.message = message
                 self.oops(block, nextBlock)(err)
             })
+            return
         } else if (err.nodeName) {
             // err is a DOM
             oops.appendChild(err)
@@ -1757,9 +1758,14 @@ const ui = (function() {
      * leading @ character?
      *
      */
-    self.findFile = filepath => {
+    self.findFile = (filepath, safe) => {
         if (!filepath) {
-            throw new Error('Please specify a file')
+            if (!safe) {
+                throw new Error('Please specify a file')
+            } else {
+                // caller asked us to play nice
+                return ''
+            }
         } else if (filepath.charAt(0) === '@') {
             // ui.js is in the root /app directory already
             return require('path').join(__dirname, filepath.substring(1))

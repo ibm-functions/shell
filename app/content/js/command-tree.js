@@ -322,6 +322,7 @@ const _listen = (model, route, handler, options={}) => {
     const leaf = treeMatch(model, path, false, options.hide)
 
     if (leaf) {
+        const prevOptions = leaf.options
         if (options) {
             leaf.options = options
         }
@@ -329,6 +330,13 @@ const _listen = (model, route, handler, options={}) => {
         if (leaf.$) {
             // then we're overriding an existing command
             if (!leaf.options) leaf.options = {}
+
+            if (prevOptions) {
+                for (let key in prevOptions) {
+                    leaf.options[key] = prevOptions[key]
+                }
+            }
+
             leaf.options.override = leaf.$
         }
 
@@ -434,31 +442,39 @@ const _read = (model, argv, contextRetry, originalArgv) => {
         // maybe the plugin that supports this route hasn't been
         // loaded, yet; so: invoke the plugin resolver and retry
         //
+        debug('attempting to resolve plugin')
         resolver.resolve(`/${argv.join('/')}`)
         leaf = treeMatch(model, argv, true) // true means read-only, don't modify the context model please
         evaluator = leaf && leaf.$
+        if (!leaf) debug('plugin resolution not helpful')
     }
 
     if (!evaluator) {
         if (!contextRetry) {
             return false
+
         } else if (contextRetry.length === 0) {
+            debug('no context')
             return _read(model, originalArgv, undefined, originalArgv)
+
         } else if (contextRetry.length > 0 && contextRetry[contextRetry.length - 1] !== originalArgv[originalArgv.length - 1]) {
             // command not found so far, look further afield.
             const maybeInContextRetry = _read(model, /*contextRetry.length === 1 ? originalArgv :*/ contextRetry.concat(originalArgv), contextRetry.slice(0, contextRetry.length - 1), originalArgv)
 
             if (maybeInContextRetry) {
+                debug('context retry helped', maybeInContextRetry)
                 return maybeInContextRetry
             }
 
             // oof, fallback plan: look in /wsk/action
+            debug('fallback to wsk action')
             const newContext = ['wsk','action'].concat(originalArgv).filter((elt,idx,A) => elt!==A[idx-1])
             const maybeInWskAction = _read(model, newContext, contextRetry.slice(0, contextRetry.length - 1), originalArgv)
             return maybeInWskAction
 
         } else {
             // if we get here, we can't find a matching command
+            debug('no matching command')
             return false
         }
     } else {
@@ -477,6 +493,7 @@ const read = (model, argv) => {
  */
 const disambiguate = (argv, noRetry=false) => {
     const resolutions = (disambiguator[argv[0]] || disambiguator[argv[argv.length -1]] || []).filter(isFileFilter)
+    debug('disambiguate', argv, resolutions)
 
     if (resolutions.length === 0 && !noRetry) {
         // maybe we haven't loaded the plugin, yet
@@ -485,7 +502,7 @@ const disambiguate = (argv, noRetry=false) => {
 
     } else if (resolutions.length === 1) {
         const leaf = resolutions[0]
-        // debug('disambiguate success', leaf.route)
+        debug('disambiguate success', leaf)
         return withEvents(leaf.$, leaf)
     }
 }

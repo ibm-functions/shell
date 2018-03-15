@@ -34,7 +34,7 @@ describe('Help command', function() {
     after(common.after(this))
 
     /** helper method, used in the tests below: ask for help */
-    const doHelp = (cmd, code=450) => {
+    const doHelp = (cmd, code=500) => {
         return it(`should show help via ${cmd}`, () => cli.do(cmd, this.app)
                   .then(cli.expectError(code))
                   .catch(common.oops(this)))

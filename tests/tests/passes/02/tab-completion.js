@@ -22,6 +22,15 @@ const common = require('../../../lib/common'),
       cli = ui.cli,
       sidecar = ui.sidecar
 
+/** execute the given async task n times */
+const doTimes = (n, task) => {
+    if (n > 0) {
+        return task().then(() => doTimes(n - 1, task))
+    } else {
+        return Promise.resolve()
+    }
+}
+
 describe('Tab completion', function() {
     before(common.before(this))
     after(common.after(this))
@@ -37,15 +46,40 @@ describe('Tab completion', function() {
           .then(cli.expectJustOK)
           .catch(common.oops(this));
 
-    const tabbyWithOptions = (app, partial, expected, choiceIdx, full) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
+    const tabbyWithOptions = (app, partial, expected, full, { click, nTabs }={}) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
           .then(() => app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count'))
           .then(count => parseInt(count))
           .then(count => app.client.keys(partial)
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), partial))
                 .then(() => app.client.keys('Tab'))
+                .then(() => {
+                    if (!expected) {
+                        // then we expect non-visibility of the tab-completion popup
+                        console.error('Expecting non-existence of popup')
+                        return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`, 5000, true)
+                            .then(() => {
+                                // great, the tab completion popup does not exist; early exit
+                                const err = new Error()
+                                err.failedAsExpected = true
+                                throw err
+                            })
+                    } else {
+                        console.error('Expecting existence of popup')
+                        return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`)
+                    }
+                })
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
-                .then(() => app.client.click(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary > div[data-value="${expected[choiceIdx]}"] .clickable`))
+                .then(() => {
+                    if (click) {
+                        // click on a row
+                        return app.client.click(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary > div[data-value="${expected[click]}"] .clickable`)
+                    } else {
+                        // otherwise hit tab a number of times, to cycle to the desired entry
+                        return doTimes(nTabs, () => app.client.keys('Tab'))
+                            .then(() => app.client.keys('Enter'))
+                    }
+                })
                 .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true)) // wait for non-existence of the temporary
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), full)))
           .then(() => cli.do('', app))
@@ -58,10 +92,12 @@ describe('Tab completion', function() {
           .then(count => app.client.keys(partial)
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), partial))
                 .then(() => app.client.keys('Tab'))
+                .then(() => app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
                 .then(() => app.client.keys('ffffff')) // type something random
                 .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true))) // wait for non-existence of the temporary
+          .then(() => this.app.client.execute('repl.doCancel()')) // clear the line
           .catch(common.oops(this));
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
@@ -70,17 +106,71 @@ describe('Tab completion', function() {
     it('should tab complete the data/fsm.js file', () => tabby(this.app, 'lls data/fsm.js', 'lls data/fsm.json'))
     it('should tab complete the ../app directory', () => tabby(this.app, 'lls ../ap', 'lls ../app/'))
 
-    const expected = ['commandFile.wsk',
-                      'composer-source/',
-                      'composer-source-expect-errors/',
-                      'composer-wookiechat/']
+    const options = ['commandFile.wsk',
+                     'composer-source/',
+                     'composer-source-expect-errors/',
+                     'composer-wookiechat/']
 
     // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list
-    it('should tab complete with options', () => tabbyWithOptions(this.app, 'lls data/com',
-                                                                  expected,
-                                                                  1, // click on the second entry
-                                                                  'lls data/composer-source/')) // expect this to be the completed value
+    it('should tab complete local file path', () => tabbyWithOptions(this.app,
+                                                                     'lls data/com',
+                                                                     options,
+                                                                     'lls data/composer-source/',
+                                                                     { click: 1 }))
 
-    it('should tab complete with options, then options go away on edit', () => tabbyWithOptionsThenCancel(this.app, 'lls data/com',
-                                                                                                          expected))
+    // same, but this time tab to cycle through the options
+    it('should tab complete local file path', () => tabbyWithOptions(this.app,
+                                                                     'lls data/com',
+                                                                     options,
+                                                                     'lls data/composer-source/',
+                                                                     { nTabs: 1 }))
+
+    it('should tab complete local file path, then options go away on edit', () => tabbyWithOptionsThenCancel(this.app, 'lls data/com',
+                                                                                                             options))
+
+    it('should create an action foo', () => cli.do('let foo = x=>x', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should create an action foo2', () => cli.do('let foo2 = x=>x', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should create an action bar', () => cli.do('let bar = x=>x', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should create an action foofoo/yum', () => cli.do('let foofoo/yum = x=>x', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    // expect b to autocomplete with only tab, since we only have one action starting with b
+    it('should tab complete action bar', () => tabby(this.app, 'action get b', 'action get bar'))
+
+    it('should tab complete action foo with options', () => tabbyWithOptions(this.app, 'action get f',
+                                                                             ['foofoo/yum', 'foo2', 'foo'],
+                                                                             'action get foo',
+                                                                             { clicky: 2 }))
+
+    it('should tab complete action foo with options (no prefix)', () => tabbyWithOptions(this.app, 'action get ',
+                                                                                         ['foofoo/yum', 'bar', 'foo2', 'foo'],
+                                                                                         'action get foo',
+                                                                                         { clicky: 3 }))
+
+    it('should not tab complete action without trailing whitespace', () => tabbyWithOptions(this.app, 'action get')
+       .catch(err => {
+           if (!err.failedAsExpected) {
+               throw err
+           } else {
+               this.app.client.execute('repl.doCancel()') // clear the line
+           }
+       }))
+
+    it('should create a trigger', () => cli.do('wsk trigger create ttt', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should fire trigger with autocomplete', () => tabby(this.app, 'wsk trigger fire t', 'wsk trigger fire ttt'))
+
+    it('should get package foofoo with autocomplete', () => tabby(this.app, 'wsk package get f', 'wsk package get foofoo'))
 })

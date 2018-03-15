@@ -83,6 +83,7 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
 
     // accumulate doms from the output of the subcommand
     const parentNode = document.createElement('div')
+    let rawErr = ''
 
     proc.stdout.on('data', data => {
         if (execOptions.stdout) {
@@ -96,6 +97,8 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
     })
 
     proc.stderr.on('data', data => {
+        rawErr += data
+
         if (execOptions.stderr) {
             execOptions.stderr(data.toString())
             //stderrLines += data.toString()
@@ -115,10 +118,24 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
             resolve(parentNode)
         } else {
             // oops, non-zero exit code. reject!
-            reject(execOptions.stderr ? code : parentNode)
+            if (execOptions && execOptions.nested) {
+                reject(rawErr)
+            } else {
+                reject(execOptions.stderr ? code : parentNode)
+            }
         }
     })
 })
+
+const usage = {
+    lls: {
+        strict: 'lls',
+        command: 'lls',
+        title: 'local file list',
+        header: 'Directory listing of your local filesystem',
+        optional: [{ name: 'path', docs: 'local file path', file: true, positional: true }]
+    }
+}
 
 module.exports = commandTree => {
     const shellFn = (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(fullArgv, options, execOptions)
@@ -131,8 +148,10 @@ module.exports = commandTree => {
     commandTree.listen('/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options, execOptions),
                        { docs: 'Change the current working directory for future shell commands' })
 
-    commandTree.listen('/lls', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'ls', '-l', ...argv.slice(1)], options, execOptions),
-                       { docs: 'Directory listing of your local filesystem' })
+    commandTree.listen('/lls', (_1, _2, fullArgv, { errors }, _4, execOptions, argv, options) => {
+        return doShell(['!', 'ls', '-l', ...argv.slice(1)], options, Object.assign({}, execOptions, { nested: true }))
+            .catch(message => { throw new errors.usage({ message, usage: usage.lls }) })
+    }, { usage: usage.lls })
 
     commandTree.listen('/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'rm', ...argv.slice(1)], options, execOptions),
                        { docs: 'Remove a file from your local filesystem' })

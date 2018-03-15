@@ -29,6 +29,6 @@ describe('Error handling', function() {
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
     it('bind with no args', () => cli.do('bind', this.app)
-	.then(cli.expectError(0, 'Usage: bind <packageName> <bindName> [-p key value]...'))
+       .then(cli.expectError(497))
        .catch(common.oops(this)))
 })

@@ -29,7 +29,7 @@ const common = require('../../../lib/common'),
       actionName2 = 'foo3'
 
 // synonyms for append and prepend
-const appends = ['append', 'then', '+=', '->' ],
+const appends = ['append', 'then', '+=' ],
       prepends = ['prepend', 'unshift' ]
 
 /** Turn an list of strings into a map */

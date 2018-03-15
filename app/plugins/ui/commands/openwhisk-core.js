@@ -137,7 +137,7 @@ const synonyms = {
     },
     verbs: {
         invoke: ['i', 'call', 'exec'],
-        fire: ['f'],
+        fire: [],
         get: ['g', 'cat', 'show', 'open'],
         list: ['l', 'ls'],
         delete: ['d' ],
@@ -705,10 +705,12 @@ specials.triggers = {
             delete options.f
             delete options.name
 
-            options.params = options.trigger.parameters.reduce((M, kv) => {
-                M[kv.key] = kv.value
-                return M
-            }, {})
+            if (options.trigger && options.trigger.parameters) {
+                options.params = options.trigger.parameters.reduce((M, kv) => {
+                    M[kv.key] = kv.value
+                    return M
+                }, {})
+            }
 
             options.feedName = feedName
             options.trigger = triggerName
@@ -772,7 +774,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
     let options = Object.assign({}, regularOptions, pair.kvOptions)
     delete options._
 
-    // debug('exec', entity, verb, argv, options)
+    debug('exec', entity, verb, argv, options)
 
     const verbIndex = argv.findIndex(arg => arg === verbSynonym),
           nameIndex = verbIndex + 1,
@@ -917,6 +919,29 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
                     return response
                 } else {
                     return response
+                }
+            })
+            .catch(err => {
+                if (err.error && err.error.activationId) {
+                    // then this is a failed activation
+                    throw err
+
+                } else if (execOptions.nested && !execOptions.failWithUsage) {
+                    throw err
+                } else {
+                    //
+                    // wrap the backend error in a usage error
+                    //
+                    const message = modules.ui.oopsMessage(err),
+                          code = err.statusCode || err.code,
+                          _usageModel = usage[entity].available && usage[entity].available.find(({command}) => command === verb),
+                          usageModel = _usageModel && typeof _usageModel.fn === 'function' ? _usageModel.fn(verb, entity) : _usageModel
+
+                    if (!usageModel) {
+                        throw err
+                    } else {
+                        throw new modules.errors.usage({ message, usage: usageModel, code })
+                    }
                 }
             })
     }
@@ -1130,7 +1155,7 @@ module.exports = (commandTree, prequire) => {
     // trigger fire special case?? hacky
     const doFire = executor('triggers', 'invoke', 'fire', commandTree, preflight)
     synonymsFn('triggers').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/fire`, doFire, { doc: 'Fire an OpenWhisk trigger' })
+        commandTree.listen(`/wsk/${syn}/fire`, doFire, { usage: usage.triggers.available.find(({command}) => command === 'fire') })
     })
 
     const removeTrigger = (block, nextBlock, argv, modules) => {

@@ -37,20 +37,21 @@ const strings = {
  * Usage message for app create
  *
  */
-exports.create = cmd => ({
-    strict: cmd,
+exports.create = command => ({
+    strict: command,
+    command,
     title: 'Deploy composition',
-    header: strings[cmd],
-    example: `app ${cmd} <name> <sourceFile>`,
+    header: strings[command],
+    example: `app ${command} <name> <sourceFile>`,
     required: [{ name: 'name', docs: 'the name of your new app', implicitOK: ['actions', 'preview'] },
-               { name: 'sourceFile', docs: 'source file or pre-compiled composition', notNeededIfImplicit: true }],
-    optional: actionsUsage[cmd].optional.concat([
+               { name: 'sourceFile', docs: 'source file or pre-compiled composition', file: true, notNeededIfImplicit: true }],
+    optional: actionsUsage[command].optional.concat([
         { name: '--recursive', alias: '-r', boolean: true, docs: 'also deploy any referenced actions' },
         { name: '--dry-run', consumesPositional: 1, alias: '-n', boolean: true, advanced: true, docs: 'only check the given input for validity' },
         /*{ name: '--log-input', boolean: true, advanced: true, docs: 'log initial input' },
         { name: '--log-inline', boolean: true, advanced: true, docs: 'log inline function output' },
         { name: '--log-all', boolean: true, advanced: true, docs: 'log initial input and inline function output' }*/]),
-    sampleInputs: sampleInputs(sampleName => `app ${cmd} -r ${sampleName}`),
+    sampleInputs: sampleInputs(sampleName => `app ${command} -r ${sampleName}`),
     parents: ['composer', { command: 'composer app' }],
     related: ['app get', 'app invoke', 'app list']
 })
@@ -64,7 +65,7 @@ exports.invoke = {
     title: 'Invoke composition',
     header: 'Invoke a given app and wait for its completion',
     example: 'app invoke <name> [-p key value]*',
-    required: [{ name: 'name', docs: 'a deployed composition', implicitOK: ['actions', 'activations'] }],
+    required: [{ name: 'name', docs: 'a deployed composition', entity: 'action', implicitOK: ['actions', 'activations'] }],
     optional: actionsUsage.invoke.optional,
     parents: ['composer', { command: 'composer app' }],
     related: ['app async', 'app create', 'app get', 'app list']
@@ -93,12 +94,13 @@ exports.async = {
  * Usage message for app get
  *
  */
-exports.app_get = cmd => ({
-    strict: cmd,
+exports.app_get = command => ({
+    strict: command,
+    command,
     title: 'Show composition',
     header: 'Displays the details of a given composition',
-    example: `app ${cmd} <appName>`,
-    required: [{ name: 'appName', docs: 'the name of your composition' }],
+    example: `app ${command} <appName>`,
+    required: [{ name: 'appName', docs: 'the name of your composition', entity: 'action' }],
     optional: [{ name: '--cli', boolean: true, docs: 'display the results textually (headless mode only)' }],
     parents: ['composer', { command: 'composer app' }],
     related: ['app create', 'app invoke', 'app list']
@@ -108,11 +110,12 @@ exports.app_get = cmd => ({
  * Usage message for app list
  *
  */
-exports.app_list = cmd => ({
-    strict: cmd,
+exports.app_list = command => ({
+    strict: command,
+    command,
     title: 'List compositions',
     header: 'Print a list of deployed compositions',
-    example: `app ${cmd}`,
+    example: `app ${command}`,
     optional: skipAndLimit,
     parents: ['composer', { command: 'composer app' }],
     related: ['app create', 'app get', 'app invoke']
@@ -126,36 +129,38 @@ const related = {
     get: ['session list', 'session result'],
     result: ['session list', 'session get']
 }
-exports.session_get = cmd => ({
-    strict: cmd,
+exports.session_get = command => ({
+    strict: command,
+    command,
     title: 'Show composer session',
-    header: strings[`session_${cmd}`],
-    example: `session ${cmd} <sessionId>`,
+    header: strings[`session_${command}`],
+    example: `session ${command} <sessionId>`,
     oneof: [{ name: 'sessionId', docs: 'show a specific session id' },
             { name: '--last', example: '[appName]', booleanOK: true, docs: 'show the last session [of the given app name]' },
             { name: '--last-failed', example: '[appName]', booleanOK: true, docs: 'ibid, except show the last failed session' }],
     optional: activationsUsage.get.optional,
     parents: ['composer', { command: 'composer session' }],
-    related: related[cmd]
+    related: related[command]
 })
 
 /**
  * Usage string for app preview
  *
  */
-exports.preview = cmd => ({
-    strict: cmd,
+exports.preview = command => ({
+    command,
+    strict: command,
     title: 'Preview composition',
     header: 'Visualize a composition, without deploying it.',
-    example: `${cmd} <sourceFile>`,
+    example: `${command} <sourceFile>`,
     detailedExample: {
-        command: `${cmd} @demos/hello.js`,
+        command: `${command} @demos/hello.js`,
         docs: 'preview a built-in hello world demo'
     },
-    oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file' },
-            { name: 'src.json', docs: 'ibid, but for a pre-compiled composition' }],
+    oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file', file: true },
+            { name: 'src.json', docs: 'ibid, but for a pre-compiled composition', file: true }],
     optional: [{ name: '--fsm', boolean: true, docs: 'validate and show raw FSM' } ],
-    sampleInputs: sampleInputs(cmd),
+    sampleInputs: sampleInputs(command),
     parents: ['composer', { command: 'composer app' }],
     related: ['app create']
 })

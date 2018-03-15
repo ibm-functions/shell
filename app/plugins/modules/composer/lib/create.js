@@ -126,7 +126,9 @@ module.exports = (commandTree, prequire) => {
                 }
 
             } else {
-                throw new Error(messages.unknownInput)
+                throw new errors.usage({ message: messages.unknownInput,
+                                         usage: usage(cmd) },
+                                       undefined, 497)
             }
 
             const { kvOptions: { action: { annotations=[], parameters=[] }={} }={} } = wsk.parseOptions(fullArgs, 'action');

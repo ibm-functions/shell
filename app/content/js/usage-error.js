@@ -113,7 +113,11 @@ const format = message => {
     } else if (message.nodeName) {
         // then this is a pre-formatted HTML
         return message
-        
+
+    } else if (message.fn) {
+        // then message.fn is a generator, e.g. for command aliases
+        return format(message.fn(message.command))
+
     } else {
         // these are the fields of the usage message
         const replWrappedAMessageString = message.message && message.usage,
@@ -136,7 +140,7 @@ const format = message => {
             // then the repl wrapped around the usage model, adding an extra message string
             const messageDom = div(undefined, 'normal-size', 'h1'),
                   prefacePart = span(''),
-                  messagePart = span(`${messageString}.`, 'red-text')
+                  messagePart = span(messageString, 'red-text')
 
             result.classList.add('hidden')
 
@@ -438,7 +442,7 @@ const format = message => {
     }
 }
 
-module.exports = function UsageError(message, extra, code=450) {
+module.exports = function UsageError(message, extra, code=message.statusCode || message.code || 500) {
     Error.captureStackTrace(this, this.constructor)
     this.name = this.constructor.name
     this.message = format(message)
