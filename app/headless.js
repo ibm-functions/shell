@@ -34,7 +34,7 @@ const events = require('events'),
       colors = require('colors'),
       verbose = process.argv.find(_ => _ === '-v'),
       rawOutput = process.argv.find(_ => _ === '--raw-output'), // don't try to pretty-print the JSON; c.f. jq's --raw-output
-      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v' && arg != '--raw-output'),
+      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v' && arg !== '--raw-output' && arg !== '--no-color'),
       grequire = module => require(`./content/js/${module}`),
       Store = require('./store'),
       log = console.log,
