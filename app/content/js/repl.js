@@ -130,8 +130,7 @@ const formatOneListResult = options => (entity, idx, A) => {
         entityNameClickable.classList.remove('clickable')
     } else {
         dom.onclick = entityNameClickable.onclick = entity.onclick
-            || (() => self.pexec(`wsk ${entity.type} get "/${entity.namespace}/${entity.name}"`)
-                .then(ui.showEntity))
+            || (() => self.pexec(`wsk ${entity.type} get "/${entity.namespace}/${entity.name}"`))
     }
 
     //
