@@ -32,35 +32,44 @@ exports.rp = opts => {
  *   fuzz lets us blank out certain portions of the world
  *
  */
-exports.before = (ctx, {fuzz}={}) => {
+exports.before = (ctx, {fuzz, noApp=false}={}) => {
     ctx.retries(10)
 
     return function() {
-    const env = {}
-    if (fuzz) {
-        env.___IBM_FSH_FUZZ = JSON.stringify(fuzz)
-    }
+        const env = {}
+        if (fuzz) {
+            env.___IBM_FSH_FUZZ = JSON.stringify(fuzz)
+        }
 
-    const opts = {
-	path: electron,
-	env,
-        chromeDriverArgs: [ '--no-sandbox' ],
-        waitTimeout: process.env.TIMEOUT || 60000,
-	args: [ appMain ]
-    }
-    if (process.env.CHROMEDRIVER_PORT) {
-        opts.port = process.env.CHROMEDRIVER_PORT
-    }
-    if (process.env.WSKNG_NODE_DEBUG) {
-	// pass WSKNG_DEBUG on to NODE_DEBUG for the application
-	opts.env.NODE_DEBUG = process.env.WSKNG_NODE_DEBUG
-    }
+        if (!noApp) {
+            const opts = {
+	        path: electron,
+	        env,
+                chromeDriverArgs: [ '--no-sandbox' ],
+                waitTimeout: process.env.TIMEOUT || 60000,
+	        args: [ appMain ]
+            }
+            if (process.env.CHROMEDRIVER_PORT) {
+                opts.port = process.env.CHROMEDRIVER_PORT
+            }
+            if (process.env.WSKNG_NODE_DEBUG) {
+	        // pass WSKNG_DEBUG on to NODE_DEBUG for the application
+	        opts.env.NODE_DEBUG = process.env.WSKNG_NODE_DEBUG
+            }
 
-    ctx.app = new Application(opts)
-    return Promise.all([ wsk.cleanAll(process.env.AUTH), wsk.cleanAll(process.env.AUTH2) ])  // clean openwhisk assets from previous runs
-        .then(() => ctx.app.start())                                                         // this will launch electron
-        .then(() => ctx.title && ctx.app.browserWindow.setTitle(ctx.title))                  // set the window title to the name of the current test
-        .then(() => ctx.app.client.localStorage('DELETE'))                                   // clean out local storage
+            ctx.app = new Application(opts)
+        }
+
+        // start the app, if requested
+        const start = noApp ? x=>x : () => {
+            return ctx.app.start()                                                  // this will launch electron
+                .then(() => ctx.title && ctx.app.browserWindow.setTitle(ctx.title)) // set the window title to the current test
+                .then(() => ctx.app.client.localStorage('DELETE'))                  // clean out local storage
+        }
+
+        // clean openwhisk assets from previous runs, then start the app
+        return Promise.all([ wsk.cleanAll(process.env.AUTH), wsk.cleanAll(process.env.AUTH2) ])
+            .then(start)
     }
 }
 
@@ -106,20 +115,22 @@ exports.after = (ctx, f) => () => {
 exports.oops = ctx => err => {
     console.log(err)
 
-    ctx.app.client.getMainProcessLogs().then(logs => logs.forEach(log => {
-        if (log.indexOf('INFO:CONSOLE') < 0) {
-            // don't log console messages, as these will show up in getRenderProcessLogs
-            console.log(`MAIN ${log}`)
-        }
-    }))
-    ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => console.log(`RENDER ${log.source} ${log.level} ${log.message}`)))
+    if (ctx.app) {
+        ctx.app.client.getMainProcessLogs().then(logs => logs.forEach(log => {
+            if (log.indexOf('INFO:CONSOLE') < 0) {
+                // don't log console messages, as these will show up in getRenderProcessLogs
+                console.log(`MAIN ${log}`)
+            }
+        }))
+        ctx.app.client.getRenderProcessLogs().then(logs => logs.forEach(log => console.log(`RENDER ${log.source} ${log.level} ${log.message}`)))
     
-    ctx.app.client.getText(ui.selectors.OOPS)
-	.then(anyErrors => {
-	    if (anyErrors) {
-		console.log('Error from the UI', anyErrors)
-	    }
-	})
+        ctx.app.client.getText(ui.selectors.OOPS)
+	    .then(anyErrors => {
+	        if (anyErrors) {
+		    console.log('Error from the UI', anyErrors)
+	        }
+	    })
+    }
 
     // swap these two if you want to debug failures locally
     //return new Promise((resolve, reject) => setTimeout(() => { reject(err) }, 100000))

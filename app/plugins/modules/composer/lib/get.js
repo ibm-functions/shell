@@ -28,7 +28,6 @@ const viewName = 'app'
  *
  */
 module.exports = (commandTree, prequire) => {
-    const {visualize} = prequire('wskflow')
     const wsk = prequire('/ui/commands/openwhisk-core'),
           rawGet = commandTree.find('/wsk/action/get').$
 
@@ -63,7 +62,7 @@ module.exports = (commandTree, prequire) => {
 
                     if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
                         const doVisualize = execOptions.override || !execOptions.nested,
-                              content = decorateAsApp({ action, visualize, doVisualize }),
+                              content = decorateAsApp({ action, doVisualize }),
                               input = `/${response.namespace}/${response.name}`
 
                         if (doVisualize) {

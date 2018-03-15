@@ -35,8 +35,6 @@ const viewName = 'preview',               // for back button and sidecar header 
  *
  */
 module.exports = (commandTree, prequire) => {
-    const {visualize} = prequire('wskflow')
-
      const render = (input, options) => new Promise((resolve, reject) => {
          let fsmPromise, type, extraModes=[]
 
@@ -62,6 +60,7 @@ module.exports = (commandTree, prequire) => {
 
          // create a fake action/entity record
          const formatForUser = defaultMode => ({fsm,code}) => {
+             const {visualize} = prequire('wskflow')
              const { view, controller } = wskflow(visualize, viewName, { fsm, input, name })
              extraModes = extraModes.concat(zoomToFitButtons(controller))
 

@@ -24,7 +24,6 @@ const { isAnApp, decorateAsApp } = require('./composer'),
  *
  */
 module.exports = (commandTree, prequire) => {
-    const {visualize} = prequire('wskflow')
     const wsk = prequire('/ui/commands/openwhisk-core')
 
     /** command handler */
@@ -66,7 +65,7 @@ module.exports = (commandTree, prequire) => {
                 return rawListImpl.apply(undefined, arguments)
                     .then(response => response.map(action => {
                         if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
-                            decorateAsApp({action, visualize})
+                            decorateAsApp({action})
                             action.prettyKind = 'composition'
                         }
 

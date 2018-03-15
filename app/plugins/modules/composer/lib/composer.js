@@ -662,7 +662,7 @@ exports.hasUnknownOptions = (options, expected) => {
  * like an app
  *
  */
-exports.decorateAsApp = ({action, visualize, viewName='app', commandPrefix='app get', doVisualize}) => {
+exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVisualize}) => {
     action.prettyType = appBadge
     action.fsm = action.annotations.find(({key}) => key === 'fsm').value
 
@@ -671,6 +671,7 @@ exports.decorateAsApp = ({action, visualize, viewName='app', commandPrefix='app 
     }
 
     if (doVisualize) {
+        const visualize = require(path.join(__dirname, '../../wskflow/lib/visualize'))
         const { view, controller } = exports.wskflow(visualize, viewName, action)
 
         action.modes = (action.modes||[]).filter(_ => _.mode !== 'code')
