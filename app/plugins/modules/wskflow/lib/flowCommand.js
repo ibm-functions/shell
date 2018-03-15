@@ -23,6 +23,8 @@ const PromisePool = require('es6-promise-pool'),
       visualize = require('./visualize'),
       { zoomToFitButtons } = require(path.join(__dirname, '../../composer/lib/composer'))
 
+const viewName = 'session flow'
+
 debug('finished loading modules')
 
 /**
@@ -95,8 +97,9 @@ module.exports = (commandTree, prequire) => {
                 let fsm;
                 if (action.wskflowErr) {
                     // 1) if an app was deleted, the last promise item returns an error
-                    console.error('app was deleted');
-                    fsm = 'deleted';
+                    const error = new Error(`${viewName} unavailable, as the composition was deleted`);
+                    error.code = 404
+                    throw error
 
                 } else {
                     // extract the FSM
