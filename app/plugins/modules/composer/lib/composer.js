@@ -603,12 +603,14 @@ exports.zoomToFitButtons = controller => {
     return [
         { label: '1:1', actAsButton: true, flush: 'right', balloon: 'Use a fixed-size canvas', selected: false,
           selectionController: zoom1to1Bus,
+          visibleWhen: 'visualization',
           direct: () => {
               controller.zoom1to1()
           }
         },
         { fontawesome: 'fas fa-expand', actAsButton: true, flush: 'right', balloon: 'Use a zoom to fit canvas', selected: true,
           selectionController: zoomToFitBus,
+          visibleWhen: 'visualization',
           direct: () => {
               controller.zoomToFit()
           }
