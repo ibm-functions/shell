@@ -27,6 +27,8 @@ const fs = require('fs'),
 *
 */
 const complete = (match, prompt, { temporaryContainer, partial=temporaryContainer.partial, dirname=temporaryContainer.dirname }) => {
+    debug('completion', match, partial, dirname)
+
     // in case match includes partial as a prefix
     const partialIdx = match.indexOf(partial),
           completion = partialIdx >= 0 ? match.substring(partialIdx + partial.length) : match
@@ -42,9 +44,11 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
                 if (!err) {
                     if (stats.isDirectory()) {
                         // add a trailing slash if the dirname/match is a directory
+                        debug('complete as directory')
                         prompt.value = prompt.value + completion + '/'
                     } else {
                         // otherwise, dirname/match is not a directory
+                        debug('complete as file')
                         prompt.value = prompt.value + completion
                     }
                 } else {
@@ -54,8 +58,11 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
 
         } else {
             // otherwise, just add the completion to the prompt
+            debug('complete as file (alt)')
             prompt.value = prompt.value + completion
         }
+    } else {
+        debug('no completion string')
     }
 }
 
@@ -265,54 +272,59 @@ const suggestLocalFile = (last, block, prompt, temporaryContainer, lastIdx) => {
     // dirname will "foo" in the above example; it
     // could also be that last is itself the name
     // of a directory
-    const lastIsDir = last.charAt(last.length - 1) === '/'
-    dirname = lastIsDir ? last : path.dirname(last)
+    const lastIsDir = last.charAt(last.length - 1) === '/',
+          dirname = lastIsDir ? last : path.dirname(last)
 
+    debug('suggest local file', dirname, last)
+    
     if (dirname) {
-        fs.access(dirname, err => {
-            if (!err) {
-                // then dirname exists! now scan the directory so we can find matches
-                fs.readdir(dirname, (err, files) => {
-                    if (!err) {
-                        const partial = path.basename(last),
-                              matches = files.filter(f => (lastIsDir || f.indexOf(partial) === 0)
-                                                     && !f.endsWith('~') && !f.startsWith('.'))
+        // then dirname exists! now scan the directory so we can find matches
+        fs.readdir(dirname, (err, files) => {
+            if (err) {
+                debug('fs.readdir error', err)
 
-                        if (matches.length === 1) {
-                            //
-                            // then there is one unique match, so autofill it now;
-                            // completion will be the bit we have to append to the current prompt.value
-                            //
-                            complete(matches[0], prompt, { temporaryContainer, partial, dirname })
+            } else {
+                debug('fs.readdir success')
 
-                        } else if (matches.length > 1) {
-                            //
-                            // then there are multiple matches, present the choices
-                            //
+                const partial = path.basename(last),
+                      matches = files.filter(f => (lastIsDir || f.indexOf(partial) === 0)
+                                             && !f.endsWith('~') && !f.startsWith('.'))
 
-                            // make a temporary div to house the completion options,
-                            // and attach it to the block that encloses the current prompt
-                            if (!temporaryContainer) {
-                                temporaryContainer = makeCompletionContainer(block, prompt, partial, dirname, lastIdx)
-                            }
+                if (matches.length === 1) {
+                    //
+                    // then there is one unique match, so autofill it now;
+                    // completion will be the bit we have to append to the current prompt.value
+                    //
+                    debug('singleton file completion', matches[0])
+                    complete(matches[0], prompt, { temporaryContainer, partial, dirname })
 
-                            // add each match to that temporary div
-                            matches.forEach((match, idx) => {
-                                const { option, optionInner } = addSuggestion(temporaryContainer, partial, dirname, prompt)(match, idx)
+                } else if (matches.length > 1) {
+                    //
+                    // then there are multiple matches, present the choices
+                    //
+                    debug('multi file completion')
 
-                                // see if the match is a directory, so that we add a trailing slash
-                                fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
-                                    if (!err && stats.isDirectory()) {
-                                        optionInner.innerText = match + '/'
-                                    } else {
-                                        optionInner.innerText = match
-                                    }
-                                    option.setAttribute('data-value', option.innerText)
-                                })
-                            })
-                        }
+                    // make a temporary div to house the completion options,
+                    // and attach it to the block that encloses the current prompt
+                    if (!temporaryContainer) {
+                        temporaryContainer = makeCompletionContainer(block, prompt, partial, dirname, lastIdx)
                     }
-                })
+
+                    // add each match to that temporary div
+                    matches.forEach((match, idx) => {
+                        const { option, optionInner } = addSuggestion(temporaryContainer, partial, dirname, prompt)(match, idx)
+
+                        // see if the match is a directory, so that we add a trailing slash
+                        fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
+                            if (!err && stats.isDirectory()) {
+                                optionInner.innerText = match + '/'
+                            } else {
+                                optionInner.innerText = match
+                            }
+                            option.setAttribute('data-value', option.innerText)
+                        })
+                    })
+                }
             }
         })
     }

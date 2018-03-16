@@ -61,6 +61,7 @@ exports.create = command => ({
  *
  */
 exports.invoke = {
+    command: 'invoke',
     strict: 'invoke',
     title: 'Invoke composition',
     header: 'Invoke a given app and wait for its completion',
