@@ -647,7 +647,11 @@ self.exec = (commandUntrimmed, execOptions) => {
                                   err = new modules.errors.usage({ message, usage })
                             err.code = 499
                             debug(message, args, parsedOptions, optional, argv) // args is argv with options stripped
-                            return ui.oops(block, nextBlock)(err)
+                            if (execOptions && execOptions.failWithUsage) {
+                                return err
+                            } else {
+                                return ui.oops(block, nextBlock)(err)
+                            }
 
                         } else if (match.boolean && typeof parsedOptions[optionalArg] !== 'boolean'
                                    || (match.booleanOK && !(typeof parsedOptions[optionalArg] === 'boolean' || typeof parsedOptions[optionalArg] === 'string'))
@@ -670,7 +674,11 @@ self.exec = (commandUntrimmed, execOptions) => {
                                   error = new modules.errors.usage({ message, usage })
                             debug(message, match)
                             error.code = 498
-                            return ui.oops(block, nextBlock)(error)
+                            if (execOptions && execOptions.failWithUsage) {
+                                return error
+                            } else {
+                                return ui.oops(block, nextBlock)(error)
+                            }
                         }
                     }
                 }
@@ -809,7 +817,9 @@ self.exec = (commandUntrimmed, execOptions) => {
                         // indicate that the command was NOT successfuly completed
                         evaluator.error(err)
 
-                        if (!nested) {
+                        if (execOptions && execOptions.failWithUsage) {
+                            return err
+                        } else if (!nested) {
                             ui.oops(block, nextBlock)(err)
                         } else {
                             throw err
@@ -818,7 +828,9 @@ self.exec = (commandUntrimmed, execOptions) => {
                 })
         }
     } catch (e) {
-        if (ui.headless) {
+        if (execOptions && execOptions.failWithUsage) {
+            return e
+        } else if (ui.headless) {
             throw e
         }
 

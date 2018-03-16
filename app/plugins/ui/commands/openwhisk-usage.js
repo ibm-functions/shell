@@ -125,8 +125,8 @@ module.exports = {
                    // ACTION CREATE
                    { command: 'create', docs: 'create a new action', strict: 'create',
                      example: 'wsk action create <action> <sourceFile>',
-                     required: [{ name: 'name', docs: 'the name of your new action' }],
-                     optional: sourceFile.concat(actionMix),
+                     required: [{ name: 'name', docs: 'the name of your new action' }].concat(sourceFile),
+                     optional: actionMix,
                      parents: context('action')
                    },
                    // ACTION UPDATE
