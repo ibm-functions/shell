@@ -52,7 +52,8 @@ module.exports = {
         title: 'Activation visualizations',
         header: 'These commands will help you visualize your activations',
         example: 'visualize <command>',
-        commandPrefix: '',
+        commandPrefix: 'visualize',
+        commandPrefixNotNeeded: true,
         available: [{ command: 'summary', docs: header.summary },
                     { command: 'timeline', docs: header.timeline },
                     { command: 'grid', docs: header.grid }],
@@ -61,6 +62,7 @@ module.exports = {
 
     summary: {
         strict: 'summary',
+        command: 'summary',
         nRowsInViewport,
         title: 'Summarize performance',
         header: '${header.summary}.',

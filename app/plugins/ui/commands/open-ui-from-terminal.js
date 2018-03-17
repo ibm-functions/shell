@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,15 @@
  */
 
 
-const docs = { docs: 'Open the visual shell', needsUI: true, fullscreen: false, noEcho: true, noHistory: true } // noEcho means don't echo the command if we came from headless
+const usage = {
+    command: 'shell',
+    title: 'Visual Shell',
+    header: 'Open the visual shell',
+    headlessOnly: true
+}
+
+// noEcho means don't echo the command if we came from headless
+const docs = { usage, needsUI: true, fullscreen: false, noEcho: true, noHistory: true }
 
 /**
  * This plugin allows opening the graphical shell from the terminal

@@ -15,6 +15,9 @@
  */
 
 const debug = require('debug')('about')
+debug('loading')
+
+const usage = require('./usage')
 
 /**
  * The repl allows plugins to provide their own window, via the
@@ -67,7 +70,7 @@ const getVersion = () => {
 const reportVersion = (_1, _2, argv) => {
     debug('reportVersion')
 
-    const checkForUpdates = argv.find(_ => _ === '-u'),
+    const checkForUpdates = argv.find(_ => _ === '-u' || _ === '--update-check'),
           version = getVersion()
 
     if (!checkForUpdates) {
@@ -99,6 +102,7 @@ const reportVersion = (_1, _2, argv) => {
                   // now we need to clear a newline see shell issue
                   // #194
                   console.log('')
+                  console.log('')
               }
               return updates
           }
@@ -126,7 +130,8 @@ module.exports = (commandTree, prequire) => {
      */
     commandTree.listen('/version',      // the command path
                        reportVersion,   // the command handler
-                       { noAuthOk })    // the command options
+                       { noAuthOk,      // the command options
+                         usage: usage.version })
 
     /**
      * Open a graphical window displaying more detail about the tool
