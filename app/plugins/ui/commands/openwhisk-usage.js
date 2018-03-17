@@ -101,18 +101,19 @@ module.exports = {
 
     // this is the ascii art for OpenWhisk, with backslashes escaped
     wsk: { //header: `        ____      ___                   _    _ _     _     _\r\n       /\\   \\    / _ \\ _ __   ___ _ __ | |  | | |__ (_)___| | __\r\n  /\\  /__\\   \\  | | | | '_ \\ / _ \\ '_ \\| |  | | '_ \\| / __| |/ /\r\n /  \\____ \\  /  | |_| | |_) |  __/ | | | |/\\| | | | | \\__ \\   <\r\n \\   \\  /  \\/    \\___/| .__/ \\___|_| |_|__/\\__|_| |_|_|___/_|\\_\\\r\n  \\___\\/ tm           |_|`,
-           breadcrumb: 'OpenWhisk',
-           title: 'The fundamental OpenWhisk operations',
-           header: 'These commands will help you work with OpenWhisk assets.',
-           example: 'wsk <command>',
-           commandPrefix: 'wsk',
-           available: [{ command: 'action', docs: 'work with actions', dir: true },
-                       { command: 'activation', docs: 'work with activations', dir: true, aliases: ['$'] },
-                       { command: 'package', docs: 'work with packages', dir: true },
-                       { command: 'rule', docs: 'work with rules', dir: true },
-                       { command: 'trigger', docs: 'work with triggers', dir: true },
-                       { command: 'list', docs: 'list all entities in the current namespace', aliases: aliases.list }],
-         },
+        breadcrumb: 'OpenWhisk',
+        command: 'wsk',
+        title: 'The fundamental OpenWhisk operations',
+        header: 'These commands will help you work with OpenWhisk assets.',
+        example: 'wsk <command>',
+        nRowsInViewport: 6, // list all six, since we have a short list
+        available: [{ command: 'action', docs: 'work with actions', dir: true, commandPrefix: 'wsk' },
+                    { command: 'activation', docs: 'work with activations', dir: true, aliases: ['$'], commandPrefix: 'wsk' },
+                    { command: 'package', docs: 'work with packages', dir: true, commandPrefix: 'wsk' },
+                    { command: 'rule', docs: 'work with rules', dir: true, commandPrefix: 'wsk' },
+                    { command: 'trigger', docs: 'work with triggers', dir: true, commandPrefix: 'wsk' },
+                    { command: 'list', docs: 'list all entities in the current namespace', aliases: aliases.list, commandPrefix: 'wsk' }],
+    },
 
     bind: 'Usage: bind <packageName> <bindName> [-p key value]...',
 

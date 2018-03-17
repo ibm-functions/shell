@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,17 @@ const util = require('util'),
       disambiguator = {}    // map from command name to disambiguations
 
 debug('finished loading modules')
+
+// for plugins.js
+exports.disambiguator = () => {
+    const map = {}
+    for (let command in disambiguator) {
+        map[command] = disambiguator[command].map(({route, options}) => ({
+            route, plugin: options && options.plugin
+        }))
+    }
+    return map
+}
 
 /** shallow array equality */
 const sameArray = (A, B) => A.length === B.length && A.every((element, idx) => element === B[idx])
@@ -402,6 +413,7 @@ const withEvents = (evaluator, leaf) => {
     }
     
     return {
+        subtree: leaf,
         route: leaf.route,
         eval: evaluator,
         options: leaf && leaf.options,
@@ -492,27 +504,51 @@ const read = (model, argv) => {
  *
  */
 const disambiguate = (argv, noRetry=false) => {
-    const resolutions = (disambiguator[argv[0]] || disambiguator[argv[argv.length -1]] || []).filter(isFileFilter)
-    debug('disambiguate', argv, resolutions)
+    let idx
+    const resolutions = ( (((idx=0)||true) && disambiguator[argv[idx]]) || (((idx=argv.length-1)||true) && disambiguator[argv[idx]]) || []).filter(isFileFilter)
+    debug('disambiguate', idx, argv, resolutions)
 
     if (resolutions.length === 0 && !noRetry) {
         // maybe we haven't loaded the plugin, yet
+        debug('disambiguate attempting to resolve plugins')
         resolver.resolve(`/${argv.join('/')}`)
         return disambiguate(argv, true)
 
     } else if (resolutions.length === 1) {
+        // one unambiguous resolution! great, but we need to
+        // double-check: if the resolution is a subtree, then it better have a child that matches 
         const leaf = resolutions[0]
+
+        if (idx < argv.length - 1 && leaf.children) {
+            // then the match is indeed a subtree
+            let foundMatch = false
+            const next = argv[argv.length - 1]
+            for (let cmd in leaf.children) {
+                if (cmd === next) {
+                    foundMatch = true
+                    break
+                }
+            }
+            if (!foundMatch) {
+                debug('disambiguate blocked due to subtree mismatch')
+                return
+            }
+        }
+
         debug('disambiguate success', leaf)
         return withEvents(leaf.$, leaf)
     }
 }
 
 /**
- * Oops, we couldn't resolve the given command
+ * Oops, we couldn't resolve the given command. But maybe we found
+ * some partial matches that might be helpful to the user.
  *
  */
-const commandNotFoundMessage = 'Command not found'
-const commandNotFound = argv => {
+const commandNotFoundMessage = 'Command not found',
+      commandNotFoundMessageWithPartialMatches = 'The following commands are partial matches for your request.'
+
+const commandNotFound = (argv, partialMatches) => {
     eventBus.emit('/command/resolved', {
         // ANONYMIZE: namespace: namespace.current(),
         error: commandNotFoundMessage,
@@ -520,9 +556,79 @@ const commandNotFound = argv => {
         context: exports.currentContext()
     })
 
-    const error = new Error(commandNotFoundMessage)
+    const error = partialMatches ? formatPartialMatches(partialMatches) : new Error(commandNotFoundMessage)
     error.code = 404
+
+    // to allow for programmatic use of the partial matches, e.g. for tab completion
+    if (partialMatches) {
+        error.partialMatches = partialMatches.map(_ => ({ command: _.route.split('/').slice(1).join(' '),
+                                                          usage: _.options && _.options.usage }))
+    }
+
     throw error
+}
+
+/**
+ * Help the user with some partial matches for a command not found
+ * condition. Here, we reuse the usage-error formatter, to present the
+ * user with a list of possible completions to their (mistyped or
+ * otherwise) command.
+ *
+ * We use the `available` list to present the list of available
+ * command completions to what they typed.
+ *
+ */
+const formatPartialMatches = matches => {
+    return new (require('./usage-error'))({
+        message: commandNotFoundMessage,
+        usage: {
+            header: commandNotFoundMessageWithPartialMatches,
+            available: matches.map(({options}) => options.usage).filter(x=>x)
+        }
+    }, { noBreadcrumb: true, noHide: true })
+}
+
+/**
+ * Command not found: let's find partial matches at head of the given
+ * subtree. We hope that the last part of the argv is a partial match
+ * for some command at this root. Return all such prefix matches.
+ *
+ */
+const findPartialMatchesAt = (subtree, partial) => {
+    debug('scanning for partial matches', partial, subtree)
+
+    const matches = []
+
+    if (subtree && subtree.children && partial) {
+        for (let cmd in subtree.children) {
+            if (cmd.indexOf(partial) === 0) {
+                const match = subtree.children[cmd]
+                if (!match.options || (!match.options.synonymFor && !match.options.hide)) {
+                    // don't include synonyms or hidden commands
+                    matches.push(match)
+                }
+            }
+        }
+    }
+
+    return matches
+}
+
+/** remove duplicates of leaf nodes from a given array */
+const removeDuplicates = arr => {
+    return arr
+        .filter(x=>x)
+        .reduce((state, item) => {
+            const { M, A } = state,
+                  route = item.route
+
+            if (item && !M[item.route]) {
+                M[item.route] = true
+                A.push(item)
+            }
+
+            return state
+        }, { M: {}, A: [] }).A
 }
 
 /** here, we will use implicit context resolutions */
@@ -553,7 +659,41 @@ exports.read = (argv, noRetry=false, noSubtreeRetry=false) => {
     }
 
     if (!cmd) {
-        return commandNotFound(argv)
+        debug('command not found, searching for partial matches')
+
+        // command not found, but maybe we can find partial matches
+        // that might be helpful?
+        let matches
+
+        if (argv.length === 1) {
+            debug('searching for partial matches at root')
+
+            // disambiguatePartial takes a partial command, and
+            // returns an array of matching full commands, which we
+            // can turn into leafs via `disambiguate`
+            matches = removeDuplicates(findPartialMatchesAt(model, argv[0])
+                                       .concat(resolver.disambiguatePartial(argv[0]).map(_ => [_]).map(_ => disambiguate(_))))
+
+        } else {
+            const allButLast = argv.slice(0, argv.length - 1),
+                  last = argv[argv.length - 1]
+
+            debug('searching for partial matches for subcommand', allButLast)
+
+            const parent = read(model, allButLast) || disambiguate(allButLast)
+            if (parent) {
+                matches = removeDuplicates(findPartialMatchesAt(parent.subtree, last))
+            }
+        }
+
+        // found some partial matches?
+        if (matches && matches.length > 0) {
+            debug('found partial matches', matches)
+        } else {
+            matches = undefined
+        }
+
+        return commandNotFound(argv, matches)
     } else {
         return cmd
     }

@@ -9,13 +9,19 @@
 
 .tab-completion-temporary > div {
     color: var(--color-stripe-01);
-    display: block;
+    display: flex;
+    align-items: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.75em;
     font-size: 0.75em;
     padding: 0 0.5ex;
+}
+
+.tab-completion-temporary > div > .tab-completion-temporary-fill {
+    /* the clickable should fill available horizontal space in a completion row */
+    flex: 1;
 }
 
 .tab-completion-temporary .clickable {

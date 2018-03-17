@@ -126,12 +126,26 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
 })
 
 const usage = {
+    lcd: {
+        strict: 'lcd',
+        command: 'lcd',
+        title: 'change working directory',
+        header: 'Update the current working directory for local filesystem manipulations',
+        optional: [{ name: 'path', docs: 'local file path', file: true, positional: true }]
+    },
     lls: {
         strict: 'lls',
         command: 'lls',
         title: 'local file list',
         header: 'Directory listing of your local filesystem',
         optional: [{ name: 'path', docs: 'local file path', file: true, positional: true }]
+    },
+    lrm: {
+        strict: 'lrm',
+        command: 'lrm',
+        title: 'local file remove',
+        header: 'Remove a file in the local filesystem',
+        required: [{ name: 'path', docs: 'local file path', file: true }]
     }
 }
 
@@ -145,19 +159,24 @@ module.exports = commandTree => {
     const shellFn = (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(fullArgv, options, execOptions)
     const shellCmd = commandTree.listen('/!', shellFn, { docs: 'Execute a UNIX shell command' })
 
-    commandTree.listen('/!/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions),
-                       { docs: 'Print the current working directory' })
+    commandTree.listen('/!/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
+        return doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions)
+    }, { docs: 'Print the current working directory' })
 
-    commandTree.listen('/!/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options, execOptions),
-                       { docs: 'Change the current working directory for future shell commands' })
+    commandTree.listen('/!/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
+        return doShell(['!', 'cd', ...argv.slice(1)], options, execOptions, Object.assign({}, execOptions, { nested: true }))
+            .catch(message => { throw new errors.usage({ message, usage: usage.lcd }) })
+    }, { usage: usage.lcd })
 
     commandTree.listen('/!/lls', (_1, _2, fullArgv, { errors }, _4, execOptions, argv, options) => {
         return doShell(['!', 'ls', '-l', ...argv.slice(1)], options, Object.assign({}, execOptions, { nested: true }))
             .catch(message => { throw new errors.usage({ message, usage: usage.lls }) })
     }, { usage: usage.lls })
 
-    commandTree.listen('/!/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'rm', ...argv.slice(1)], options, execOptions),
-                       { docs: 'Remove a file from your local filesystem' })
+    commandTree.listen('/!/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
+        return doShell(['!', 'rm', ...argv.slice(1)], options, execOptions)
+            .catch(message => { throw new errors.usage({ message, usage: usage.lrm }) })
+    }, { usage: usage.lrm })
 
     return {
         exec: (_1, _2, argv, _3, _4, execOptions, _a, options) => doShell(['!', ...argv], options, execOptions)

@@ -104,7 +104,7 @@ const expectOK = (appAndCount, opt) => {
                                 }
                             }
 
-			    return opt.passthrough ? N-1 : selector // so that the caller can inspect the selector in more detail
+			    return opt.passthrough ? N - 1 : selector // so that the caller can inspect the selector in more detail
 		        })
                 }
 	    } else {
@@ -170,7 +170,7 @@ exports.cli = {
     
     /** wait for the result of a cli.do */
     makeCustom: (selector, expect, exact) => ({ selector: selector, expect: expect, exact: exact }),
-    expectError: (statusCode, expect) => res => expectOK(res, { selector: `.oops[data-status-code="${statusCode||0}"]`, expectError: true, expect: expect }).then(() => res.app),
+    expectError: (statusCode, expect, passthrough) => res => expectOK(res, { selector: `.oops[data-status-code="${statusCode||0}"]`, expectError: true, expect: expect, passthrough }).then(_ => passthrough ? _ : res.app),
     expectBlank: res => expectOK(res, { selector: '', expectError: true }),
     expectOKWithCustom: custom => res => expectOK(res, custom),        // as long as its ok, accept anything
     expectOKWithAny: res => expectOK(res),                             // as long as its ok, accept anything
@@ -298,6 +298,11 @@ exports.expectSubset = struct1 => string => {
 
 /** is the given actual array the same as the given expected array? */
 exports.expectArray = expected => actual => {
+    if (!Array.isArray(actual)) {
+        // webdriver.io's getText will return a singleton if there is only one match
+        actual = [actual]
+    }
+
     const ok = actual.length === expected.length
           && actual.every(function(u, i) {
               return u === expected[i]

@@ -22,7 +22,7 @@ const all = ['summary', 'timeline', 'grid']
 const allExcept = cmd => all.filter(_ => _ !== cmd)
 
 /** optional arguments */
-const optional = [{ name: 'action|app', positional: true, docs: 'include only activity for the given action or composition' },
+const optional = [{ name: 'action|app', positional: true, docs: 'include only activity for the given action or composition', entity: 'action' },
                   { name: '--success', boolean: true, docs: 'include only successful activations' },
                   { name: '--failure', boolean: true, docs: 'include only failed activations' },
                   { name: '--outliers', docs: 'include only outlier activations', allowed: ['min',25,50,90,95,99,'max'], defaultValue: 90 },
@@ -76,6 +76,7 @@ module.exports = {
 
     timeline: {
         strict: 'timeline',
+        command: 'timeline',
         nRowsInViewport,
         title: 'Activity timeline',
         header: '${header.timeline}.',
@@ -86,6 +87,7 @@ module.exports = {
 
     grid: {
         strict: 'grid',
+        command: 'grid',
         nRowsInViewport,
         title: 'Activity grid',
         header: `${header.grid}.`,

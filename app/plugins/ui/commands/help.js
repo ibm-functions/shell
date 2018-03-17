@@ -37,7 +37,7 @@ const help = (usage, docs) => (_1, _2, _3, { ui, errors }) => {
             if (model && (ui.headless || !model.headlessOnly)) {
                 topLevelUsage.available.push({
                     label: route.substring(1),
-                    dir: model.available,
+                    available: model.available,
                     command: model.commandPrefix || model.command,   // either subtree or leaf command
                     docs: model.command ? model.header : model.title // for leaf commands, print full header
                 })
@@ -94,8 +94,8 @@ module.exports = (commandTree, prequire, { usage, docs }={}) => {
          * Tell the user about the help feature.
          *    return false to make sure that upstream repl handling is terminated, we take over here
          */
-        show: (block, nextBlock, msg) =>{
-            return ui.oops(block, nextBlock)({
+        show: (block, nextBlock, msg) => {
+            return ui.oops(block, nextBlock)(msg.isUsageError ? msg : {
                 // if the message says command not found, then add on the "enter help to see your options" as a suffix
                 error: msg ? msg : baseMessage
             }) && false }

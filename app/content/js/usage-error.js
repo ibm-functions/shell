@@ -16,6 +16,8 @@
 
 'use strict'
 
+const debug = require('debug')('usage error')
+
 const Promise_each = async function(arr, fn) { // take an array and a function
     const result = []
     for(const item of arr) result.push(await fn(item))
@@ -106,7 +108,9 @@ const breadcrumbFromCommand = command => usageFromCommand(command)
  * Format the given usage message
  *
  */
-const format = message => {
+const format = (message, options={}) => {
+    debug('format', message)
+
     if (typeof message === 'string') {
         return message
 
@@ -123,8 +127,8 @@ const format = message => {
         const replWrappedAMessageString = message.message && message.usage,
               usage = replWrappedAMessageString ? message.usage : message,
               messageString = replWrappedAMessageString && message.message
-              
-        const { command, docs, title, breadcrumb=title||command, header=`${docs}.`, example, detailedExample, sampleInputs,
+
+        const { command, docs, title, breadcrumb=title||command, header=docs&&`${docs}.`, example, detailedExample, sampleInputs,
                 commandPrefix, commandPrefixNotNeeded,
                 available, parents=[], related, required, optional, oneof } = usage
 
@@ -132,7 +136,7 @@ const format = message => {
         // those fields now; `body` is the flex-wrap portion of the
         // content
         const resultWrapper = div(undefined, 'fade-in'),
-              result = div(undefined, 'hideable'),
+              result = div(undefined, options.noHide ? '' : 'hideable'),
               body = div(),
               left = div(),  // usage and detailedExample
               right = div()  // required and optional parameters
@@ -143,13 +147,15 @@ const format = message => {
                   prefacePart = span(''),
                   messagePart = span(messageString, 'red-text')
 
-            result.classList.add('hidden')
+            if (!options.noHide) {
+                result.classList.add('hidden')
+            }
 
             messageDom.appendChild(prefacePart)
             messageDom.appendChild(messagePart)
             resultWrapper.appendChild(messageDom)
 
-            if (!ui.headless) {
+            if (!ui.headless && !options.noHide) {
                 const usagePart = div(undefined, 'small-top-pad hideable'),
                       frontPart = span('Click '),
                       clickyPart = span('here', 'clickable clickable-blatant'),
@@ -181,7 +187,9 @@ const format = message => {
         // breadcrumb
         //
         let breadcrumbPromise
-        {
+        if (options.noBreadcrumb) {
+            breadcrumbPromise = Promise.resolve()
+        } else {
             const container = div(undefined, 'bx--breadcrumb bx--breadcrumb--no-trailing-slash', 'h1')
             result.appendChild(container)
 
@@ -289,14 +297,14 @@ const format = message => {
          *
          */
         const makeTable = (title, rows, parent=right) => {
-            const availablePart = bodyPart(),
+            const wrapper = bodyPart(),
                   prePart = prefix(title),
                   table = document.createElement('table')
 
             table.className = 'log-lines'
 
-            availablePart.appendChild(prePart)
-            parent.appendChild(availablePart)
+            wrapper.appendChild(prePart)
+            parent.appendChild(wrapper)
 
             // make the table scrollable, showing only a max number of
             // rows at a time: e.g. 5 rows, plus a bit (1px) for the
@@ -307,9 +315,9 @@ const format = message => {
                 const tableScrollable = div(undefined, 'scrollable')
                 tableScrollable.style.maxHeight = `calc(${nRowsInViewport} * 3em + 1px)`
                 tableScrollable.appendChild(table)
-                availablePart.appendChild(tableScrollable)
+                wrapper.appendChild(tableScrollable)
             } else {
-                availablePart.appendChild(table)
+                wrapper.appendChild(table)
             }
 
             // render the rows
@@ -319,9 +327,15 @@ const format = message => {
                     return renderRow(rowData.fn(rowData.command))
                 }
 
-                const {command, name=command, label=name, alias, numeric, aliases=[alias], hidden=false, advanced=false,
-                       example=numeric&&'N', dir:isDir=false, docs, partial=false, allowed, defaultValue} = rowData
+                // fields of the row model
+                debug('row', rowData)
+                const { commandPrefix, command=commandPrefix, name=command, label=name,
+                        alias, numeric, aliases=[alias], hidden=false, advanced=false,
+                        available,
+                        example=numeric&&'N', dir:isDir=available||false,
+                        title, header, docs=title||header, partial=false, allowed, defaultValue } = rowData
 
+                // row is either hidden or only shown for advanced users
                 if (hidden) return
                 if (advanced) return // for now
 
@@ -396,11 +410,15 @@ const format = message => {
 
             rows.forEach(renderRow)
 
-            return table
+            return wrapper
         }
 
         if (available) {
-            makeTable('Available Commands', available)
+            const table = makeTable('Available Commands', available)
+            table.classList.add('user-error-available-commands')
+            if (!title && !header) {
+                table.style.marginTop = 0
+            }
         }
 
         if (required) {
@@ -449,8 +467,9 @@ const format = message => {
 
 module.exports = function UsageError(message, extra, code=(message && (message.statusCode || message.code)) || 500) {
     Error.captureStackTrace(this, this.constructor)
+    this.isUsageError = true
     this.name = this.constructor.name
-    this.message = format(message)
+    this.message = format(message, extra)
     this.raw = message
     this.extra = extra
     this.code = code

@@ -373,9 +373,43 @@ const unify = m1 => m2 => {
 const makeResolver = prescan => {
     debug('makeResolver')
 
+    /** memoize resolved plugins */
     const isResolved = {}
+
+    /** resolve one given plugin */
+    const resolveOne = plugin => {
+        if (!plugin || isResolved[plugin]) {
+            return
+        }
+        isResolved[plugin] = true
+        const prereqs = prescan.topological[plugin]
+        if (prereqs) {
+            prereqs.forEach(exports.require)
+        }
+        exports.require(plugin)
+    }
+
+    /** a plugin resolver impl */
     const resolver = {
         isOverridden: route => prescan.overrides[route],
+
+        /** given a partial command, do we have a disambiguation of it? e.g. "gr" => "grid" */
+        disambiguatePartial: partial => {
+            const matches = []
+            if (prescan.disambiguator) {
+                for (let command in prescan.disambiguator) {
+                    if (command.indexOf(partial) === 0) {
+                        const { route, plugin } = prescan.disambiguator[command]
+                        matches.push(command)
+                    }
+                }
+            }
+
+            debug('disambiguate partial', partial, matches)
+            return matches
+        },
+
+        /** load any plugins required by the given command */
         resolve: (command, {subtree=false}={}) => { // subpath if we are looking for plugins for a subtree, e.g. for cd /auth
             let plugin, matchLen
             for (let route in prescan.commandToPlugin) {
@@ -387,15 +421,7 @@ const makeResolver = prescan => {
                 }
             }
             if (plugin) {
-                if (isResolved[plugin]) {
-                    return
-                }
-                isResolved[plugin] = true
-                const prereqs = prescan.topological[plugin]
-                if (prereqs) {
-                    prereqs.forEach(exports.require)
-                }
-                exports.require(plugin)
+                resolveOne(plugin)
             }
         }
     }
@@ -439,7 +465,7 @@ exports.scan = opts => {
                 }
             }
         }
-        return { commandToPlugin, topological, flat, overrides, usage }
+        return { commandToPlugin, topological, flat, overrides, usage, disambiguator: commandTree.disambiguator() }
     })
 }
 

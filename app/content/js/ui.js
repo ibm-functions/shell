@@ -471,12 +471,6 @@ const ui = (function() {
         const message = self.oopsMessage(err),
               errString = err && err.toString()
 
-        if (!errString || (errString.indexOf('HTTP 404') < 0 && errString.indexOf('HTTP 409') < 0)) {
-            // don't scream about 404s and 409s
-            console.error(`${message} ${errString} ${err && err.stack}`, err)
-            console.trace()
-        }
-
         if (!block) return // we're not attached to a prompt right now
 
         ui.setStatus(block, 'error')

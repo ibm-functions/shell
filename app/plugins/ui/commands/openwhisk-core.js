@@ -128,20 +128,20 @@ const parseName = fqn => fqn.substring(fqn.lastIndexOf('/') + 1)
 
 const synonyms = {
     entities: {
-        actions: ['a', '@', 'action'],
-        packages: ['p', 'package'],
-        rules: ['r', 'rule'],
-        triggers: ['t', 'trigger'],
+        actions: ['action'],
+        packages: ['package'],
+        rules: ['rule'],
+        triggers: ['trigger'],
         namespaces: ['namespace', 'ns'],
         activations: ['$', 'activation']
     },
     verbs: {
-        invoke: ['i', 'call', 'exec'],
+        invoke: ['call', 'exec'],
         fire: [],
-        get: ['g', 'cat', 'show', 'open'],
-        list: ['l', 'ls'],
-        delete: ['d' ],
-        create: ['c',
+        get: ['cat', 'show', 'open'],
+        list: ['ls'],
+        delete: [],
+        create: [
                  // these are synonyms from the openwhisk npm standpoint, but not from the openwhisk command experience standpoint
                  { nickname: 'update', name: 'update', notSynonym: true},
                  { nickname: 'bind', name: 'bind', notSynonym: true, limitTo: {packages:true} }

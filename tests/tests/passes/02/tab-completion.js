@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ describe('Tab completion', function() {
     before(common.before(this))
     after(common.after(this))
 
-    const tabby = (app, partial, full) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
+    const tabby = (app, partial, full, expectOK=true) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
           .then(() => app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count'))
           .then(count => parseInt(count))
           .then(count => app.client.keys(partial)
@@ -43,10 +43,16 @@ describe('Tab completion', function() {
                 .then(() => app.client.keys('Tab'))
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), full)))
           .then(() => cli.do('', app))
-          .then(cli.expectJustOK)
+          .then(data => {
+              if (expectOK) {
+                  return cli.expectJustOK(data)
+              } else {
+                  return app
+              }
+          })
           .catch(common.oops(this));
 
-    const tabbyWithOptions = (app, partial, expected, full, { click, nTabs }={}) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
+    const tabbyWithOptions = (app, partial, expected, full, { click, nTabs, expectOK=true }={}) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
           .then(() => app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count'))
           .then(count => parseInt(count))
           .then(count => app.client.keys(partial)
@@ -55,7 +61,7 @@ describe('Tab completion', function() {
                 .then(() => {
                     if (!expected) {
                         // then we expect non-visibility of the tab-completion popup
-                        console.error('Expecting non-existence of popup')
+                        // console.error('Expecting non-existence of popup')
                         return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`, 5000, true)
                             .then(() => {
                                 // great, the tab completion popup does not exist; early exit
@@ -64,18 +70,24 @@ describe('Tab completion', function() {
                                 throw err
                             })
                     } else {
-                        console.error('Expecting existence of popup')
-                        return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`)
+                        const selector = `${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`
+                        // console.error('Expecting existence of popup', selector)
+                        return app.client.waitForExist(selector, 5000)
                     }
                 })
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
+                // .then(() => { console.error('Got expected options') })
                 .then(() => {
-                    if (click) {
+                    if (click != undefined) {
                         // click on a row
-                        return app.client.click(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary > div[data-value="${expected[click]}"] .clickable`)
+                        const selector = `${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .tab-completion-option[data-value="${expected[click]}"] .clickable`
+                        // console.error('clicking', click, selector)
+                        return app.client.waitForExist(selector, 5000)
+                            .then(() => app.client.click(selector))
                     } else {
                         // otherwise hit tab a number of times, to cycle to the desired entry
+                        // console.error('tabbing', nTabs)
                         return doTimes(nTabs, () => app.client.keys('Tab'))
                             .then(() => app.client.keys('Enter'))
                     }
@@ -83,8 +95,15 @@ describe('Tab completion', function() {
                 .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true)) // wait for non-existence of the temporary
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), full)))
           .then(() => cli.do('', app))
-          .then(cli.expectJustOK)
-          .catch(common.oops(this));
+          .then(data => {
+              if (expectOK) {
+                  return cli.expectJustOK(data)
+              } else {
+                  return app
+              }
+          })
+          .catch(err => this.app.client.execute('repl.doCancel()') // clear the line
+                 .then(() => common.oops(this)(err)))
 
     const tabbyWithOptionsThenCancel = (app, partial, expected) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
           .then(() => app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count'))
@@ -149,13 +168,19 @@ describe('Tab completion', function() {
 
     it('should tab complete action foo with options', () => tabbyWithOptions(this.app, 'action get f',
                                                                              ['foofoo/yum', 'foo2', 'foo'],
-                                                                             'action get foo',
-                                                                             { clicky: 2 }))
+                                                                             'action get foo2',
+                                                                             { click: 1 })
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo2'))
+       .catch(common.oops(this)))
 
     it('should tab complete action foo with options (no prefix)', () => tabbyWithOptions(this.app, 'action get ',
                                                                                          ['foofoo/yum', 'bar', 'foo2', 'foo'],
                                                                                          'action get foo',
-                                                                                         { clicky: 3 }))
+                                                                                         { click: 3 })
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foo'))
+       .catch(common.oops(this)))
 
     it('should not tab complete action without trailing whitespace', () => tabbyWithOptions(this.app, 'action get')
        .catch(err => {
@@ -172,5 +197,17 @@ describe('Tab completion', function() {
 
     it('should fire trigger with autocomplete', () => tabby(this.app, 'wsk trigger fire t', 'wsk trigger fire ttt'))
 
-    it('should get package foofoo with autocomplete', () => tabby(this.app, 'wsk package get f', 'wsk package get foofoo'))
+    it('should get package foofoo with autocomplete', () => tabby(this.app, 'wsk package get f', 'wsk package get foofoo')
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('foofoo'))
+       .catch(common.oops(this)))
+
+    it('should auto complete wsk command', () => tabby(this.app, 'ws', 'wsk', false))
+    it('should auto complete wsk rules command', () => tabby(this.app, 'wsk rul', 'wsk rules', false))
+    it('should auto complete wsk triggers command', () => tabby(this.app, 'wsk trig', 'wsk triggers', false))
+
+    it('should tab complete wsk action', () => tabbyWithOptions(this.app, 'wsk ac',
+                                                                ['wsk action', 'wsk activations'],
+                                                                'wsk actions',
+                                                                { click: 0, expectOK: false }))
 })
