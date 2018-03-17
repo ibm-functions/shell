@@ -272,7 +272,7 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidth
         stream.write(' ')
     }
 
-    const extraColor = isHeader ? 'bold' : dom.hasStyle('fontWeight', 500) ? 'green' : dom.hasStyle('fontSize', '0.875em') ? 'gray' : _extraColor || 'reset',
+    const extraColor = isHeader || dom.hasStyle('fontWeight', 'bold') ? 'bold' : dom.hasStyle('fontWeight', 500) ? 'green' : dom.hasStyle('fontSize', '0.875em') ? 'gray' : _extraColor || 'reset',
           colorCode = dom.hasStyle('color') || _color,
           color = colorMap[colorCode] || colorCode
     // debug('child', dom.nodeType)

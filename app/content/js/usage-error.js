@@ -125,7 +125,8 @@ const format = message => {
               messageString = replWrappedAMessageString && message.message
               
         const { command, docs, title, breadcrumb=title||command, header=`${docs}.`, example, detailedExample, sampleInputs,
-                commandPrefix, available, parents=[], related, required, optional, oneof } = usage
+                commandPrefix, commandPrefixNotNeeded,
+                available, parents=[], related, required, optional, oneof } = usage
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
@@ -334,6 +335,9 @@ const format = message => {
                       docsPart = span(docs),
                       allowedPart = allowed && smaller(span(undefined))
 
+                // for repl.exec, 
+                const commandForExec = alias => `${commandPrefix && !commandPrefixNotNeeded ? commandPrefix + ' ' : ''}${alias}`
+
                 row.className = 'log-line entity'
                 cmdCell.className = 'log-field'
                 docsCell.className = 'log-field'
@@ -351,7 +355,7 @@ const format = message => {
                               cmdPart = span(alias, 'clickable clickable-blatant'),
                               dirPart = isDir && span('/')
 
-                        cmdPart.onclick = () => repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${alias}`)
+                        cmdPart.onclick = () => repl.pexec(commandForExec(alias))
 
                         aliasesPart.appendChild(cmdCell)
                         cmdCell.appendChild(cmdPart)
@@ -379,11 +383,12 @@ const format = message => {
                 if (command) {
                     cmdPart.classList.add('clickable')
                     cmdPart.classList.add('clickable-blatant')
+                    if (!isDir) cmdPart.style.fontWeight = 'bold'
                     cmdPart.onclick = () => {
                         if (partial) {
-                            return repl.partial(`${commandPrefix ? commandPrefix + ' ' : ''}${command}${partial === true ? '' : ' ' + partial}`)
+                            return repl.partial(commandForExec(alias)(command) + `${partial === true ? '' : ' ' + partial}`)
                         } else {
-                            return repl.pexec(`${commandPrefix ? commandPrefix + ' ' : ''}${command}`)
+                            return repl.pexec(commandForExec(command))
                         }
                     }
                 }
@@ -442,7 +447,7 @@ const format = message => {
     }
 }
 
-module.exports = function UsageError(message, extra, code=message.statusCode || message.code || 500) {
+module.exports = function UsageError(message, extra, code=(message && (message.statusCode || message.code)) || 500) {
     Error.captureStackTrace(this, this.constructor)
     this.name = this.constructor.name
     this.message = format(message)

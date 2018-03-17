@@ -15,7 +15,6 @@
  */
 
 const fs = require('fs'),
-      rp = require('request-promise'),
       path = require('path'),
       exec = require('child_process').exec
 
@@ -75,14 +74,15 @@ const notifyOfAvailableUpdatesVisually = changes => {
  * Wrap the given string in a div
  *
  */
-const wrapInDiv = str => {
+const wrapInDiv = (str, tag='div') => {
     if (typeof str === 'string') {
-        const div = document.createElement('div')
+        const div = document.createElement(tag)
         div.innerText = str
         return div
 
     } else {
-        const pre = document.createElement('pre')
+        const pre = document.createElement('div')
+        pre.style.whiteSpace = 'pre-wrap'
 
         str.forEach(line => {
             pre.appendChild(wrapInDiv(line))
@@ -158,11 +158,13 @@ const npmProcessResponse = (exec = 'npm', name, stdout) => {
             Current = header.indexOf('Current'),
             Wanted = header.indexOf('Wanted'),
             Location = header.indexOf(' Location')
+
         return lines
             .filter(_ => _)                           // strip blank lines
             .map(line => line.substring(0, Location)) // strip last column
             .map(line => line.substring(0, Current + 'Current'.length) +
-                         line.substring(Wanted + 'Wanted'.length)) // strip Wanted column
+                 line.substring(Wanted + 'Wanted'.length)) // strip Wanted column
+            .concat(' ')
             .concat('To update, run the following command from the terminal:')
             .concat(`${exec} update ${name} -g`)
 }

@@ -16,13 +16,11 @@
 
 
 /**
- * This plugin introduces /shell, and a synonym !, which executes a
- * given shell command.
+ * This plugin introduces !, which executes a given shell command.
  *
  */
 
 const shell = require('shelljs')
-const request = require('request-promise')
 
 const doShell = (argv, options, execOptions) => new Promise((resolve, reject) => {
     if (argv.length < 2) {
@@ -137,23 +135,28 @@ const usage = {
     }
 }
 
+/**
+ * Register command handlers
+ *
+ */
 module.exports = commandTree => {
+    // commandTree.subtree('/!', { usage: usage.toplevel })
+
     const shellFn = (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(fullArgv, options, execOptions)
     const shellCmd = commandTree.listen('/!', shellFn, { docs: 'Execute a UNIX shell command' })
-    // commandTree.synonym('/shell', shellFn, shellCmd)
 
-    commandTree.listen('/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions),
+    commandTree.listen('/!/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions),
                        { docs: 'Print the current working directory' })
 
-    commandTree.listen('/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options, execOptions),
+    commandTree.listen('/!/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'cd', ...argv.slice(1)], options, execOptions),
                        { docs: 'Change the current working directory for future shell commands' })
 
-    commandTree.listen('/lls', (_1, _2, fullArgv, { errors }, _4, execOptions, argv, options) => {
+    commandTree.listen('/!/lls', (_1, _2, fullArgv, { errors }, _4, execOptions, argv, options) => {
         return doShell(['!', 'ls', '-l', ...argv.slice(1)], options, Object.assign({}, execOptions, { nested: true }))
             .catch(message => { throw new errors.usage({ message, usage: usage.lls }) })
     }, { usage: usage.lls })
 
-    commandTree.listen('/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'rm', ...argv.slice(1)], options, execOptions),
+    commandTree.listen('/!/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(['!', 'rm', ...argv.slice(1)], options, execOptions),
                        { docs: 'Remove a file from your local filesystem' })
 
     return {

@@ -21,7 +21,7 @@ debug('loading')
  * Respond with a top-level usage document
  *
  */
-const help = (usage, docs) => (_1, _2, _3, { errors }) => {
+const help = (usage, docs) => (_1, _2, _3, { ui, errors }) => {
     if (usage) {
         // this will be our return value
         const topLevelUsage = {
@@ -34,12 +34,12 @@ const help = (usage, docs) => (_1, _2, _3, { errors }) => {
         // traverse the top-level usage documents, populating topLevelUsage.available
         for (let key in usage) {
             const { route, usage:model } = usage[key]
-            if (model) {
+            if (model && (ui.headless || !model.headlessOnly)) {
                 topLevelUsage.available.push({
                     label: route.substring(1),
-                    dir: true,
-                    command: model.commandPrefix,
-                    docs: model.title
+                    dir: model.available,
+                    command: model.commandPrefix || model.command,   // either subtree or leaf command
+                    docs: model.command ? model.header : model.title // for leaf commands, print full header
                 })
             }
         }
