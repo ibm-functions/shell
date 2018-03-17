@@ -834,18 +834,23 @@ self.exec = (commandUntrimmed, execOptions) => {
             throw e
         }
 
-        console.error(e.message)
-        console.trace()
+        console.error(e)
 
         const blockForError = block || ui.getCurrentProcessingBlock()
 
-        const cmd = help.show(blockForError, nextBlock, e.message || 'Unknown command')
-        const isPromise = !!(cmd && cmd.then)
-        const cmdPromise = isPromise ? cmd : Promise.resolve(cmd)
-        const resultDom = blockForError.querySelector('.repl-result')
-        return cmdPromise
-            .then(printResults(blockForError, nextBlock, resultDom))
-            .then(ui.installBlock(blockForError.parentNode, blockForError, nextBlock))
+        return Promise.resolve(e.message).then(message => {
+            if (message.nodeName) {
+                e.message = message
+                ui.oops(block, nextBlock)(e)
+
+            } else {
+                const cmd = help.show(blockForError, nextBlock, message || 'Unknown command')
+                const resultDom = blockForError.querySelector('.repl-result')
+                return Promise.resolve(cmd)
+                    .then(printResults(blockForError, nextBlock, resultDom))
+                    .then(ui.installBlock(blockForError.parentNode, blockForError, nextBlock))
+            }
+        })
     }
 }
 

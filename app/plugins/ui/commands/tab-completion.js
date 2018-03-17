@@ -26,12 +26,12 @@ const fs = require('fs'),
  * prompt, which is an <input>.
 *
 */
-const complete = (match, prompt, { temporaryContainer, partial=temporaryContainer.partial, dirname=temporaryContainer.dirname }) => {
+const complete = (match, prompt, { temporaryContainer, partial=temporaryContainer.partial, dirname=temporaryContainer.dirname, addSpace=false }) => {
     debug('completion', match, partial, dirname)
 
     // in case match includes partial as a prefix
     const partialIdx = match.indexOf(partial),
-          completion = partialIdx >= 0 ? match.substring(partialIdx + partial.length) : match
+          completion = (partialIdx >= 0 ? match.substring(partialIdx + partial.length) : match) + (addSpace ? ' ' : '')
 
     if (temporaryContainer) {
         temporaryContainer.cleanup()
@@ -48,7 +48,7 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
                         prompt.value = prompt.value + completion + '/'
                     } else {
                         // otherwise, dirname/match is not a directory
-                        debug('complete as file')
+                        debug('complete as scalar')
                         prompt.value = prompt.value + completion
                     }
                 } else {
@@ -58,7 +58,7 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
 
         } else {
             // otherwise, just add the completion to the prompt
-            debug('complete as file (alt)')
+            debug('complete as scalar (alt)')
             prompt.value = prompt.value + completion
         }
     } else {
@@ -235,13 +235,29 @@ const makeCompletionContainer = (block, prompt, partial, dirname, lastIdx) => {
  *
  */
 const addSuggestion = (temporaryContainer, partial, dirname, prompt) => (match, idx) => {
+    const matchLabel = match.label || match,
+          matchCompletion = match.completion || matchLabel
+
     const option = document.createElement('div'),
+          optionInnerFill = document.createElement('span'),
           optionInner = document.createElement('a')
 
     temporaryContainer.appendChild(option)
-    option.appendChild(optionInner)
+    option.appendChild(optionInnerFill)
+    optionInnerFill.appendChild(optionInner)
 
-    optionInner.innerText = match
+    // we want the clickable part to fill horizontal space
+    optionInnerFill.className = 'tab-completion-temporary-fill'
+
+    optionInner.appendChild(document.createTextNode(matchLabel))
+
+    // maybe we have a doc string for the match?
+    if (match.docs) {
+        const optionDocs = document.createElement('span')
+        optionDocs.className = 'deemphasize left-pad'
+        option.appendChild(optionDocs)
+        optionDocs.innerText = `(${match.docs})`
+    }
 
     option.className = 'tab-completion-option'
     optionInner.className = 'clickable plain-anchor'
@@ -252,14 +268,16 @@ const addSuggestion = (temporaryContainer, partial, dirname, prompt) => (match, 
     
     // onclick, use this match as the completion
     option.addEventListener('click', () => {
-        complete(match, prompt, { temporaryContainer })
+        complete(matchCompletion, prompt, { temporaryContainer, partial, dirname, addSpace: match.addSpace })
     })
 
-    option.setAttribute('data-match', match)
-    option.setAttribute('data-value', option.innerText)
+    option.setAttribute('data-match', matchLabel)
+    option.setAttribute('data-completion', matchCompletion)
+    if (match.addSpace) option.setAttribute('data-add-space', match.addSpace)
+    option.setAttribute('data-value', optionInner.innerText)
 
     // for incremental completion; see onChange handler above
-    temporaryContainer.matches.push({ match, option })
+    temporaryContainer.matches.push({ match: matchLabel, completion: matchCompletion, option })
 
     return { option, optionInner }
 }
@@ -321,7 +339,7 @@ const suggestLocalFile = (last, block, prompt, temporaryContainer, lastIdx) => {
                             } else {
                                 optionInner.innerText = match
                             }
-                            option.setAttribute('data-value', option.innerText)
+                            option.setAttribute('data-value', optionInner.innerText)
                         })
                     })
                 }
@@ -372,6 +390,37 @@ const filterAndPresentEntitySuggestions = (last, block, prompt, temporaryContain
 }
 
 /**
+ * Command not found, but we have command completions to offer the user
+ *
+ */
+const suggestCommandCompletions = (matches, partial, block, prompt, temporaryContainer) => {
+    // don't suggest anything without a usage model, and then align to
+    // the addSuggestion model
+    matches = matches.filter(({ usage, docs }) => usage || docs)
+        .map(({ command, docs, usage={command, docs} }) => ({
+            label: usage.command || usage.commandPrefix,
+            completion: command,
+            addSpace: true,
+            docs: usage.title || usage.header || usage.docs // favoring shortest first
+        }))
+
+    if (matches.length === 1) {
+        debug('singleton command completion', matches[0])
+        complete(matches[0].completion, prompt, { partial, dirname: false })
+
+    } else if (matches.length > 0) {
+        debug('suggesting command completions', matches, partial)
+
+        if (!temporaryContainer) {
+            temporaryContainer = makeCompletionContainer(block, prompt, partial)
+        }
+
+        // add suggestions to the container
+        matches.forEach(addSuggestion(temporaryContainer, partial, undefined, prompt))
+    }
+}
+
+/**
  * Suggest options
  *
  */
@@ -413,11 +462,13 @@ module.exports = () => {
                 const current = temporaryContainer.querySelector('.selected')
                 if (current) {
                     const match = current.getAttribute('data-match'),
+                          completion = current.getAttribute('data-completion'),
+                          addSpace = current.getAttribute('data-add-space'),
                           partial = temporaryContainer.partial,
                           dirname = temporaryContainer.dirname,
                           prompt = ui.getCurrentPrompt()
 
-                    complete(match, prompt, { temporaryContainer })
+                    complete(completion, prompt, { temporaryContainer, addSpace })
                 }
 
                 // prevent the REPL from evaluating the expr
@@ -460,6 +511,13 @@ module.exports = () => {
                             // resolve the generator and retry
                             debug('resolving generator')
                             yo(usage.fn(usage.command))
+
+                        } else if (usageError.partialMatches || usageError.available) {
+                            // command not found, with partial matches that we can offer the user
+                            suggestCommandCompletions(usageError.partialMatches || usageError.available,
+                                                      prompt.value,
+                                                      block, prompt,
+                                                      temporaryContainer)
 
                         } else if (usage && usage.command) {
                             // so we have a usage model; let's
