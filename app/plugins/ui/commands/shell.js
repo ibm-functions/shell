@@ -20,12 +20,15 @@
  *
  */
 
-const shell = require('shelljs')
+const debug = require('debug')('shell plugin'),
+      shell = require('shelljs')
 
 const doShell = (argv, options, execOptions) => new Promise((resolve, reject) => {
     if (argv.length < 2) {
         reject('Please provide a bash command')
     }
+
+    debug('argv', argv)
 
     const cmd = argv[1]
     if (shell[cmd]) {
@@ -41,11 +44,11 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
             args[0] = process.env.OLDPWD
         }
 
-        if (!args.find(arg => arg.charAt(0) === '-')) {
+        if (!args.find(arg => arg.charAt(0) === '-') && cmd !== 'ls') {
             // shelljs doesn't like dash args
             // otherwise, shelljs has a built-in handler for this
 
-            console.log(`shell.internal: ${cmd}`)
+            debug('using internal shelljs', cmd, args)
 
             const output = shell[cmd](args)
             if (cmd === 'cd') {
@@ -76,7 +79,7 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
     //
     
     const cmdLine = argv.slice(1).join(' ')
-    console.log(`shell.exec: ${cmdLine}`)
+    debug('cmdline', cmdLine)
     const proc = shell.exec(cmdLine, {async: true, silent: true, env: process.env})
 
     // accumulate doms from the output of the subcommand
@@ -156,25 +159,25 @@ const usage = {
 module.exports = commandTree => {
     // commandTree.subtree('/!', { usage: usage.toplevel })
 
-    const shellFn = (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => doShell(fullArgv, options, execOptions)
+    const shellFn = (_1, _2, fullArgv, _3, command, execOptions, argv, options) => doShell(repl.split(command, false), options, execOptions)
     const shellCmd = commandTree.listen('/!', shellFn, { docs: 'Execute a UNIX shell command' })
 
-    commandTree.listen('/!/pwd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
-        return doShell(['!', 'pwd', ...argv.slice(1)], options, execOptions)
+    commandTree.listen('/!/pwd', (_1, _2, fullArgv, _3, command, execOptions, argv, options) => {
+        return doShell(['!', 'pwd', ...repl.split(command, false).slice(1)], options, execOptions)
     }, { docs: 'Print the current working directory' })
 
-    commandTree.listen('/!/lcd', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
-        return doShell(['!', 'cd', ...argv.slice(1)], options, execOptions, Object.assign({}, execOptions, { nested: true }))
+    commandTree.listen('/!/lcd', (_1, _2, fullArgv, _3, command, execOptions, argv, options) => {
+        return doShell(['!', 'cd', ...repl.split(command, false).slice(1)], options, execOptions, Object.assign({}, execOptions, { nested: true }))
             .catch(message => { throw new errors.usage({ message, usage: usage.lcd }) })
     }, { usage: usage.lcd })
 
-    commandTree.listen('/!/lls', (_1, _2, fullArgv, { errors }, _4, execOptions, argv, options) => {
-        return doShell(['!', 'ls', '-l', ...argv.slice(1)], options, Object.assign({}, execOptions, { nested: true }))
+    commandTree.listen('/!/lls', (_1, _2, fullArgv, { errors }, command, execOptions, argv, options) => {
+        return doShell(['!', 'ls', '-l', ...repl.split(command, false).slice(1)], options, Object.assign({}, execOptions, { nested: true }))
             .catch(message => { throw new errors.usage({ message, usage: usage.lls }) })
     }, { usage: usage.lls })
 
-    commandTree.listen('/!/lrm', (_1, _2, fullArgv, _3, _4, execOptions, argv, options) => {
-        return doShell(['!', 'rm', ...argv.slice(1)], options, execOptions)
+    commandTree.listen('/!/lrm', (_1, _2, fullArgv, _3, command, execOptions, argv, options) => {
+        return doShell(['!', 'rm', ...repl.split(command, false).slice(1)], options, execOptions)
             .catch(message => { throw new errors.usage({ message, usage: usage.lrm }) })
     }, { usage: usage.lrm })
 

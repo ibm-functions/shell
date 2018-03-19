@@ -143,6 +143,22 @@ const listenForEscape = prompt => {
     return cleanup
 }
 
+/** safeguard: only one tab completion temporary at a time, please */
+const cleaner = () => {
+    const safeguard = document.querySelectorAll('.tab-completion-temporary')
+    for (let idx = 0; idx < safeguard.length; idx++) {
+        try {
+            console.error('removing glitch')
+            const old = safeguard[idx]
+            if (old.parentNode) {
+                old.parentNode.removeChid(safeguard)
+            }
+        } catch (err) {
+            console.error('error removing glitch', err)
+        }
+    }
+}
+
 /**
   * Make a container UI for tab completions
   *

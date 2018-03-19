@@ -206,7 +206,7 @@ function main(args) {
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(actionName18)))
     // invoke it
-    it('should do an async of the action, using implicit context', () => cli.do(`async --param lines '[\"and now\", \"for something completely\", \"different\" ]'`, this.app)
+    it('should do an async of the action, using implicit context', () => cli.do(`async --param lines '["and now", "for something completely", "different" ]'`, this.app)
 	.then(cli.expectJustOK))
     // call await
     it('should await successful completion of the activation', () => cli.do(`$ await`, this.app)
