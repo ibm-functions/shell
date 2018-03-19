@@ -328,7 +328,7 @@ const format = (message, options={}) => {
                 }
 
                 // fields of the row model
-                debug('row', rowData)
+                // debug('row', rowData)
                 const { commandPrefix, command=commandPrefix, name=command, label=name,
                         alias, numeric, aliases=[alias], hidden=false, advanced=false,
                         available,

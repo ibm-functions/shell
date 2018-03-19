@@ -128,7 +128,17 @@ module.exports = (commandTree, require) => {
           asyncInvoke = doAsync(rawInvoke.$)                   //             ... and for async
 
     wsk.synonyms('actions').forEach(syn => {
-        commandTree.listen(`/wsk/${syn}/invoke`, syncInvoke, docs(syn))
-        commandTree.listen(`/wsk/${syn}/async`, asyncInvoke, { usage: 'Invoke an action asynchronously' })
+        const invokeOpts = docs(syn),
+              asyncOpts = {
+                  usage: Object.assign({}, invokeOpts.usage,
+                                       { command: 'async',
+                                         strict: 'async',
+                                         title: 'Async Invoke',
+                                         header: 'Invoke an action asynchronously'
+                                       })
+              }
+
+        commandTree.listen(`/wsk/${syn}/invoke`, syncInvoke, invokeOpts)
+        commandTree.listen(`/wsk/${syn}/async`, asyncInvoke, asyncOpts)
     })
 }

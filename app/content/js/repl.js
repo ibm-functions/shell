@@ -449,10 +449,58 @@ self.pexec = (command, execOptions) => self.exec(command, Object.assign({ echo: 
 
 const patterns = {
     commentLine: /\s*#.*$/,
-    split: /(?:[^\s"']+|["'][^"']*["'])+/g,
-    quotes: /^"(.*)"$/g
+    whitespace: /\s/
 }
-const split = str => str.match(patterns.split).map(s => s.replace(patterns.quotes, '$1'))
+const split = (str, removeOuterQuotes=true) => {
+    const A = [],
+          stack = []
+
+    let cur = ''
+
+    for (let idx = 0; idx < str.length; idx++) {
+        const char = str.charAt(idx)
+
+        if (stack.length === 0 && char.match(patterns.whitespace)) {
+            if (cur.length > 0) {
+                A.push(cur)
+                cur = ''
+            }
+            continue
+        }
+
+        if (char === '\'' || char === '"') {
+            const last = stack.length > 0 && stack[stack.length - 1]
+
+            if (char === last) {
+                // found matching close quote
+                stack.pop()
+
+                if (stack.length > 0 || !removeOuterQuotes) {
+                    // add the outer quotes?
+                    cur += char
+                }
+
+            } else {
+                // found open quote
+                if (stack.length > 0 || !removeOuterQuotes) {
+                    // add the outer quotes?
+                    cur += char
+                }
+
+                stack.push(char)
+            }
+        } else {
+            // not a quote
+            cur += char
+        }
+    }
+
+    if (cur.length > 0) {
+        A.push(cur)
+    }
+
+    return A
+}
 self.split = split
 
 /** an empty promise, for blank lines */
@@ -531,6 +579,8 @@ self.exec = (commandUntrimmed, execOptions) => {
         }
 
         const argv = split(command)
+        debug('split', command, argv)
+
         if (argv.length === 0) {
             if (block) {
                 ui.setStatus(block, 'valid-response')
@@ -613,7 +663,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             debug('usage', usage, evaluator)
 
             if (usage && usage.strict) { // strict: command wants *us* to enforce conformance
-                // required and otional parameters
+                // required and optional parameters
                 const { strict:cmd, required=[], oneof=[], optional:_optional=[] } = usage,
                       optLikeOneOfs = oneof.filter(({name}) => name.charAt(0) === '-'), // some one-ofs might be of the form --foo
                       positionalConsumers = _optional.filter(({name, alias, consumesPositional}) => consumesPositional && (parsedOptions[unflag(name)] || parsedOptions[unflag(alias)])),

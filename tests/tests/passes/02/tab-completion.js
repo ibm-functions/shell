@@ -62,7 +62,7 @@ describe('Tab completion', function() {
                     if (!expected) {
                         // then we expect non-visibility of the tab-completion popup
                         // console.error('Expecting non-existence of popup')
-                        return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`, 5000, true)
+                        return app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`, 20000, true)
                             .then(() => {
                                 // great, the tab completion popup does not exist; early exit
                                 const err = new Error()
@@ -72,27 +72,27 @@ describe('Tab completion', function() {
                     } else {
                         const selector = `${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`
                         // console.error('Expecting existence of popup', selector)
-                        return app.client.waitForExist(selector, 5000)
+                        return app.client.waitForVisible(selector, 20000)
                     }
                 })
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
                 // .then(() => { console.error('Got expected options') })
                 .then(() => {
-                    if (click != undefined) {
+                    if (click !== undefined) {
                         // click on a row
                         const selector = `${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .tab-completion-option[data-value="${expected[click]}"] .clickable`
-                        // console.error('clicking', click, selector)
-                        return app.client.waitForExist(selector, 5000)
+                        console.error('clicking', click, selector)
+                        return app.client.waitForVisible(selector, 20000)
                             .then(() => app.client.click(selector))
                     } else {
                         // otherwise hit tab a number of times, to cycle to the desired entry
-                        // console.error('tabbing', nTabs)
+                        console.error('tabbing', nTabs)
                         return doTimes(nTabs, () => app.client.keys('Tab'))
                             .then(() => app.client.keys('Enter'))
                     }
                 })
-                .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true)) // wait for non-existence of the temporary
+                .then(() => app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 20000, true)) // wait for non-existence of the temporary
                 .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), full)))
           .then(() => cli.do('', app))
           .then(data => {
@@ -115,7 +115,7 @@ describe('Tab completion', function() {
                 .then(() => app.client.getText(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary .clickable`))
                 .then(ui.expectArray(expected))
                 .then(() => app.client.keys('ffffff')) // type something random
-                .then(() => app.client.waitForExist(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 5000, true))) // wait for non-existence of the temporary
+                .then(() => app.client.waitForVisible(`${ui.selectors.PROMPT_BLOCK_N(count)} .tab-completion-temporary`, 20000, true))) // wait for non-existence of the temporary
           .then(() => this.app.client.execute('repl.doCancel()')) // clear the line
           .catch(common.oops(this));
 
@@ -164,12 +164,15 @@ describe('Tab completion', function() {
        .catch(common.oops(this)))
 
     // expect b to autocomplete with only tab, since we only have one action starting with b
-    it('should tab complete action bar', () => tabby(this.app, 'action get b', 'action get bar'))
+    it('should tab complete action get bar', () => tabby(this.app, 'action get b', 'action get bar'))
+    it('should tab complete action invoke bar', () => tabby(this.app, 'action invoke b', 'action invoke bar'))
+    it('should tab complete invoke bar', () => tabby(this.app, 'invoke b', 'invoke bar'))
+    it('should tab complete async bar', () => tabby(this.app, 'async b', 'async bar'))
 
-    it('should tab complete action foo with options', () => tabbyWithOptions(this.app, 'action get f',
-                                                                             ['foofoo/yum', 'foo2', 'foo'],
-                                                                             'action get foo2',
-                                                                             { click: 1 })
+    it('should tab complete action foo2 with options', () => tabbyWithOptions(this.app, 'action get f',
+                                                                              ['foofoo/yum', 'foo2', 'foo'],
+                                                                              'action get foo2',
+                                                                              { click: 1 })
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo2'))
        .catch(common.oops(this)))
