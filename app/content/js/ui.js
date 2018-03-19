@@ -686,7 +686,7 @@ const ui = (function() {
             // click handler
             if (actionNamespace) {
                 const nsForClick = actionNamespace.indexOf('/') >= 0? actionNamespace : `/${actionNamespace}`
-                action.onclick = () => repl.pexec(`wsk ${options && options.type || 'action'} get "${nsForClick}/${actionName}"`).then(ui.showEntity)
+                action.onclick = () => repl.pexec(`wsk ${options && options.type || 'action'} get "${nsForClick}/${actionName}"`)
             }
         }
     }
@@ -1153,6 +1153,7 @@ const ui = (function() {
      */
     self.showEntity = (entity, options={}, block, nextBlock) => {
         debug('showEntity', entity, options)
+        console.trace()
 
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header')
@@ -1506,7 +1507,7 @@ const ui = (function() {
             const entityName = nameDom.querySelector('.entity-name')
             entityName.innerText = entity.name
             entityName.className = `${entityName.className} clickable`
-            entityName.onclick = entity.onclick || (() => repl.pexec(`wsk action get "/${entityNameWithPackageAndNamespace}"`).then(ui.showEntity))
+            entityName.onclick = entity.onclick || (() => repl.pexec(`wsk action get "/${entityNameWithPackageAndNamespace}"`))
 
             // add the activation id to the header
             const activationDom = sidecar.querySelector('.sidecar-header-name .activation-id')
