@@ -1187,7 +1187,7 @@ function graph2doms(JSONgraph, containerId, width, height, activations){
 	        applyAutoScale = useThisValue !== undefined ? useThisValue : !applyAutoScale;	// toggle applyAutoScale
                 customZoom = false
             notify()
-            console.error('ZTF', applyAutoScale, customZoom)
+            //console.error('ZTF', applyAutoScale, customZoom)
 		if(applyAutoScale){
 			// when clicking to switch from inactive to active, it resizes the graph to fit the window. #422
 			resizeToFit($('#wskflowSVG').width(), $('#wskflowSVG').height());

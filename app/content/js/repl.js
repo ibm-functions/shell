@@ -67,6 +67,10 @@ const formatOneListResult = options => (entity, idx, A) => {
     dom.className = `entity ${entity.prettyType || ''} ${entity.type}`
     dom.setAttribute('data-name', entity.name)
 
+    if (entity.packageName) {
+        dom.setAttribute('data-package-name', entity.packageName)
+    }
+
     const entityName = document.createElement('div')
     entityName.className = 'entity-attributes'
     dom.appendChild(entityName)

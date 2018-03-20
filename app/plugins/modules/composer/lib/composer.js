@@ -590,32 +590,39 @@ exports.wskflow = (visualize, viewName, { fsm, input, name, packageName }) => {
  *
  */
 exports.zoomToFitButtons = controller => {
-    const events = require('events'),
-          zoom1to1Bus = new events.EventEmitter(),
-          zoomToFitBus = new events.EventEmitter()
+    if (controller && controller.register) {
+        const events = require('events'),
+              zoom1to1Bus = new events.EventEmitter(),
+              zoomToFitBus = new events.EventEmitter()
 
-    const listener = event => {
-        zoom1to1Bus.emit('change', event.applyAutoScale === false && !event.customZoom)
-        zoomToFitBus.emit('change', event.applyAutoScale === true && !event.customZoom)
-    }
-    controller.register(listener)
-
-    return [
-        { label: '1:1', actAsButton: true, flush: 'right', balloon: 'Use a fixed-size canvas', selected: false,
-          selectionController: zoom1to1Bus,
-          visibleWhen: 'visualization',
-          direct: () => {
-              controller.zoom1to1()
-          }
-        },
-        { fontawesome: 'fas fa-expand', actAsButton: true, flush: 'right', balloon: 'Use a zoom to fit canvas', selected: true,
-          selectionController: zoomToFitBus,
-          visibleWhen: 'visualization',
-          direct: () => {
-              controller.zoomToFit()
-          }
+        const listener = event => {
+            zoom1to1Bus.emit('change', event.applyAutoScale === false && !event.customZoom)
+            zoomToFitBus.emit('change', event.applyAutoScale === true && !event.customZoom)
         }
-    ]
+
+        controller.register(listener)
+
+        return [
+            { label: '1:1', actAsButton: true, flush: 'right', balloon: 'Use a fixed-size canvas', selected: false,
+              selectionController: zoom1to1Bus,
+              visibleWhen: 'visualization',
+              direct: () => {
+                  controller.zoom1to1()
+              }
+            },
+            { fontawesome: 'fas fa-expand', actAsButton: true, flush: 'right', balloon: 'Use a zoom to fit canvas', selected: true,
+              selectionController: zoomToFitBus,
+              visibleWhen: 'visualization',
+              direct: () => {
+                  controller.zoomToFit()
+              }
+            }
+        ]
+
+    } else {
+        // probably some error initializing wskflow; try to safeguard against that
+        return []
+    }
 }
 
 /**
