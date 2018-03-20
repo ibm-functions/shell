@@ -37,7 +37,7 @@ module.exports = (commandTree, prequire) => {
             .then(apps => {
                 apps.forEach(app => {
                     app.prettyType = appBadge
-                    app.onclick = () => repl.pexec(`app get ${app.name}`)
+                    app.onclick = () => repl.pexec(`app get "/${app.namespace}/${app.name}"`)
                     return app
                 })
                 return apps

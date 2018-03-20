@@ -219,7 +219,8 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                                     const junkMatch = err.stack.match(/\s+at Object\.exports\.runInNewContext/)
                                           || err.stack.match(/\s+at Object\.runInNewContext/)
                                           || err.stack.match(/\s+at fs\.readFile/),
-                                          message = err.message.indexOf('Invalid argument to compile') >= 0? 'Your source code did not produce a valid app.' : (!junkMatch ? e.stack : err.stack.substring(0, junkMatch.index).replace(/\s+.*create-from-source([^\n])*/g, '\n').replace(/(evalmachine.<anonymous>)/g, filename).replace(/\s+at createScript([^\n])*/g, '\n').trim())
+                                          _message = err.message.indexOf('Invalid argument to compile') >= 0? 'Your source code did not produce a valid app.' : (!junkMatch ? e.stack : err.stack.substring(0, junkMatch.index).replace(/\s+.*create-from-source([^\n])*/g, '\n').replace(/(evalmachine.<anonymous>)/g, filename).replace(/\s+at createScript([^\n])*/g, '\n').trim()),
+                                          message = _message.replace(/\s+\(.*plugins\/modules\/composer\/node_modules\/@ibm-functions\/composer\/composer\.js:[^\s]*/, '')
 
                                     console.error('All composer create/preview errors are here', errors)
                                     console.error('Selected error', err)
