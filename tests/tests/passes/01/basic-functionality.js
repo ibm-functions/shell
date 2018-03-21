@@ -21,7 +21,7 @@ const common = require('../../../lib/common'),
       timeout = process.env.TIMEOUT || 60000
 
 const API_HOST = process.env.API_HOST || 'openwhisk.ng.bluemix.net',
-      APP_TITLE = process.env.APP_TITLE || 'IBM Cloud Functions Shell',
+      APP_TITLE = process.env.APP_TITLE || 'IBM Cloud Shell',
       CLI_PLACEHOLDER = process.env.CLI_PLACEHOLDER || 'enter your command'
 
 const selectors ={

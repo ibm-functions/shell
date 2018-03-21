@@ -1,5 +1,6 @@
 const isDev = false//require('electron-is-dev');
 const path = require('path')
+const { productName } = require(path.join(__dirname, './build/config.json'))
 
 exports.install = (app, Menu, createWindow) => {
     if (!isDev) {
@@ -87,7 +88,7 @@ exports.install = (app, Menu, createWindow) => {
             }
         ]
 
-        const about = { label: 'About IBM Cloud Functions Shell',
+        const about = { label: `About ${productName}`,
                         click: () => {
                             try {
                                 require('./plugins/welcome/about')()
@@ -99,7 +100,7 @@ exports.install = (app, Menu, createWindow) => {
         
         if (process.platform === 'darwin') {
             menuTemplate.unshift({
-                label: 'IBM Cloud Functions Shell',
+                label: productName,
                 submenu: [
                     about,
                     {type: 'separator'},

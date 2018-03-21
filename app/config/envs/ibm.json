@@ -1,0 +1,10 @@
+{
+    "productName": "IBM Cloud Shell",
+    "companyName": "IBM",
+    "productSubName": "Cloud",
+    "shellName": "Shell",
+    "userAgent": "IBM Cloud Functions Shell",
+    "cssTheme": "ibm.css",
+    "appIcon": "../assets/icons/png/blue-dolphin-transparent.png",
+    "largeIcon": "content/icons/svg/blue-dolphin.svg"
+}

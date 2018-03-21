@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>IBM Cloud Functions Shell</title>
+    <title>${productName}</title>
 
     <!-- syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/mono-blue.min.css">
@@ -10,11 +10,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/swift.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css?family=Fira+Mono:400,500,700" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="content/css/ui.css">
-    <link rel="stylesheet" type="text/css" href="content/css/themes/ibm.css">
+    <link rel="stylesheet" type="text/css" href="../content/css/ui.css">
+    <link rel="stylesheet" type="text/css" href="../content/css/themes/${cssTheme}">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/0.5.0/balloon.min.css">
-    <script src="content/js/events.js"></script>
-    <script src="content/js/ui.js"></script>
+    <script src="../content/js/events.js"></script>
+    <script src="../content/js/ui.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
   </head>
 
@@ -24,7 +24,7 @@
         <div class="application-icon"></div>
 
     <div>
-	<div class="application-name"><span class="application-name-prefix"><span class="bx--logo__text">IBM <span class="bx--logo__text--bold">Cloud Functions</span></span></span> <span class="bx--global-header__title--current-page">Shell</span></div>
+	<div class="application-name"><span class="application-name-prefix"><span class="bx--logo__text">${companyName} <span class="bx--logo__text--bold">${productSubName}</span></span></span> <span class="bx--global-header__title--current-page">${shellName}</span></div>
     </div>
       </div> <!-- end of header-left-bits -->
       <div class="header-right-bits">
@@ -194,13 +194,13 @@
 
     <div id='restart-needed-warning'>
       <div class='restart-needed-warning-content'>
-        IBM Cloud Functions Shell has been updated. Please quit and restart to pick up the changes.
+        The Shell has been updated. Please quit and restart to pick up the changes.
       </div>
     </div>
     </body>
 
     <script>
-    let plugins, repl, prefs
+    let plugins, repl, settings, prefs
 
     function catastrophe(err) {
         console.error('restart needed')
@@ -230,8 +230,9 @@
     }
 
     try {
-        plugins = require('./content/js/plugins.js')
-        repl = require('./content/js/repl.js')
+        plugins = require('../content/js/plugins.js')
+        repl = require('../content/js/repl.js')
+        settings = require('./config.json'),
         prefs = ui.preinit()
     } catch (err) {
         catastrophe(err)

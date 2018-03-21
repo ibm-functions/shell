@@ -217,10 +217,10 @@ const addContextClickMenu = () => {
 const ui = (function() {
     const self = {},
           ui = self,
-          commandTree = require('./content/js/command-tree'),
+          commandTree = require('../content/js/command-tree'),
           util = require('util'),
           prettyPrintDuration = require('pretty-ms'),
-          bottomStripe = require('./content/js/bottom-stripe'),
+          bottomStripe = require('../content/js/bottom-stripe'),
           {ipcRenderer, remote} = require('electron')
 
     remote.getCurrentWindow().on('enter-full-screen', function() {
@@ -778,7 +778,7 @@ const ui = (function() {
             if (value.length > 0 && value[0].match(logPatterns.activationId)) {
                 // then we have a list of activation ids; value is an
                 // array of activationIds
-                return require('./content/js/views/list/activations').render({entity, activationIds: value, container})
+                return require('../content/js/views/list/activations').render({entity, activationIds: value, container})
             }
 
             const logTable = document.createElement('div')
@@ -1664,7 +1664,7 @@ const ui = (function() {
         let prefs = {}
         if (process.env.___IBM_FSH_FUZZ) {
             // for testing, we sometimes want to monkey patch out certain features
-            prefs = require('./content/js/fuzz-testing')(process.env.___IBM_FSH_FUZZ)
+            prefs = require('../content/js/fuzz-testing')(process.env.___IBM_FSH_FUZZ)
         }
 
         /** add os-xxxx to the body's classname, to allow for os-specific styling, if needed */
@@ -1699,7 +1699,7 @@ const ui = (function() {
     }
 
     /** export the picture-in-picture module */
-    self.pictureInPicture = require('./content/js/picture-in-picture')
+    self.pictureInPicture = require('../content/js/picture-in-picture')
 
     /**
      * Generic method for injecting content into the DOM
@@ -1762,8 +1762,8 @@ const ui = (function() {
                 return ''
             }
         } else if (filepath.charAt(0) === '@') {
-            // ui.js is in the root /app directory already
-            return require('path').join(__dirname, filepath.substring(1))
+            // ui.js is in the /app/build directory
+            return require('path').join(__dirname, '..', filepath.substring(1))
         } else {
             return require('expand-home-dir')(filepath)
         }

@@ -15,7 +15,7 @@
  */
 
 const debug = require('debug')('openwhisk-core')
-debug('starting')
+debug('loading')
 
 /**
  * This plugin adds commands for the core OpenWhisk API.
@@ -28,7 +28,6 @@ const propertiesParser = require('properties-parser'),
       minimist = require('yargs-parser'),
       fs = require('fs'),
       path = require('path'),
-      util = require('util'),
       history = plugins.require('/ui/commands/history'),
       usage = require('./openwhisk-usage'),
       isLinux = require('os').type() === 'Linux'
@@ -492,7 +491,7 @@ const standardViewModes = (defaultMode, fn) => {
                  { mode: 'raw', command: () => 'raw' }]
 
     if (defaultMode) {
-        if (!util.isArray(defaultMode)) {
+        if (!Array.isArray(defaultMode)) {
             if (!modes.find(_ => _.mode === defaultMode)) {
                 // only add the defaultMode if it isn't already in the list
                 const mode = defaultMode.mode || defaultMode
@@ -744,9 +743,10 @@ const owOpts = (options = {}, execOptions = {}) => {
         options.agent = agent
     }
 
-    if (!process.env.TEST_SPACE && !process.env.TRAVIS) {
+    if (!process.env.TEST_SPACE && !process.env.TRAVIS && settings.userAgent) {
         // install a User-Agent header, except when running tests
-        options['User-Agent'] = 'IBM Cloud Functions Shell'
+        debug('setting User-Agent', settings.userAgent)
+        options['User-Agent'] = settings.userAgent
     }
 
     return options

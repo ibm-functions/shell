@@ -45,8 +45,12 @@ body a:hover:not(.plain-anchor) {
     padding-right: 3em;
     font-weight: 300;
     font-size: 1rem;
-    outline: 1px solid; /* outline rather than border-bottom, to allow minimized sidecar to stay on top */
+    border-bottom: 1px solid; /* outline rather than border-bottom, to allow minimized sidecar to stay on top */
     -webkit-font-smoothing: antialiased;  /* chrome, you suck */
+}
+body.sidecar-is-minimized .header {
+    outline: 1px solid; /* outline rather than border-bottom, to allow minimized sidecar to stay on top */
+    border-bottom: none;
 }
 .header .deemphasize {
     font-size: 55%;
@@ -1289,11 +1293,18 @@ body.os-darwin:not(.fullscreen) .header {
 body .header .application-icon {
     position: absolute;
     top: 0.4em;
-    right: 0; /*0.5em;*/
+    right: 0.5em;
     width: 1.8em;
     height: 1.8em;
     margin: 0;
     z-index: 20;
+    transition: all 150ms ease-in-out;
+}
+body.sidecar-is-minimized .header .application-icon {
+    /* scoot the icon to be flush right when the sidecar is minimized, so
+   that the icon will be horizontally centered on the vertical stripe
+   that represents the minimized sidecar */
+    right: 0;
 }
 body.subwindow.still-loading .header .application-icon {
     transition: all 150ms ease-in-out;

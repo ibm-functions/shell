@@ -31,6 +31,7 @@ const hide = clearSelectionToo => {
     if (!clearSelectionToo) {
         // only minimize if we weren't asked to clear the selection
         sidecar.classList.add('minimized')
+        document.body.classList.add('sidecar-is-minimized')
     }
 
     const replView = document.querySelector('#main-repl')
@@ -52,6 +53,7 @@ const show = (block, nextBlock) => {
 
     const sidecar = document.querySelector('#sidecar')
     if (sidecar.entity || sidecar.className.indexOf('custom-content') >= 0) {
+        document.body.classList.remove('sidecar-is-minimized')
         sidecar.classList.remove('minimized')
         sidecar.classList.add('visible')
 
