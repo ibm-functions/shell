@@ -147,7 +147,10 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
         // BrowserWindow opts doesn't stick; and... this has to be on
         // did-finish-load, for some reason... at least these are true
         // statements for electron 1.6.x
-        mainWindow.setTitle('IBM Cloud Functions Shell')
+        const path = require('path'),
+              { productName } = require(path.join(__dirname, './build/config.json'))
+
+        mainWindow.setTitle(productName)
     })
     
     /** jump in and manage the way popups create new windows */
@@ -175,9 +178,9 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
     // and load the index.html of the app.
   debug('mainWindow::loadURL')
   mainWindow.loadURL(require('url').format({
-    pathname: require('path').join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
+      pathname: require('path').join(__dirname, 'build/index.html'),
+      protocol: 'file:',
+      slashes: true
   }))
 
     require('./menu').install(app, electron.Menu, createWindow)

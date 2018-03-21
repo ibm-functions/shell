@@ -19,11 +19,16 @@
 # TODO this only handles MacOS right now
 
 #ICON=../assets/icons/png/OpenWhisk-512x512.png
-ICON=../assets/icons/png/blue-dolphin-transparent.png
+ICON=`cat ./build/config.json | jq --raw-output .appIcon`
 
-APPNAME="IBM Cloud Functions Shell"
+APPNAME=`cat ./build/config.json | jq --raw-output .productName`
 
-if [ ! -x ./node_modules/.bin/fileicon ]; then exit; fi
+echo "Using appName=${APPNAME} and appIcon=${ICON}"
+
+if [ ! -x ./node_modules/.bin/fileicon ]; then
+    echo "Not setting icon, as fileicon npm not installed"
+    exit;
+fi
 
 if [ $? == 0 ]; then
     ./node_modules/.bin/fileicon set ./node_modules/electron/dist/Electron.app/ $ICON >& /dev/null

@@ -4,3 +4,5 @@
 # and other times it appears in `app/plugins/node_modules/wskng-composer-plugins/node_modules/@openwhisk/composer`
 package-lock.json
 plugins/package-lock.json
+
+build

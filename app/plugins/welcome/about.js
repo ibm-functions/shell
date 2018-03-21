@@ -29,13 +29,15 @@ const aboutWindow = () => {  /* bringYourOwnWindow impl */
     debug('aboutWindow')
 
     const path = require('path'),
-          root = path.join(__dirname, '..', '..')
+          root = path.join(__dirname, '..', '..'),
+          settings = require(path.join(root, 'build', './config.json'))
 
     const foo = require('electron-about-window').default({
-        icon_path: path.join(root, 'content/icons/svg/blue-dolphin.svg'),
-        package_json_dir: root,
+        icon_path: path.join(root, settings.largeIcon),
+        package_json_dir: path.join(root, 'build'),
         use_inner_html: true,
-        css_path: path.join(root, 'content/css/about.css'),
+        css_path: [path.join(__dirname, '../../content/css/themes/', settings.cssTheme),
+                   path.join(__dirname, 'about.css')],
         win_options: { width: 600, height: 600 }
     })
 

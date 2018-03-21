@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
+const path = require('path')
+
 /**
  * This plugin implements a simple in-page text search, using Chrome's findInPage API.
  *
  */
-const app = require('electron');
 module.exports = () => {
+    const app = require('electron');
+
     if (typeof document === 'undefined') return // return if no document
 
     // inject css
-    ui.injectCSS('plugins/ui/commands/text-search.css');
+    ui.injectCSS(path.join(__dirname, './text-search.css'));
 
     // insert html
     let searchBar = document.createElement('div');
