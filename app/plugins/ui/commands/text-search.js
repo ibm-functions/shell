@@ -79,6 +79,11 @@ module.exports = () => {
 
     });    
 
+    // we need to override the repl's global onpaste handler; see shell issue #693
+    searchInput.onpaste = evt => {
+        evt.stopPropagation()
+    }
+
     searchInput.addEventListener('click', e => {
         searchInput.focus();   
     });

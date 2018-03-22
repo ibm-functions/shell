@@ -108,4 +108,19 @@ describe('Text search', function() {
                .then(txt => txt === 'no matches')
        }))
        .catch(common.oops(this)))
+
+    // paste test
+    it('should close the search bar if clicking the close button', () => this.app.client.click('#search-close-button')
+       .then(() => this.app.client.waitForVisible('#search-bar', 2000, false))
+       .catch(common.oops(this)))
+    it('should paste into the text search box', () => this.app.client.keys([ui.ctrlOrMeta, 'f'])
+       .then(() => this.app.client.waitForVisible('#search-bar'))
+       .then(() => this.app.client.hasFocus('#search-input'))
+       .then(r => assert.ok(r, 'assert if search-input is focused'))
+       .then(() => this.app.electron.clipboard.writeText('grumble'))
+       .then(() => this.app.client.execute(() => document.execCommand('paste')))
+       .then(() => this.app.client.getValue('#search-input'))
+       .then(actual => assert.equal(actual, 'grumble')) // paste made it to #search-input?
+       .catch(common.oops(this)))
+
 })
