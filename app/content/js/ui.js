@@ -1153,7 +1153,6 @@ const ui = (function() {
      */
     self.showEntity = (entity, options={}, block, nextBlock) => {
         debug('showEntity', entity, options)
-        console.trace()
 
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header')

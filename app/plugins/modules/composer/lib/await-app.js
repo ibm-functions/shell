@@ -17,10 +17,8 @@
 const debug = require('debug')('composer:session_get')
 debug('loading')
 
-const { init, decorateAsApp } = require('./composer'),
-      { session_get:usage } = require('./usage'),
-      messages = require('./messages.json'),
-      parseDuration = require('parse-duration')
+const { session_get:usage } = require('./usage'),
+      messages = require('./messages.json')
 
 debug('finished loading modules')
 
@@ -29,10 +27,35 @@ const viewName = 'session',              // for back button and sidecar header l
       defaultMode = 'visualization'      // on open, which view mode should be selected?
 
 /**
+ * Format the given activation record for display as a session
+ *
+ */
+const formatSessionResponse = projection => activation => {
+    activation.prettyType = 'sessions'
+
+    // entity onclick handler
+    activation.onclick = () => repl.pexec(`app get "/${path}"`)
+
+    // add our visualization view mode
+    if (!activation.modes) activation.modes = []
+    activation.modes.find(({mode}) => mode === 'logs').label = 'trace'
+
+    const path = activation.annotations.find(({key}) => key === 'path').value
+
+    activation.modes.push({
+        mode: defaultMode,
+        label: 'Session Flow',
+        direct: entity => repl.pexec(`session flow ${activation.activationId}`)
+    })
+
+    return activation
+}
+
+/**
  * This is the command handler for await-app
  *
  */
-const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, argvNoOptions, commandLineOptions) => new Promise((resolve, reject) => init(wsk, {noping: true}).then(({manager}) => {
+const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, argvNoOptions, commandLineOptions) => new Promise((resolve, reject) => {
     let sessionId = argvNoOptions[argvNoOptions.indexOf(cmd) + 1]
 
     if (typeof sessionId === 'number') {
@@ -48,73 +71,6 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         sessionId = argv_full.find(arg => arg == sessionId && arg !== sessionId)
     }
     debug('session get', sessionId)
-
-    // parseDuration expects a string, and returns millis; we must be
-    // aware that manager.get expects a value unit of seconds; the default is 30 seconds
-    const defaultTimeout = 30
-    const timeout = commandLineOptions.timeout ? parseDuration(commandLineOptions.timeout.toString()) / 1000 : defaultTimeout
-
-    /** poll once for completion */
-    const poll = iter => {
-        if (iter > 100) {
-            reject('Timeout waiting for composer application to finish')
-        } else {
-            manager.get(sessionId, timeout, true)
-                .then(activation => {
-                    if (projection) {
-                        return resolve(projection(activation))
-                    }
-
-                    activation.prettyType = 'sessions'
-
-                    // entity onclick handler
-                    activation.onclick = () => repl.pexec(`app get "/${path}"`)
-
-                    // add our visualization view mode
-                    if (!activation.modes) activation.modes = []
-                    activation.modes.find(({mode}) => mode === 'logs').label = 'trace'
-
-                    const path = activation.annotations.find(({key}) => key === 'path').value
-
-                    activation.modes.push({
-                        mode: defaultMode,
-                        label: 'Session Flow',
-                        direct: entity => repl.pexec(`session flow ${activation.activationId}`)
-                    })
-
-                    resolve(activation)
-                })
-                .catch(err => {
-                    //
-                    // hmm... maybe the user is confused and this is a plain activation?
-                    //
-                    return repl.qexec(`activation get ${sessionId}`)
-                        .then(resolve)
-                        .catch(err2 => {
-                            //
-                            // nope, there is truly nothing to be found here
-                            //
-                            console.error(err)
-                            if (typeof err === 'string' && err.endsWith('is still running')) {
-                                setTimeout(() => poll(iter + 1), 300)
-                            } else if (typeof err == 'string' && err.startsWith('Cannot find trace for session')) {
-                                reject('Trace data expired')
-                            } else if (err.message && err.message.indexOf('ECONNREFUSED') >= 0) {
-                                reject(messages.slowInit)
-                            } else {
-                                if (typeof err === 'string' && err.indexOf('Cannot find') >= 0) {
-                                    // the composer's manager API does
-                                    // not nicely wrap this error with
-                                    // a status code :(
-                                    reject({ code: 404, message: err })
-                                } else {
-                                    reject(err)
-                                }
-                            }
-                        })
-                })
-        }
-    }
 
     if (commandLineOptions.last || commandLineOptions['last-failed']) {
         //
@@ -159,10 +115,17 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
         if (!sessionId) {
             reject(new modules.errors.usage(usage(cmd)))
         } else {
-            poll(0)
+            repl.qexec(`wsk activation get ${sessionId}`)
+                .then(activation => {
+                    if (projection) {
+                        resolve(projection(activation))
+                    } else {
+                        resolve(activation)
+                    }
+                }).catch(reject)
         }
     }
-}))
+})
 
 /**
  * Here is the await-app module entry point. Here we register command
@@ -170,18 +133,41 @@ const await = (wsk, cmd, projection) => (_a, _b, argv_full, modules, _1, _2, arg
  *
  */
 module.exports = (commandTree, prequire) => {
-    const wsk = prequire('/ui/commands/openwhisk-core')
+    const wsk = prequire('/ui/commands/openwhisk-core'),
+          rawGet = commandTree.find('/wsk/activation/get').$
 
     // this one is mostly session get, but designed for internal consumption as an internal repl API
     commandTree.listen(`/wsk/app/await-app`, await(wsk, 'await-app'), { hide: true })
 
     // session get
-    commandTree.listen(`/wsk/session/get`, await(wsk, 'get'), { usage: usage('get'),
-                                                                needsUI: true,
-                                                                viewName,
-                                                                fullscreen: true, width: 800, height: 600,
-                                                                clearREPLOnLoad: true,
-                                                                placeholder: 'Fetching session results...' })
+    const sessionGet =  await(wsk, 'get')
+    commandTree.listen(`/wsk/session/get`, sessionGet, { usage: usage('get'),
+                                                         needsUI: true,
+                                                         viewName,
+                                                         fullscreen: true, width: 800, height: 600,
+                                                         clearREPLOnLoad: true,
+                                                         placeholder: 'Fetching session results...' })
+
+    wsk.synonyms('activations').forEach(syn => {
+        commandTree.listen(`/wsk/${syn}/get`, function() {
+            if (!rawGet) {
+                return Promise.reject()
+            }
+
+            return rawGet.apply(undefined, arguments)
+                .then(response => {
+                    debug('response', response)
+
+                    if (response && response.annotations && response.annotations.find(({key, value}) => key === 'conductor' && value)) {
+                        debug('activation is session')
+                        return formatSessionResponse()(response)
+                    } else {
+                        debug('activation is not session')
+                        return response
+                    }
+                })
+        })
+    })
 
     // project out just the session result
     commandTree.listen(`/wsk/session/result`, await(wsk, 'result', _ => _.response.result), { usage: usage('result') })
