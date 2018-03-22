@@ -35,17 +35,6 @@ module.exports = (passedFsm, container, w, h, activations) => {
     }
 
     // create a copy - all annotations make by wskflow will not affect the original object.
-    let ir = JSON.parse(JSON.stringify(passedFsm)),
-        width, 
-        height;
-
-    if($('body').hasClass('sidecar-full-screen')){   
-        width = $(window).width()-2;               
-    }
-    else{   // not full screen
-        width = $(window).width()*0.6-2;                 
-    }
-    height = $('#sidecar').height()-$('.sidecar-header').height()-$('.sidecar-bottom-stripe').height()-2;
-
-    return fsm2graph(ir, container, width, height, activations); 
+    let ir = JSON.parse(JSON.stringify(passedFsm));
+    return fsm2graph(ir, container, activations); 
 }
