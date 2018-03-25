@@ -626,13 +626,10 @@ module.exports = (commandTree, prequire) => {
             (annotators[letType] || []).forEach(annotator => annotator(action))
             if (annotators[extension]) annotators[extension].forEach(annotator => annotator(action))
 
-            const owOpts = wsk.owOpts({ name: name, action: action })
-            debug('inline-function::create', owOpts, code)
-            return preflight(update, owOpts)
-                .then(owOpts => wsk.ow.actions[update](owOpts)) // dangit, the openwhisk npm uses classes, so we have to do this
-                .then(wsk.addPrettyType('actions', 'create'))
-                .then(action => execOptions && execOptions.nested ? action : commandTree.changeContext(`/wsk/actions`, action.name)(action))
+            debug('inline-function::create', name)
+            return repl.qexec(`wsk action update "${name}"`, undefined, undefined, { entity: { action } })
                 .catch(packageAutoCreate(name))
+
         } else {
             // maybe a sequence?
             debug('sequenceMatch', sequenceMatch, components)

@@ -523,6 +523,7 @@ const unflag = opt => opt.replace(/^[-]+/,'')
  */
 self.exec = (commandUntrimmed, execOptions) => {
     //debug(`repl::exec ${new Date()}`)
+    debug('exec', commandUntrimmed)
 
     const echo = !execOptions || execOptions.echo !== false
     const nested = execOptions && execOptions.noHistory
