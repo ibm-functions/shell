@@ -486,26 +486,30 @@ const specials = {}
 
 /** for parametrizable entity types, e.g. actions, packages, the standard view modes */
 const standardViewModes = (defaultMode, fn) => {
-    let modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
-                 { mode: 'annotations', command: () => 'annotations' },
-                 { mode: 'raw', command: () => 'raw' }]
+    const makeModes = () => {
+        let modes = [{ mode: 'parameters', label: 'params', command: () => 'parameters' },
+                     { mode: 'annotations', command: () => 'annotations' },
+                     { mode: 'raw', command: () => 'raw' }]
 
-    if (defaultMode) {
-        if (!Array.isArray(defaultMode)) {
-            if (!modes.find(_ => _.mode === defaultMode)) {
-                // only add the defaultMode if it isn't already in the list
-                const mode = defaultMode.mode || defaultMode
-                modes.splice(0, 0,  { mode, defaultMode: typeof mode === 'string' || mode.default, command: () => mode })
+        if (defaultMode) {
+            if (!Array.isArray(defaultMode)) {
+                if (!modes.find(_ => _.mode === defaultMode)) {
+                    // only add the defaultMode if it isn't already in the list
+                    const mode = defaultMode.mode || defaultMode
+                    modes.splice(0, 0,  { mode, defaultMode: typeof mode === 'string' || mode.default, command: () => mode })
+                }
+            } else {
+                modes = defaultMode.concat(modes)
             }
-        } else {
-            modes = defaultMode.concat(modes)
         }
+
+        return modes
     }
 
     if (fn) {
-        return (options, argv, verb) => Object.assign(fn(options, argv, verb) || {}, { modes: entity => modes })
+        return (options, argv, verb) => Object.assign(fn(options, argv, verb) || {}, { modes: entity => makeModes() })
     } else {
-        return (options, argv) => ({ modes: entity => modes })
+        return (options, argv) => ({ modes: entity => makeModes() })
     }
 }
 
@@ -774,7 +778,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
     let options = Object.assign({}, regularOptions, pair.kvOptions)
     delete options._
 
-    debug('exec', entity, verb, argv, options)
+    debug('exec', entity, verb, argv, options, execOptions)
 
     const verbIndex = argv.findIndex(arg => arg === verbSynonym),
           nameIndex = verbIndex + 1,
@@ -845,6 +849,13 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
             verb = res.verb
         }
     }*/
+
+    const kind = toOpenWhiskKind(entity)
+    if (execOptions && execOptions.entity && execOptions.entity[kind]) {
+        // passing entity options programatically rather than via the command line
+        options[kind] = Object.assign({}, options[entity]||{}, execOptions.entity[kind])
+        debug('programmatic entity', execOptions.entity[kind], options[entity])
+    }
 
     if (!options.then) options = Promise.resolve(options)
 
@@ -1049,11 +1060,10 @@ module.exports = (commandTree, prequire) => {
             }
         },
 
-        /** add action modes */
+        /** add action modes; where=push|unshift */
         addActionMode: (mode, where='push') => {
             actionSpecificModes[where](mode)
             debug('adding action mode', where, mode, actionSpecificModes)
-            specials.actions.get = standardViewModes(actionSpecificModes)
         },
 
 	owOpts: owOpts,

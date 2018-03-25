@@ -56,7 +56,7 @@ jobs:
       env: EXECUTING=01:08:02:05
     - script: (cd tests && ./bin/runLocal.sh 07)
       env: EXECUTING=07
-    - script: (cd tests && ./bin/runLocal.sh 02 03)
-      env: EXECUTING=02:03
+    - script: (cd tests && ./bin/runLocal.sh 03)
+      env: EXECUTING=03
     - script: (cd tests && ./bin/runLocal.sh 04)
       env: EXECUTING=04

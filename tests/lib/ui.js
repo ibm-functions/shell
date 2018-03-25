@@ -9,6 +9,7 @@ const common = require('./common'),
       },
       
       keys = {
+          TAB: '\uE004',
 	  ENTER: '\uE007',
 	  ESCAPE: '\uE00C'
       }
