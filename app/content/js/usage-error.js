@@ -279,17 +279,26 @@ const format = (message, options={}) => {
 
         // detailed example command
         if (detailedExample) {
-            const examplePart = bodyPart(),
-                  prePart = prefix('Example'),
-                  textPart = div(detailedExample.command),
-                  docPart = sans(div(detailedExample.docs))
+            const examples = !Array.isArray(detailedExample) ? [detailedExample] : detailedExample
 
+            const examplePart = bodyPart(),
+                  prePart = prefix(examples.length === 1 ? 'Example' : 'Examples')
             left.appendChild(examplePart)
             examplePart.appendChild(prePart)
-            examplePart.appendChild(textPart)
-            examplePart.appendChild(smaller(docPart))
 
-            textPart.style.color = 'var(--color-support-02)'
+            examples.forEach(({command, docs}, idx) => {
+                const textPart = div(command),
+                      docPart = sans(div(docs))
+
+                examplePart.appendChild(textPart)
+                examplePart.appendChild(smaller(docPart))
+
+                textPart.style.color = 'var(--color-support-02)'
+
+                if (idx > 0) {
+                    textPart.style.marginTop = '1em'
+                }
+            })
         }
 
         /**

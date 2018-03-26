@@ -298,15 +298,10 @@ const updateText = editor => action => {
 let amdRequire   // the monaco editor uses the AMD module loader, and smashes the global.require; we need to finagle it a bit
 let initDone     // this is part of the finagling, to make sure we finagle only once
 const openEditor = wsk => {
-    const sidecar = document.querySelector('#sidecar'),
-          leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
-          rightHeader = sidecar.querySelector('.header-right-bits .custom-header-content')
+    const sidecar = document.querySelector('#sidecar')
 
     /** returns the current action entity */
     const getAction = () => sidecar.entity
-
-    ui.removeAllDomChildren(leftHeader)
-    ui.removeAllDomChildren(rightHeader)
 
     // Monaco uses a custom amd loader that over-rides node's require.
     // Keep a reference to node's require so we can restore it after executing the amd loader file.
@@ -435,7 +430,7 @@ const openEditor = wsk => {
         sidecar.entity = action
 
         // isModified display
-        const subtext = sidecar.querySelector('.custom-header-content'),
+        const subtext = sidecar.querySelector('.sidecar-header-secondary-content .custom-header-content'),
               status = document.createElement('div'),
               isNew = document.createElement('div'),
               upToDate = document.createElement('div'),
@@ -510,6 +505,7 @@ const openEditor = wsk => {
 const respondToRepl = (wsk, extraModes=[]) => ({ getAction, editor, content, eventBus }) => ({
     type: 'custom',
     content,
+    controlHeaders: ['.header-right-bits'],
     displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
     modes: extraModes
         .map(_ => _({wsk, getAction, editor, eventBus}))

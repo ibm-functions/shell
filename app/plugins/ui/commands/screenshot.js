@@ -18,17 +18,26 @@
  * Usage message
  *
  */
-const usage = () => `Capture a screenshot to the clipboard.
-
-\tscreenshot [sidecar | repl | full | last]
-
-Required parameters:
-\tsidecar        capture the sidecar contents
-\trepl           capture the REPL contents
-\tfull           capture the entire page, including header
-\tlast           capture the REPL output of the last command
-\tlast           capture the REPL output of the last command
-\t<no params>    capture the entire page, except for header`
+const usage = {
+    strict: 'screenshot',
+    title: 'Capture screenshot',
+    header: 'Capture a screenshot to the clipboard, optionally specifying which region of the window to capture.',
+    example: 'screenshot [which]',
+    detailedExample: [
+        { command: 'screenshot sidecar', docs: 'capture the sidecar contents' },
+        { command: 'screenshot repl', docs: 'capture the REPL contents' },
+        { command: 'screenshot last', docs: 'capture the REPL output of the last command' },
+        { command: 'screenshot full', docs: 'capture the entire page, including header' },
+        { command: 'screenshot', docs: 'capture the entire page, except for header' },
+    ],
+    optional: [
+        { name: 'which',
+          positional: true,
+          docs: 'the region to capture',
+          allowed: ['sidecar', 'repl', 'full', 'last']
+        }
+    ]
+}
 
 /**
  * Round a dom coordinate to make the electron API happy.
@@ -88,9 +97,9 @@ module.exports = (commandTree, prequire) => {
             // which dom to snap?
             const which = (argv[1] && argv[1].toLowerCase()) || 'default'
 
-            if (options.help || !selectors[which]) {
+            if (!selectors[which]) {
                 // either we couldn't find the area to 
-                return reject(new modules.errors.usage(usage()))
+                return reject(new modules.errors.usage(usage))
 
             } else if (which === 'sidecar' && !sidecarVisibility.isVisible()) {
                 // sanity check the sidecar option
@@ -292,5 +301,5 @@ module.exports = (commandTree, prequire) => {
             console.error(e)
             reject('Internal Error')
         }
-    }))
+    }), { usage })
 }

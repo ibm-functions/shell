@@ -912,6 +912,24 @@ const ui = (function() {
 
         const sidecar = document.querySelector('#sidecar')
 
+        if (custom.controlHeaders === true) {
+            // plugin will control all headers
+        } else if (!custom.controlHeaders) {
+            // plugin will control no headers
+            const customHeaders = sidecar.querySelectorAll('.custom-header-content')
+            for (let idx = 0; idx < customHeaders.length; idx++) {
+                ui.removeAllDomChildren(customHeaders[idx])
+            }
+        } else {
+            // plugin will control some headers; it tell us which it wants us to control
+            custom.controlHeaders.forEach(_ => {
+                const customHeaders = sidecar.querySelectorAll(`${_} .custom-header-content`)
+                for (let idx = 0; idx < customHeaders.length; idx++) {
+                    ui.removeAllDomChildren(customHeaders[idx])
+                }
+            })
+        }
+
         // which viewer is currently active?
         sidecar.setAttribute('data-active-view', '.custom-content > div')
 

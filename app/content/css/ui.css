@@ -67,6 +67,10 @@ body.sidecar-is-minimized .header {
 .header-left-bits {
     flex: 1;
 }
+.header-top-bits {
+    display: flex;
+    flex: 1;
+}
 .header .clickable, .header .clickable:hover {
     text-decoration: none;
     transition: none;
@@ -523,6 +527,7 @@ sidecar.visible {
 .sidecar-bottom-stripe {
     padding: 0 1em;
     flex-basis: 3em;
+    min-height: 3rem; /* see shell issue #712 */
     display: flex;
     align-items: center;
     font-size: 0.875em;
@@ -642,8 +647,10 @@ sidecar .custom-content {
 }
 sidecar .sidecar-header {
     display: flex;
+    flex-direction: column;
     border-bottom: 1px solid;
     flex-basis: 9rem;
+    min-height: 9rem; /* see shell issue #712 */
 }
 sidecar .header-right-bits {
     flex-direction: column;
@@ -777,7 +784,7 @@ sidecar.entity-is-activations .sidecar-header-name  .sidecar-header-name-content
 sidecar .sidecar-header-secondary-content {
     font-size: 0.875rem;
     opacity: 0.75;
-    margin: 1ex 0;
+    margin: 1ex 2em;
 }
 sidecar .sidecar-header-secondary-content .kind-content {
     overflow: hidden;

@@ -27,7 +27,6 @@ exports.readonly = ({ wsk, getAction }) => () => Promise.resolve(getAction())
  *
  */
 exports.edit = ({ wsk, getAction }) => () => Promise.resolve(getAction())
-    .then(x => { console.error("!!!!!!!!!!", getAction, x); return x})
     .then(({ namespace, name }) => repl.qexec(`edit "/${namespace}/${name}"`))
     .then(ui.showCustom)
 

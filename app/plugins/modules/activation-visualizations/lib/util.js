@@ -278,7 +278,7 @@ exports.displayTimeRange = ({minTime, maxTime, totalCount}, container) => {
  */
 exports.prepareHeader = isRedraw => {
     const sidecar = document.querySelector('#sidecar'),
-          leftHeader = sidecar.querySelector('.header-left-bits .sidecar-header-secondary-content .custom-header-content'),
+          leftHeader = sidecar.querySelector('.sidecar-header-secondary-content .custom-header-content'),
           rightHeader = sidecar.querySelector('.header-right-bits .custom-header-content')
 
     if (!isRedraw) {
