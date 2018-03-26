@@ -104,14 +104,7 @@ describe('Tab completion', function() {
                 }
             })
             .catch(err => this.app.client.execute('repl.doCancel()') // clear the line
-                   .then(() => {
-                       if (iter < 5) {
-                           console.error('retry', iter)
-                           return tabbyWithOptions(app, partial, expected, full, { click, nTabs, expectOK, iter: iter + 1 })
-                       } else {
-                           return common.oops(this)(err)
-                       }
-                   }))
+                   .then(() => common.oops(this)(err)))
     }
 
     const tabbyWithOptionsThenCancel = (app, partial, expected) => app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
@@ -131,11 +124,11 @@ describe('Tab completion', function() {
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
     // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list
-    it('should tab complete local file path', () => tabbyWithOptions(this.app,
-                                                                     'lls data/com',
-                                                                     options,
-                                                                     'lls data/composer-source/',
-                                                                     { click: 1 }))
+    it('should tab complete local file path with options', () => tabbyWithOptions(this.app,
+                                                                                  'lls data/com',
+                                                                                  options,
+                                                                                  'lls data/composer-source/',
+                                                                                  { click: 1 }))
 
     it('should tab complete the data directory', () => tabby(this.app, 'lls da', 'lls data/'))
     it('should tab complete the data/fsm.js file', () => tabby(this.app, 'lls data/fsm.js', 'lls data/fsm.json'))

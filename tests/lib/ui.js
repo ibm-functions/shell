@@ -298,7 +298,7 @@ exports.expectSubset = struct1 => string => {
 }
 
 /** is the given actual array the same as the given expected array? */
-exports.expectArray = expected => actual => {
+exports.expectArray = (expected, failFast=true) => actual => {
     if (!Array.isArray(actual)) {
         // webdriver.io's getText will return a singleton if there is only one match
         actual = [actual]
@@ -313,7 +313,11 @@ exports.expectArray = expected => actual => {
         console.error(`array mismatch; expected=${expected} actual=${actual}`)
     }
 
-    assert.ok(ok)
+    if (failFast) {
+        assert.ok(ok)
+    } else {
+        return ok
+    }
 }
 
 /**
