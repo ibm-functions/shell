@@ -521,7 +521,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 medianDot.style.left = percent(medianLeft)
                 medianDot.setAttribute('data-balloon', prettyPrintDuration(thisMedian))
                 medianDot.setAttribute('data-balloon-length', 'small')
-                medianDot.setAttribute('data-balloon-pos', balloonPos)
+                medianDot.setAttribute('data-balloon-pos', 'right')
                 focus(medianDot)
 
                 // outlier activations

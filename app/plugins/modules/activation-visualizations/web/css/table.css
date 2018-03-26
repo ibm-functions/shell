@@ -212,15 +212,15 @@
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
     width: 0.4em;
-    height: 2.2em;
-    background: #56D2BB;
+    height: 1.75em;
+    background: #67a9cf;
     outline: 2px solid rgba(255,255,255,0.5);
     border: 1px solid rgba(0,0,0,0.9);
     transition: all 150ms ease-in-out;
 }
 .activation-viz-plugin.show-outliers .outlier-dot {
     /* dot representing an outlier activation */
-    background: #3C6DF0;
+    background: #b2182b;
     opacity: 0.6;
     border-color: rgba(255,255,255,0.2);
     width: 0.3em;
@@ -254,8 +254,7 @@
 .activation-viz-plugin .data-table td.cell-stats .stat-indicator {
     position: absolute;
     color: white;
-    /*mix-blend-mode: difference;*/
-    font-size: 0.6875em;
+    font-size: 0.6em;
     opacity: 0.8;
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-bar:hover {
@@ -263,8 +262,8 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-bar {
     position: absolute;
-    background: hsla(171, 100%, 25%, 1);  /* #00A78F with Lightness reduced from 33% to 25% */
-    height: 1.9em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
+    background: #2166ac;
+    height: 1.25em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
     transition: all 150ms ease-in-out, outline 300ms ease-in-out;
 }
     /* focused bar */
@@ -747,12 +746,12 @@ body.subwindow .grid-grid:not(.activation-viz-timeline) {
 }
 .activation-summary-range-selector li {
     list-style: none;
-    border: 1px solid var(--color-brand-01);
+    border: 1px solid var(--color-text-02);
     padding: 0 2em;
     font-weight: 400;
     font-size: 0.75em;
     display: flex;
-    color: var(--color-brand-01);
+    color: var(--color-text-02);
     align-items: center;
     transition: all 150ms ease-in-out;
     -webkit-font-smoothing: antialiased; /* fonts a bit too bold otherwise */
@@ -770,15 +769,15 @@ body.subwindow .grid-grid:not(.activation-viz-timeline) {
     border-bottom-right-radius: 8px;
 }
 .activation-summary-range-selector li:hover {
-    background: var(--color-brand-02);
+    background: var(--color-text-01);
     color: white;
     cursor: pointer;
 }
 .activation-summary-range-selector li.selected {
-    background: var(--color-brand-01);
+    background: var(--color-text-02);
     color: white;
 }
 .activation-summary-range-selector li.partially-selected {
-    background: var(--color-brand-02);
+    background: var(--color-text-01);
     color: white;
 }

@@ -159,6 +159,7 @@ const drawGrid = (options, header) => activations => {
     return {
         type: 'custom',
         content,
+        controlHeaders: true,
         modes: modes('grid', options)
     }
 }
