@@ -107,10 +107,17 @@ const listenForUpDown = prompt => {
 
     const previousKeyDown = prompt.onkeydown
     prompt.onkeydown = evt => { // keydown is necessary for evt.preventDefault() to work; keyup would otherwise also work
-        if (evt.keyCode === ui.keys.DOWN) {
+        const char = evt.keyCode
+
+        if (char === ui.keys.DOWN) {
             moveTo('nextSibling', evt)
-        } else if (evt.keyCode === ui.keys.UP) {
+
+        } else if (char === ui.keys.UP) {
             moveTo('previousSibling', evt)
+
+        } else if (char === ui.keys.C && event.ctrlKey) {
+            // Ctrl+C, cancel
+            repl.doCancel()
         }
     }
 
@@ -143,22 +150,6 @@ const listenForEscape = prompt => {
     return cleanup
 }
 
-/** safeguard: only one tab completion temporary at a time, please */
-const cleaner = () => {
-    const safeguard = document.querySelectorAll('.tab-completion-temporary')
-    for (let idx = 0; idx < safeguard.length; idx++) {
-        try {
-            console.error('removing glitch')
-            const old = safeguard[idx]
-            if (old.parentNode) {
-                old.parentNode.removeChid(safeguard)
-            }
-        } catch (err) {
-            console.error('error removing glitch', err)
-        }
-    }
-}
-
 /**
   * Make a container UI for tab completions
   *
@@ -167,7 +158,13 @@ const makeCompletionContainer = (block, prompt, partial, dirname, lastIdx) => {
     const input = block.querySelector('input')
 
     const temporaryContainer = document.createElement('div')
-    temporaryContainer.className = 'tab-completion-temporary scrollable fade-in'
+    temporaryContainer.className = 'tab-completion-temporary scrollable repl-temporary'
+
+    if (!process.env.RUNNING_SHELL_TEST) {
+        // see shell issue #699; chrome seems not to play the fade-in
+        // animation when the window is offscreen
+        temporaryContainer.classList.add('fade-in')
+    }
 
     // determine pixel width of current input value
     const tmp = document.createElement('div')

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -514,6 +514,23 @@ const emptyPromise = () => {
     return emptyPromise
 }
 
+/**
+ * Remove any .repl-temporary structures from the given dom
+ *
+ */
+const removeAnyTemps = block => {
+    const temps = block.querySelectorAll('.repl-temporary')
+
+    for (let idx = 0; idx < temps.length; idx++) {
+        const temp = temps[idx]
+        if (temp.parentNode) {
+            temp.parentNode.removeChild(temp)
+        }
+    }
+
+    return block
+}
+
 /** turn --foo into foo and -f into f */
 const unflag = opt => opt.replace(/^[-]+/,'')
 
@@ -559,6 +576,12 @@ self.exec = (commandUntrimmed, execOptions) => {
     } else {
         // qfexec with nextBlock, see rm plugin
         nextBlock = execOptions && execOptions.nextBlock
+    }
+
+    if (nextBlock) {
+        // remove any .repl-temporary that might've come along for the
+        // ride when we cloned the current block
+        removeAnyTemps(nextBlock)
     }
 
     // blank line, after removing comments?
@@ -973,7 +996,7 @@ self.paste = event => {
 self.doCancel = () => {
     debug('doCancel')
 
-    const block = ui.getCurrentProcessingBlock() || ui.getCurrentBlock(),
+    const block = removeAnyTemps(ui.getCurrentProcessingBlock() || ui.getCurrentBlock()),
           nextBlock = block.cloneNode(true),
           nextBlockPrompt = ui.getPrompt(nextBlock)
 
