@@ -160,7 +160,8 @@ exports.preview = command => ({
     },
     oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file', file: true },
             { name: 'src.json', docs: 'ibid, but for a pre-compiled composition', file: true }],
-    optional: [{ name: '--fsm', boolean: true, docs: 'validate and show raw FSM' } ],
+    optional: [{ name: '--fsm', boolean: true, docs: 'validate and show raw FSM' },
+               { name: '--env', alias: '-e', docs: 'Assign a value to an environment variable', narg: 2 }],
     sampleInputs: sampleInputs(command),
     parents: ['composer', { command: 'composer app' }],
     related: ['app create']

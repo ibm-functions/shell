@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('app preview')
+debug('loading')
+
 const { isValidFSM, wskflow, zoomToFitButtons, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
       badges = require('./badges'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
@@ -35,7 +38,9 @@ const viewName = 'preview',               // for back button and sidecar header 
  *
  */
 module.exports = (commandTree, prequire) => {
-     const render = (input, options) => new Promise((resolve, reject) => {
+    const render = (input, options) => new Promise((resolve, reject) => {
+         debug('options', options)
+
          let fsmPromise, type, extraModes=[]
 
          if (input.endsWith('.fsm') || input.endsWith('.json')) {
@@ -49,7 +54,7 @@ module.exports = (commandTree, prequire) => {
              }
          } else if (input.endsWith('.js')) {
              type = badges.composerLib
-             fsmPromise = compileToFSM(input, { code: true })
+             fsmPromise = compileToFSM(input, Object.assign({ code: true }, options))
              extraModes.push(codeViewMode)
              
          } else {
@@ -134,6 +139,22 @@ module.exports = (commandTree, prequire) => {
          fs.exists(expandHomeDir(input), exists => { 
              if (!exists) {
                  reject('The specified file does not exist')
+             }
+
+             if (options.env) {
+                 debug('parsing environment variables from command line', options.env)
+
+                 const environment = {}
+                 for (let idx = 0; idx < options.env.length; idx += 2) {
+                     const key = options.env[idx],
+                           value = options.env[idx + 1]
+                     environment[key] = value
+                 }
+
+                 options.env = environment
+                 delete options.e
+
+                 debug('environment', environment)
              }
 
              // render now

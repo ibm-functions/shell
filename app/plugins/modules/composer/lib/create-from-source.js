@@ -37,12 +37,29 @@ openwhiskComposer.wsk = {
     triggers: nope
 }
 
-const usage = cmd => `Usage: app ${cmd} </path/to/app-src.js>`
-
 const patterns = {
     require: /(const [^\s]+)\s*=\s*require\('@ibm-functions\/composer'\)/,
     constAppEquals: /.*const ([^\s]+)\s*=\s+composer(.*)/,
     return: /^return\s+/
+}
+
+/** override values in A with those from B, returning any overwritten values */
+const save = (A, B) => {
+    const overwritten = {}
+    for (let key in B) {
+        overwritten[key] = A[key]
+        A[key] = B[key]
+    }
+    return overwritten
+}
+
+/** restore values to A using values from B */
+const restore = (A, B) => {
+    for (let key in B) {
+        if (B[key]) {
+            A[key] = B[key]
+        }
+    }
 }
 
 /**
@@ -130,7 +147,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                     logMessage = ''
                     try {
                         const module = { exports: {},
-                                         process: { env: process.env, exit: doExit },
+                                         process: { env: opts.env || process.env, exit: doExit },
                                          console: { error: msg => errorMessage += msg + '\n',
                                                     log: doLog }
                                        },
@@ -150,6 +167,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                         if (typeof res === 'function') {
                             res = res()
                         }
+
                         if (isValidFSM(res)) {
                             return res
                         } else {
@@ -175,14 +193,19 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                         process.exit = doExit
                         try {
                             errorMessage = ''
-                            const json = eval(originalCode)
-                            if (isValidFSM(json)) {
-                                return json
-                            } else {
-                                const maybe = json
-                                console.log = log
-                                process.exit = exit
-                                return maybe
+                            const tmp = save(process.env, opts.env)
+                            try {
+                                const json = eval(originalCode)
+                                if (isValidFSM(json)) {
+                                    return json
+                                } else {
+                                    const maybe = json
+                                    console.log = log
+                                    process.exit = exit
+                                    return maybe
+                                }
+                            } finally {
+                                restore(process.env, tmp)
                             }
                         } catch (e2) {
                             console.log = log
@@ -198,10 +221,15 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                                     console.log = doLog
                                     process.exit = doExit
                                     errorMessage = ''
-                                    const composition = eval(bootstrapWithRequire(originalCode))
-                                    console.log = log
-                                    process.exit = exit
-                                    return composition
+                                    const tmp = save(process.env, opts.env)
+                                    try {
+                                        const composition = eval(bootstrapWithRequire(originalCode))
+                                        console.log = log
+                                        process.exit = exit
+                                        return composition
+                                    } finally {
+                                        restore(process.env, tmp)
+                                    }
                                     
                                 } catch (e4) {
                                     console.log = log

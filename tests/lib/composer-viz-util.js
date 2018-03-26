@@ -30,6 +30,7 @@ const input = (file, subdir='.') => ({
     path: path.join('data', subdir, file)
 })
 const composerInput = file => input(file, 'composer-source')
+const composerErrorInput = file => input(file, 'composer-source-expect-errors')
 
 /**
  * Verify that a node with the given action name exists on the canvas
@@ -38,8 +39,8 @@ const composerInput = file => input(file, 'composer-source')
 const verifyNodeExists = (name, isDeployed=false) => app => {
     const selector = `#wskflowSVG .node[data-name="/_/${name}"][data-deployed="${isDeployed ? 'deployed' : 'not-deployed'}"]`
     console.error(`CHECKING NODE ${name} ${selector}`)
-    return app.client.elements(selector)
-        .then(nodes => assert.equal(nodes.value.length, 1))
+    return app.client.waitUntil(() => app.client.elements(selector)
+                                .then(nodes => nodes.value.length === 1))
         .then(() => app)
 }
 const verifyNodeExistsById = id => app => {
@@ -93,6 +94,7 @@ const verifyTheBasicStuff = (file, badge) => _ => Promise.resolve(_)
 module.exports = {
     input,
     composerInput,
+    composerErrorInput,
     verifyNodeExists,
     verifyNodeExistsById,
     verifyEdgeExists,
