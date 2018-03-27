@@ -84,6 +84,14 @@ const _squish = (which, op) => {
 const squish = which => _squish(which, (element, property, value) => element.style[property] = value)
 const unsquish = which => _squish(which, (element, property, value) => element.style[property] = null)
 
+/** fill to two digits */
+const fill = n => n < 10 ? `0${n}` : n
+
+/** format the date; e.g. 2018-03-27 */
+const dateString = ts => `${ts.getUTCFullYear()}-${fill(1 + ts.getUTCMonth())}-${fill(ts.getUTCDate())}`
+
+/** format the time; e.g. 11.36.54 AM */
+const timeString = ts => ts.toLocaleTimeString('en-us').replace(/:/g, '.')
 
 /** this is the handler body */
 module.exports = (commandTree, prequire) => {
@@ -203,7 +211,7 @@ module.exports = (commandTree, prequire) => {
                 // save screenshot to disk
                 const saveButton = document.createElement('div'),
                       ts = new Date(),
-                      filename = `Screen Shot ${ts.toLocaleDateString().replace(/\//g,'-')}-${ts.toLocaleTimeString().replace(/:/g,'-')}.png`,
+                      filename = `Screen Shot ${dateString(ts)} ${timeString(ts)}.png`,
                       location = require('path').join(app.getPath('desktop'), filename)
                 saveButton.innerText = 'Save to Desktop'
                 saveButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-save'
