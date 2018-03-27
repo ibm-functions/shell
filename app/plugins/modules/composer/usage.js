@@ -49,7 +49,7 @@ module.exports = {
         title: 'Inspecting Sessions',
         header: 'These commands will help you inspect the activation results of Composer applications.',
         example: 'wsk session <command>',
-        commandPrefix: 'wsk session',
+        commandPrefix: 'session',
         available: [{ command: 'get', docs: 'get the details of a given Composer activation' },
                     { command: 'list', docs: 'list recent Composer activations' }],
         parents: ['composer'],
