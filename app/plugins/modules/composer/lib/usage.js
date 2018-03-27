@@ -137,7 +137,7 @@ exports.session_get = command => ({
     header: strings[`session_${command}`],
     example: `session ${command} <sessionId>`,
     oneof: [{ name: 'sessionId', docs: 'show a specific session id' },
-            { name: '--last', example: '[appName]', booleanOK: true, docs: 'show the last session [of the given app name]' },
+            { name: '--last', example: '[appName]', booleanOK: true, docs: 'show the last session [of the given app]' },
             { name: '--last-failed', example: '[appName]', booleanOK: true, docs: 'ibid, except show the last failed session' }],
     optional: activationsUsage.get.optional,
     parents: ['composer', { command: 'composer session' }],
