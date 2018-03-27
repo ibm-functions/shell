@@ -45,4 +45,8 @@ describe('wsk action invoke with implicit entity', function() {
            .then(ui.expectStruct({ x:3, name:'grumble' }))
            .catch(common.oops(this)))
     }
+
+    it(`should fail when requesting parameters of an activation`, () => cli.do('params', this.app)
+       .then(cli.expectError(0, 'The current entity does not support viewing parameters'))
+       .catch(common.oops(this)))
 })

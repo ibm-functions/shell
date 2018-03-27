@@ -279,18 +279,24 @@ exports.sidecar.expectRule = A => app => app.client.waitUntil(() => {
 })
 
 /** is the given struct2 the same as the given struct2 (given as a string) */
-exports.expectStruct = (struct1, noParse=false) => string => {
+exports.expectStruct = (struct1, noParse=false, failFast=true) => string => {
     try {
-        assert.ok(sameStruct(struct1, noParse ? string : JSON.parse(string)))
-        return true
+        const ok = sameStruct(struct1, noParse ? string : JSON.parse(string))
+        if (failFast) {
+            assert.ok(ok)
+        }
+        return ok
     } catch (err) {
         console.error('Error comparing structs for actual value= ' + string)
         throw err
     }
 }
-exports.expectSubset = struct1 => string => {
+exports.expectSubset = (struct1, failFast=true) => string => {
     try {
-        assert.ok(sameStruct(struct1, JSON.parse(string), true))
+        const ok = sameStruct(struct1, JSON.parse(string), true)
+        if (failFast) {
+            assert.ok(ok)
+        }
         return true
     } catch (err) {
         console.error('Error comparing subset for actual value= ' + string)
