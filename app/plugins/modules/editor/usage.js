@@ -35,31 +35,39 @@ module.exports = {
     },
 
     edit: {
+        strict: 'edit',
+        command: 'edit',
         title: 'Edit action',
         header: 'Open a given action or composition in the sidecar for editing.',
         example: 'edit <actionName>',
-        commandPrefix: 'editor edit',
-        required: [{ name: '<actionName>', docs: 'The OpenWhisk action to edit' }],
+        required: [{ name: '<actionName>', docs: 'The OpenWhisk action to edit', implicitOK: ['actions', 'activations'] }],
         parents: [{command: 'editor'}],
         related: allExcept('edit')
     },
 
     compose: {
+        strict: 'compose',
+        command: 'compose',
         title: 'New composition',
         header: 'For quick prototyping of compositions, this command opens an editor in the sidecar.',
         example: 'compose <appName>',
-        commandPrefix: 'editor compose',
         required: [{ name: '<appName>', docs: 'The name of your new composition' }],
         parents: [{command: 'editor'}],
         related: allExcept('compose')
     },
 
     new: {
+        strict: 'new',
+        command: 'new',
         title: 'New action',
         header: 'For quick prototyping of actions, this command opens an editor in the sidecar.',
         example: 'new <actionName>',
-        commandPrefix: 'editor new',
         required: [{ name: '<actionName>', docs: 'The name of your new action' }],
+        optional: [{ name: '--kind', alias: '-k', docs: 'The OpenWhisk kind of the new action',
+                     allowed: ['nodejs', 'python', 'php', 'swift'],
+                     allowedIsPrefixMatch: true,
+                     defaultValue: 'nodejs'
+                   }],
         parents: [{command: 'editor'}],
         related: allExcept('new')
     }

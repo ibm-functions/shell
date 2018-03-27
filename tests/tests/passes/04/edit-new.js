@@ -42,6 +42,10 @@ describe('create new actions in editor', function() {
        .then(cli.expectError(409))
        .catch(common.oops(this)))
 
+    it('should report 498 for new --kind zoo', () => cli.do('new nope --kind zoo', this.app)
+       .then(cli.expectError(498)) // bad value for optional parameter
+       .catch(common.oops(this)))
+
     /** deploy the new action */
     const deploy = (app, action) => () => {
         return app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('Deploy'))
