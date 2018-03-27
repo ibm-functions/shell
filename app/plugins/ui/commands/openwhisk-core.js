@@ -747,7 +747,7 @@ const owOpts = (options = {}, execOptions = {}) => {
         options.agent = agent
     }
 
-    if (!process.env.TEST_SPACE && !process.env.TRAVIS && settings.userAgent) {
+    if (settings.userAgent && !process.env.TEST_SPACE && !process.env.TRAVIS) {
         // install a User-Agent header, except when running tests
         debug('setting User-Agent', settings.userAgent)
         options['User-Agent'] = settings.userAgent

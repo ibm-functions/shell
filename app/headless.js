@@ -248,6 +248,8 @@ function mimicDom(app, { createWindow }, localStorage) {
     const isVowel = c => c === 'a' || c === 'e' || c === 'i' || c === 'o' || c === 'u'
     const startsWithVowel = s => isVowel(s.charAt(0))
     global.ui.startsWithVowel = startsWithVowel
+
+    global.settings = require(require('path').join(__dirname, './build/config.json'))
 }
 
 const colorMap = {
