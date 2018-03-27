@@ -287,7 +287,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             }
 
             // and try to make the gridDom mostly squarish
-            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2.5 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 0.75)}vw`
+            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2.75 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 0.75)}vw`
 
             let idx = 0
             group.activations.forEach(activation => {

@@ -373,8 +373,8 @@
 }*/
 .activation-viz-plugin .grid-cell {
     /* square aspect ratio */
-    width: 2.5vw;
-    height: 2.5vw;
+    width: 2.75vw;
+    height: 2.75vw;
 }
 .activation-viz-plugin .zoom_1 .grid-cell {
     /* square aspect ratio */

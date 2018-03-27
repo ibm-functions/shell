@@ -58,7 +58,7 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         fdom.className = 'grid-oops-overlay'
         container.appendChild(fdom)
 
-    } else if (!options || options.zoom > 0) {
+    } else if (!options || options.zoom >= 0) {
         // for larger zoom levels, and only for successful activations,
         // render the latency inside the cell
         const innerLabel = document.createElement('span')
