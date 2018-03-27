@@ -659,6 +659,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     return {
         type: 'custom',
         content,
+        controlHeaders: true,
         modes: modes(viewName.toLowerCase(), options)
     }
 }
