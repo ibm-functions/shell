@@ -314,8 +314,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
     tableScrollContainer.className = 'data-table-scroll-container'
 
     // header title
-    const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
-    ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
+    const onclick = options.name ? drilldownWith(viewName, `app get "${options.name}"`) : undefined
+    ui.addNameToSidecarHeader(sidecar, options.name || titleWhenNothingSelected, undefined, onclick)
 
     // cache rows for redraw
     const rowMap = {}
@@ -400,7 +400,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
                 // drill down to grid view; note how we pass through a --name
                 // query, to filter based on the clicked-upon row
-                //row.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}" ${splitOptions}`))
+                //row.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --zoom 1 --name "${group.path}" ${splitOptions}`)
 
                 if (options.split) {
                     const version = row.insertCell(-1)
