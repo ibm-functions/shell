@@ -130,7 +130,8 @@ const format = (message, options={}) => {
 
         const { command, docs, title, breadcrumb=title||command, header=docs&&`${docs}.`, example, detailedExample, sampleInputs,
                 commandPrefix, commandPrefixNotNeeded,
-                available, parents=[], related, required, optional, oneof } = usage
+                available, parents=[], related, required, optional, oneof } = usage,
+              outerCommandPrefix = commandPrefix
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
@@ -338,7 +339,7 @@ const format = (message, options={}) => {
 
                 // fields of the row model
                 // debug('row', rowData)
-                const { commandPrefix, command=commandPrefix, name=command, label=name,
+                const { commandPrefix=outerCommandPrefix, command=commandPrefix, name=command, label=name,
                         alias, numeric, aliases=[alias], hidden=false, advanced=false,
                         available,
                         example=numeric&&'N', dir:isDir=available||false,
@@ -358,7 +359,7 @@ const format = (message, options={}) => {
                       docsPart = span(docs),
                       allowedPart = allowed && smaller(span(undefined))
 
-                // for repl.exec, 
+                // for repl.exec,
                 const commandForExec = alias => `${commandPrefix && !commandPrefixNotNeeded ? commandPrefix + ' ' : ''}${alias}`
 
                 row.className = 'log-line entity'
