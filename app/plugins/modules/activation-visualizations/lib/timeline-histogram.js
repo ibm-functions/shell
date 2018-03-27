@@ -38,8 +38,8 @@ const drawTimeline = (options, header) => activations => {
     content.style.width = 0             // ugh, chrome doesn't trigger a resize on shrink; see https://stackoverflow.com/a/7985973
 
     // header title
-    const onclick = options.appName ? drilldownWith(viewName, `app get "${options.appName}"`) : undefined
-    ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
+    const onclick = options.name ? drilldownWith(viewName, `app get "${options.name}"`) : undefined
+    ui.addNameToSidecarHeader(sidecar, options.name || titleWhenNothingSelected, undefined, onclick)
 
     // add time range to the sidecar header
     const groupData = groupByAction(activations, Object.assign({ groupBySuccess: true }, options))
