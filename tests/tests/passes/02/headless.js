@@ -24,7 +24,9 @@ const path = require('path'),
 
 const cli = {
     do: cmd => new Promise((resolve, reject) => {
-        const result = exec(`${fsh} ${cmd} --no-color`, (err, stdout, stderr) => {
+        const command = `${fsh} ${cmd} --no-color`
+
+        exec(command, (err, stdout, stderr) => {
             if (err) {
                 resolve({ code: err.code, output: stderr })
             } else {
@@ -78,6 +80,10 @@ const cli = {
 
 describe('Headless mode', function() {
     before(common.before(this, { noApp: true }))
+
+    it('should list sessions', () => cli.do('session list')
+       .then(cli.expectOK('ok'))
+       .catch(common.oops(this)))
 
     it('should show top-level help with no arguments', () => cli.do('')
        .then(cli.expectError(1, 'Shell Docs / Getting Started'))
