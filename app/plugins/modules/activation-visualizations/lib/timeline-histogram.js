@@ -50,6 +50,7 @@ const drawTimeline = (options, header) => activations => {
     return {
         type: 'custom',
         content,
+        controlHeaders: true,
         modes: modes('timeline', options)
     }
 }
