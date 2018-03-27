@@ -154,6 +154,22 @@ module.exports = (commandTree, prequire) => {
                 return Promise.reject()
             }
 
+            if (arguments[arguments.length - 1].last) {
+                //
+                // the user has asked for wsk activation --last
+                //
+                const which = arguments[arguments.length - 1].last
+                return repl.qexec(`wsk activation list --limit 1`
+                                  + (typeof which === 'string' ? ` --name ${which}` : ''))
+                    .then(activations => {
+                        if (activations.length === 0) {
+                            throw new Error('No such activation found')
+                        } else {
+                            return repl.qexec(`wsk activation get ${activations[0].activationId}`)
+                        }
+                    })
+            }
+
             return rawGet.apply(undefined, arguments)
                 .then(response => {
                     debug('response', response)

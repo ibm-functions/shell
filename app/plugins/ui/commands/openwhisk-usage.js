@@ -344,7 +344,8 @@ module.exports = {
                              available: [{ command: 'get', fn: (command, syn='activation') => ({
                                  command, docs: 'get the full details of an activation', strict: command,
                                  example: `wsk ${syn} get <activationID>`,
-                                 required: activationID,
+                                 oneOf: [activationID,
+                                         { name: '--last [actionName]', booleanOK: true, docs: 'show the last activation [of the given action]' }],
                                  parents: [{ command: 'wsk' }, { command: 'wsk activation' }]
                              })
                              },
