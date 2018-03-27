@@ -306,7 +306,7 @@ const openEditor = wsk => {
     // Monaco uses a custom amd loader that over-rides node's require.
     // Keep a reference to node's require so we can restore it after executing the amd loader file.
     const nodeRequire = global.require;
-    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.10.1/min/vs/loader.js')
+    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.11.1/min/vs/loader.js')
     ui.injectCSS(path.join(__dirname, 'mono-blue.css'))
     ui.injectCSS(path.join(__dirname, 'editor.css'))
 
@@ -364,6 +364,12 @@ const openEditor = wsk => {
                         languages.forEach(({language, provider}) => {
                             monaco.languages.registerCompletionItemProvider(language, provider)
                         })
+
+                        // e.g. js-beautify detects global.define and
+                        // tries to use it, but in a way that is
+                        // incompatible with whatever amd that monaco
+                        // incorporates
+                        global.define = undefined
 
                         initDone = true
                     }
