@@ -395,6 +395,10 @@
     /* square aspect ratio */
     width: 0.75vw;
     height: 0.75vw;
+
+    /* for higher zoom levels, use a transparent outline to blur the small cells together better */
+    border: none;
+    outline: 1px solid rgba(255,255,255,0.4);
 }
 .activation-viz-plugin .grid .grid-cell {
     display: flex;

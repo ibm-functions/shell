@@ -50,21 +50,24 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
     cell.className = `${cell.className} is-failure-${isFailure}`
     container.className = `grid-cell-content latency-${latBucket}`
 
-    if (!isFailure && (!options || options.zoom > 0)) {
-        const innerLabel = document.createElement('span')
-        innerLabel.innerText = prettyPrintDuration(duration)
-        container.appendChild(innerLabel)
-    }
-
-    //label = document.createElement('div')
-    // container.appendChild(label)
-    // label.className = 'cell-label'
-    // label.innerText = labelText || ''
+    // any extra info to display in the tooltip?
+    let extraTooltip = ''
 
     if (isFailure) {
         const fdom = document.createElement('div')
         fdom.className = 'grid-oops-overlay'
         container.appendChild(fdom)
+
+    } else if (!options || options.zoom > 0) {
+        // for larger zoom levels, and only for successful activations,
+        // render the latency inside the cell
+        const innerLabel = document.createElement('span')
+        innerLabel.innerText = prettyPrintDuration(duration)
+        container.appendChild(innerLabel)
+
+    } else {
+        // for higher zoom levels (zoom < 0), render the latency in the tooltip
+        extraTooltip += `${newline}${prettyPrintDuration(duration)}`
     }
 
     if (activation) {
@@ -88,7 +91,7 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         cell.isFailure = isFailure
         cell.setAttribute('data-action-name', activation.name)
         cell.setAttribute('data-balloon-break', 'data-balloon-break')
-        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}`)
+        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}${extraTooltip}`)
         cell.setAttribute('data-balloon-pos', 'up')
     }
 
