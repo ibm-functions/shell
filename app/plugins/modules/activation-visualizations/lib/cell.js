@@ -68,7 +68,7 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
     }
 
     if (activation) {
-        cell.onclick = drilldownWith(returnTo, () => repl.pexec(`wsk activation get ${activation.activationId}`), cell)
+        cell.onclick = drilldownWith(returnTo, `wsk activation get ${activation.activationId}`, cell)
 
         // tooltip
         const result = activation.response && activation.response.result

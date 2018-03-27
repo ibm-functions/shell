@@ -189,4 +189,9 @@ exports.addModeButtons = (modes, entity, options) => {
     const defaultMode = modes && modes.find(({defaultMode}) => defaultMode),
           show = options && options.show || (defaultMode && (defaultMode.mode || defaultMode.label))
     bottomStripe.addModeButtons(modes, entity, show)
+
+    if (!options || !options.preserveBackButton) {
+        const backContainer = document.querySelector(css.backContainer)
+        backContainer.classList.remove('has-back-button')
+    }
 }
