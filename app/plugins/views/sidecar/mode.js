@@ -47,8 +47,15 @@ module.exports = (commandTree, require) => {
         if (sidecar && sidecar.entity && (!entityType
                                           || sidecar.entity.type === entityType
                                           || util.isArray(entityType) && entityType.find(t => t === sidecar.entity.type))) {
-            sidecarVisibility.show()
-            return ui.showEntity(sidecar.entity, { show: mode }, block, nextBlock)
+            if (mode !== 'raw' &&
+                !(sidecar.entity[mode]
+                  || (sidecar.entity.exec && sidecar.entity.exec[mode])
+                  || (sidecar.entity.response && sidecar.entity.response[mode]))) {
+                throw new Error(`The current entity does not support viewing ${mode}`)
+            } else {
+                sidecarVisibility.show()
+                return ui.showEntity(sidecar.entity, { show: mode }, block, nextBlock)
+            }
         } else {
             throw new Error(!entityType ? 'You have not selected an entity'
                             : `You have not yet selected ${ui.startsWithVowel(entityType) ? 'an' : 'a'} ${entityType.replace(/s$/, '')}`)
