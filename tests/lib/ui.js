@@ -39,6 +39,7 @@ selectors.SIDECAR_PACKAGE_NAME_TITLE = `${selectors.SIDECAR} .sidecar-header-nam
 selectors.SIDECAR_CONTENT = `${selectors.SIDECAR} .sidecar-content`,
 selectors.SIDECAR_WEB_ACTION_URL = `${selectors.SIDECAR} .sidecar-header .entity-web-export-url.has-url`
 selectors.SIDECAR_ACTION_SOURCE = `${selectors.SIDECAR_CONTENT} .action-content .action-source`,
+selectors.SIDECAR_PACKAGE_PARAMETERS = `${selectors.SIDECAR_CONTENT} .package-content .package-source`,
 selectors.SIDECAR_ACTIVATION_RESULT = `${selectors.SIDECAR_CONTENT} .activation-result`,
 selectors.SIDECAR_ACTIVATION_ID = `${selectors.SIDECAR} .sidecar-header .activation-id`,
 selectors.SIDECAR_RULE_CANVAS = `${selectors.SIDECAR} .rule-components`
