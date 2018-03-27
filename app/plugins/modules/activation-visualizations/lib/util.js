@@ -398,10 +398,11 @@ exports.optionsToString = options => {
     let str = ''
     for (let key in options) {
         // underscore comes from minimist
-        if (key !== '_' && options[key] !== undefined && key !== 'name') {
+        if (key !== '_' && options[key] !== undefined && key !== 'name' && key !== 'theme') {
             const dash = key.length === 1 ? '-' : '--',
                   prefix = options[key] === false ? 'no-' : '', // e.g. --no-help
                   value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
+
             if (! (dash === '-' && options[key] === false)) {
                 // avoid -no-q, i.e. single dash
                 str = `${str} ${dash}${prefix}${key}${value}`
@@ -424,7 +425,7 @@ exports.darken = (color, factor=0.3) => Color(color).darken(factor).rgbString()
  *
  */
 exports.ready = () => new Promise(resolve => {
-    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js')
+    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js')
 
     const iter = () => {
         if (typeof Chart === 'undefined') {

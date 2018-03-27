@@ -195,5 +195,8 @@ module.exports = (command, highlightThis, container, returnTo, options) => event
     highlight(highlightThis)
 
     // now we can safely begin executing the command
-    return typeof command === 'string' ? repl.pexec(command) : command()
+    return typeof command === 'string'
+        ? repl.pexec(command, { preserveBackButton: true })
+        : typeof command === 'function' ? command()
+        : ui.showEntity(command, { preserveBackButton: true })
 }

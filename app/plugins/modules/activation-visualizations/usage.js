@@ -81,7 +81,8 @@ module.exports = {
         title: 'Activity timeline',
         header: '${header.timeline}.',
         example: 'timeline [action|app]',
-        optional, parents,
+        optional: optional.concat([{ name: '--theme', docs: 'a color theme to use' }]),
+        parents,
         related: allExcept('timeline')
     },
 

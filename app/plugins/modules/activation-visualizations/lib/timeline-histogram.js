@@ -38,7 +38,7 @@ const drawTimeline = (options, header) => activations => {
     content.style.width = 0             // ugh, chrome doesn't trigger a resize on shrink; see https://stackoverflow.com/a/7985973
 
     // header title
-    const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined
+    const onclick = options.appName ? drilldownWith(viewName, `app get "${options.appName}"`) : undefined
     ui.addNameToSidecarHeader(sidecar, options.appName || titleWhenNothingSelected, undefined, onclick)
 
     // add time range to the sidecar header
@@ -79,10 +79,10 @@ const prepare = (timelineData, theme) => {
         labels: [],
         datasets: [
             { type: 'line', fill: false, borderWidth: theme.cost.borderWidth||6, pointBorderWidth: 3, pointBackgroundColor: theme.cost.pointBackgroundColor || 'rgba(255,255,255,0.5)', pointRadius: theme.cost.pointRadius === undefined ? 3 :theme.cost.pointRadius, pointHoverRadius: 6,
-              xborderDash: [12,4], label: 'Cumulative Cost'.toUpperCase(), data: accumulate(cost), yAxisID: 'cost',
+              borderDash: [12,1], label: 'Cumulative Cost', data: accumulate(cost), yAxisID: 'cost',
               borderColor: theme.cost.border, backgroundColor: theme.cost.bg},
-            { type: 'bar', fill, borderWidth, label: 'Successes'.toUpperCase(), data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
-            { type: 'bar', fill, borderWidth, label: 'Failures'.toUpperCase(), data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg }
+            { type: 'bar', fill, borderWidth, label: 'Successes', data: success, hoverBackgroundColor: hover(theme.success), borderColor: theme.success.border, backgroundColor: theme.success.bg },
+            { type: 'bar', fill, borderWidth, label: 'Failures', data: failure, hoverBackgroundColor: hover(theme.failure), borderColor: theme.failure.border, backgroundColor: theme.failure.bg }
         ]
     }
 
@@ -107,7 +107,7 @@ const prepare = (timelineData, theme) => {
  */
 const _drawTimeline = ({options, content, timelineData}) => () => {
     const timeFormat = 'MM/DD/YYYY HH:mm',
-          { colors } = require(`../themes/${options.theme || 'ibm'}`)
+          { colors } = require(`../themes/${options.theme || 'colorbrewer1'}`)
 
     /** render the chart */
     const render = () => {
@@ -215,7 +215,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                     onClick: (event, {datasetIndex}) => {
                         if (datasetIndex < 2) {
                             const filter = datasetIndex === 0 ? 'success' : 'failure'
-                            drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --${filter}`))()
+                            drilldownWith(viewName, `grid ${optionsToString(options)} --${filter}`)()
                         }
                     },
                     labels: {
@@ -324,7 +324,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                       timeRangeEnd = _index === labels.length - 1 ? last : labels[_index + 1]
                 if (_datasetIndex < 2) {
                     const filter = _datasetIndex === 0 ? 'success' : 'failure'
-                    drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --since ${timeRangeStart} --upto ${timeRangeEnd} --${filter}`))()
+                    drilldownWith(viewName, `grid ${optionsToString(options)} --since ${timeRangeStart} --upto ${timeRangeEnd} --${filter}`)()
                 }
             }
         }
@@ -342,7 +342,7 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
  */
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core'),
-          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, '\t--theme    <orange-cyan|coral|acacia|highcharts|ibm> [default=ibm]\n\t--nBuckets configure the number of buckets along the x axis [default=20]', extraOptions),
+          mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, extraOptions),
           timelineIt = mkCmd('timeline'),
           pollingTimeline = mkCmd('...', { live: true })
 

@@ -245,13 +245,13 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
 
         } else if (response.type === 'custom' || response.renderAs == 'custom') {
             if (echo) {
-                ui.showCustom(response)
+                ui.showCustom(response, execOptions)
                 ui.ok(resultDom.parentNode)
             }
 
         } else if (response.type === 'activations') {
             // activation response
-            ui.showActivation(response, resultDom)
+            ui.showActivation(response, resultDom, execOptions)
 
         } else if (response.verb === 'delete') {
             if (echo) ui.ok(resultDom.parentNode)

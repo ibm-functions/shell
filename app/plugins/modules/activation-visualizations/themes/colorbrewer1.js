@@ -17,9 +17,9 @@
 const { transparent } = require('../lib/util')
 
 exports.colors = ctx => {
-    const orange = '#e31a1c',
-          cyan = '#1f78b4',
-          blue = '#ff7f00',
+    const orange = '#e71d32',
+          cyan = '#2166ac',
+          blue = '#67a9cf',
           barBorder = transparent('#292525', 0.6)
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 800)
@@ -30,8 +30,8 @@ exports.colors = ctx => {
         fontFamily: 'ibm-plex-sans',
         success: { border: barBorder, bg: cyan },
         failure: { border: barBorder, bg: orange },
-        cost: { border: blue, bg: gradient, borderWidth: 8, pointRadius: 6 },
-        fontColor: '#5A5A5A',
+        cost: { border: blue, bg: gradient, borderWidth: 4, pointRadius: 0 },
+        fontColor: 'black',
         chart: {
             backgroundColor: '#fff'
         },

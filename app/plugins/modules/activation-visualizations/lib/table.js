@@ -535,7 +535,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                     if (!redraw) {
                         outlier.dom = dot
                         dot.className = 'outlier-dot cell-show-only-when-outliers-shown'
-                        dot.onclick = drilldownWith(viewName, () => repl.pexec(`activation get ${activation.activationId}`))
+                        dot.onclick = drilldownWith(viewName, `activation get ${activation.activationId}`)
                         barWrapper.appendChild(dot)
 
                         // try to explain why it's slow
@@ -572,7 +572,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 } else {
                     // drill down to grid, showing just successes
                     cell.classList.add('clickable')
-                    cell.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --success --zoom 1 --name "${group.path}" ${splitOptions}`))
+                    cell.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --success --zoom 1 --name "${group.path}" ${splitOptions}`)
                 }
                 cell.appendChild(countPart)
                 countPart.innerText = group.nSuccesses
@@ -602,7 +602,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
                 // drill down to grid, showing just failures
                 cell.classList.add('clickable')
-                cell.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure --zoom 1 --name "${group.path}" ${splitOptions}`))
+                cell.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --failure --zoom 1 --name "${group.path}" ${splitOptions}`)
                 if (group.nFailures === 0) {
                     cell.classList.add('count-is-zero')
                     cell.classList.remove('clickable')

@@ -529,7 +529,7 @@ const ui = (function() {
      * Render an activation response in the CLI portion of the UI
      *
      */
-    self.showActivation = (response, resultDom) => {
+    self.showActivation = (response, resultDom, execOptions) => {
         if (!response.response && response.activationId) {
             // probably non-blocking invoke
             // say "ok: invoked foo with id xxx"
@@ -562,7 +562,7 @@ const ui = (function() {
 
         } else {
             // blocking invoke, we have a response
-            ui.showEntity(response)
+            ui.showEntity(response, execOptions)
             ui.ok(resultDom)
         }
     }
@@ -936,7 +936,7 @@ const ui = (function() {
         // add mode buttons, if requested
         const modes = custom.modes
         if (!options || !options.leaveBottomStripeAlone) {
-            bottomStripe.addModeButtons(modes, custom)
+            bottomStripe.addModeButtons(modes, custom, options)
             sidecar.setAttribute('class', `${sidecar.getAttribute('data-base-class')} visible custom-content`)
         } else {
             sidecar.classList.add('custom-content')

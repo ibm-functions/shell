@@ -722,12 +722,12 @@ function graph2doms(JSONgraph, containerId, activations){
 						//if(d.type == "Exit" || d.type == 'Entry'){
 						if(d.type === 'Exit'){
 							//console.log(fsm.States[d.id].act[0]);
-							ui.pictureInPicture(() => ui.showEntity(activations[d.visited[0]]),
+						        ui.pictureInPicture(activations[d.visited[0]],
 	                                    d3.event.currentTarget.parentNode, // highlight this node
 	                                    $("#wskflowContainer")[0],
 	                                    'App Visualization'          // container to pip
 	                                    )(d3.event)
-							/*ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
+							/*ui.pictureInPicture(`wsk activation get ${id}`, {echo: true}),
 	                                    d3.event.currentTarget.parentNode, // highlight this node
 	                                    $("#wskflowContainer")[0],
 	                                    'App Visualization'          // container to pip
@@ -748,10 +748,10 @@ function graph2doms(JSONgraph, containerId, activations){
 								//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 								//let id = fsm.States[d.id].act[0].activationId;
 
-								ui.pictureInPicture(() => ui.showEntity(activations[d.visited[0]]),
+								ui.pictureInPicture(activations[d.visited[0]],
 		                                    d3.event.currentTarget.parentNode, // highlight this node
 		                                    $("#wskflowContainer")[0],
-		                                    'App Visualization'          // container to pip		                                 
+		                                    'App Visualization'          // container to pip
 		                                    )(d3.event)               // pass along the raw dom event
 							}
 							else{
@@ -807,11 +807,11 @@ function graph2doms(JSONgraph, containerId, activations){
 									//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
 									let id = $(this).attr("aid"), index = $(this).attr('index');
 
-									//ui.pictureInPicture(() => repl.exec(`wsk activation get ${id}`, {echo: true}),
-									ui.pictureInPicture(() => ui.showEntity(activations[index]),
+									//ui.pictureInPicture(`wsk activation get ${id}`, {echo: true}),
+									ui.pictureInPicture(activations[index],
 			                                    $(this).parent()[0], // highlight this node
 			                                    $("#wskflowContainer")[0],
-			                                    'App Visualization'          // container to pip			                                    
+			                                    'App Visualization'          // container to pip
 			                                    )(e)               // pass along the raw dom event
 								})
 
@@ -833,10 +833,11 @@ function graph2doms(JSONgraph, containerId, activations){
 					if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'deployed'){
 						if(d.name){
 							//repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true});
-							ui.pictureInPicture(() => repl.exec(`wsk action get "${d.name}"`, {sidecarPrevious: 'get myApp', echo: true}),
+							ui.pictureInPicture(`wsk action get "${d.name}"`,
 	                                    d3.event.currentTarget.parentNode, // highlight this node
 	                                    $("#wskflowContainer")[0],
-	                                    'App Visualization'          // container to pip	                                    
+                                            'App Visualization',          // container to pip
+                                            undefined, {sidecarPrevious: 'get myApp', echo: true}
 	                                    )(d3.event)               // pass along the raw dom event
 						}
 						else{

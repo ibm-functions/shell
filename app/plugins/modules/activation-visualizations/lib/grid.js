@@ -211,12 +211,12 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
               pathComponents = group.path.split('/'),
               packageName = pathComponents.length === 4 ? pathComponents[2] : ''
 
-        const onclick = drilldownWith(viewName, () => repl.pexec(`action get "${group.path}"`))
+        const onclick = drilldownWith(viewName, `action get "${group.path}"`)
         ui.addNameToSidecarHeader(sidecar, group.name, packageName, onclick)
 
         drawLegend(viewName, rightHeader, group, options)
     } else {
-        const onclick = options.appName ? drilldownWith(viewName, () => repl.pexec(`app get "${options.appName}"`)) : undefined,
+        const onclick = options.appName ? drilldownWith(viewName, `app get "${options.appName}"`) : undefined,
               pathComponents = (options.appName||'').split('/'),
               packageName = pathComponents.length === 4 ? pathComponents[2] : pathComponents.length === 2 && options.appName.charAt(0) !== '/' ? pathComponents[0] : '',
               name = pathComponents.length > 1 ? pathComponents[pathComponents.length - 1] : options.appName || titleWhenNothingSelected
@@ -265,7 +265,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             labelInner.appendChild(labelAction)
             labelAction.innerText = actionName
             labelAction.className = 'clickable grid-label-part'
-            labelAction.onclick = drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`))
+            labelAction.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`)
         }
 
         // render the grid
