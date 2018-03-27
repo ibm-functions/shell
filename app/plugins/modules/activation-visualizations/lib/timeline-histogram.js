@@ -323,8 +323,8 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
                 const { _datasetIndex, _index } = elements[0],
                       timeRangeStart = labels[_index],
                       timeRangeEnd = _index === labels.length - 1 ? last : labels[_index + 1]
-                if (_datasetIndex < 2) {
-                    const filter = _datasetIndex === 0 ? 'success' : 'failure'
+                if (_datasetIndex <= 2) {
+                    const filter = _datasetIndex === 1 ? 'success' : 'failure'
                     drilldownWith(viewName, `grid ${optionsToString(options)} --since ${timeRangeStart} --upto ${timeRangeEnd} --${filter}`)()
                 }
             }
