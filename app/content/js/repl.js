@@ -472,8 +472,15 @@ const split = (str, removeOuterQuotes=true) => {
             continue
         }
 
+        const last = stack.length > 0 && stack[stack.length - 1]
+
+        if (char === '{') {
+            stack.push(char)
+        } else if (char === '}' && last === '{') {
+            stack.pop()
+        }
+
         if (char === '\'' || char === '"') {
-            const last = stack.length > 0 && stack[stack.length - 1]
 
             if (char === last) {
                 // found matching close quote

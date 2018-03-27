@@ -258,7 +258,7 @@ const handleKeyValuePairAsArray = key => (M, idx, argv, type) => {
         while (!argv[idx].endsWith(startQuote)) {
             paramValue = `${paramValue} ${argv[++idx]}`
         }
-        paramValue = paramValue.replace(new RegExp(startQuote, 'g'), '')
+        //paramValue = paramValue.replace(new RegExp(startQuote, 'g'), '')
     }
 
     if (paramValue.charAt(0) === '@') {
