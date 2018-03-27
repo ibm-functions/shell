@@ -1305,7 +1305,7 @@ body .header .application-icon {
     height: 1.8em;
     margin: 0;
     z-index: 20;
-    transition: all 150ms ease-in-out;
+    transition: all 500ms ease-in-out;
 }
 body.sidecar-is-minimized .header .application-icon {
     /* scoot the icon to be flush right when the sidecar is minimized, so
