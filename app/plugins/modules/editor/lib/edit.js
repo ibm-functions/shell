@@ -23,11 +23,6 @@ const path = require('path'),
       placeholders = require('./placeholders'),
       { lockIcon } = require('./readonly')
 
-/** optional command line arguments, by command */
-const optionalArguments = {
-    new: '[--kind <nodejs:default*|python:default|php:default|swift:default>]'
-}
-
 /** default settings */
 const defaults = {
     kind: 'nodejs:default'
@@ -717,12 +712,12 @@ module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
     // command registration: edit existing action
-    commandTree.listen('/editor/edit', edit(wsk, prequire), { docs: strings.docs.edit })
+    commandTree.listen('/editor/edit', edit(wsk, prequire), { usage: usage.edit })
 
     // command registration: create new action
-    commandTree.listen('/editor/new', newAction({wsk, prequire}), { docs: strings.docs.new })
+    commandTree.listen('/editor/new', newAction({wsk, prequire}), { usage: usage.new })
 
     // command registration: create new app/composition
     commandTree.listen('/editor/compose', newAction(compositionOptions({ wsk, prequire, op: 'compose'})),
-                       { docs: strings.docs.compose })
+                       { usage: usage.compose })
 }

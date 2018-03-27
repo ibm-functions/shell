@@ -36,10 +36,18 @@ describe('edit actions', function() {
        .then(cli.expectError(404))
        .catch(common.oops(this)))
 
+    it('should report 499 for edit --kind', () => cli.do('edit nope --kind foo', this.app)
+       .then(cli.expectError(499)) // unsupported optional parameter
+       .catch(common.oops(this)))
+
     it('should create an action', () => cli.do('let foo = x=>x', this.app)
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo'))
+       .catch(common.oops(this)))
+
+    it('should report 499 for edit --kind on existing action', () => cli.do('edit foo --kind foo', this.app)
+       .then(cli.expectError(499)) // unsupported optional parameter
        .catch(common.oops(this)))
 
     it('should edit with implicit entity', () => cli.do('edit', this.app)
