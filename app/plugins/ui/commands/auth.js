@@ -27,6 +27,81 @@ const fs = require('fs'),
       expandHomeDir = require('expand-home-dir'),
       wskpropsFile = expandHomeDir('~/.wskprops')
 
+const usage = {
+    auth: {
+        toplevel: {
+            commandPrefix: 'auth',
+            title: 'Authorization Operations',
+            header: 'Commands to switch, list, and remember OpenWhisk authorization keys',
+            related: ['host']
+        },
+        list: {
+            strict: 'list',
+            command: 'list',
+            title: 'List Auth Keys',
+            header: 'List the OpenWhisk namespaces for which you have authorization keys',
+            parents: ['auth'],
+            related: ['host set']
+        },
+        switch: {
+            strict: 'switch',
+            command: 'switch',
+            title: 'Switch Auth Keys',
+            header: 'Switch to use an OpenWhisk namespace, by name',
+            example: 'auth switch <namespace>',
+            required: [{ name: 'namespace', docs: 'an OpenWhisk namespace', entity: 'namespace' }],
+            parents: ['auth'],
+            related: ['auth list', 'host set']
+        },
+        add: {
+            strict: 'add',
+            command: 'add',
+            title: 'Add Auth Key',
+            header: 'Install an OpenWhisk authorization key',
+            example: 'auth add <auth>',
+            required: [{ name: 'auth', docs: 'an OpenWhisk authorization key' }],
+            parents: ['auth'],
+            related: ['auth switch', 'auth list', 'host set']
+        }
+    },
+    host: {
+        toplevel: {
+            commandPrefix: 'host',
+            title: 'Host Operations',
+            header: 'Commands to switch OpenWhisk API host',
+            related: ['auth']
+        },
+        get: {
+            strict: 'get',
+            command: 'get',
+            commandPrefix: 'host',
+            title: 'Get API Host',
+            header: 'Print the current OpenWhisk API host',
+            example: 'host get',
+            parents: ['host']
+        },
+        set: {
+            strict: 'set',
+            command: 'set',
+            commandPrefix: 'host',
+            title: 'Set API Host',
+            header: 'Change the OpenWhisk API host to a chosen alternative',
+            example: 'host set <which>',
+            nRowsInViewport: 5,
+            oneof: [
+                { name: 'local', docs: 'Use a local OpenWhisk installation' },
+                { name: 'us-south', docs: 'Use the IBM Cloud Dallas installation' },
+                { name: 'eu-gb', docs: 'Use the IBM Cloud London installation' },
+                { name: 'eu-de', docs: 'Use the IBM Cloud Frankrut installation' },
+                { name: 'hostname', docs: 'Use a given hostname or IP address' }
+            ],
+            parents: ['host']
+        }
+    }
+}
+usage.auth.toplevel.available = [usage.auth.add, usage.auth.list, usage.auth.switch]
+usage.host.toplevel.available = [usage.host.get, usage.host.set]
+
 /**
  * The message we will use to inform the user of a auth switch event
  *
@@ -142,8 +217,8 @@ const use = (wsk, commandTree) => verb => (_1, _2, _3, _4, _5, _6, argv) => name
 module.exports = (commandTree, prequire) => {
     const wsk = prequire('/ui/commands/openwhisk-core')
 
-    commandTree.subtree('/host', { docs: 'Commands to switch OpenWhisk API host' })
-    commandTree.subtree('/auth', { docs: 'Commands to switch, list, and remember OpenWhisk authorization keys' })
+    commandTree.subtree('/host', { usage: usage.host.toplevel })
+    commandTree.subtree('/auth', { usage: usage.auth.toplevel })
 
     const clicky = (parent, cmd, exec = repl.pexec) => {
         const dom = document.createElement('span')
@@ -185,22 +260,22 @@ module.exports = (commandTree, prequire) => {
     }
     const add = (_1, _2, _3, _4, _5, _6, argv) => addFn(firstArg(argv, 'add'))
 
-    const listCmd = commandTree.listen('/auth/list', list, { docs: 'List the OpenWhisk authorization keys you have installed' })
+    const listCmd = commandTree.listen('/auth/list', list, { usage: usage.auth.list })
     commandTree.synonym('/auth/ls', list, listCmd)
 
     const useFn = use(wsk, commandTree)
-    const useCmd = commandTree.listen('/auth/use', useFn('use'), { docs: 'Switch to use an OpenWhisk namespace, by name (hint: try auth ls first)' })
-    commandTree.synonym('/auth/switch', useFn('switch'), useCmd)
+    const useCmd = commandTree.listen('/auth/switch', useFn('switch'), { usage: usage.auth.switch })
+    // commandTree.synonym('/auth/switch', useFn('switch'), useCmd)
     //commandTree.synonym('/auth/use', useFn, useCmd)
 
-    const addCmd = commandTree.listen('/auth/add', add, { docs: 'Install an OpenWhisk authorization key' })
-    commandTree.synonym('/auth/install', use, addCmd)
+    const addCmd = commandTree.listen('/auth/add', add, { usage: usage.auth.add })
+    //commandTree.synonym('/auth/install', use, addCmd)
 
     /**
      * OpenWhisk API host: get and set commands
      *
      */
-    commandTree.listen('/host/get', () => wsk.apiHost.get(), { docs: 'Print the current OpenWhisk API host' })
+    commandTree.listen('/host/get', () => wsk.apiHost.get(), { usage: usage.host.get })
     commandTree.listen('/host/set',
                        (_1, _2, _a, _3, _4, _5, argv_without_options, options) => {
                            const argv = slice(argv_without_options, 'set')
@@ -241,7 +316,7 @@ module.exports = (commandTree, prequire) => {
                                host = 'https://192.168.33.13'
                                ignoreCerts = true
                                isLocal = true
-                           } else if (host === 'local') {
+                           } else if (host === 'local' || host === 'localhost') {
                                // try a variety of options
                                const variants = [ 'https://192.168.33.13', 'http://172.17.0.1:10001', 'http://192.168.99.100:10001' ]
                                const request = require('request')
@@ -324,7 +399,7 @@ module.exports = (commandTree, prequire) => {
                                }
                                })))
                        },
-                       { docs: 'Update the current OpenWhisk API host' })
+                       { usage: usage.host.set })
 
     return {
         add: addFn

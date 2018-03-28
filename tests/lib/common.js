@@ -56,6 +56,9 @@ exports.before = (ctx, {fuzz, noApp=false}={}) => {
 	        // pass WSKNG_DEBUG on to NODE_DEBUG for the application
 	        opts.env.NODE_DEBUG = process.env.WSKNG_NODE_DEBUG
             }
+            if (process.env.DEBUG) {
+                opts.env.DEBUG = process.env.DEBUG
+            }
 
             ctx.app = new Application(opts)
         }

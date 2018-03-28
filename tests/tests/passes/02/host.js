@@ -39,6 +39,10 @@ describe('host tests', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
+    it('should command not found on hosts set', () => cli.do('hosts set', this.app)
+       .then(cli.expectError(0, 'Command not found'))
+       .catch(common.oops(this)))
+
     it('bogus host from default context', () => cli.do(`host set xxx`, this.app)
 	.then(cli.expectOKWithCustom({selector: '', expect: `Before you can proceed, please provide an OpenWhisk auth key, using auth add <AUTH_KEY>` })))
 

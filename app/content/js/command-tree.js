@@ -26,18 +26,28 @@ const util = require('util'),
       interior = () => undefined,   // this will trigger a re-parse using Context.current as the path prefix
       newTree = () => ({ $: root(), key: '/', route: '/', children: {}}),
       model = newTree(),    // this is the model of registered listeners, a tree
-      intentions = newTree(),    // this is the model of registered intentional listeners
-      disambiguator = {}    // map from command name to disambiguations
+      intentions = newTree()    // this is the model of registered intentional listeners
+let disambiguator = {}    // map from command name to disambiguations
 
 debug('finished loading modules')
 
 // for plugins.js
-exports.disambiguator = () => {
+exports.startScan = () => {
+    const state = disambiguator
+    disambiguator = {}
+    debug('startScan', disambiguator)
+    return state
+}
+exports.endScan = state => {
+    debug('finishing up', disambiguator)
     const map = {}
     for (let command in disambiguator) {
         map[command] = disambiguator[command].map(({route, options}) => ({
             route, plugin: options && options.plugin
         }))
+    }
+    if (state) {
+        disambiguator = state
     }
     return map
 }
@@ -505,7 +515,7 @@ const read = (model, argv) => {
  */
 const disambiguate = (argv, noRetry=false) => {
     let idx
-    const resolutions = ( (((idx=0)||true) && disambiguator[argv[idx]]) || (((idx=argv.length-1)||true) && disambiguator[argv[idx]]) || []).filter(isFileFilter)
+    const resolutions = ( (((idx=0)||true) && resolver.disambiguate(argv[idx])) || (((idx=argv.length-1)||true) && resolver.disambiguate(argv[idx])) || [])
     debug('disambiguate', idx, argv, resolutions)
 
     if (resolutions.length === 0 && !noRetry) {
@@ -516,11 +526,26 @@ const disambiguate = (argv, noRetry=false) => {
 
     } else if (resolutions.length === 1) {
         // one unambiguous resolution! great, but we need to
-        // double-check: if the resolution is a subtree, then it better have a child that matches 
-        const leaf = resolutions[0]
+        // double-check: if the resolution is a subtree, then it better have a child that matches
+        const argvForMatch = resolutions[0].route.split('/').slice(1)
+        const cmdMatch = treeMatch(model, argvForMatch),
+              leaf = cmdMatch && cmdMatch.$ ? cmdMatch : treeMatch(intentions, argvForMatch)
 
-        if (idx < argv.length - 1 && leaf.children) {
+        debug('disambiguate single match', idx, argv, cmdMatch, leaf)
+
+        if (!leaf || !leaf.$) {
+            if (!noRetry && resolutions[0].plugin) {
+                debug('disambiguate attempting to resolve plugins 2')
+                resolver.resolve(`/${argv.join('/')}`)
+                return disambiguate(argv, true)
+            } else {
+                debug('disambiguate nope', intentions)
+                return
+            }
+
+        } else if (idx < argv.length - 1 && leaf.children) {
             // then the match is indeed a subtree
+            debug('validating disambiguation')
             let foundMatch = false
             const next = argv[argv.length - 1]
             for (let cmd in leaf.children) {
@@ -535,7 +560,7 @@ const disambiguate = (argv, noRetry=false) => {
             }
         }
 
-        debug('disambiguate success', leaf)
+        debug(`disambiguate success ${leaf.route}`, leaf)
         return withEvents(leaf.$, leaf)
     }
 }
