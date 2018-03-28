@@ -92,7 +92,7 @@ const wrap = div => {
  */
 const usageFromCommand = command => repl.qexec(command)
       .then(_ => {
-          console.error('Invalid usage model', _)
+          console.error('Invalid usage model', command, _)
           throw new Error('Internal Error')
       })
       .catch(usageError => usageError.raw)

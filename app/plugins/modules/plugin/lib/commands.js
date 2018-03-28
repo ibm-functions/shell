@@ -57,6 +57,15 @@ const doList = (_a, _b, fullArgv, modules, rawCommandString, _2, argvWithoutOpti
                               name,
                               onclick: () => repl.pexec(name)
                             })))
+        .catch(err => {
+            if (err.code === 'ENOENT') {
+                const error = new Error('This plugin is not installed')
+                error.code = 404
+                throw error
+            } else {
+                throw err
+            }
+        })
             //success(false, `offered by the ${plugin} plugin`, commands))
 }
 

@@ -61,7 +61,7 @@ const writeToFile = (dir, modules) => new Promise((resolve, reject) => {
  *
  */
 const readFile = dir => new Promise((resolve, reject) => {
-    fs.readFile(prescanned(dir), (err, data) => {
+    fs.readFile(prescanned(dir), (err, _data) => {
         if (err) {
             console.error(err.code)
             if (err.code === 'ENOENT') {
@@ -70,7 +70,18 @@ const readFile = dir => new Promise((resolve, reject) => {
                 reject(err)
             }
         } else {
-            resolve(JSON.parse(data.toString()))
+            try {
+                const data = _data.toString()
+                if (!data || data.trim().length === 0) {
+                    // it was empty
+                    resolve({})
+                } else {
+                    resolve(JSON.parse(data))
+                }
+            } catch (err) {
+                console.error(err)
+                resolve({})
+            }
         }
     })
 })

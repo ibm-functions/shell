@@ -70,7 +70,7 @@ describe('auth tests', function() {
         .then(cli.expectContext(undefined, ''))) // don't care about command context (undefined), and selection must be empty ('')
 
     // switch back to second namespace
-    it('should switch to the second namespace, using the CLI use command', () => cli.do(`auth use ${ns2}`, this.app)
+    it('should switch to the second namespace, using the CLI switch command', () => cli.do(`auth switch ${ns2}`, this.app)
 	.then(cli.expectOKWithCustom({selector: '', expect: `namespace ${ns2}` })))
 
     // list should show only foo2

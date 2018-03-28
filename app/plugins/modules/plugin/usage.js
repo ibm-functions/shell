@@ -18,7 +18,7 @@
 const parents = [{ command: 'plugin' }]
 
 /** required parameter: name of installed plugin */
-const installedPlugin = [{ name: 'plugin', docs: 'the name of an installed plugin' }]
+const installedPlugin = [{ name: 'plugin', docs: 'the name of an installed plugin', entity: 'plugin' }]
 
 /**
  * Usage model for plugin commands
@@ -68,6 +68,7 @@ exports.list = {
     breadcrumb: 'List plugins',
     docs: 'list installed Shell plugins',
     example: 'plugin list',
+    optional: [{ name: '--limit', hidden: true }], // to make tab completion happy
     parents
 }
 

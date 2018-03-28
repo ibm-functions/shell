@@ -15,7 +15,7 @@
  */
 
 const debug = require('debug')('plugins')
-debug('starting')
+debug('loading')
 
 const fs = require('fs'),
       path = require('path'),
@@ -323,13 +323,19 @@ const loadPrescan = userDataDir => {
     debug('loading prescan %s', prescanned)
 
     return new Promise((resolve, reject) => {
-        fs.readFile(prescanned, (err, data) => {
+        fs.readFile(prescanned, (err, _data) => {
             debug('read done, any errors in the read? %s', !!err)
 
             if (err) {
                 reject(err)
             } else {
-                resolve(JSON.parse(data.toString()))
+                const data = _data.toString()
+                if (data.trim().length === 0) {
+                    // it was empty
+                    resolve({})
+                } else {
+                    resolve(JSON.parse(data))
+                }
             }
         })
     })
@@ -393,8 +399,14 @@ const makeResolver = prescan => {
     const resolver = {
         isOverridden: route => prescan.overrides[route],
 
+        disambiguate: command => {
+            debug('attempting to disambiguate command', command)
+            return prescan.disambiguator[command]
+        },
+
         /** given a partial command, do we have a disambiguation of it? e.g. "gr" => "grid" */
         disambiguatePartial: partial => {
+            debug('attempting to disambiguate partial', partial)
             const matches = []
             if (prescan.disambiguator) {
                 for (let command in prescan.disambiguator) {
@@ -434,7 +446,9 @@ const makeResolver = prescan => {
  *
  */
 exports.scan = opts => {
-    debug('scan')
+    debug('scan', opts)
+
+    const state = opts.externalOnly && commandTree.startScan()
 
     return resolveFromLocalFilesystem(opts).then(() => {
         const disambiguator = {}
@@ -465,7 +479,8 @@ exports.scan = opts => {
                 }
             }
         }
-        return { commandToPlugin, topological, flat, overrides, usage, disambiguator: commandTree.disambiguator() }
+
+        return { commandToPlugin, topological, flat, overrides, usage, disambiguator: commandTree.endScan(state) }
     })
 }
 
