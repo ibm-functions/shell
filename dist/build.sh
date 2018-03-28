@@ -2,22 +2,19 @@
 
 #
 # input params: choose a platform to build for (default: all)
-# and choose a name for the app (default: IBM Cloud Functions Shell)
 #
 PLATFORM=${1-all}
-APP_NAME="${APP_NAME-IBM Cloud Functions Shell}"
+
+# product name
+PRODUCT_NAME="${PRODUCT_NAME-`cat ../build/config.json | jq --raw-output .productName`"
+
+# filesystem icons
+ICON_MAC=`cat ../build/config.json | jq --raw-output .filesystemIcons.darwin`
+ICON_WIN32=`cat ../build/config.json | jq --raw-output .filesystemIcons.win32`
+ICON_LINUX=`cat ../build/config.json | jq --raw-output .filesystemIcons.linux`
 
 VERSION=`git rev-parse master`
 BUILDDIR=build
-
-# openwhisk icons
-#ICON_MAC=../assets/icons/icns/OpenWhisk-512x512.icns
-#ICON_WIN32=../assets/icons/ico/openwhisk_512x512_jnb_icon.ico
-
-# dolphin icons
-ICON_MAC=../assets/icons/icns/blue-dolphin-transparent.icns
-ICON_WIN32=../assets/icons/ico/blue-dolphin-transparent.ico
-ICON_LINUX=../assets/icons/png/blue-dolphin-transparent.png
 
 function init {
     # make the build directory
@@ -58,26 +55,26 @@ function win32 {
         # create the bundles
         ./node_modules/.bin/electron-packager \
 	    ../app \
-	    "$APP_NAME" \
+	    "$PRODUCT_NAME" \
 	    --asar=true \
             --build-version=$VERSION \
 	    --out=$BUILDDIR \
 	    --platform=win32 \
 	    --icon=$ICON_WIN32 \
-	    --protocol=wsk --protocol-name="Execute ${APP_NAME} commands" \
+	    --protocol=wsk --protocol-name="Execute ${PRODUCT_NAME} commands" \
 	    --overwrite \
 	    --win32metadata.CompanyName="Apache" \
-	    --win32metadata.ProductName="${APP_NAME}"
+	    --win32metadata.ProductName="${PRODUCT_NAME}"
 
         # CLI scripts
-        cp ../app/bin/fsh "$BUILDDIR/${APP_NAME}-win32-x64/fsh"
-        cp ../app/bin/fsh.bat "$BUILDDIR/${APP_NAME}-win32-x64"
+        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-win32-x64/fsh"
+        cp ../app/bin/fsh.bat "$BUILDDIR/${PRODUCT_NAME}-win32-x64"
 
         #
         # deal with win32 packaging
         #
         if [ -z "$NO_INSTALLER" ]; then
-            (cd $BUILDDIR && zip -q -r "${APP_NAME}-win32-x64" "${APP_NAME}-win32-x64" -x \*~)
+            (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-win32-x64" "${PRODUCT_NAME}-win32-x64" -x \*~)
         fi
     fi
 }
@@ -90,30 +87,30 @@ function mac {
     if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "mac" ] || [ "$PLATFORM" == "macos" ] || [ "$PLATFORM" == "darwin" ]; then
         ./node_modules/.bin/electron-packager \
 	    ../app \
-	    "${APP_NAME}" \
+	    "${PRODUCT_NAME}" \
 	    --asar=true \
             --build-version=$VERSION \
 	    --ignore='~$' \
 	    --out=$BUILDDIR \
 	    --platform=darwin \
 	    --icon=$ICON_MAC \
-	    --protocol=wsk --protocol-name="Execute ${APP_NAME} commands" \
+	    --protocol=wsk --protocol-name="Execute ${PRODUCT_NAME} commands" \
 	    --overwrite
 
         # use a custom icon for mac
-        cp $ICON_MAC "$BUILDDIR/${APP_NAME}-darwin-x64/${APP_NAME}.app/Contents/Resources/electron.icns"
+        cp $ICON_MAC "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app/Contents/Resources/electron.icns"
 
         # CLI script
-        cp ../app/bin/fsh "$BUILDDIR/${APP_NAME}-darwin-x64/${APP_NAME}.app/Contents/MacOS/"
+        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app/Contents/MacOS/"
 
         # create the installers
         if [ -n "$ZIP_INSTALLER" ]; then
-            (cd $BUILDDIR && zip -q -r "${APP_NAME}-darwin-x64" "${APP_NAME}-darwin-x64" -x \*~)
+            (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-darwin-x64" "${PRODUCT_NAME}-darwin-x64" -x \*~)
 
         elif [ -z "$NO_INSTALLER" ]; then
             ./node_modules/.bin/electron-installer-dmg \
-	        "$BUILDDIR/${APP_NAME}-darwin-x64/${APP_NAME}.app" \
-	        "${APP_NAME}" \
+	        "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app" \
+	        "${PRODUCT_NAME}" \
 	        --out=$BUILDDIR \
 	        --icon=$ICON_MAC \
 	        --icon-size=128 \
@@ -129,20 +126,20 @@ function linux {
     if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "linux" ]; then
         ./node_modules/.bin/electron-packager \
 	    ../app \
-	    "${APP_NAME}" \
+	    "${PRODUCT_NAME}" \
 	    --asar=true \
             --build-version=$VERSION \
 	    --out=$BUILDDIR \
 	    --platform=linux \
-	    --protocol=wsk --protocol-name="Execute ${APP_NAME} commands" \
+	    --protocol=wsk --protocol-name="Execute ${PRODUCT_NAME} commands" \
             --icon=$ICON_LINUX \
 	    --overwrite
 
         # CLI script
-        cp ../app/bin/fsh "$BUILDDIR/${APP_NAME}-linux-x64"
+        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-linux-x64"
 
         if [ -z "$NO_INSTALLER" ]; then
-            (cd $BUILDDIR && zip -q -r "${APP_NAME}-linux-x64" "${APP_NAME}-linux-x64" -x \*~)
+            (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-linux-x64" "${PRODUCT_NAME}-linux-x64" -x \*~)
         fi
     fi
 }
@@ -154,7 +151,3 @@ win32
 mac
 linux
 cleanup
-
-# TODO:
-# upload to OS
-# (cd ../prebuilt && npm version publish)
