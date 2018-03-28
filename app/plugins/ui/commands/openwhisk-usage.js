@@ -55,7 +55,7 @@ const activationID = [{ name: 'activationId', docs: 'an activation ID', entity: 
 
 /** optional parameters having to do with parameter bindings */
 const params = [{ name: '--param', alias: '-p', example: 'key value', docs: 'bind a variable to a value', narg: 2, key: 'parameters' },
-                { name: '--param-file', alias: '-P', advanced: true, docs: 'a local path to a bindings file' }]
+                { name: '--param-file', alias: '-P', advanced: true, docs: 'a local path to a bindings file', file: true }]
 
 /** optional parameters having to do with annotations */
 const annotations = [{ name: '--annotation', alias: '-a', example: 'key value', docs: 'annotate a variable with a value', narg: 2, key: 'annotations' },

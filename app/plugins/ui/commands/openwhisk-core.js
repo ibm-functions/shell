@@ -196,7 +196,7 @@ const paramFile = (M, idx, argv, type) => {
     const params = JSON.parse(require('fs').readFileSync(expandHomeDir(file)).toString())
     M[type].parameters = M[type].parameters.concat(toArray(params))
 
-    return idx
+    return idx + 1
 }
 
 const isBinary = {
@@ -804,6 +804,7 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         //
         // OPERATION WITH IMPLICIT ENTITY: try to get the name from the current selection
         //
+        debug('seeing if we can use an implicit entity')
         const sidecar = document.querySelector('#sidecar')
         if (sidecar && sidecar.entity) {
             options.name = `/${sidecar.entity.namespace || '_'}/${sidecar.entity.name}`
