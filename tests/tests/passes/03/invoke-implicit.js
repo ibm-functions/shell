@@ -18,6 +18,7 @@ const common = require('../../../lib/common'),
       openwhisk = require('../../../lib/openwhisk'),
       ui = require('../../../lib/ui'),
       assert = require('assert'),
+      path = require('path'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
@@ -45,6 +46,32 @@ describe('wsk action invoke with implicit entity', function() {
            .then(ui.expectStruct({ x:3, name:'grumble' }))
            .catch(common.oops(this)))
     }
+
+    const paramsJson = require(path.join(__dirname, '../../../data/params.json'))
+
+    it(`should invoke ${actionName} with implicit entity and --param-file`, () => cli.do(`invoke --param-file ./data/params.json`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .then(ui.expectStruct(Object.assign({ x:3 }, paramsJson )))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with implicit entity and -P`, () => cli.do(`invoke -P ./data/params.json`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .then(ui.expectStruct(Object.assign({ x:3 }, paramsJson )))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${actionName} with explicit entity and -P`, () => cli.do(`invoke ${actionName} -P ./data/params.json`, this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(actionName))
+       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+       .then(ui.expectStruct(Object.assign({ x:3 }, paramsJson )))
+       .catch(common.oops(this)))
 
     it(`should fail when requesting parameters of an activation`, () => cli.do('params', this.app)
        .then(cli.expectError(0, 'The current entity does not support viewing parameters'))
