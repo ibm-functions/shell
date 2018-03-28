@@ -6,5 +6,10 @@
     "userAgent": "IBM Cloud Functions Shell",
     "cssTheme": "ibm.css",
     "appIcon": "../assets/icons/png/blue-dolphin-transparent.png",
-    "largeIcon": "content/icons/svg/blue-dolphin.svg"
+    "largeIcon": "content/icons/svg/blue-dolphin.svg",
+    "filesystemIcons": {
+        "darwin": "../assets/icons/icns/blue-dolphin-transparent.icns",
+        "win32": "../assets/icons/ico/blue-dolphin-transparent.ico",
+        "linux": "../assets/icons/png/blue-dolphin-transparent.png"
+    }
 }
