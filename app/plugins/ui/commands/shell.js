@@ -44,7 +44,10 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
             args[0] = process.env.OLDPWD
         }
 
-        if (!args.find(arg => arg.charAt(0) === '-') && cmd !== 'ls') {
+        // see if we should use the built-in shelljs support
+        if (!args.find(arg => arg.charAt(0) === '-') // any options? then no
+            && !args.find(arg => arg === '>')           // redirection? then no
+            && cmd !== 'ls') {
             // shelljs doesn't like dash args
             // otherwise, shelljs has a built-in handler for this
 
