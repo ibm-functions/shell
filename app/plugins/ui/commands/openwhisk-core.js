@@ -567,36 +567,44 @@ specials.actions = {
         } else if (verb !== 'update' || argv[0]) {
             // for action create, or update and the user gave a
             // positional param... find the input file
-            const filepath = ui.findFile(expandHomeDir(argv[0])),
-                  isBinary = argv[0].endsWith('.zip'),
-                  encoding = isBinary ? 'base64' : 'utf8'
+            if (options.docker) {
+                // blackbox action!
+                options.action.exec.kind = 'blackbox'
+                options.action.exec.image = argv[0]
 
-            options.action.exec.code = fs.readFileSync(filepath).toString(encoding)
+            } else {
+                // otherwise, find the file named by argv[0]
+                const filepath = ui.findFile(expandHomeDir(argv[0])),
+                      isBinary = argv[0].endsWith('.zip'),
+                      encoding = isBinary ? 'base64' : 'utf8'
 
-            if (!options.action.annotations) options.action.annotations = []
-            options.action.annotations.push({ key: 'file', value: filepath })
+                options.action.exec.code = fs.readFileSync(filepath).toString(encoding)
 
-            if (isBinary) {
-                // add an annotation to indicate that this is a managed action
-                options.action.annotations.push({ key: 'wskng.combinators', value: [{
-                    type: 'action.kind',
-                    role: 'replacement',
-                    badge: 'zip'
-                }]})
+                if (!options.action.annotations) options.action.annotations = []
+                options.action.annotations.push({ key: 'file', value: filepath })
 
-                options.action.annotations.push({ key: 'binary', value: true })
-            }
+                if (isBinary) {
+                    // add an annotation to indicate that this is a managed action
+                    options.action.annotations.push({ key: 'wskng.combinators', value: [{
+                        type: 'action.kind',
+                        role: 'replacement',
+                        badge: 'zip'
+                    }]})
 
-            eventBus.emit('/action/update', { file: filepath, action: { name: options.name, namespace: options.namespace } })
+                    options.action.annotations.push({ key: 'binary', value: true })
+                }
 
-            // set the default kind
-            if (!options.action.exec.kind) {
-                if (options.kind) {
-                    options.action.exec.kind = options.kind
-                } else {
-                    const extension = filepath.substring(filepath.lastIndexOf('.') + 1)
-                    if (extension) {
-                        options.action.exec.kind = extensionToKind[extension] || extension
+                eventBus.emit('/action/update', { file: filepath, action: { name: options.name, namespace: options.namespace } })
+
+                // set the default kind
+                if (!options.action.exec.kind) {
+                    if (options.kind) {
+                        options.action.exec.kind = options.kind
+                    } else {
+                        const extension = filepath.substring(filepath.lastIndexOf('.') + 1)
+                        if (extension) {
+                            options.action.exec.kind = extensionToKind[extension] || extension
+                        }
                     }
                 }
             }

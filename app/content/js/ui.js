@@ -1408,7 +1408,20 @@ const ui = (function() {
                     if (renderThirdParty(entity)) {
                         // then the third party rendering took care of it
                     } else {
-                        if (entity.exec.code) {
+                        // this is the container for the code
+                        const code = sidecar.querySelector('.action-content .action-source')
+
+                        if (entity.exec.kind === 'blackbox') {
+                            // show the image name
+                            const clicky = document.createElement('a')
+                            clicky.className = 'clickable clickable-blatant'
+                            code.appendChild(document.createTextNode('dockerhub image: '))
+                            code.appendChild(clicky)
+                            clicky.innerText = entity.exec.image
+                            clicky.setAttribute('href', `https://hub.docker.com/r/${entity.exec.image}`)
+                            clicky.setAttribute('target', '_blank')
+
+                        } else if (entity.exec.code) {
                             //
                             // show the action's code
                             //
@@ -1417,7 +1430,6 @@ const ui = (function() {
                                 //
                                 // render the textual source code
                                 //
-                                const code = sidecar.querySelector('.action-content .action-source')
 
                                 code.className = `action-source ${uiNameForKind(entity.exec.kind.substring(0, entity.exec.kind.indexOf(':')))}`
                                 code.innerText = beautify(entity.exec.kind, entity.exec.code)
