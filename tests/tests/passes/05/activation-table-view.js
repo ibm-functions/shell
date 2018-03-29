@@ -34,7 +34,7 @@ const parsesAsInteger = str => {
 }
 const isInteger = str => typeof str === 'number' || parsesAsInteger(str)
 
-const openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, cmd) {
+const _openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, cmd) {
     const view = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} .activation-viz-plugin`,
           row = `${view} tr[data-action-name="${actionName}"]`,
           successCell = `${row} .cell-successes.cell-hide-when-outliers-shown`,
@@ -79,7 +79,12 @@ const openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, c
               }
           });
 
-    it(`open activation table, with ${cmd}`, () => new Promise((resolve, reject) => once(0, resolve, reject)))
+    return new Promise((resolve, reject) => once(0, resolve, reject))
+}
+const openTableExpectCountOf = function() {
+    const cmd = arguments[arguments.length - 1]
+
+    it(`open activation table, with ${cmd}`, () => _openTableExpectCountOf.apply(this, arguments))
 }
 exports.openTableExpectCountOf = openTableExpectCountOf
 
@@ -149,6 +154,15 @@ describe('Activation table visualization', function() {
     bomb()
     openTableExpectCountOf(this, 3, 1, 'summary')
     openTableExpectCountOf(this, 3, 1, 'summary --batches 10')
+
+    it('should open table, click on a failure cell, and show grid', () => _openTableExpectCountOf(this, 3, 1, 'summary --batches 10')
+       .then(() => `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-errors`)
+       .then(selector => this.app.client.scroll(selector)
+             .then(this.app.client.click(selector)))
+       .then(() => this.app)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectMode('grid'))
+       .catch(common.oops(this)))
 
     // force a version update
     it('should create the action that bombs if the input value is negative', () => cli.do(`let ${actionName} = ({x}) => x<0 ? {error:'bomb!'} : {x: x}`, this.app)
