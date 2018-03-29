@@ -42,8 +42,9 @@ module.exports = (commandTree, require) => {
     const wsk = require('/ui/commands/openwhisk-core'),
           sidecarVisibility = require('/views/sidecar/visibility')
 
-    const switchSidecarMode = (entityType, mode) => (block, nextBlock) => {
+    const switchSidecarMode = (entityType, mode) => (block, nextBlock, argv) => {
         const sidecar = document.querySelector('#sidecar')
+
         if (sidecar && sidecar.entity && (!entityType
                                           || sidecar.entity.type === entityType
                                           || util.isArray(entityType) && entityType.find(t => t === sidecar.entity.type))) {
@@ -56,6 +57,10 @@ module.exports = (commandTree, require) => {
                 sidecarVisibility.show()
                 return ui.showEntity(sidecar.entity, { show: mode }, block, nextBlock)
             }
+        } else if (argv.length === 3 || argv.length === 4) { // activation logs xxx or wsk activation logs xxx
+            return repl.qexec(`${entityType} get ${argv[argv.length - 1]}`)
+                .then(_ => ui.showEntity(_, { show: mode }, block, nextBlock))
+                .then(() => true) // make repl happy
         } else {
             throw new Error(!entityType ? 'You have not selected an entity'
                             : `You have not yet selected ${ui.startsWithVowel(entityType) ? 'an' : 'a'} ${entityType.replace(/s$/, '')}`)
