@@ -28,9 +28,9 @@ const cli = {
 
         exec(command, (err, stdout, stderr) => {
             if (err) {
-                resolve({ code: err.code, output: stderr })
+                resolve({ code: err.code, output: stdout.trim().concat(stderr) })
             } else {
-                resolve({ code: 0, output: stdout })
+                resolve({ code: 0, output: stdout, stderr })
             }
         })
     }),
@@ -99,6 +99,10 @@ describe('Headless mode', function() {
 
     it('should show wsk help with wsk help', () => cli.do('wsk help')
        .then(cli.expectError(1, 'Shell Docs / OpenWhisk'))
+       .catch(common.oops(this)))
+
+    it('should show help for app ls -h', () => cli.do('app ls -h')
+       .then(cli.expectError(1, 'Shell Docs / Composer / CRUD Operations / List compositions'))
        .catch(common.oops(this)))
 
     const listers = ['action list', 'wsk action list', 'ls']

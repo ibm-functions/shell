@@ -136,7 +136,7 @@ const format = (message, options={}) => {
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
         // content
-        const resultWrapper = div(undefined, 'fade-in'),
+        const resultWrapper = div(undefined, 'fade-in usage-error-wrapper'),
               result = div(undefined, options.noHide ? '' : 'hideable'),
               body = div(),
               left = div(),  // usage and detailedExample
