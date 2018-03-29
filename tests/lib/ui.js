@@ -236,6 +236,11 @@ exports.sidecar = {
         it('should toggle closed the sidecar', () => exports.sidecar.doClose(ctx.app))
     },
 
+    expectMode: expectedMode => app => app.client.waitUntil(() => {
+        return app.client.waitForVisible(`${selectors.SIDECAR_MODE_BUTTON(expectedMode)}.sidecar-bottom-stripe-button-active`)
+            .then(() => app)
+    }),
+
     expectShowing: (expectedName, expectedActivationId, expectSubstringMatchOnName=false, expectedPackageName, expectType, waitThisLong=timeout) => app => app.client.waitUntil(() => {
 	// check selected name in sidecar
         return app.client.waitForVisible(`${selectors.SIDECAR}${!expectType ? '' : '.entity-is-' + expectType}`)
