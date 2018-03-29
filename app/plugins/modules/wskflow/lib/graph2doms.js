@@ -77,16 +77,31 @@ const wfColorAct = {
 	inactiveBorder: "grey"
 }
 
+const containerId = 'wskflowDiv';
+
 // need to fix center
-function graph2doms(JSONgraph, containerId, activations){
+function graph2doms(JSONgraph, ifReuseContainer, activations){
 
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
 
-	$("#wskflowContainer").remove();
-	$(containerId).append("<div id='wskflowContainer'></div>");	
+	let containerElement,
+		wskflowContainer = $('<div id="wskflowContainer"></div>');
 
-	$("#wskflowContainer").css({
+	if(ifReuseContainer && $(`#${containerId}`).length>0){
+		containerElement = $(`#${containerId}`);
+		$(containerElement).html('').css('display', 'flex').css('flex', 1);
+		$("#wskflowSVG").remove();
+		$("#qtip").remove();
+	}
+	else{
+		containerElement = $(`<div id="${containerId}" style="display: flex; flex: 1; width: 100%; height: 100%;"></div>`);
+	}
+
+	$(containerElement).append(wskflowContainer);	
+	
+
+	$(wskflowContainer).css({
 		"display": "none",
 		"flex-direction": "column",
 		"align-items": "center",
@@ -99,10 +114,10 @@ function graph2doms(JSONgraph, containerId, activations){
 		"width": '100%',
 		"height": '100%'
 	});
-    $("#wskflowContainer").addClass('grabbable') // we want to use grab/grabbing cursor
+    $(wskflowContainer).addClass('grabbable') // we want to use grab/grabbing cursor
 
 	
-	let ssvg = d3.select("#wskflowContainer")        
+	let ssvg = d3.select($(wskflowContainer)[0])        
 	    .append("svg")
 	    .attr("id", "wskflowSVG")
 	    .style('width', '100%')	// svg width and height changes with the size of the container 
@@ -216,24 +231,24 @@ function graph2doms(JSONgraph, containerId, activations){
 	     .append("svg:path")
 	      .attr("d", "M852.8,558.8c0,194.5-158.2,352.8-352.8,352.8c-194.5,0-352.8-158.3-352.8-352.8c0-190.8,152.4-346.7,341.8-352.5v117.4l176.4-156.9L489,10v118C256.3,133.8,68.8,324.8,68.8,558.8C68.8,796.6,262.2,990,500,990c237.8,0,431.2-193.4,431.2-431.2H852.8z");
 	
-	$("#wskflowContainer").append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
+	$(wskflowContainer).append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
 
 
 	if(activations){
-		$("#wskflowContainer").append("<div id='actList' style='position: absolute; display:none; background-color: rgba(0, 0, 0, 0.8); color: white; font-size: 0.75em; padding: 1ex; width:225px; right: 5px; top: 5px;'></div>");		
+		$(wskflowContainer).append("<div id='actList' style='position: absolute; display:none; background-color: rgba(0, 0, 0, 0.8); color: white; font-size: 0.75em; padding: 1ex; width:225px; right: 5px; top: 5px;'></div>");		
 	}
-	$("#qtip").css({
+	$(wskflowContainer).find("#qtip").css({
 		"position": "absolute",
 		"align-items": "center",
 		"pointer-events": "none",
 	});
-	$("#qtipArrow").css({
+	$(wskflowContainer).find("#qtipArrow").css({
 		"position": "relative",
 		"left": "3px",
 		"top": "1px",
 		"color": "#2E4053"
 	});
-	$("#qtipContent").css({
+	$(wskflowContainer).find("#qtipContent").css({
 		"background-color": wfColor.qtipBackground.normal,
 		"color": "white", 
 		"font-size": "0.75em",		
@@ -348,7 +363,7 @@ function graph2doms(JSONgraph, containerId, activations){
 
 	function drawGraph(nodes, links){
 		console.log("[wskflow] in drawGraph in graph2doms")
-		
+
 		// #1 add the nodes' groups
 		var nodeData = root.selectAll(".node")
 		.data(nodes,  function(d) { return d.id; });
@@ -1127,7 +1142,7 @@ function graph2doms(JSONgraph, containerId, activations){
 
 	function graphDoneCallback(){	
 		// show graph 
-   		$("#wskflowContainer").css("display", "flex");
+   		$(wskflowContainer).css("display", "flex");
  	} 		
 
  	// check if transition is complete. from https://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
@@ -1230,9 +1245,12 @@ function graph2doms(JSONgraph, containerId, activations){
 
     // exported API
     return {
-        register: callback => handlers.push(callback),
-        zoomToFit: () => zoomToFit(true),
-        zoom1to1: () => zoomToFit(false)
+    	view: $(containerElement)[0],
+    	controller:{
+    		register: callback => handlers.push(callback),
+	        zoomToFit: () => zoomToFit(true),
+	        zoom1to1: () => zoomToFit(false)
+    	}        
     }
 }
 

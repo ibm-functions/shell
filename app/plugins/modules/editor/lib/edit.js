@@ -635,8 +635,7 @@ const addWskflow = prequire => opts => {
 
     const { getAction, editor, content, eventBus } = opts,
           wskflowContainer = document.createElement('div'),
-          editorDom = content.querySelector('.monaco-editor-wrapper'),
-          h = document.getElementById("sidecar").getBoundingClientRect().height
+          editorDom = content.querySelector('.monaco-editor-wrapper')
 
     content.appendChild(wskflowContainer)
     wskflowContainer.className = 'wskflow-container'
@@ -669,7 +668,8 @@ const addWskflow = prequire => opts => {
                 // don't bother redrawing on revert
                 ui.removeAllDomChildren(wskflowContainer)
 
-                visualize(fsm, wskflowContainer, undefined, h, undefined, { xdirection: 'RIGHT' })
+                let {view, controller} = visualize(fsm)
+                wskflowContainer.appendChild(view);
             }
 
         }

@@ -566,22 +566,17 @@ exports.handleError = (err, reject) => {
  *
  * @return { view, controller } where controller is the API exported by graph2doms
  */
-exports.wskflow = (visualize, viewName, { fsm, input, name, packageName }) => {
-    const view = document.createElement('div')
-    const h = document.getElementById("sidecar").getBoundingClientRect().height
-    view.style.flex = 1
-    view.style.display = 'flex'
-
-    // wskflow uses jquery, and assumes that the view is attached to the document;
-    // we have to fake it out, by attaching to document.body, then removing
-    document.body.appendChild(view)
-    const controller = visualize(fsm, view, undefined, h)
-    document.body.removeChild(view)
+exports.wskflow = (visualize, viewName, { fsm, input, name, packageName, reuseContainer}) => {
+    // wskflow's visualize function now returns the view as DOM and the controllers for mode buttons 
+    // container is only used in the app preview filewatch mode, where sidecar graph is updated by updating an existing wskflow container
+    // in other cases, container is undefined and wskflow generates a container itself
+    
+    const { view, controller } = visualize(fsm, reuseContainer);
 
     const onclick = undefined
     ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
                               'This is a preview of your app, it is not yet deployed')
-
+    
     return { view, controller }
 }
 

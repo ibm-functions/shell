@@ -43,6 +43,16 @@ const verifyNodeExists = (name, isDeployed=false) => app => {
                                 .then(nodes => nodes.value.length === 1))
         .then(() => app)
 }
+
+// for session - verify node execution status
+const verifyNodeStatusExists = (name, status) => app => {
+    const selector = `#wskflowSVG .node[data-name="/_/${name}"][data-status="${status}"]`
+    console.error(`CHECKING NODE ${name} ${selector}`)
+    return app.client.waitUntil(() => app.client.elements(selector)
+                                .then(nodes => nodes.value.length === 1))
+        .then(() => app)
+}
+
 const verifyNodeExistsById = id => app => {
     return app.client.waitUntil(() => app.client.elements(`#wskflowSVG #${id}`)
                                 .then(nodes => nodes.value.length === 1))
@@ -96,6 +106,7 @@ module.exports = {
     composerInput,
     composerErrorInput,
     verifyNodeExists,
+    verifyNodeStatusExists,
     verifyNodeExistsById,
     verifyEdgeExists,
     verifyOutgoingEdgeExists,

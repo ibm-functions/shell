@@ -459,8 +459,8 @@ function ir2graph(ir, gm, id, prevId){	// ir and graph model
 }
 
 
-function fsm2graph(ir, containerId, acts){
-	//console.log(ir, containerId, act);
+function fsm2graph(ir, containerElement, acts){
+	//console.log(ir, containerElement, acts);
 	taskIndex = 0;
 	activations = acts;
         visited = undefined; // see shell issue #602
@@ -551,7 +551,7 @@ function fsm2graph(ir, containerId, acts){
 	
 	console.log('[wskflow] inserting DOM, calling graph2doms');
 
-	return graph2doms(graphData, containerId, activations);
+	return graph2doms(graphData, containerElement, activations);
 
 }
 
