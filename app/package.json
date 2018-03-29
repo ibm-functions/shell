@@ -33,7 +33,7 @@
     "colors": "^1.1.2",
     "columnify": "^1.5.4",
     "debug": "^3.1.0",
-    "electron-about-window": "^1.8.0",
+    "about-window": "^1.11.0",
     "electron-editor-context-menu": "^1.1.1",
     "es6-promise-pool": "^2.5.0",
     "expand-home-dir": "0.0.3",
