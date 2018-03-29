@@ -1,1 +1,1 @@
-const main = () => composer.try('RandomError', /* catch */ args => ({ message: args.error + ' is caught' }))
+exports.main = composer.try('RandomError', /* catch */ args => ({ message: args.error + ' is caught' }))

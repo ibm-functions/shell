@@ -78,10 +78,9 @@ describe('app create error handling and app create --dry-run', function() {
     const dryRunOk = 'data/composer-source/if.js',
           badDir = 'data/composer-source-expect-errors',
           dryRunBad = [ { input: `${badDir}/error1.js`, err: `SLACK_TOKEN required in environment.` },
-                        { input: `${badDir}/nofsm.js`, err: `Your code could not be composed` },
+                        { input: `${badDir}/nofsm.js`, err: `Error: Unable to compile your composition` },
                         { input: `${badDir}/t2s.js`, err: `ReferenceError: slackConfig is not defined
-    at t2s.js:17:19
-    at t2s.js:22:3` },
+    at t2s.js:16:19` },
                         { input: `${badDir}/if-bad.js`, err: `if-bad.js:2
   /* cond */ 'authenticate',,  /* double comma, expect parse error */
                             ^
