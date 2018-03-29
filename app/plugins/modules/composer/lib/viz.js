@@ -39,8 +39,7 @@ const viewName = 'preview',               // for back button and sidecar header 
  */
 module.exports = (commandTree, prequire) => {
     const render = (input, options) => new Promise((resolve, reject) => {
-         debug('options', options)
-
+         debug('options', options)         
          let fsmPromise, type, extraModes=[]
 
          if (input.endsWith('.fsm') || input.endsWith('.json')) {
@@ -65,8 +64,9 @@ module.exports = (commandTree, prequire) => {
 
          // create a fake action/entity record
          const formatForUser = defaultMode => ({fsm,code}) => {
-             const {visualize} = prequire('wskflow')
-             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name })
+           
+             const {visualize} = prequire('wskflow')             
+             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name, pk: undefined, reuseContainer: options.alreadyWatching})
              extraModes = extraModes.concat(zoomToFitButtons(controller))
 
              const entity = {
@@ -98,7 +98,7 @@ module.exports = (commandTree, prequire) => {
                  entity.show = 'fsm'
                  entity.type = 'actions'
              }
-
+             
              resolve(entity)
          }
          fsmPromise.then(formatForUser(defaultMode))
@@ -114,6 +114,7 @@ module.exports = (commandTree, prequire) => {
                      // createFromSource returns error as either an object that's {fsm:errMsg, code:originalCode}, or just the errMsg string
                      // here we check the error format and send the correct input to formatForUser/handleError
                      // in sidecar, error message shows in the fsm (JSON) tab. code tab shows the user's js code (if existed). 
+                     
                      if(err.fsm)
                       formatForUser('fsm')(err);
                      else
@@ -156,6 +157,9 @@ module.exports = (commandTree, prequire) => {
 
                  debug('environment', environment)
              }
+
+             if(execOptions.alreadyWatching)
+                options.alreadyWatching = execOptions.alreadyWatching;
 
              // render now
              render(input, options).then(resolve, reject)

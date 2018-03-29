@@ -90,9 +90,6 @@ module.exports = (commandTree, prequire) => {
         return repl.qexec(`session get ${sessionId}`)
             .then(session => Promise.all([session, fetchTrace(session), fetchTheAction(session)]))
             .then(([session, activations, action]) => {
-                const content = document.createElement('div')
-                content.style.display = 'none'
-                document.body.appendChild(content)
 
                 let fsm;
                 if (action.wskflowErr) {
@@ -106,11 +103,8 @@ module.exports = (commandTree, prequire) => {
                     fsm = action.annotations.find(({key}) => key === 'fsm').value
                 }
 
-                const controller = visualize(fsm, content, undefined, 1, activations)
+                const {view, controller} = visualize(fsm, undefined, undefined, undefined, activations)
 
-                content.style.display = ''
-                content.style.flex = 1
-                document.body.removeChild(content)
 
                 // set the default mode to session flow
                 session.modes.find(({defaultMode}) => defaultMode).defaultMode = false
@@ -124,7 +118,7 @@ module.exports = (commandTree, prequire) => {
                 return Object.assign(session, {
                     viewName: session.type,
                     type: 'custom',
-                    content,
+                    content: view,
                     isEntity: true
                 })
             })

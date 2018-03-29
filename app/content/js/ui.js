@@ -1155,13 +1155,13 @@ const ui = (function() {
         debug('wskflow', fsm)
         const sidecar = document.querySelector('#sidecar')
         const {visualize} = plugins.require('wskflow')
-        const h = document.getElementById("sidecar").getBoundingClientRect().height
 
         sidecar.classList.add('custom-content')
         const container = document.querySelector('#sidecar > .custom-content')
         removeAllDomChildren(container)
 
-        visualize(fsm, container, undefined, h)
+        let {view, controller} = visualize(fsm)
+        container.appendChild(view)
         sidecar.setAttribute('data-active-view', '.custom-content > div')
     }
 
@@ -1360,6 +1360,7 @@ const ui = (function() {
                 } else if (renderThirdParty(entity)) {
                     // then the third party rendering took care of it
                 } else {
+                    // to show the sequence graph
                     const extraCss = entity.exec.components.length < 5 ? 'small-node-count-canvas' : ''
                     sequence.className = `${sequence.getAttribute('data-base-class')} ${extraCss}`
                     // old viz: setTimeout(() => entity.exec.components.map(renderActionBubble(sequence)), 0)
@@ -1375,7 +1376,6 @@ const ui = (function() {
                     // form a fake FSM, so we can use the wskflow visualization
                     // wskflw now use the IR, so we have to fake a IR instead of a FSM
                     const key = idx => `action_${idx}`
-
                     Promise.all(entity.exec.components.map((actionName,idx,A) => repl.qexec(`wsk action get "${actionName}"`)
                                                            .then(action => {
                                                                const anonymousCode = isAnonymousLet(action)
@@ -1394,6 +1394,7 @@ const ui = (function() {
                                                            })))
                         .then(actions => ({ composition: actions }))
                         .then(fsm => ui.wskflow(fsm))
+                        
                 }
             } else {
                 //
