@@ -17,6 +17,11 @@
 const debug = require('debug')('headless')
 debug('starting')
 
+// by default, we'll exit with an exit code of 0 when success is
+// called; this bit is necessary, as process.exit doesn't seem to
+// really exit the first time
+let exitCode = 0
+
 // electron pops up a window by default, for uncaught exceptions
 process.on('uncaughtException', err => {
     console.error(err.red)
@@ -62,6 +67,8 @@ let noAuth = false
  */
 function mimicDom(app, { createWindow }, localStorage) {
     debug('mimicDom')
+
+    const { quit } = app
 
     try {
         global.localStorage = Store(app)
@@ -152,7 +159,7 @@ function mimicDom(app, { createWindow }, localStorage) {
         showEntity: entity => print(entity),
         maybeHideEntity: () => false,
         ok: () => dom0(),
-        oops: () => failure,
+        oops: () => failure(quit),
         oopsMessage: err => {
             return (err && err.error && err.error.response && err.error.response.result && err.error.response.result.error && err.error.response.result.error.error) // feed creation error. nice
                 || (err && err.error && err.error.response && err.error.response.result && err.error.response.result.error)
@@ -230,11 +237,11 @@ function mimicDom(app, { createWindow }, localStorage) {
                             .then(resolve)
                             .catch(reject);
                     } catch (err) {
-                        failure(err); reject(err)
+                        failure(quit)(err); reject(err)
                     }
                 })
         } catch (err) {
-            failure(err); reject(err)
+            failure(quit)(err); reject(err)
         }
     })
 
@@ -424,12 +431,20 @@ const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') =
 
                 if (msg._isFakeDom) {
                     // msg is a DOM facade
+
+                    if (msg.className.indexOf('usage-error-wrapper') >= 0) {
+                        // print usage errors to stdout
+                        stream = process.stdout
+                    }
+
                     prettyDom(msg, logger, stream, color)
                     logger()
 
                 } else if (msg.then) {
                     // msg is a promise; resolve it and try again
-                    msg.then(msg => print(msg, logger, stream, color, ok))
+                    return msg.then(msg => {
+                        return print(msg, logger, stream, color, ok)
+                    })
 
                 } else if (msg.message && msg.message._isFakeDom) {
                     // msg.message is a DOM facade
@@ -505,14 +520,17 @@ const success = quit => out => {
 
     if (!graphicalShellIsOpen) {
         quit()
-        process.exit(0)
+        process.exit(exitCode)
     } else {
 	//log('The graphical shell should now be open. This process will stay alive till you close the window.'.red)
         //log('You may background this process, but do not kill it, unless you also want to kill the graphical shell.'.red)
     }
 }
-const failure = err => {
+const failure = quit => err => {
     debug('failure', err)
+
+    let completion = Promise.resolve()
+
     if (!noAuth) {
         // we're not in a corner case of having no openwhisk auth, so
         // print the error
@@ -521,18 +539,22 @@ const failure = err => {
         if (typeof msg === 'string') {
             error(msg.red)
         } else {
-            print(msg, error, process.stderr, 'red', 'error')
+            completion = print(msg, error, process.stderr, 'red', 'error') || Promise.resolve()
         }
     } else {
         error(`No wskprops file was found. Consider trying again with "fsh help" command.`)
     }
 
-    if (!graphicalShellIsOpen) {
-        // if the graphical shell isn't open, then we're done here
-        process.exit(1)
-    }
+    return completion.then(() => {
+        if (!graphicalShellIsOpen) {
+            // if the graphical shell isn't open, then we're done here
+            exitCode = 1
+            process.exit(1)
+            if (quit) quit()
+        }
 
-    return false
+        return false
+    })
 }
 
 /**
@@ -545,13 +567,7 @@ const onlyOpts = argv => !argv.find(_ => _.charAt(0) !== '-')
  * Insufficient arguments provided?
  *
  */
-const insufficientArgs = () => argv.length === 0 || onlyOpts(argv) || argv.find(_ => _ === '--help' || _ === '-h')
-
-/**
- * Print usage information, if the command line arguments are insufficient
- *
- */
-const usage = () => repl.qexec('help')
+const insufficientArgs = () => argv.length === 0
 
 /**
  * Initialize headless mode
@@ -610,9 +626,9 @@ const main = (app, mainFunctions) => {
                 debug('delayed namespace loading')
                 return namespace.init()
                     .then(() => eval(cmd))
-                    .catch(failure)
+                    .catch(failure(quit))
             } else {
-                return failure(err)
+                return failure(quit)(err)
             }
         }
 
@@ -628,7 +644,7 @@ const main = (app, mainFunctions) => {
             debug('exiting, no command')
             process.exit(0)
         }
-    }).catch(failure)
+    }).then(success(quit)).catch(failure(quit))
 }
 
 exports.main = main
