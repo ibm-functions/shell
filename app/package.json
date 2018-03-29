@@ -1,6 +1,6 @@
 {
   "name": "@ibm-functions/shell",
-  "version": "1.3.425",
+  "version": "1.3.444",
   "description": "An Electron-based shell for Apache OpenWhisk",
   "homepage": "https://github.com/ibm-functions/shell",
   "main": "main.js",
