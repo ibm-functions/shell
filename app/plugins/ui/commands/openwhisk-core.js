@@ -1177,11 +1177,18 @@ module.exports = (commandTree, prequire) => {
         commandTree.listen(`/wsk/${syn}/fire`, doFire, { usage: usage.triggers.available.find(({command}) => command === 'fire') })
     })
 
+    /**
+     * A request to delete a trigger. If this trigger has an
+     * associated feed, we are responsible for invoking the DELETE
+     * lifecycle event on the feed.
+     *
+     */
     const removeTrigger = (block, nextBlock, argv, modules) => {
         const name = argv[argv.length - 1]
         return ow.triggers.delete(owOpts({ name: name }))
             .then(trigger => {
                 const feedAnnotation = trigger.annotations && trigger.annotations.find(kv => kv.key === 'feed')
+                debug('trigger delete success', trigger, feedAnnotation)
                 if (feedAnnotation) {
                     // special case of feed
                     debug('delete feed', trigger)
@@ -1193,10 +1200,100 @@ module.exports = (commandTree, prequire) => {
                 }
             }).then(() => true)
     }
-    synonyms.verbs.delete.forEach(rm => {
-        synonyms.entities.triggers.forEach(syn => {
-            commandTree.listen(`/wsk/${syn}/${rm}`, removeTrigger, { docs: 'Remove an OpenWhisk trigger' })
-        })
+    synonyms.entities.triggers.forEach(syn => {
+        commandTree.listen(`/wsk/${syn}/delete`,
+                           removeTrigger,
+                           { usage: usage.triggers.available.find(({command}) => command === 'delete') })
+    })
+
+    /**
+     * As per the delete trigger comment for removeTrigger, we
+     * similarly must invoke the CREATE lifecycle event for feed
+     * creation
+     *
+     */
+    const createTrigger = (_1, _2, _3, _4, _5, _6, argv, options) => {
+        const name = argv[argv.length - 1],
+              triggerSpec = owOpts({ name }),
+              paramsArray = [],
+              params = {}
+
+        if (options.param) {
+            for (let idx = 0; idx < options.param.length; idx += 2) {
+                const key = options.param[idx]
+                let value = options.param[idx + 1]
+
+                try {
+                    value = JSON.parse(options.param[idx + 1])
+                } catch (err) {
+                }
+
+                params[key] = value
+                paramsArray.push({ key, value })
+            }
+        }
+
+        if (options.feed) {
+            // add the feed annotation
+
+            const annotation = { key: 'feed', value: options.feed }
+            debug('adding feed annotation', annotation)
+
+            if (!triggerSpec.trigger) {
+                triggerSpec.trigger = {}
+            }
+            if (!triggerSpec.trigger.annotations) {
+                triggerSpec.trigger.annotations = []
+            }
+
+            triggerSpec.trigger.annotations.push(annotation)
+        } else {
+            if (!triggerSpec.trigger) {
+                triggerSpec.trigger = {}
+            }
+            if (!triggerSpec.trigger.parameters) {
+                triggerSpec.trigger.parameters = paramsArray
+            } else {
+                triggerSpec.trigger.parameters = triggerSpec.trigger.parameters.concat(paramsArray)
+            }
+        }
+
+        debug('creating trigger', triggerSpec)
+        return ow.triggers.create(triggerSpec)
+            .then(trigger => {
+                /** remove trigger if something bad happened instantiating the feed */
+                const removeTrigger = err => {
+                    console.error(err)
+                    ow.triggers.delete(owOpts({ name }))
+                    throw new Error('Internal Error')
+                }
+
+                if (options.feed) {
+                    try {
+                        // special case of feed: invoke CREATE lifecycle
+                        const feedName = options.feed
+
+                        debug('create feed', feedName, name, params)
+                        return ow.feeds.create(owOpts({ feedName, trigger: name, params }))
+                            .then(() => trigger)   // return the trigger, not the result of invoking the feed lifecycle
+                            .catch(removeTrigger)  // catastrophe, clean up after ourselves
+
+                    } catch (err) {
+                        // make sure to clean up after ourselves in case of catastrophe
+                        return removeTrigger(err)
+                    }
+
+                } else {
+                    // otherwise, this is a normal trigger, not a feed
+                    return trigger
+                }
+            })
+            .then(addPrettyType('triggers', 'create', name))
+    }
+    synonyms.entities.triggers.forEach(syn => {
+        commandTree.listen(`/wsk/${syn}/create`,
+                           createTrigger,
+                           { usage: usage.triggers.available.find(({command}) => command === 'create') })
     })
 
     // namespace.current

@@ -68,7 +68,7 @@ const paramsAndAnnotations = params.concat(annotations)
 const shared = [{ name: '--shared', docs: 'package visibility', allowed: ['yes', 'no' ] }]
 
 /** feed annotation for triggers */
-const feed = [{ name: '--feed', alias: '-f', docs: 'create a feed', entity: 'action' }]
+const feed = [{ name: '--feed', alias: '-f', docs: 'create a feed from a given provider', entity: 'action' }]
 
 /** timeout parameter */
 const timeout = [{ name: '--timeout', alias: '-t', docs: 'max milliseconds to wait for blocking invoke', defaultValue: 60000 }]
