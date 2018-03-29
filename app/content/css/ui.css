@@ -9,13 +9,9 @@ html, body, .page, .main, .repl, #sidecar {
 body {
     margin: 0;
     overflow: hidden;
-    -webkit-app-region: drag;
 
     /* variables */
     --font-monospace: "Fira Mono",Menlo,"DejaVu Sans Mono","Bitstream Vera Sans Mono",Courier,monospace;
-}
-body p, body input, .entity-name, .repl-input, .repl-output span {
-    -webkit-app-region: no-drag;
 }
 .page {
     display: flex;
@@ -37,6 +33,10 @@ body a:hover:not(.plain-anchor) {
 }
 
 /* HEADER */
+body .page > .header {
+    /* only allow mouse dragging on top-most header */
+    -webkit-app-region: drag;
+}
 .header {
     flex-basis: 40px;
     display: flex;
@@ -799,14 +799,12 @@ sidecar .sidecar-content {
 }
 sidecar .sidecar-content > div, sidecar .sidecar-content .activation-content > pre {
     padding: 1.5em 1em;
-    -webkit-app-region: no-drag;
 }
 sidecar .sidecar-content .hook-for-third-party-content.no-content {
     display: none;
 }
 sidecar .sidecar-content .activation-content  {
     padding: 0;
-    -webkit-app-region: drag;
 }
 sidecar .sidecar-content .activation-content, sidecar .sidecar-content .hook-for-third-party-content  {
     flex: 1;
@@ -1285,11 +1283,6 @@ body.subwindow .repl-block {
 }
 body.subwindow .repl-inner {
     margin-top: 2em;
-}
-
-/* subwindow */
-body.subwindow .repl {
-    -webkit-app-region: drag;
 }
 
 /* we use titleBarStyle:hidden/hiddenInset on mac; this makes room for the window close/min/max buttons */
