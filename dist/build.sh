@@ -6,12 +6,12 @@
 PLATFORM=${1-all}
 
 # product name
-PRODUCT_NAME="${PRODUCT_NAME-`cat ../build/config.json | jq --raw-output .productName`"
+PRODUCT_NAME="${PRODUCT_NAME-`cat ../app/build/config.json | jq --raw-output .productName`}"
 
 # filesystem icons
-ICON_MAC=`cat ../build/config.json | jq --raw-output .filesystemIcons.darwin`
-ICON_WIN32=`cat ../build/config.json | jq --raw-output .filesystemIcons.win32`
-ICON_LINUX=`cat ../build/config.json | jq --raw-output .filesystemIcons.linux`
+ICON_MAC=`cat ../app/build/config.json | jq --raw-output .filesystemIcons.darwin`
+ICON_WIN32=`cat ../app/build/config.json | jq --raw-output .filesystemIcons.win32`
+ICON_LINUX=`cat ../app/build/config.json | jq --raw-output .filesystemIcons.linux`
 
 VERSION=`git rev-parse master`
 BUILDDIR=build
