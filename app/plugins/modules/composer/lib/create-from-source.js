@@ -17,10 +17,9 @@
 const vm = require('vm'),
       fs = require('fs'),
       path = require('path'),
-      mod = require('module'),
       expandHomeDir = require('expand-home-dir'),
       openwhiskComposer = require('@ibm-functions/composer'),
-      { isValidFSM, handleError } = require('./composer')
+      { isValidFSM } = require('./composer')
 
 //
 // just in case, block any use of wsk from within sandboxed compilations
@@ -87,184 +86,95 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                     return reject({ message: 'No code to compile', type: 'EMPTY_FILE'})
                 }
 
-                /**
-                 * The Composer constructor tries to initialize
-                 * wsk. But we may not have a wskprops, e.g. if the
-                 * user is previewing apps without any AUTH
-                 * configuration. See
-                 * tests/passes/07/composer-viz-no-auth.js
-                 *
-                 */
-
-                // check to see if the source already requires the openwhisk-composer library
-                function bootstrapWithRequire() {
-                    lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer');` + originalCode
-                }
-                function bootstrapWithRequireForModule() {
-                    lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer')const process = module.process; const console = module.console;\n` + originalCode
-                }
-                function bootstrapWithModuleExports() {
-                    lineOffset = 0
-                    return "const process = module.process; const console = module.console; module.exports=" + originalCode
-                }
-                function bootstrapWithModuleExportsAndRequire() {
-                    lineOffset = 0
-                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=` + originalCode
-                }
-                function bootstrapWithModuleExportsAndRequireAndTrim() {
-                    lineOffset = 0
-                    const code = originalCode.trim().replace(/^([;\s]+)/, '') // trim leading semicolons
-                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console; module.exports=` + code
-                }
-                function bootstrapWithConstMain() {
-                    lineOffset = 1
-                    return "const process = module.process; const console = module.console;" + originalCode + "\n;module.exports=main"
-                }
-                function bootstrapWithConstMainAndRequire() {
-                    lineOffset = 1
-                    return `const composer = require('@ibm-functions/composer'); const process = module.process; const console = module.console;\n` + originalCode + "\n;module.exports=main"
-                }
-
-                const retryA = [bootstrapWithRequireForModule,
-                                bootstrapWithModuleExports,
-                                bootstrapWithModuleExportsAndRequire,
-                                bootstrapWithModuleExportsAndRequireAndTrim,
-                                bootstrapWithConstMain,
-                                bootstrapWithConstMainAndRequire]
-
                 let errorMessage = '',
                     logMessage = ''     // TODO this isn't flowing through, yet
-                const doLog = msg => logMessage += msg + '\n',
-                      doExit = () => reject({
-                          fsm: errorMessage,
-                          code: originalCode
-                      })
                 const errors = []
-                const compile = (code, retries=retryA) => {
+                const compile = code => {
                     errorMessage = ''
                     logMessage = ''
                     try {
-                        const module = { exports: {},
-                                         process: { env: opts.env || process.env, exit: doExit },
-                                         console: { error: msg => errorMessage += msg + '\n',
-                                                    log: doLog }
-                                       },
-                              my_require = m => {
-                                  if (m === '@ibm-functions/composer') {
-                                      return openwhiskComposer
-                                  } else {
-                                      return require(path.resolve(dir, m))
+                        const doExit = () => reject({
+                            fsm: errorMessage,
+                            code: originalCode
+                        })
 
-                                  }
-                              }
+                        const my = {
+                            process: Object.assign(process, {
+                                env: Object.assign({}, process.env, opts.env), // merge -e from the command line
+                                exit: doExit                                   // override process.exit()
+                            }),
+                            console: {
+                                error: msg => errorMessage += msg + '\n',
+                                log: msg => logMessage += msg + '\n'
+                            },
+                            require: m => {
+                                if (m === '@ibm-functions/composer') {
+                                    return openwhiskComposer
+                                } else {
+                                    return require(path.resolve(dir, m))
+                                    
+                                }
+                            }
+                        }
 
-                        const sandbox = {}
-                        module.exports = {}
-                        let res = vm.runInNewContext(mod.wrap(code), { filename, lineOffset, console: module.console, process: module.process })(module.exports, my_require, module, filename, dir) || module.exports.main || module.exports || res.main
-                        //console.error(code)
+                        const module = {
+                            exports: {}
+                        }
+                        const sandbox = {
+                            module,
+                            exports: module.exports,
+                            filename,
+                            lineOffset,
+                            console: my.console,
+                            process: my.process,
+                            require: my.require
+                        }
+                        const sandboxWithComposer = Object.assign(sandbox, { composer: openwhiskComposer })
+
+                        let res = vm.runInNewContext(code, sandboxWithComposer)
+                        debug('res', typeof res, res)
+
                         if (typeof res === 'function') {
                             res = res()
                         }
 
                         if (isValidFSM(res)) {
                             return res
+
                         } else {
+                            let err = ''
                             try {
                                 // maybe the code did a console.log?
                                 const maybe = openwhiskComposer.deserialize(JSON.parse(logMessage))
                                 if (isValidFSM(maybe)) {
                                     return maybe
                                 }
-                            } catch (e) { }
-
-                            throw new Error('Unable to compile your composition')
-                        }
-                    } catch (e) {
-                         console.error(e)
-                        errors.push(e)
-                        if (retries.length > 0) {
-                            return compile(retries.pop()(), retries)
-                        }
-
-                        const log = console.log, exit = process.exit
-                        console.log = doLog
-                        process.exit = doExit
-                        try {
-                            errorMessage = ''
-                            const tmp = save(process.env, opts.env)
-                            try {
-                                const json = eval(originalCode)
-                                if (isValidFSM(json)) {
-                                    return json
-                                } else {
-                                    const maybe = json
-                                    console.log = log
-                                    process.exit = exit
-                                    return maybe
-                                }
-                            } finally {
-                                restore(process.env, tmp)
+                            } catch (e) {
+                                err = e
                             }
-                        } catch (e2) {
-                            console.log = log
-                            process.exit = exit
-                            try {
-                                // maybe the user logged a compiled fsm?
-                                const maybe = JSON.parse(logMessage)
-                                if (isValidFSM(maybe)) {
-                                    return maybe
-                                }
-                            } catch (e3) {
-                                try {
-                                    console.log = doLog
-                                    process.exit = doExit
-                                    errorMessage = ''
-                                    const tmp = save(process.env, opts.env)
-                                    try {
-                                        const composition = eval(bootstrapWithRequire(originalCode))
-                                        console.log = log
-                                        process.exit = exit
-                                        return composition
-                                    } finally {
-                                        restore(process.env, tmp)
-                                    }
-                                    
-                                } catch (e4) {
-                                    console.log = log
-                                    process.exit = exit
-                                    // some sort of parse or runtime error with the composer source file
-                                    // note that we take care to elide our junk on any error stacks (junkMatch)
-                                    //console.error(mod.wrap(code))
-                                    //console.error(errorMessage)
 
-                                    const goodMsg = e => e.message.indexOf('has already been declared') < 0
-                                          && e.message.indexOf('composer is not defined') < 0
-                                          && e
-                                    const err = errors.find(goodMsg) || goodMsg(e2) || goodMsg(e3) || e4
-
-                                    const junkMatch = err.stack.match(/\s+at Object\.exports\.runInNewContext/)
-                                          || err.stack.match(/\s+at Object\.runInNewContext/)
-                                          || err.stack.match(/\s+at fs\.readFile/),
-                                          _message = err.message.indexOf('Invalid argument to compile') >= 0? 'Your source code did not produce a valid app.' : (!junkMatch ? e.stack : err.stack.substring(0, junkMatch.index).replace(/\s+.*create-from-source([^\n])*/g, '\n').replace(/(evalmachine.<anonymous>)/g, filename).replace(/\s+at createScript([^\n])*/g, '\n').trim()),
-                                          message = _message.replace(/\s+\(.*plugins\/modules\/composer\/node_modules\/@ibm-functions\/composer\/composer\.js:[^\s]*/, '')
-
-                                    console.error('All composer create/preview errors are here', errors)
-                                    console.error('Selected error', err)
-                                    console.error('Selected message', message, junkMatch)
-
-                                    // for parse error, error message is shown in the fsm (JSON) tab, and user code in the source (code) tab
-                                    // reject now returns {fsm:errMsg, code:originalCode}
-                                    reject(
-                                        {
-                                            fsm: message,
-                                            code: originalCode
-                                        }
-                                    )
-                                }
-                            }
+                            throw new Error(`Unable to compile your composition
+${err}
+${errorMessage}`)
                         }
+                    } catch (err) {
+                        const junkMatch = err.stack.match(/\s+at Object\.exports\.runInNewContext/)
+                              || err.stack.match(/\s+at Object\.runInNewContext/)
+                              || err.stack.match(/\s+at fs\.readFile/),
+                              _message = err.message.indexOf('Invalid argument to compile') >= 0? 'Your source code did not produce a valid app.' : (!junkMatch ? e.stack : err.stack.substring(0, junkMatch.index).replace(/\s+.*create-from-source([^\n])*/g, '\n').replace(/(evalmachine.<anonymous>)/g, filename).replace(/\s+at createScript([^\n])*/g, '\n').trim()),
+                              message = _message
+                              .replace(/\s+\(.*plugins\/modules\/composer\/node_modules\/@ibm-functions\/composer\/composer\.js:[^\s]*/, '')
+                              .replace(/\s+at ContextifyScript[^\n]*/g, '')
+
+
+                        // for parse error, error message is shown in the fsm (JSON) tab, and user code in the source (code) tab
+                        // reject now returns {fsm:errMsg, code:originalCode}
+                        reject(
+                            {
+                                fsm: message,
+                                code: originalCode
+                            }
+                        )
                     }
                 }
                 let fsm
