@@ -32,7 +32,8 @@ const aboutWindow = () => {  /* bringYourOwnWindow impl */
           root = path.join(__dirname, '..', '..'),
           settings = require(path.join(root, 'build', './config.json'))
 
-    const foo = require('electron-about-window').default({
+    const foo = require('about-window').default({
+        product_name: settings.productName,
         icon_path: path.join(root, settings.largeIcon),
         package_json_dir: path.join(root, 'build'),
         use_inner_html: true,
