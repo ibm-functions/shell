@@ -74,6 +74,6 @@ describe('Create an actions, switch to parameters view, then add parameters with
     doAdd('action set x=6', '{"x":6}')
     doAdd('wsk action set x=7', '{"x":7}')
 
-    doSwitch('..', '/')
-    doAdd('wsk action set x=8', '{"x":8}')
+    //doSwitch('..', '/')
+    //doAdd('wsk action set x=8', '{"x":8}')
 })

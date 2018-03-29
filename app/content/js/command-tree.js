@@ -95,6 +95,7 @@ const CDHelpers = {
               route = `/${A.join('/')}`,
               m = match(A, true)           // make sure the context exists
 
+        debug('cd', m)
         if (!m || !m.children || (m.route !== route && !m.children[A[A.length - 1]])) {
             // maybe we need to load a plugin?
             if (!noRetry) {
@@ -104,7 +105,11 @@ const CDHelpers = {
                 // then the desiredContext does not exist; the caller will handle error reporting
                 return false
             }
-        } else {
+        } else if (m.route !== '/' && (!m.$ || m.options.subtreeHandler)) {
+            // disallow cd /
+            // and: m.$ means that there is a command installed here, so disallow cd'ing;
+            //      so: m.$ && m.options.subtreeHandler means that we installed this as a help handler below
+
             // if the user expressed a synonym, use the main name
             if (m.options && m.options.synonymFor) {
                 return exports.changeContext(m.options.synonymFor.route)()
@@ -305,8 +310,8 @@ exports.subtree = (route, options) => {
         //
         // also listen route e.g. /wsk, and present usage
         //
-        listen(route, help, Object.assign({}, options, { noArgs: true }))
-        listen(`${route}/help`, help, Object.assign({}, options, { noArgs: true }))
+        listen(route, help, Object.assign({}, options, { noArgs: true, subtreeHandler: true }))
+        listen(`${route}/help`, help, Object.assign({}, options, { noArgs: true, subtreeHandler: true }))
 
         return leaf
     }
