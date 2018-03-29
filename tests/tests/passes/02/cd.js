@@ -58,8 +58,11 @@ describe('Change contexts via cd', function() {
     doSwitch('..', '/wsk')
     doSwitch('./actions', '/wsk/actions')
     doSwitch('..', '/wsk')
-    doSwitch('..', '/')
+    //doSwitch('..', '/')
     doSwitch('/wsk/triggers', '/wsk/triggers')
+
+    bogusSwitch('/')                            // disallow switching to /
+    bogusSwitch('/history')                     // disallow switching to /history, as it is a command handler not a subtree
 
     doSwitch('/wsk/action', '/wsk/actions')    // test that we switch to /wsk/actions, even when asking to change to /wsk/action
     bogusSwitch('actions')                     // type 'actions' while in /wsk/actions, and expect error
@@ -86,9 +89,10 @@ describe('Change contexts via cd', function() {
        .catch(common.oops(this)))
 
     sidecar.close(this)
-    doSwitch('../../', '/', undefined, actionName) // actionName had better still be selected
-    doSwitch('wsk/rules', '/wsk/rules', undefined, actionName) // actionName had better still be selected
-    doSwitch('../..', '/', undefined, actionName) // actionName had better still be selected
+    bogusSwitch('../../')  // this would cd us to /, which is disallowed
+    //doSwitch('../../', '/', undefined, actionName) // actionName had better still be selected
+    // doSwitch('wsk/rules', '/wsk/rules', undefined, actionName) // actionName had better still be selected
+    //doSwitch('../..', '/', undefined, actionName) // actionName had better still be selected
 
     bogusSwitch('ffjdsjfioas990890890890')
 
@@ -104,7 +108,7 @@ describe('Change contexts via cd', function() {
     doSwitch('..', '/wsk', undefined, actionName) // actionName had better still be selected
     doSwitch('actions', '/wsk/actions', undefined, actionName) // actionName had better still be selected
     doSwitch('..', '/wsk', undefined, actionName) // actionName had better still be selected
-    doSwitch('..', '/', undefined, actionName) // actionName had better still be selected
-    doSwitch('wsk', '/wsk', undefined, actionName) // actionName had better still be selected
+    //doSwitch('..', '/', undefined, actionName) // actionName had better still be selected
+    // doSwitch('wsk', '/wsk', undefined, actionName) // actionName had better still be selected
     bogusSwitch('ufdufdasufdsa', undefined, actionName) // actionName had better still be selected
 })
