@@ -49,7 +49,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
      * Render one legend entry
      *
      */
-    const entry = (labelText, labelValue, isFailure, latBucket, { zoom = 1, labelAsTooltip = false, useThisLabelInstead, balloonPos, balloonLength = 'small', onclick }={}) => {
+    const entry = (labelText, labelValue, isFailure, latBucket, { zoom = 1, labelAsTooltip = false, useThisLabelInstead, balloonPos, balloonLength='small', onclick }={}) => {
         const existing3 = wrapper2.querySelector(`.grid[label="${labelText}"]`),
               wrapper3 = existing3 || document.createElement('div'),
               existingEntry = wrapper3.querySelector('table'),
@@ -61,10 +61,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
                   valueRow = entry.insertRow(-1),
                   gridCellCell = valueRow.insertCell(-1),
                   cell = document.createElement('div'),
-                  valueCell = valueRow.insertCell(-1)
-
-            valueDom = document.createElement('div')
-            valueCell.classList.add('kind')
+                  valueCell = document.createElement('div')
 
             wrapper2.appendChild(wrapper3)
             wrapper3.className = `grid zoom_${zoom}`
@@ -73,6 +70,11 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             wrapper3.appendChild(entry)
             cell.className = 'grid-cell grid-cell-occupied'
 
+            // value for the legend entry
+            valueDom = document.createElement('div')
+            valueCell.classList.add('kind')
+            gridCellCell.appendChild(valueCell)
+
             renderCell('Legend', cell, null, isFailure, 0, latBucket, { zoom }) // null means no activation associated with cell
 
             if (onclick) {
@@ -80,7 +82,7 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             }
 
             if (labelAsTooltip) {
-                const attachTo = gridCellCell
+                const attachTo = cell
                 attachTo.setAttribute('data-balloon', labelText)
                 attachTo.setAttribute('data-balloon-pos', balloonPos)
                 attachTo.setAttribute('data-balloon-length', balloonLength)
@@ -98,8 +100,8 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
                 labelCell.className = 'activation-viz-legend-label'
             }
             valueCell.appendChild(valueDom)
-            valueCell.style.lineHeight = '1em'
-            gridCellCell.style.paddingRight = '0.5ex'
+            //valueCell.style.lineHeight = '1em'
+            //gridCellCell.style.paddingRight = '0.5ex'
         } else {
            valueDom = entry.querySelector('.kind > div')
         }
@@ -135,10 +137,11 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             // roughlySame means e.g. 50-100ms versus 500ms-1s; both
             // are "close", but the second one splits into a new range
             
-            const labelText = last
-                  ? `${prettyPrintDuration(latencyRange)}+` // special label for the last latency bucket
-                  : roughlySame ? `${lower}${enDash}${prettyPrintDuration(upper)}`
-                  : `${prettyPrintDuration(lower)}${enDash}${prettyPrintDuration(upper)}`
+            const labelText = ''
+                  + (last
+                     ? `${prettyPrintDuration(latencyRange)}+` // special label for the last latency bucket
+                     : roughlySame ? `${lower}${enDash}${prettyPrintDuration(upper)}`
+                     : `${prettyPrintDuration(lower)}${enDash}${prettyPrintDuration(upper)}`)
 
             // number of cells with this coloration
             const count = statData.latBuckets[idx]
@@ -146,8 +149,8 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             if (count > 0) {
                 entry(labelText, count, false, idx, // false means not a failure
                     { zoom: -1, labelAsTooltip: true,
-                      balloonPos: idx < ~~(nLatencyBuckets / 2) - 1? 'right' : 'left',
-                      useThisLabelInstead: isFirstNonZero ? `fastest` : isLastNonZero ? `slowest` : nbsp,
+                      balloonPos: lastNonZero >= 2 && idx < ~~(nLatencyBuckets / 2) ? 'right' : 'left',
+                      useThisLabelInstead: isFirstNonZero ? `fast` : isLastNonZero ? `slow` : nbsp,
                       onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --success --latency-bucket ${idx}`))
                     })
             }
@@ -157,10 +160,10 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
     //
     // render the legend entry for failures
     //
-    entry('Failing Invocations',
+    entry('these cells represent activation failures',
         nFailures,
         true, 0, // true means render as failure
-          { zoom: -1, labelAsTooltip: true, useThisLabelInstead: 'failures', balloonPos: 'up', balloonLength: 'medium',
+          { zoom: -1, labelAsTooltip: true, useThisLabelInstead: 'fail', balloonPos: 'left', balloonLength: 'medium',
             onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure`))
           })
 }
