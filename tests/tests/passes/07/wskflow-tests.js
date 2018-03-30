@@ -133,7 +133,7 @@ describe('create a if composition, invoke, verify session flow is shown correctl
        .then(sidecar.expectShowing(appName))
        .catch(common.oops(this)))
 
-    it(`should invoke ${appName} with condition equals true, and get the output {path: true}`, () => cli.do(`app invoke ${appName} -p condition true`, this.app)
+    it(`should invoke ${appName} with condition equals true`, () => cli.do(`app invoke ${appName} -p condition true`, this.app)
       .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .catch(common.oops(this)))
@@ -148,7 +148,7 @@ describe('create a if composition, invoke, verify session flow is shown correctl
            .then(verifyNodeStatusExists('p=>({path:false})', 'not-run'))
            .catch(common.oops(this)))
 
-    it(`should invoke ${appName} with condition equals false, and get the output {path: false}`, () => cli.do(`app invoke ${appName} -p condition false`, this.app)
+    it(`should invoke ${appName} with condition equals false`, () => cli.do(`app invoke ${appName} -p condition false`, this.app)
       .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .catch(common.oops(this)))
@@ -163,5 +163,48 @@ describe('create a if composition, invoke, verify session flow is shown correctl
            .then(verifyNodeStatusExists('p=>({path:true})', 'not-run'))
            .then(verifyNodeStatusExists('p=>({path:false})', 'success'))
            .catch(common.oops(this)))
+
+});
+
+// test if mousedown on a node, drag and release triggers the clicking behavior of the node (it shouldn't)
+describe('test if pressing a node, dragging and releasing triggers the clicking behavior of the node (it shouldn not)', function() {
+    before(common.before(this))
+    after(common.after(this))
+
+    const appName = 'test-if', appFile = 'data/composer-source/if-session.js';
+    it('should have an active repl', () => this.app.client.waitForText('#openwhisk-api-host', 60000))
+
+    it(`should create an app with ${appFile}`, () => cli.do(`app create ${appName} ${appFile}`, this.app)
+      .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing(appName))
+       .catch(common.oops(this)))
+
+    it(`should invoke ${appName} with condition equals true`, () => cli.do(`app invoke ${appName} -p condition true`, this.app)
+      .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .catch(common.oops(this)))
+
+    it(`should be able to click on the mode button to switch to session flow`, () => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('visualization'))
+      .then(() => this.app)           
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing(appName))
+           .then(app => app.client.waitForExist('#wskflowSVG', 5000))
+           .then(() => this.app)
+           .then(verifyNodeStatusExists('Exit', 'success'))
+           .catch(common.oops(this)))
+
+    it(`should press, drag and release exist node and still stay at session flow`, () => this.app.client.moveToObject('#Exit')
+      .then(() => this.app.client.buttonDown())
+      .then(() => this.app.client.moveToObject('#wskflowSVG'))
+      .then(() => this.app.client.buttonUp())      
+      .then(() => this.app.client.getText('.sidecar-header-icon'))
+      .then(text => assert.equal(text, 'SESSION'))
+      .catch(common.oops(this)))
+
+    it(`should click on the exit node and go to the activation`, () => this.app.client.click('#Exit')
+      .then(() => this.app.client.getText('.sidecar-header-icon'))      
+      .then(text => assert.equal(text, 'ACTIVATION'))
+      .catch(common.oops(this)))
 
 });

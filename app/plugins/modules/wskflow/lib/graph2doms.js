@@ -86,7 +86,8 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	    .on("zoom", redraw);
 
 	let containerElement,
-		wskflowContainer = $('<div id="wskflowContainer"></div>');
+		wskflowContainer = $('<div id="wskflowContainer"></div>'),
+		enterClickMode = false;
 
 	if(ifReuseContainer && $(`#${containerId}`).length>0){
 		containerElement = $(`#${containerId}`);
@@ -727,7 +728,12 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				$(".link").removeClass("hover");
 				$("#qtip").removeClass("visible");
 				
+			}).on('mousedown', () => {	
+				enterClickMode = true;			
 			}).on("click", function(d, i){
+				if(!enterClickMode) return;
+				enterClickMode = false;
+
 				if(activations){
 					if(d.visited){
 						if($("#actList").css("display") != "block"){
@@ -1219,6 +1225,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 			customZoom = true
             notify()   
 		}
+		enterClickMode = false;
 		container.attr('transform', `translate(${d3.event.translate}) scale(${d3.event.scale})`);
      	$("#qtip").removeClass("visible")	
 	}	
