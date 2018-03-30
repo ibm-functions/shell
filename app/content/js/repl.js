@@ -453,8 +453,31 @@ self.pexec = (command, execOptions) => self.exec(command, Object.assign({ echo: 
 
 const patterns = {
     commentLine: /\s*#.*$/,
+    dash: /-([^\s]*)/,
     whitespace: /\s/
 }
+
+/**
+ * Escape the given value so that it is compatible with command line execution
+ *
+ */
+const escape = str => str.replace(patterns.dash, "'-$1'")
+
+/**
+  * Resolve the given string as a possible reference to an environment
+  * variable; e.g. $FOO should resolve to 3 if process.env.FOO has
+  * value 3.
+  *
+  */
+const resolveEnvVar = variable => {
+    const envValue = process.env[variable.substring(1)]
+    return envValue ? escape(envValue) : variable
+}
+
+/**
+ * Split the given string into an argv
+ *
+ */
 const split = (str, removeOuterQuotes=true) => {
     const A = [],
           stack = []
@@ -466,7 +489,7 @@ const split = (str, removeOuterQuotes=true) => {
 
         if (stack.length === 0 && char.match(patterns.whitespace)) {
             if (cur.length > 0) {
-                A.push(cur)
+                A.push(resolveEnvVar(cur))
                 cur = ''
             }
             continue
@@ -507,7 +530,7 @@ const split = (str, removeOuterQuotes=true) => {
     }
 
     if (cur.length > 0) {
-        A.push(cur)
+        A.push(resolveEnvVar(cur))
     }
 
     return A
