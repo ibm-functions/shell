@@ -907,6 +907,7 @@ self.exec = (commandUntrimmed, execOptions) => {
                                     }
                                 })
                                 .catch(err => {
+                                    console.error(err)
                                     if (execOptions && execOptions.noHistory) {
                                         // then pass the error upstream
                                         throw err
@@ -919,6 +920,8 @@ self.exec = (commandUntrimmed, execOptions) => {
                     }
                 })
                 .catch(err => {
+                    console.error(err)
+
                     if (ui.headless) {
                         throw err
                     } else {

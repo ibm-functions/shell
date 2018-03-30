@@ -22,10 +22,46 @@ const prettyPrintDuration = require('pretty-ms'),
       { modes } = require('./modes'),
       { summary:usage } = require('../usage'),
       { leftArrowHead, rightArrowHead, newline, enDash, emDash, optionsToString, titleWhenNothingSelected, latencyBucket, displayTimeRange, visualize } = require('./util'),
-      defaultBottom = 25, defaultTop = 75,         // default range to show in summary
-      defaultSorter = statDataSorter(defaultTop)   // sort by the default top of the range
+      defaultBottom = 25, defaultTop = 75  // default range to show in summary
 
 const viewName = 'Summary'
+
+/**
+ * Mode switchers
+ *
+ */
+const choices = [
+    { bottom: 25, top: 75, fontawesome: 'fas fa-thermometer-quarter' },
+    //{ bottom: 25, top: 90 },
+    { bottom: 25, top: 95, fontawesome: 'fas fa-thermometer-half' },
+    //{ bottom: 25, top: 99 },
+    { bottom: 'min', top: 'max', label: 'Min-Max', text: 'mininum to maximum', fontawesome: 'fas fa-thermometer-full' }
+]
+const tableModes = choices.map((choice, idx) => {
+    const {bottom, top, label, text, fontawesome} = choice
+    return { label: label || `${bottom}-${top}`, flush: 'right',
+             fontawesome,
+             //labelBelow: true,
+             balloon: `Show the ${text || bottom + 'th to the ' + top + 'th percentile of'} latency`,
+             actAsButton: true, selected: idx === 0,
+             direct: state => {
+                 state.eventBus.emit('/summary/range/change', choice)
+             }
+           }
+}).concat([
+    { mode: 'outliers',
+      fontawesome: 'fas fa-exclamation',
+      flush: 'right',
+      balloon: 'Include outlier activations with very high latency',
+      actAsButton: true, selected: false,
+      radioButton: true,  // this is a separate radio button
+      direct: state => {
+          const showOutliers = !state.showOutliers
+          state.showOutliers = showOutliers
+          state.eventBus.emit(`/summary/range/outliers/toggle`, { showOutliers })
+      }
+    }
+])
 
 /**
  * Render the given fractional value as a CSS percent
@@ -64,124 +100,8 @@ const drawTable = (options, header) => activations => {
 
     return _drawTable(options, header, content,
                       groupData, eventBus,
-                      options.split ? versionSorter : defaultSorter // if we were asked to split by version, then sort by name
+                      options.split && versionSorter // if we were asked to split by version, then sort by name
                      )
-}
-
-/**
- * Let the user select the percentile range to display
- *
- */
-const addRangeSelector = (container, eventBus, defaultBottom, defaultTop, groupData, options) => {
-    const selector = document.createElement('div'),
-          label = document.createElement('div'),
-          list = document.createElement('ul')
-
-    const choices = [
-        { bottom: 25, top: 75 },
-        //{ bottom: 25, top: 90 },
-        { bottom: 25, top: 95 },
-        //{ bottom: 25, top: 99 },
-        { bottom: 'min', top: 'max', text: 'Min-Max' }
-    ]
-
-    container.appendChild(selector)
-    selector.appendChild(label)
-    selector.appendChild(list)
-    selector.className = 'activation-summary-range-selector'
-
-    label.className = 'activation-summary-range-selector-label'
-    label.innerText = 'select range'
-
-    // handler to change the selected choice
-    const change = choice => function(evt) {
-        // did the user click, or is this an animation step?
-        const fromUser = evt !== undefined
-
-        list.querySelector('.selected').classList.remove('selected')
-        choice.dom.classList.add('selected')
-
-        // tell the world...
-        eventBus.emit('/summary/range/change', Object.assign({}, choice, { fromUser }))
-    }
-
-    // render the choice buttons
-    choices.forEach((choice, idx) => {
-        const {bottom, top, text=`${bottom}th-${top}th`} = choice,
-              dom = document.createElement('li')
-        dom.setAttribute('data-choice', choice)
-        choice.dom = dom
-        dom.idx = idx
-        list.appendChild(dom)
-        dom.onclick = change(choice)  // register onclick change handler
-        dom.innerText = text
-
-        if (bottom === defaultBottom && top === defaultTop) {
-            // select the default range
-            dom.classList.add('selected')
-        }
-    })
-
-    // render the animate button
-    const animate = document.createElement('li')
-    animate.setAttribute('data-choice', 'animate')
-    list.appendChild(animate)
-    animate.innerText = 'Animate'
-    const auto = () => {
-        if (animate.classList.contains('partially-selected')) {
-            // animation in progress
-            animate.classList.remove('partially-selected')
-            clearInterval(animate.interval)
-            return
-        }
-
-        animate.classList.add('partially-selected')
-
-        const currentSelection = list.querySelector('.selected')
-        let idx = (currentSelection.idx + 1) % choices.length
-        const cycle = () => {
-            const current = choices[idx]
-            idx = (idx + 1) % choices.length    // -1: don't go to animate
-            change(current)()
-        }
-
-        // change every few seconds
-        cycle()
-        animate.interval = setInterval(cycle, 1500)
-
-        // listen for user clicks, and kill the interval
-        eventBus.on('/summary/range/change', ({fromUser}) => {
-            if (fromUser) {
-                animate.classList.remove('partially-selected')
-                clearInterval(animate.interval)
-            }
-        })
-    }
-    animate.onclick = auto
-
-    if (options.auto) {
-        // the user asked to start the animation immediately
-        auto()
-    }
-
-    // render the outliers button
-    const outliers = document.createElement('li')
-    outliers.setAttribute('data-choice', 'outliers')
-    list.appendChild(outliers)
-    outliers.innerText = 'Outliers'
-    if (options.outliers) {
-        // user asked for this to be the initial state
-        outliers.classList.toggle('partially-selected')
-    }
-    outliers.onclick = () => {
-        outliers.classList.toggle('partially-selected')
-        eventBus.emit(`/summary/range/outliers/toggle`, { showOutliers: outliers.classList.contains('partially-selected') })
-    }
-
-    return {
-        // currently selected range
-        getCurrentRange: () => choices[list.querySelector('.selected').idx]
-    }
 }
 
 /**
@@ -189,7 +109,7 @@ const addRangeSelector = (container, eventBus, defaultBottom, defaultTop, groupD
  * re-sorting.
  *
  */
-const _drawTable = (options, header, content, groupData, eventBus, sorter=defaultSorter, sortDir=+1) => {
+const _drawTable = (options, header, content, groupData, eventBus, sorter=statDataSorter(defaultTop), sortDir=+1) => {
     const { groups } = groupData,
           tableHeader = document.createElement('table'),
           tableScrollContainer = document.createElement('div'),
@@ -198,9 +118,6 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
     // clean the container
     ui.removeAllDomChildren(content)
-
-    // let user select the 25-75, min-max, etc. range of interest
-    const { getCurrentRange } = addRangeSelector(content, eventBus, defaultBottom, defaultTop, groupData, options)
 
     // x axis
     const headerRow = tableHeader.insertRow(-1),
@@ -325,7 +242,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
             const thisLeft = group.statData.n[stat25],
                   thisMedian = group.statData.n['50'],
                   thisBarRight = group.statData.n[stat75],
-                  thisRight = showOutliers ? group.statData.outlierMax : thisBarRight,
+                  thisRight = showOutliers && group.statData.outlierMax || thisBarRight, // outlierMax might not be defined for this group, if no outliers
                   thisBarRange = thisBarRight - thisLeft,
                   thisRange = thisRight - thisLeft
             if (MM.min25 === 0 || thisLeft < MM.min25) MM.min25 = thisLeft
@@ -354,6 +271,9 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
         // for each group of activations, render a table row
         let alreadyPlacedCountLabel = false
+        let lastTimeWeRenderedARangeIndicator   // render the range indicator every once and a while
+        let lastTimeWeRenderedAMedianIndicator  // render the median indicator every once and a while
+
         groups.forEach((group, idx) => {
             // for redraw, we need to walk through the columns...
             let columnIdx = 0
@@ -456,7 +376,13 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 focus(bar)
 
                 // add 25th and 75th explainers to widest bar
-                if (this75 - this25 === maxBarRange) {
+                if (this75 - this25 === maxBarRange
+                    || ( (lastTimeWeRenderedARangeIndicator === undefined || idx - lastTimeWeRenderedARangeIndicator > 20)
+                         && (this75 - this25) / maxBarRange > 0.9)) {
+
+                    // render the < 25th and 75th > indicators inside the bar
+                    lastTimeWeRenderedARangeIndicator = idx
+                    
                     // e.g. 25th versus min; and 75th percentile versus max
                     const kindaNarrow = right - left < 0.4,
                           veryNarrow = right - left < 0.25,
@@ -498,8 +424,15 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
                 // add < median indicator to the second widest bar
                 // whose median isn't "too far right"
-                const showMedianIndicator = max2BarRange > 0 && this75 - this25 === max2BarRange
+                const showMedianIndicator = max2BarRange > 0
+                      && (lastTimeWeRenderedAMedianIndicator === undefined || idx - lastTimeWeRenderedAMedianIndicator > 20)
+                      && idx !== lastTimeWeRenderedARangeIndicator  // don't render a median indicator alongside a range indicator
+                      && (this75 - this25 === max2BarRange
+                          || (this75 - this25) / max2BarRange > 0.75)
+
                 if (showMedianIndicator) {
+                    lastTimeWeRenderedAMedianIndicator = idx
+
                     const indicator50 = document.createElement('div')
                     barWrapper.appendChild(indicator50)
                     indicator50.className = 'stat-indicator'
@@ -519,8 +452,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
 
                 // an element to show the median of this bar
                 medianDot.style.left = percent(medianLeft)
-                medianDot.setAttribute('data-balloon', prettyPrintDuration(thisMedian))
-                medianDot.setAttribute('data-balloon-length', 'small')
+                medianDot.setAttribute('data-balloon', `median: ${prettyPrintDuration(thisMedian)}`)
+                medianDot.setAttribute('data-balloon-length', 'medium')
                 medianDot.setAttribute('data-balloon-pos', 'right')
                 focus(medianDot)
 
@@ -538,20 +471,32 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                         dot.onclick = drilldownWith(viewName, `activation get ${activation.activationId}`)
                         barWrapper.appendChild(dot)
 
+                        const tooltip = `${prettyPrintDuration(duration)} (versus median ${prettyPrintDuration(thisMedian)})`
+                        dot.setAttribute('data-balloon', tooltip)
+                        dot.setAttribute('data-balloon-break', 'data-balloon-break')
+                        dot.setAttribute('data-balloon-length', 'large')
+                        dot.setAttribute('data-balloon-pos', 'left')
+                        //if (left > 0.8) dot.setAttribute('data-balloon-far', 'right')
+
                         // try to explain why it's slow
                         if (reasons.length > 0) {
                             const { why } = reasons[0],
-                                  render = reasons => reasons.map(({why, disparity}) => `${why}: +${prettyPrintDuration(disparity)}`).join(newline)
+                                  render = reasons => {
+                                      reasons.sort((a, b) => a - b)
+                                      const { why } = reasons[0]
+                                      return `due to increased ${why.toLowerCase()}`
+                                  }
                             dot.setAttribute('why-is-it-slow', why)
 
-                            // tooltip metadata
-                            const tooltip = `${prettyPrintDuration(duration)} (${~~(duration/thisMedian*10)/10}x the median)\u000a\u000a${render(reasons)}`
-                            dot.setAttribute('data-balloon', tooltip)
-                            dot.setAttribute('data-balloon-break', 'data-balloon-break')
-                            dot.setAttribute('data-balloon-length', 'large')
-                            dot.setAttribute('data-balloon-pos', balloonPos)
-                            if (left > 0.8) dot.setAttribute('data-balloon-far', 'right')
+                            // append the reasons to the tooltip
+                            const currentTooltip = dot.getAttribute('data-balloon'),
+                                  amendedTooltip = `${currentTooltip}\u000a${render(reasons)}`
+                            dot.setAttribute('data-balloon', amendedTooltip)
+
+                        } else {
+                            //console.error('no reasons', group.statData.explainOutlier(activation), activation)
                         }
+
                     }
 
                     // focus the x axis on the bar, even when hovering over the outlier dots
@@ -618,7 +563,7 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
                 cell.setAttribute('data-outliers', nOutliers)
                 if (nOutliers === 0) {
                     cell.classList.add('count-is-zero')
-                    nOutliers.classList.remove('clickable')
+                    cell.classList.remove('clickable')
                 }
                 cell.appendChild(countPart)
                 countPart.innerText = nOutliers
@@ -639,29 +584,35 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=defaul
         })
     }
 
-    // initial render
+    // here is the initial rendering
     draw({bottom: defaultBottom, top: defaultTop, showOutliers: options.outliers})
+
     if (options.outliers) {
         // user asked for this as the initial state
         content.classList.toggle('show-outliers')
     }
 
+    const state = {
+        currentRange: choices[0],
+        type: 'custom',
+        content,
+        controlHeaders: true,
+        eventBus,
+        modes: modes(viewName.toLowerCase(), options).concat(tableModes)
+    }
+
     eventBus.on('/summary/range/change', range => {
+        state.currentRange = range
         draw(Object.assign({}, range, { redraw: true }))
     })
 
     // user requested that we toggle the display of outliers
     eventBus.on('/summary/range/outliers/toggle', ({showOutliers}) => {
         content.classList.toggle('show-outliers')
-        draw(Object.assign({}, getCurrentRange(), { redraw: true, showOutliers }))
+        draw(Object.assign({}, state.currentRange, { redraw: true, showOutliers }))
     })
 
-    return {
-        type: 'custom',
-        content,
-        controlHeaders: true,
-        modes: modes(viewName.toLowerCase(), options)
-    }
+    return state
 }
 
 /**

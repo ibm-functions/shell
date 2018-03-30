@@ -40,13 +40,15 @@ const _openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, 
           successCell = `${row} .cell-successes.cell-hide-when-outliers-shown`,
           failureCell = `${row} .cell-failures.cell-hide-when-outliers-shown`,
           bar = `${row} .stat-bar`,
+          medianDot = `${row} .stat-median-dot`,
           focusLabel = `${view} .table-header .x-axis-focus-label`,
-          outliersButton = `${view} li[data-choice="outliers"]`,
+          outliersButton = ui.selectors.SIDECAR_MODE_BUTTON('outliers'),
           outlierDots = `${view} .outlier-dot`
 
     const once = (iter, resolve, reject) => cli.do(cmd, ctx.app)
-        .then(cli.expectOK)
+          .then(cli.expectOK)
           .then(sidecar.expectOpen)
+          .then(() => ctx.app.client.scroll(row))
           .then(() => ctx.app.client.getText(successCell))
           .then(actualCount => assert.equal(actualCount, expectedCount))
 
@@ -54,14 +56,14 @@ const _openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, 
           .then(actualErrorRate => assert.equal(actualErrorRate, expectedErrorRate))
 
           // hover over a bar, expect focus labels
-          .then(() => ctx.app.client.moveToObject(bar, 5, 5))
+          .then(() => ctx.app.client.moveToObject(medianDot, 1, 1))
           .then(() => ctx.app.client.waitForVisible(focusLabel))
 
           // click outliers button
-          .then(() => ctx.app.client.click(outliersButton))
           .then(() => {
               if (expectedCount > 8) {
-                  return ctx.app.client.waitForVisible(outlierDots)
+                  return ctx.app.client.click(outliersButton)
+                      .then(() => ctx.app.client.waitForVisible(outlierDots))
               }
           })
 
@@ -73,13 +75,16 @@ const _openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, 
           .then(resolve)
           .catch(err => {
               if (iter < 10) {
-                  setTimeout(() => once(iter + 1, resolve, reject), 1000)
+                  if (err.type !== 'NoSuchElement') {
+                      console.error(err)
+                  }
+                  setTimeout(() => once(iter + 1, resolve, reject), 2000)
               } else {
                   common.oops(ctx)(err)
               }
           });
 
-    return new Promise((resolve, reject) => once(0, resolve, reject))
+    return new Promise((resolve, reject) => setTimeout(() => once(0, resolve, reject), 2000))
 }
 const openTableExpectCountOf = function() {
     const cmd = arguments[arguments.length - 1]
@@ -137,7 +142,6 @@ describe('Activation table visualization', function() {
     // invoke with positive number, expect count of 1 in the table
     notbomb()
     openTableExpectCountOf(this, 1, 0, 'summary')
-    openTableExpectCountOf(this, 1, 0, 'summary --auto')
     openTableExpectCountOf(this, 1, 0, 'summary --batches 10')
 
     // invoke again with positive, and then look for a count of 2

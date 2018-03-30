@@ -21,6 +21,7 @@ const css = {
     modeContainer: '#sidecar .sidecar-bottom-stripe .sidecar-bottom-stripe-left-bits .sidecar-bottom-stripe-mode-bits',
     button: 'sidecar-bottom-stripe-button',
     buttonActingAsButton: 'sidecar-bottom-stripe-button-as-button',
+    buttonActingAsRadioButton: 'sidecar-bottom-stripe-button-as-radio-button',
     active: 'sidecar-bottom-stripe-button-active',
     selected: 'selected',
     hidden: 'hidden'
@@ -29,8 +30,9 @@ exports.css = css
 
 const addModeButton = (bottomStripe, opts, entity, show) => {
     const {mode, label, flush, selected, selectionController, visibleWhen,
-           fontawesome, balloon, balloonLength, data, command=()=>mode, direct,
-           defaultMode, actAsButton, echo=false, noHistory=true} = opts
+           fontawesome, labelBelow,   // show label below the fontawesome?
+           balloon, balloonLength, data, command=()=>mode, direct,
+           defaultMode, actAsButton, radioButton=false, echo=false, noHistory=true} = opts
 
     if (visibleWhen && visibleWhen !== show) {
         // only visible when a specific mode is active!
@@ -45,6 +47,10 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
         // some plugins want to add buttons, not mode-switchers to the bottom bar
         // let's make them behave a bit more like buttons
         button.classList.add(css.buttonActingAsButton)
+
+        if (radioButton) {
+            button.classList.add(css.buttonActingAsRadioButton)
+        }
 
         if (selected) {
             button.classList.add(css.selected)
@@ -72,10 +78,20 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
 
     // add the button label
     if (fontawesome) {
-        const icon = document.createElement('i')
+        const iconContainer = document.createElement('span'),
+              icon = document.createElement('i')
         icon.className = fontawesome
         button.classList.add('graphical-icon')
-        button.appendChild(icon)
+        button.appendChild(iconContainer)
+        iconContainer.appendChild(icon)
+        iconContainer.classList.add('icon-container')
+
+        if (labelBelow) {
+            const labelContainer = document.createElement('div')
+            labelContainer.classList.add('deemphasize')
+            labelContainer.innerText = label
+            iconContainer.appendChild(labelContainer)
+        }
     } else {
         button.innerText = label || mode
     }
@@ -132,11 +148,15 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
                 })*/
 
             } else if (actAsButton && selected !== undefined) {
-                const currentSelected = bottomStripe.querySelector(`.${css.selected}`)
-                if (currentSelected) {
-                    currentSelected.classList.remove(css.selected)
+                if (radioButton) {
+                    button.classList.toggle(css.selected)
+                } else {
+                    const currentSelected = bottomStripe.querySelector(`.${css.selected}`)
+                    if (currentSelected) {
+                        currentSelected.classList.remove(css.selected)
+                    }
+                    button.classList.add(css.selected)
                 }
-                button.classList.add(css.selected)
             }
 
             // execute the command

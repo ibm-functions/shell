@@ -15,9 +15,9 @@
     padding-bottom: 1em; /* make some room for tooltips */
 }
 
-.activation-viz-plugin > .data-table {
+/*.activation-viz-plugin > .data-table {
     margin-top: 2em;
-}
+}*/
 .activation-viz-plugin .data-table {
     font-family: "Fira Mono";
     table-layout: fixed;
@@ -81,8 +81,16 @@
     padding: 0.6rem 0.75rem;
     transition: all 150ms ease-in-out;
 }
-.activation-viz-plugin .data-table:not(.table-header) td {
+.activation-viz-plugin:not(.x-axis-focus) .data-table.table-header td:not(.x-axis-focus-label-cell) {
+    border-right: 1px dotted var(--color-ui-04);
+}
+/*.activation-viz-plugin .data-table.table-header td:nth-child(5) {
+    border-right-color: var(--color-ui-04);
+}*/
+.activation-viz-plugin .data-table td {
     height: 3em;
+}
+.activation-viz-plugin .data-table:not(.table-header) td {
     border: 1px solid var(--color-ui-04);
 }
 
@@ -105,7 +113,8 @@
 
 /* action name column, and range selector padding for that label column */
 .activation-viz-plugin table td.cell-label, .activation-viz-plugin .x-axis-left-pad {
-    width: 20%;
+    width: 30%;
+    max-width: 50em;
 }
 .activation-viz-plugin.wide-label table td.cell-label, .activation-viz-plugin.wide-label .x-axis-left-pad, .sidecar-full-screen .activation-viz-plugin table td.cell-label, .sidecar-full-screen .activation-viz-plugin .x-axis-left-pad {
     /* -w option, or sidecar full screen */
@@ -117,19 +126,20 @@
 }
 
 .activation-viz-plugin .data-table.table-header td.cell-numeric, .activation-viz-plugin .data-table .x-axis-label, .activation-viz-plugin .data-table .x-axis-focus-label {
-    opacity: 0.6;
     font-size: 0.75em;
-    padding-bottom: 0.5em;
 }
 .activation-viz-plugin .data-table.table-header td.cell-numeric {
-    font-size: 0.75em;
+    font-weight: bold;
+    font-size: 0.875em;
+    font-family: var(--font-sans-serif);
+    /*border-right: 1px solid var(--color-ui-04);*/
 }
 .activation-viz-plugin .data-table .x-axis-label, .activation-viz-plugin .data-table .x-axis-focus-label {
+    opacity: 0.6;
     font-weight: bold;
     font-family: var(--font-sans-serif);
     text-align: left;
     padding-left: 0.5ex;
-    border-left: 1px dotted var(--color-text-01);
     transition: all 150ms ease-in-out;
 }
 
@@ -146,10 +156,11 @@
 .activation-viz-plugin .data-table .x-axis-focus-label-range {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
+    height: 3em;
     position: absolute;
     bottom: 0;
-    transition: all 300ms ease-in-out;
+    transition: all 500ms ease-in-out;
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:first-child {
     text-align: left;
@@ -160,10 +171,15 @@
     padding-right: 0.5ex; /* also must match padding-left for x-axis-label */
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:last-child:not(.no-border) {
-    border-right: 1px dotted var(--color-text-01); /* must match border-left for x-axis-label */
+    border-right: 1px solid var(--color-ui-05); /* must match border-left for x-axis-label */
+}
+.activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label:first-child:not(.no-border) {
+    border-left: 1px solid var(--color-ui-05); /* must match border-left for x-axis-label */
 }
 .activation-viz-plugin .data-table .x-axis-focus-label-cell .x-axis-focus-label {
-    padding-top: 0.8rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
     font-weight: bold;
     opacity: 1;
     white-space: nowrap;
@@ -211,24 +227,20 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
-    width: 0.4em;
+    width: 0.25em;
     height: 1.75em;
-    background: #67a9cf;
-    outline: 2px solid rgba(255,255,255,0.5);
-    border: 1px solid rgba(0,0,0,0.9);
+    background: #fdbf6f; /* colorbrewer, to match grid theme */
+    border: 1px solid rgba(0,0,0,0.2);
     transition: all 150ms ease-in-out;
 }
 .activation-viz-plugin.show-outliers .outlier-dot {
     /* dot representing an outlier activation */
-    background: #b2182b;
-    opacity: 0.6;
-    border-color: rgba(255,255,255,0.2);
-    width: 0.3em;
-    height: 2.1em;
+    background: #e31a1c;
+    opacity: 0.6; /* so that overlapping outlier dots blend */
 }
 .activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"] {
     /* dot representing an outlier activation that is mostly slow due to queueing delays */
-    background: #E141BB;
+    background: #6a3d9a;
 }
 .activation-viz-plugin.show-outliers .outlier-dot[why-is-it-slow="Queueing Delays"]:hover {
     /* HOVER: dot representing an outlier activation that is mostly slow due to queueing delays */
@@ -287,7 +299,7 @@
     filter: grayscale(1) opacity(0.6);
 }
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
-    width: 5rem;
+    width: 6rem;
 }
 .activation-viz-plugin .data-table .cell-numeric.cell-extra-wide {
     width: 5.25rem;

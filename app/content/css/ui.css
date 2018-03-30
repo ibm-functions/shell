@@ -1687,3 +1687,14 @@ break {
 .bx--breadcrumb .bx--no-link:not(.bx--link) {
     font-weight: 400;
 }
+
+.icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.icon-container .deemphasize {
+    white-space: nowrap;
+    font-size: 0.5em;
+    margin-top: 0.5ex;
+}
