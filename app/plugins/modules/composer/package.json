@@ -12,7 +12,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@ibm-functions/composer": "^0.2.0",
+    "@ibm-functions/composer": "^0.2.2",
     "chokidar": "^1.7.0"
   }
 }
