@@ -25,17 +25,17 @@
   },
   "devDependencies": {
     "expand-home-dir": "0.0.3",
-    "is-url": "^1.2.2",
+    "is-url": "^1.2.4",
     "mocha": "^3.4.2",
     "openwhisk": "git://github.com/starpit/openwhisk-client-js.git#add_client_timeout2",
     "promise-retry": "^1.1.1",
     "properties-parser": "^0.3.1",
-    "request": "^2.83.0",
+    "request": "^2.85.0",
     "request-promise": "^4.2.2",
     "codecov": "^3.0.0",
     "del": "^3.0.0",
     "nyc": "^11.3.0",
-    "spectron": "^3.7.1"
+    "spectron": "^3.8.0"
   },
   "dependencies": {}
 }
