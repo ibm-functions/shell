@@ -23,10 +23,10 @@ const path = require('path'),
       fsh = path.join(__dirname, '../../../../app/bin/fsh')
 
 const cli = {
-    do: cmd => new Promise((resolve, reject) => {
+    do: (cmd, env={}) => new Promise((resolve, reject) => {
         const command = `${fsh} ${cmd} --no-color`
 
-        exec(command, (err, stdout, stderr) => {
+        exec(command, { env: Object.assign({}, process.env, env) }, (err, stdout, stderr) => {
             if (err) {
                 resolve({ code: err.code, output: stdout.trim().concat(stderr) })
             } else {
@@ -124,5 +124,9 @@ describe('Headless mode', function() {
 
     it('should create an app', () => cli.do('app create seq ./data/fsm.json')
        .then(cli.expectOK('ok: updated app seq\n', { exact: true }))
+       .catch(common.oops(this)))
+
+    it('should create an action with an env var parameter', () => cli.do('action create envfun ./data/echo.js -p fun $FUN', { FUN: 3 })
+       .then(cli.expectOK('ok: updated action envfun\n', { exact: true }))
        .catch(common.oops(this)))
 })
