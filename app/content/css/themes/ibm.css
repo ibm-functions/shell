@@ -150,6 +150,10 @@ badge.clickable:hover {
 .sidecar-bottom-stripe .sidecar-bottom-stripe-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe .sidecar-bottom-stripe-button.hover, .sidecar-bottom-stripe-button-as-button.selected {
     color: var(--color-brand-02);
 }
+.sidecar-bottom-stripe .sidecar-bottom-stripe-button-as-button.sidecar-bottom-stripe-button-as-radio-button:not(.sidecar-bottom-stripe-button-active):hover, .sidecar-bottom-stripe-button-as-button.sidecar-bottom-stripe-button-as-radio-button.selected {
+    color: var(--color-support-03);
+    color: #e31a1c;
+}
 
 sidecar .header-right-bits {
     color: hsla(201, 22%, 10%, 1);

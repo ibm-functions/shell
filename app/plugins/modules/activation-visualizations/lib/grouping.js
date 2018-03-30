@@ -68,7 +68,7 @@ const summarizePerformance = (activations, options) => {
               initTime = (initAnno && initAnno.value) || 0,
               start = activation.start - waitTime,
               executionTime = activation.end - activation.start,
-              total = executionTime + waitTime + initTime
+              total = executionTime + waitTime /*+ initTime*/
               
         const durDisparity = executionTime - durAvgForFastest,
               waitDisparity = Math.max(0, waitTime - waitAvgForFastest),
@@ -85,8 +85,10 @@ const summarizePerformance = (activations, options) => {
         return { total, start, reasons }
     }
 
-    // outlier activations
-    const outliers = summaries.slice(idxOutlier),
+    // outlier activations; make sure not to include degenerate
+    // "outliers" that are just the median
+    const median = summaries[idx50].duration
+    const outliers = summaries.slice(idxOutlier).filter(({duration}) => duration > median),
           outlierMax = outliers.reduce((max, {duration}) => Math.max(max, duration), 0)
 
     return { min, max,
