@@ -124,7 +124,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
           xAxisLabels = [],
           xAxisLeftPad = headerRow.insertCell(-1)
     tableHeader.classList.add('table-header')
-    xAxisLeftPad.className = 'x-axis-left-pad'
+    xAxisLeftPad.className = 'x-axis-left-pad cell-numeric'
+    xAxisLeftPad.innerText = 'Action'
     if (numTicks === 0) {
         // we still need to insert a cell to fill in the bar column
         headerRow.insertCell(-1)//.classList.add('x-axis-label')
@@ -154,8 +155,8 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
     xAxisRightPad1.className = 'cell-numeric cell-successes cell-hide-when-outliers-shown cell-hide-when-focus-shown'
     xAxisRightPad2.className = 'cell-numeric cell-failures cell-hide-when-outliers-shown cell-hide-when-focus-shown'
     xAxisRightPad3.className = 'cell-numeric cell-failures cell-show-only-when-outliers-shown cell-hide-when-focus-shown'
-    xAxisRightPad1.innerText = 'Successes'
-    xAxisRightPad2.innerText = 'Failures'
+    xAxisRightPad1.innerText = 'Success'
+    xAxisRightPad2.innerText = 'Fail'
     xAxisRightPad3.innerText = 'Outliers'
 
     // set the focus range to be in the middle so we get some animation on first hover
@@ -318,10 +319,6 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
                     label.setAttribute('data-balloon-length', nameWithoutNamespace.length < 20 ? 'fit' : 'large')
                 }
 
-                // drill down to grid view; note how we pass through a --name
-                // query, to filter based on the clicked-upon row
-                //row.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --zoom 1 --name "${group.path}" ${splitOptions}`)
-
                 if (options.split) {
                     const version = row.insertCell(-1)
                     version.className = 'cell-version'
@@ -349,6 +346,10 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
                     const indicators = barWrapper.querySelectorAll('.stat-indicator')
                     indicators.forEach(indicator => barWrapper.removeChild(indicator))
                 }
+
+                // drill down to grid view; note how we pass through a name filter
+                // query, to filter based on the clicked-upon row
+                cell.onclick = drilldownWith(viewName, `grid "${group.path}" ${optionsToString(options)} ${splitOptions}`)
 
                 const this25 = group.statData.n[stat25],
                       thisMedian = group.statData.n['50'],
@@ -452,6 +453,13 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
 
                 // an element to show the median of this bar
                 medianDot.style.left = percent(medianLeft)
+
+                // check to see if the median dot is flush right; if
+                // so, then we'll need to make a little room for it
+                if (medianLeft === 1) {
+                    content.classList.add('median-dot-flush-right')
+                }
+
                 medianDot.setAttribute('data-balloon', `median: ${prettyPrintDuration(thisMedian)}`)
                 medianDot.setAttribute('data-balloon-length', 'medium')
                 medianDot.setAttribute('data-balloon-pos', 'right')

@@ -81,6 +81,10 @@
     padding: 0.6rem 0.75rem;
     transition: all 150ms ease-in-out;
 }
+.data-table:not(.table-header) tr:nth-child(2n + 1) td {
+    /* zebra striping of rows */
+    background: var(--color-ui-02);
+}
 .activation-viz-plugin:not(.x-axis-focus) .data-table.table-header td:not(.x-axis-focus-label-cell) {
     border-right: 1px dotted var(--color-ui-04);
 }
@@ -112,9 +116,12 @@
 }
 
 /* action name column, and range selector padding for that label column */
-.activation-viz-plugin table td.cell-label, .activation-viz-plugin .x-axis-left-pad {
+.activation-viz-plugin table td.cell-label, .activation-viz-plugin .data-table .x-axis-left-pad.cell-numeric {
     width: 30%;
     max-width: 50em;
+}
+.activation-viz-plugin .data-table .x-axis-left-pad {
+    text-align: left;
 }
 .activation-viz-plugin.wide-label table td.cell-label, .activation-viz-plugin.wide-label .x-axis-left-pad, .sidecar-full-screen .activation-viz-plugin table td.cell-label, .sidecar-full-screen .activation-viz-plugin .x-axis-left-pad {
     /* -w option, or sidecar full screen */
@@ -225,10 +232,16 @@
     display: flex;
     align-items: center;
 }
+.activation-viz-plugin.median-dot-flush-right .data-table td.cell-stats .stat-bar-wrapper {
+    /* then some median dot is flush to the right of its cell; we'll need
+   make room on the right it, so that it doesn't overflow to the right
+   */
+    width: calc(100% - 0.6125em);
+}
 .activation-viz-plugin .data-table td.cell-stats .stat-median-dot, .activation-viz-plugin.show-outliers .outlier-dot {
     position: absolute;
-    width: 0.25em;
-    height: 1.75em;
+    width: 0.6125em;
+    height: 1.25em;
     background: #fdbf6f; /* colorbrewer, to match grid theme */
     border: 1px solid rgba(0,0,0,0.2);
     transition: all 150ms ease-in-out;
@@ -299,7 +312,7 @@
     filter: grayscale(1) opacity(0.6);
 }
 .activation-viz-plugin .data-table .cell-numeric,.activation-viz-plugin .data-table .cell-version {
-    width: 6rem;
+    width: 5rem;
 }
 .activation-viz-plugin .data-table .cell-numeric.cell-extra-wide {
     width: 5.25rem;
@@ -536,8 +549,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: repeating-linear-gradient(-45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 15%);
-    background-color: var(--color-support-01);
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 15%), repeating-linear-gradient(45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 21%);
+    background-color: #b15928;
 }
 
 .activation-viz-plugin iframe {
@@ -548,26 +561,28 @@
     paddingLeft = '1ex'
 }
 .activation-viz-plugin.grid-header-key {
-    max-width: 15em;
+    height: 8em;
+    width: 16em;
     font-size: 0.875em;
     padding: 0;
 }
 .activation-viz-plugin.grid-header-key .grid {
     flex-direction: row;
     padding: 0;
-    padding-right: 0.5ex;
-    padding-top: 0.75ex;
 }
 .activation-viz-plugin.grid-header-key .grid:last-child {
     padding-right: 0;
 }
 .activation-viz-plugin.grid-header-key .grid-grid {
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center;
     flex-wrap: wrap;
     padding-top: 0;
     overflow-y: hidden; /* we don't want the table in the header to have scrollies */
 }
 .activation-viz-plugin.grid-header-key table {
-    border-spacing: 1px;
+    border-spacing: 0;
 }
 .activation-viz-plugin.grid-header-key .zoom_-1 .activation-viz-legend-label {
     font-size: 0.875em;
@@ -577,12 +592,13 @@
 .activation-viz-plugin.grid-header-key .zoom_-1 .kind {
     /* value text for the legend in the sidecar header */
     font-size: 0.875em;
-    font-weight: 400;
+    font-weight: 300;
+    text-align: center;
 }
 .activation-viz-plugin.grid-header-key .grid-cell {
     /* size of squares in legend */
-    width: 1.5vw;
-    height: 1.5vw;
+    width: 2.5vw;
+    height: 2.5vw;
 }
 
 /* tooltip */
@@ -722,78 +738,14 @@ body:not(.theme-dark) .activation-viz-plugin .activation-viz-timeline.cell-conta
     border-bottom: none;
 }
 
-
-/* picture in picture */
-.picture-in-picture.activation-viz-plugin .activation-viz-timeline-vertical-axis, .picture-in-picture.activation-viz-plugin .activation-viz-timeline-horizontal-axis {
-    display: none;
-}
-
-body.subwindow .activation-viz-timeline-horizontal-axis {
-    -webkit-app-region: drag;
-}
-body.subwindow .grid-grid:not(.activation-viz-timeline) {
-    -webkit-app-region: drag;
-}
-
-
 /* timeline range dragging */
 .activation-viz-timeline-column.grid.mousedown {
     background: rgba(198, 198, 200, 0.25);
 }
 
-/* range selector for summary */
-.activation-summary-range-selector {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 2em 1em 0;
+.main .activation-viz-plugin.grid-header-key [data-balloon]:after {
+    font-size: 0.875em !important;
 }
-.activation-summary-range-selector .activation-summary-range-selector-label {
-    text-transform: uppercase;
-    font-weight: 400;
-    font-size: 0.75em;
-    text-align: right;
-}
-.activation-summary-range-selector ul {
-    display: flex;
-    padding-left: 1ex;
-    margin: 0;
-    height: 2.5em;
-}
-.activation-summary-range-selector li {
-    list-style: none;
-    border: 1px solid var(--color-text-02);
-    padding: 0 2em;
-    font-weight: 400;
-    font-size: 0.75em;
-    display: flex;
-    color: var(--color-text-02);
-    align-items: center;
-    transition: all 150ms ease-in-out;
-    -webkit-font-smoothing: antialiased; /* fonts a bit too bold otherwise */
-}
-.activation-summary-range-selector li:not(:first-child):not(:last-child) {
-    border-right: none;
-}
-.activation-summary-range-selector li:first-child {
-    border-right: none;
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-.activation-summary-range-selector li:last-child {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
-.activation-summary-range-selector li:hover {
-    background: var(--color-text-01);
-    color: white;
-    cursor: pointer;
-}
-.activation-summary-range-selector li.selected {
-    background: var(--color-text-02);
-    color: white;
-}
-.activation-summary-range-selector li.partially-selected {
-    background: var(--color-text-01);
-    color: white;
+.main .activation-viz-plugin.grid-header-key [data-balloon][data-balloon-length="small"]:after {
+    width: 60px;
 }
