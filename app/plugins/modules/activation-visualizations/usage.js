@@ -27,6 +27,7 @@ const optional = [{ name: 'action|app', positional: true, docs: 'include only ac
                   { name: '--failure', boolean: true, docs: 'include only failed activations' },
                   { name: '--outliers', docs: 'include only outlier activations', allowed: ['min',25,50,90,95,99,'max'], defaultValue: 90 },
                   { name: '--since', hidden: true },
+                  { name: '--latency-bucket', hidden: true },
                   { name: '--upto', hidden: true },
                   { name: '--today', docs: 'show only activations from today'},
                   { name: '--yesterday', docs: 'show only activations from yesterday'},
