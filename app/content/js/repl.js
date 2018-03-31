@@ -920,7 +920,7 @@ self.exec = (commandUntrimmed, execOptions) => {
                     }
                 })
                 .catch(err => {
-                    console.error(err)
+                    console.error('error in command execution', err)
 
                     if (ui.headless) {
                         throw err
@@ -928,11 +928,24 @@ self.exec = (commandUntrimmed, execOptions) => {
                         // indicate that the command was NOT successfuly completed
                         evaluator.error(err)
 
-                        if (execOptions && execOptions.failWithUsage) {
+                        // how should we handle the error?
+                        const returnIt = execOptions && execOptions.failWithUsage,   // return to caller; it'll take care of things from now
+                              rethrowIt = execOptions && execOptions.rethrowErrors,  // rethrow the exception
+                              reportIt = execOptions && execOptions.reportErrors     // report it to the user via the repl
+
+                        if (returnIt) {
+                            debug('returning command execution error')
                             return err
-                        } else if (!nested) {
+                        } else if (!nested && !rethrowIt) {
+                            debug('reporting command execution error to user via repl')
                             ui.oops(block, nextBlock)(err)
                         } else {
+                            debug('rethrowing command execution error')
+                            if (reportIt) {
+                                // maybe the caller also wants us to report it via the repl?
+                                debug('also reporting command execution error to user via repl')
+                                ui.oops(block, nextBlock)(err)
+                            }
                             throw err
                         }
                     }
@@ -945,7 +958,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             throw e
         }
 
-        console.error(e)
+        console.error('catastrophic error in repl', e)
 
         const blockForError = block || ui.getCurrentProcessingBlock()
 

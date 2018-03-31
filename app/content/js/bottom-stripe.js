@@ -183,7 +183,7 @@ exports.addModeButtons = (modes, entity, options) => {
     const bottomStripe = document.querySelector(css.modeContainer)
 
     // for going back
-    bottomStripe.addModeButtons = (modes, entity, show) => {
+    const addModeButtons = (modes, entity, show) => {
         const bottomStripe = document.querySelector(css.modeContainer)
         ui.removeAllDomChildren(bottomStripe)
 
@@ -202,13 +202,13 @@ exports.addModeButtons = (modes, entity, options) => {
             // to avoid stale buttons from showing up while the new view renders
             ui.removeAllDomChildren(bottomStripe)
 
-            return () => bottomStripe.addModeButtons(modes, entity, show)
+            return () => addModeButtons(modes, entity, show)
         }
     }
 
     const defaultMode = modes && modes.find(({defaultMode}) => defaultMode),
           show = options && options.show || (defaultMode && (defaultMode.mode || defaultMode.label))
-    bottomStripe.addModeButtons(modes, entity, show)
+    addModeButtons(modes, entity, show)
 
     if (!options || !options.preserveBackButton) {
         const backContainer = document.querySelector(css.backContainer)

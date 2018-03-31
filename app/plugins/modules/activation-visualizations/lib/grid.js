@@ -265,7 +265,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             labelInner.appendChild(labelAction)
             labelAction.innerText = actionName
             labelAction.className = 'clickable grid-label-part'
-            labelAction.onclick = drilldownWith(viewName, `grid ${optionsToString(options)} --zoom 1 --name "${group.path}"`)
+            labelAction.onclick = drilldownWith(viewName, `grid "${group.path}" ${optionsToString(options)}`)
         }
 
         // render the grid
