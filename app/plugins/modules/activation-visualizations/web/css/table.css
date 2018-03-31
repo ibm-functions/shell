@@ -386,6 +386,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 25em;
 }
 .activation-viz-plugin .grid-grid:not(.zoom_0) .grid-label {
     max-width: none !important;
@@ -562,7 +563,7 @@
 }
 .activation-viz-plugin.grid-header-key {
     height: 8em;
-    width: 16em;
+    width: 17em;
     font-size: 0.875em;
     padding: 0;
 }
@@ -591,7 +592,7 @@
 }
 .activation-viz-plugin.grid-header-key .zoom_-1 .kind {
     /* value text for the legend in the sidecar header */
-    font-size: 0.875em;
+    font-size: 0.75em;
     font-weight: 300;
     text-align: center;
 }

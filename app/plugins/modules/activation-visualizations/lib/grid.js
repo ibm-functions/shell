@@ -224,7 +224,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
         ui.addNameToSidecarHeader(sidecar, name, packageName, onclick)
 
         if (groups.length > 0) {
-            drawLegend(viewName, rightHeader, summary)
+            drawLegend(viewName, rightHeader, summary, options)
         }
     }
 
