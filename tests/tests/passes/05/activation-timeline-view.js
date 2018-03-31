@@ -30,8 +30,9 @@ describe('Activation timeline visualization', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
-    const icon = `${ui.selectors.SIDECAR} .sidecar-header-icon-wrapper .sidecar-header-icon`
+    // disabled for now shell issue #794
+    /*const icon = `${ui.selectors.SIDECAR} .sidecar-header-icon-wrapper .sidecar-header-icon`
     it('should open timeline', () => cli.do('timeline', this.app)
        .then(() => this.app.client.waitForText(icon, 'timeline'))
-       .catch(common.oops(this)))
+       .catch(common.oops(this)))*/
 })

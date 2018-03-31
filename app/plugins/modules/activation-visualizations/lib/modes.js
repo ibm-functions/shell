@@ -35,9 +35,10 @@ const mode = mode => options => ({
  */
 const modes = [
     mode('summary'),
-    mode('timeline'),
+    // mode('timeline'),  // disabled for now shell issue #794
     mode('grid')
 ]
+exports.modes = modes
 
 /**
  * Return a view mode model, crafted for the given default mode, and

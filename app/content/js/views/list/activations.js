@@ -396,7 +396,9 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 leftButtons.classList.add('list-paginator-left-buttons')
 
                 // show summary buttons
-                const buttons = [ 'summary', 'timeline', 'grid' ]
+                const buttons = [ 'summary',
+                                  // 'timeline', // disabled for now shell issue #794
+                                  'grid' ]
                 buttons.forEach(buttonText => {
                     const command = buttonText,  // it so happens...
                           button = document.createElement('span')

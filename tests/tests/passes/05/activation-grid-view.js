@@ -161,8 +161,9 @@ describe('Activation grid visualization', function() {
     const switcheroo = () => {
         switchTo('summary')
         switchTo('grid')
-        switchTo('timeline')
-        switchTo('grid')
+        switchTo('summary')
+        //switchTo('timeline')
+        //switchTo('grid')
     }
 
     switcheroo()
