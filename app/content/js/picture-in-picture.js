@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-const util = require('util'),
+const debug = require('debug')('pip'),
       bottomStripe = require('./bottom-stripe')
 
 const _highlight = op => highlightThis => {
     if (highlightThis) {
-        if (util.isArray(highlightThis)) {
+        if (Array.isArray(highlightThis)) {
             highlightThis.forEach(_ => _.classList[op]('picture-in-picture-highlight'))
         } else {
             highlightThis.classList[op]('picture-in-picture-highlight')
@@ -34,6 +34,8 @@ const highlight = _highlight('add')
  *
  */
 const restore = (pippedContainer, sidecarClass, capturedHeaders, highlightThis, escapeHandler, options) => () => {
+    debug('restore')
+
     const sidecar = document.getElementById('sidecar'),
           parent = options && options.parent || sidecar.querySelector('.custom-content')
 
@@ -107,6 +109,8 @@ const pip = (container, capturedHeaders, highlightThis, returnTo, options) => {
             backContainer.classList.remove('has-back-button')
         }
     }
+
+    return restoreFn
 }
 
 /**
@@ -178,25 +182,16 @@ module.exports = (command, highlightThis, container, returnTo, options) => event
     const modeButtons = document.querySelector(bottomStripe.css.modeContainer).capture
     const capturedFooter = capture(bottomStripe.css.buttons, modeButtons && modeButtons())
 
-    if (container && !alreadyPipped) {
-        // make the transition
-        pip(container, [capturedHeader, capturedHeader2, capturedHeader3, capturedHeader4, capturedFooter], highlightThis, returnTo, options)
-
-    /*} else if (alreadyPipped) {
-        // for real pip... if the transition has already been made
-        const currentHighlightThis = alreadyPipped.querySelectorAll('.picture-in-picture-highlight')
-        if (currentHighlightThis) {
-            for (let idx = 0; idx < currentHighlightThis.length; idx++) {
-                dehighlight(currentHighlightThis[idx])
-            }
-        }*/
-    }
+    // make the transition
+    const restoreFn = container && !alreadyPipped
+          ? pip(container, [capturedHeader, capturedHeader2, capturedHeader3, capturedHeader4, capturedFooter], highlightThis, returnTo, options)
+          : () => true
 
     highlight(highlightThis)
 
     // now we can safely begin executing the command
-    return typeof command === 'string'
-        ? repl.pexec(command, { preserveBackButton: true })
-        : typeof command === 'function' ? command()
+    debug('executing command', command)
+    return typeof command === 'string'  ? repl.pexec(command, { preserveBackButton: true, rethrowErrors: true, reportErrors: true }).catch(restoreFn)
+        : typeof command === 'function' ? command().catch(restoreFn)
         : ui.showEntity(command, { preserveBackButton: true })
 }

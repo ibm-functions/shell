@@ -46,33 +46,34 @@ const _openTableExpectCountOf = function(ctx, expectedCount, expectedErrorRate, 
           outlierDots = `${view} .outlier-dot`
 
     const once = (iter, resolve, reject) => cli.do(cmd, ctx.app)
-          .then(cli.expectOK)
-          .then(sidecar.expectOpen)
-          .then(() => ctx.app.client.scroll(row))
-          .then(() => ctx.app.client.getText(successCell))
-          .then(actualCount => assert.equal(actualCount, expectedCount))
+          .then(cli.expectOKWithCustom({ passthrough: true}))
+          .then(N => {
+              // we'll return this N at the end; this is the data-input-count of the prompt that executed our cmd
+              return ctx.app.client.scroll(row)
+                  .then(() => ctx.app.client.getText(successCell))
+                  .then(actualCount => assert.equal(actualCount, expectedCount))
 
-          .then(() => ctx.app.client.getAttribute(failureCell, 'data-failures'))
-          .then(actualErrorRate => assert.equal(actualErrorRate, expectedErrorRate))
+                  .then(() => ctx.app.client.getAttribute(failureCell, 'data-failures'))
+                  .then(actualErrorRate => assert.equal(actualErrorRate, expectedErrorRate))
 
-          // hover over a bar, expect focus labels
-          .then(() => ctx.app.client.moveToObject(medianDot, 1, 1))
-          .then(() => ctx.app.client.waitForVisible(focusLabel))
+                  // hover over a bar, expect focus labels
+                  .then(() => ctx.app.client.moveToObject(medianDot, 1, 1))
+                  .then(() => ctx.app.client.waitForVisible(focusLabel))
 
-          // click outliers button
-          .then(() => {
-              if (expectedCount > 8) {
-                  return ctx.app.client.click(outliersButton)
-                      .then(() => ctx.app.client.waitForVisible(outlierDots))
-              }
+                  // click outliers button
+                  .then(() => {
+                      if (expectedCount > 8) {
+                          return ctx.app.client.click(outliersButton)
+                              .then(() => ctx.app.client.waitForVisible(outlierDots))
+                      }
+                  })
+
+                /*.then(() => ctx.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-stat`, 'data-value'))
+                  .then(stats => assert.equal(stats.length, 5) && stats.reduce((okSoFar,stat) => ok && isInteger(stat), true))*/
+
+                   // return the repl prompt count
+                  .then(() => resolve(N))
           })
-
-          /*.then(() => ctx.app.client.getAttribute(`${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-stat`, 'data-value'))
-          .then(stats => assert.equal(stats.length, 5) && stats.reduce((okSoFar,stat) => ok && isInteger(stat), true))*/
-
-    // return the selector
-          .then(() => `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"]`)
-          .then(resolve)
           .catch(err => {
               if (iter < 10) {
                   if (err.type !== 'NoSuchElement') {
@@ -160,7 +161,7 @@ describe('Activation table visualization', function() {
     openTableExpectCountOf(this, 3, 1, 'summary --batches 10')
 
     it('should open table, click on a failure cell, and show grid', () => _openTableExpectCountOf(this, 3, 1, 'summary --batches 10')
-       .then(() => `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-errors`)
+       .then(() => `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-errors`) // the failure cell for the action's row
        .then(selector => this.app.client.scroll(selector)
              .then(this.app.client.click(selector)))
        .then(() => this.app)
@@ -190,4 +191,26 @@ describe('Activation table visualization', function() {
        .catch(common.oops(this)))
     
     openTableExpectCountOf(this, 46, 4, `summary ${actionName}`) // 46 successful activations, 4 of which failed
+
+    // finally, test error handling: delete action, open summary,
+    // click on the action name, except the summary to still be there
+    it(`should delete ${actionName}`, () => cli.do(`wsk action delete ${actionName}`, this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should open table, click on the deleted action, and still show table view', () => _openTableExpectCountOf(this, 46, 4, `summary ${actionName}`)
+       .then(N => {
+           // N is the data-input-count of the block that executed the command
+           const selector = `${ui.selectors.SIDECAR_CUSTOM_CONTENT} tr[data-action-name="${actionName}"] .cell-label .clickable` // the name cell for the deleted action
+           return this.app.client.scroll(selector)
+               .then(this.app.client.click(selector)) // click on it
+               .then(count => ({ app: this.app, count: N + 1 })) // the command+1 had better have a 404
+               .then(cli.expectError(404)) // the repl should report the action not found error
+       })
+       .then(() => this.app.client.waitUntil(() => {
+           return sidecar.expectOpen(this.app)
+               .then(sidecar.expectMode('summary')) // and the summary had better still be open
+       }))
+       .catch(common.oops(this)))
+       
 })

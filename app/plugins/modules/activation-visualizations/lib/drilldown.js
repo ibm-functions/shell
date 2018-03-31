@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-exports.drilldownWith = (returnTo, command, highlightThis) => event => {
+exports.drilldownWith = (returnTo, command, highlightThis, callThese=[]) => event => {
+    // invoke any precursor functions
+    callThese.forEach(_ => _())
+
     const container = document.querySelector('#sidecar .custom-content .activation-viz-plugin')
     return ui.pictureInPicture(command, highlightThis, container, returnTo)(event)
 }

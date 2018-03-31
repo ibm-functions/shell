@@ -49,12 +49,15 @@ const tableModes = choices.map((choice, idx) => {
              }
            }
 }).concat([
+    // this is the bottom stripe button that toggles whether outliers are shown
+    // note how we specify that this is a radio button, i.e. a toggler
     { mode: 'outliers',
       fontawesome: 'fas fa-exclamation',
       flush: 'right',
       balloon: 'Include outlier activations with very high latency',
-      actAsButton: true, selected: false,
-      radioButton: true,  // this is a separate radio button
+      actAsButton: true,
+      radioButton: true, 
+      selected: false,
       direct: state => {
           const showOutliers = !state.showOutliers
           state.showOutliers = showOutliers
@@ -164,6 +167,10 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
     xAxisFocusLabelRange.style.width = 0
 
     /** Render a selected range on the x axis */
+    const xAxisResetFocus = barWrapper => () => {
+        content.classList.remove('x-axis-focus')
+        barWrapper.classList.remove('focus')
+    }
     const xAxisToggleFocus = ({barWrapper, this25, this75, left, right}) => {
         const inFocus = content.classList.toggle('x-axis-focus')
         barWrapper.classList.toggle('focus')
@@ -346,11 +353,6 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
                     const indicators = barWrapper.querySelectorAll('.stat-indicator')
                     indicators.forEach(indicator => barWrapper.removeChild(indicator))
                 }
-
-                // drill down to grid view; note how we pass through a name filter
-                // query, to filter based on the clicked-upon row
-                cell.onclick = drilldownWith(viewName, `grid "${group.path}" ${optionsToString(options)} ${splitOptions}`)
-
                 const this25 = group.statData.n[stat25],
                       thisMedian = group.statData.n['50'],
                       this75 = group.statData.n[stat75],
@@ -367,11 +369,16 @@ const _drawTable = (options, header, content, groupData, eventBus, sorter=statDa
                 bar.style.width = percent(right - left)
 
                 // fancy focus, to show the extent of the bar on the x axis!
-                const doFocus = () => xAxisToggleFocus({barWrapper, this25, this75, left, right}),
+                const resetFocus = xAxisResetFocus(barWrapper),
+                      doFocus = () => xAxisToggleFocus({barWrapper, this25, this75, left, right}),
                       focus = dom => {
                           dom.onmouseenter = doFocus
                           dom.onmouseleave = doFocus
                       }
+
+                // drill down to grid view; note how we pass through a name filter
+                // query, to filter based on the clicked-upon row
+                cell.onclick = drilldownWith(viewName, `grid "${group.path}" ${optionsToString(options)} ${splitOptions}`, undefined, [resetFocus])
 
                 // install the fancy focus handlers
                 focus(bar)
