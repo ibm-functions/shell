@@ -1513,12 +1513,12 @@ break {
 }
 .list-paginator .list-paginator-left-buttons {
     flex: 1;
+    font-size: 1rem;
     font-variant: small-caps;
     letter-spacing: 1px;
 }
 .list-paginator .list-paginator-left-buttons > span {
     /* a list paginator left button */
-    opacity: 0.6;
     transition: all 150ms ease-in-out;
 }
 .list-paginator .list-paginator-left-buttons > span:hover {

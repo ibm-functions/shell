@@ -62,8 +62,9 @@ describe('List activations, then drill down to summary views', function() {
     drilldownWith('summary')
     closeSidecar()
 
-    drilldownWith('timeline')
-    closeSidecar()
+    // timeline disabled shell issue #794
+    //drilldownWith('timeline')
+    //closeSidecar()
 
     drilldownWith('grid')
     closeSidecar()

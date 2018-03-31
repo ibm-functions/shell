@@ -342,6 +342,9 @@ const _drawTimeline = ({options, content, timelineData}) => () => {
  *
  */
 module.exports = (commandTree, prequire) => {
+    // disabled for now shell issue #794
+    return
+
     const wsk = prequire('/ui/commands/openwhisk-core'),
           mkCmd = (cmd, extraOptions) => visualize(wsk, commandTree, cmd, viewName, drawTimeline, extraOptions),
           timelineIt = mkCmd('timeline'),
