@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,48 +21,53 @@ const fs = require('fs'),
       expandHomeDir = require('expand-home-dir')
 
 /**
+ * Return partial updated with the given match; there may be some
+ * overlap at the beginning.
+ *
+ */
+const completeWith = (partial, match, addSpace=false) => {
+    const partialIdx = match.indexOf(partial)
+    return (partialIdx >= 0 ? match.substring(partialIdx + partial.length) : match) + (addSpace ? ' ' : '')
+}
+
+/**
  * We've found a match. Add this match to the given partial match,
  * located in the given dirname'd directory, and update the given
  * prompt, which is an <input>.
-*
-*/
+ *
+ */
 const complete = (match, prompt, { temporaryContainer, partial=temporaryContainer.partial, dirname=temporaryContainer.dirname, addSpace=false }) => {
     debug('completion', match, partial, dirname)
 
     // in case match includes partial as a prefix
-    const partialIdx = match.indexOf(partial),
-          completion = (partialIdx >= 0 ? match.substring(partialIdx + partial.length) : match) + (addSpace ? ' ' : '')
+    const completion = completeWith(partial, match, addSpace)
 
     if (temporaryContainer) {
         temporaryContainer.cleanup()
     }
 
-    if (completion) {
-        if (dirname) {
-            // see if we need to add a trailing slash
-            fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
-                if (!err) {
-                    if (stats.isDirectory()) {
-                        // add a trailing slash if the dirname/match is a directory
-                        debug('complete as directory')
-                        prompt.value = prompt.value + completion + '/'
-                    } else {
-                        // otherwise, dirname/match is not a directory
-                        debug('complete as scalar')
-                        prompt.value = prompt.value + completion
-                    }
+    if (dirname) {
+        // see if we need to add a trailing slash
+        fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
+            if (!err) {
+                if (stats.isDirectory()) {
+                    // add a trailing slash if the dirname/match is a directory
+                    debug('complete as directory')
+                    prompt.value = prompt.value + completion + '/'
                 } else {
-                    console.error(err)
+                    // otherwise, dirname/match is not a directory
+                    debug('complete as scalar')
+                    prompt.value = prompt.value + completion
                 }
-            })
+            } else {
+                console.error(err)
+            }
+        })
 
-        } else {
-            // otherwise, just add the completion to the prompt
-            debug('complete as scalar (alt)')
-            prompt.value = prompt.value + completion
-        }
     } else {
-        debug('no completion string')
+        // otherwise, just add the completion to the prompt
+        debug('complete as scalar (alt)')
+        prompt.value = prompt.value + completion
     }
 }
 
@@ -79,6 +84,44 @@ const installKeyHandlers = prompt => {
         return []
     }
 }
+
+/**
+  * Given a list of matches to the partial that is in the
+  * prompt.value, update prompt.value so that it contains the longest
+  * common prefix of the matches
+  *
+  */
+const updateReplToReflectLongestPrefix = (prompt, matches, temporaryContainer, partial=temporaryContainer.partial) => {
+    if (matches.length > 0) {
+        const shortest = matches.reduce((minLength, match) => !minLength ? match.length : Math.min(minLength, match.length), false)
+        let idx = 0
+
+        const partialComplete = idx => {
+            const completion =  completeWith(partial, matches[0].substring(0, idx))
+            temporaryContainer.partial = temporaryContainer.partial + completion
+            prompt.value = prompt.value + completion
+        }
+
+        for (idx = 0; idx < shortest; idx++) {
+            const char = matches[0].charAt(idx)
+
+            for (let jdx = 1; jdx < matches.length; jdx++) {
+                const other = matches[jdx].charAt(idx)
+                if (char != other) {
+                    if (idx > 0) {
+                        // then we found some common prefix
+                        return partialComplete(idx)
+                    }
+                }
+            }
+        }
+
+        if (idx > 0) {
+            partialComplete(idx)
+        }
+    }
+}
+
 
 /**
  * Install keyboard up-arrow and down-arrow handlers in the given REPL
@@ -247,7 +290,7 @@ const makeCompletionContainer = (block, prompt, partial, dirname, lastIdx) => {
  * Add a suggestion to the suggestion container
  *
  */
-const addSuggestion = (temporaryContainer, partial, dirname, prompt) => (match, idx) => {
+const addSuggestion = (temporaryContainer, dirname, prompt) => (match, idx) => {
     const matchLabel = match.label || match,
           matchCompletion = match.completion || matchLabel
 
@@ -281,7 +324,7 @@ const addSuggestion = (temporaryContainer, partial, dirname, prompt) => (match, 
     
     // onclick, use this match as the completion
     option.addEventListener('click', () => {
-        complete(matchCompletion, prompt, { temporaryContainer, partial, dirname, addSpace: match.addSpace })
+        complete(matchCompletion, prompt, { temporaryContainer, dirname, addSpace: match.addSpace })
     })
 
     option.setAttribute('data-match', matchLabel)
@@ -341,9 +384,11 @@ const suggestLocalFile = (last, block, prompt, temporaryContainer, lastIdx) => {
                         temporaryContainer = makeCompletionContainer(block, prompt, partial, dirname, lastIdx)
                     }
 
+                    updateReplToReflectLongestPrefix(prompt, matches, temporaryContainer)
+
                     // add each match to that temporary div
                     matches.forEach((match, idx) => {
-                        const { option, optionInner } = addSuggestion(temporaryContainer, partial, dirname, prompt)(match, idx)
+                        const { option, optionInner } = addSuggestion(temporaryContainer, dirname, prompt)(match, idx)
 
                         // see if the match is a directory, so that we add a trailing slash
                         fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
@@ -398,7 +443,9 @@ const filterAndPresentEntitySuggestions = (last, block, prompt, temporaryContain
             temporaryContainer = makeCompletionContainer(block, prompt, partial, dirname, lastIdx)
         }
 
-        filteredList.forEach(addSuggestion(temporaryContainer, partial, dirname, prompt))
+        updateReplToReflectLongestPrefix(prompt, filteredList, temporaryContainer)
+
+        filteredList.forEach(addSuggestion(temporaryContainer, dirname, prompt))
     }
 }
 
@@ -429,7 +476,7 @@ const suggestCommandCompletions = (matches, partial, block, prompt, temporaryCon
         }
 
         // add suggestions to the container
-        matches.forEach(addSuggestion(temporaryContainer, partial, undefined, prompt))
+        matches.forEach(addSuggestion(temporaryContainer, undefined, prompt))
     }
 }
 
