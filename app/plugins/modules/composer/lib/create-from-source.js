@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('composer compilation')
+
 const vm = require('vm'),
       fs = require('fs'),
       path = require('path'),
@@ -94,6 +96,7 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                     logMessage = ''
                     try {
                         const doExit = () => reject({
+                            statusCode: 'ENOPARSE',
                             fsm: errorMessage,
                             code: originalCode
                         })
@@ -169,25 +172,32 @@ ${errorMessage}`)
 
                         // for parse error, error message is shown in the fsm (JSON) tab, and user code in the source (code) tab
                         // reject now returns {fsm:errMsg, code:originalCode}
-                        reject(
-                            {
-                                fsm: message,
-                                code: originalCode
-                            }
-                        )
+                        return {
+                            statusCode: 'ENOPARSE',  // would like to use code here, but we've already used it for code:originalCode
+                            message,
+                            fsm: message,
+                            code: originalCode
+                        }
                     }
                 }
                 let fsm
                 try {
                     fsm = compile(originalCode)
                 } catch (err) {
+                    console.error('Catastrophic internal error compiling source')
                     console.error(err)
                 }
 
                 if (!isValidFSM(fsm)) {
                     // still no luck? reject
                     console.error('Error compiling app source', fsm, sandbox)
-                    reject('Your code could not be composed')
+                    if (fsm.statusCode) {
+                        debug('rejecting with pre-made error')
+                        reject(fsm)
+                    } else {
+                        reject('Your code could not be composed')
+                    }
+
                 } else {
                     if (opts.code) {
                         resolve({fsm, code: originalCode, localCodePath})
