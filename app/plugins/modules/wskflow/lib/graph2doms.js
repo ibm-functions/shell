@@ -85,19 +85,9 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
 
-	let containerElement,
+	let containerElement = $(`<div id="${containerId}" style="display: flex; flex: 1; width: 100%; height: 100%;"></div>`),
 		wskflowContainer = $('<div id="wskflowContainer"></div>'),
-		enterClickMode = false;
-
-	if(ifReuseContainer && $(`#${containerId}`).length>0){
-		containerElement = $(`#${containerId}`);
-		$(containerElement).html('').css('display', 'flex').css('flex', 1);
-		$("#wskflowSVG").remove();
-		$("#qtip").remove();
-	}
-	else{
-		containerElement = $(`<div id="${containerId}" style="display: flex; flex: 1; width: 100%; height: 100%;"></div>`);
-	}
+		enterClickMode = false;	
 
 	$(containerElement).append(wskflowContainer);	
 	
