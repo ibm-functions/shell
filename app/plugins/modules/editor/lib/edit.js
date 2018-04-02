@@ -301,7 +301,7 @@ const openEditor = wsk => {
     // Monaco uses a custom amd loader that over-rides node's require.
     // Keep a reference to node's require so we can restore it after executing the amd loader file.
     const nodeRequire = global.require;
-    ui.injectScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.11.1/min/vs/loader.js')
+    ui.injectScript(path.join(__dirname, '../node_modules/monaco-editor/min/vs/loader.js'))
     ui.injectCSS(path.join(__dirname, 'mono-blue.css'))
     ui.injectCSS(path.join(__dirname, 'editor.css'))
 
