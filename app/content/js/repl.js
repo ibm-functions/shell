@@ -243,10 +243,11 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
                 ui.ok(resultDom.parentNode).className = 'ok-for-list'
             }
 
-        } else if (response.type === 'custom' || response.renderAs == 'custom') {
-            if (echo) {
+        } else if (response.type === 'custom' || response.renderAs == 'custom') {            
+            if (echo) {                                
                 ui.showCustom(response, execOptions)
-                ui.ok(resultDom.parentNode)
+                if(!execOptions.replSilence)
+                    ui.ok(resultDom.parentNode)
             }
 
         } else if (response.type === 'activations') {

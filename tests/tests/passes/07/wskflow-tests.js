@@ -87,6 +87,21 @@ describe('app preview should actively watching an external file', function() {
       .then(verifyNodeExists('b'))
       .catch(common.oops(this)))
 
+
+    it('should update the temp file to composer.sequence("a", "c")asdfasdf', () => {
+      return new Promise((resolve, reject) => {
+        fs.writeFile(tempFileName, `composer.sequence("a", "c")asdfasdf`, (err) => {
+          if(err)
+            reject(err);
+          else
+            resolve(true);
+        });
+      });
+    });
+
+    // error message is shown as action code
+    it('should update preview with the error message', () => this.app.client.waitForVisible(`${ui.selectors.SIDECAR}.entity-is-actions`, 3000));
+
     it('should update the temp file to composer.sequence("a", "c")', () => {
       return new Promise((resolve, reject) => {
         fs.writeFile(tempFileName, `composer.sequence("a", "c")`, (err) => {
@@ -98,7 +113,8 @@ describe('app preview should actively watching an external file', function() {
       });
     });
 
-    it('should update preview', () => verifyNodeExists('a')(this.app)
+    it('should update preview', () => this.app.client.waitForVisible(ui.selectors.SIDECAR_CUSTOM_CONTENT)
+      .then(() => verifyNodeExists('a')(this.app))
       .then(verifyNodeExists('c'))
       .catch(common.oops(this)))
 

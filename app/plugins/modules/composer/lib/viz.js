@@ -167,7 +167,7 @@ module.exports = (commandTree, prequire) => {
              // and set up a file watcher to re-render upon change of the file
              if (!execOptions || !execOptions.alreadyWatching) {
                  chokidar.watch(expandHomeDir(input)).on('change', path => {
-                     repl.pexec(`preview ${path}`, { echo: false, alreadyWatching: true })
+                     repl.pexec(`preview ${path}`, { replSilence: true, alreadyWatching: true })
                  })
              }
          })
