@@ -743,7 +743,8 @@ const ui = (function() {
             if (raw.length < 10 * 1024) {
                 prettyJSON(raw, container)
             } else {
-                // too big to beautify
+                // too big to beautify; try to elide the code bits and
+                // then we'll re-check
                 const raw = JSON.stringify(value, (key, value) => {
                     if (key == 'code') {
                         // maybe this is why we're too big??
@@ -753,9 +754,12 @@ const ui = (function() {
                     }
                 }, 4)
 
-                if (raw.length > 10 * 1024) {
-                    container.innerText = raw.substring(0, 10 * 1024) + '\u2026'
+                // re-checking!
+                if (raw.length > 1 * 1024 * 1024) {
+                    // oof, still too big, crop and add a tail ellision
+                    container.innerText = raw.substring(0, 1 * 1024 * 1024) + '\u2026'
                 } else {
+                    // yay, eliding the code helped
                     prettyJSON(raw, container)
                 }
             }
