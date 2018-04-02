@@ -66,7 +66,7 @@ module.exports = (commandTree, prequire) => {
          const formatForUser = defaultMode => ({fsm,code}) => {
            
              const {visualize} = prequire('wskflow')             
-             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name, pk: undefined, reuseContainer: options.alreadyWatching})
+             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name })
              extraModes = extraModes.concat(zoomToFitButtons(controller))
 
              const entity = {
@@ -99,7 +99,15 @@ module.exports = (commandTree, prequire) => {
                  entity.type = 'actions'
              }
              
-             resolve(entity)
+             if(options.alreadyWatching && entity.type === 'custom'){  
+                // in filewatch mode (alreadyWatching), command echo is set to false
+                // calling ui.showCustom as the main repl does not do anything for custom type entity when echo is false 
+                ui.showCustom(entity);
+             }
+             else{
+                resolve(entity);
+             }             
+             
          }
          fsmPromise.then(formatForUser(defaultMode))
              .catch(err => {
@@ -158,16 +166,16 @@ module.exports = (commandTree, prequire) => {
                  debug('environment', environment)
              }
 
-             if(execOptions.alreadyWatching)
+             if(execOptions.alreadyWatching){
                 options.alreadyWatching = execOptions.alreadyWatching;
-
-             // render now
+             }             
+            
              render(input, options).then(resolve, reject)
-
+                          
              // and set up a file watcher to re-render upon change of the file
              if (!execOptions || !execOptions.alreadyWatching) {
                  chokidar.watch(expandHomeDir(input)).on('change', path => {
-                     repl.pexec(`preview ${path}`, { echo: false, alreadyWatching: true })
+                     repl.pexec(`preview ${path}`, { echo: false, alreadyWatching: true })                     
                  })
              }
          })

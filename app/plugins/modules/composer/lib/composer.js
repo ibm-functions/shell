@@ -566,12 +566,9 @@ exports.handleError = (err, reject) => {
  *
  * @return { view, controller } where controller is the API exported by graph2doms
  */
-exports.wskflow = (visualize, viewName, { fsm, input, name, packageName, reuseContainer}) => {
-    // wskflow's visualize function now returns the view as DOM and the controllers for mode buttons 
-    // container is only used in the app preview filewatch mode, where sidecar graph is updated by updating an existing wskflow container
-    // in other cases, container is undefined and wskflow generates a container itself
+exports.wskflow = (visualize, viewName, { fsm, input, name, packageName}) => {
     
-    const { view, controller } = visualize(fsm, reuseContainer);
+    const { view, controller } = visualize(fsm);
 
     const onclick = undefined
     ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
