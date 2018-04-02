@@ -15,8 +15,8 @@
  */
 
 module.exports = {
-    app: 'app',
-    fsm: 'fsm',
-    composerLib: 'compiled with composer',
-    sequence: 'sequence'
+    app: 'App',
+    fsm: 'FSM',
+    composerLib: 'Composer',
+    sequence: 'Sequence'
 }

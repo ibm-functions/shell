@@ -21,7 +21,9 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
+      path = require('path'),
       //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       actionName3 = 'foo3',
@@ -94,7 +96,7 @@ describe('Create a composer sequence', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     checkAnnotation(seqName1, { m: 4 })
     invoke(seqName1, 'n', 3)
@@ -104,7 +106,7 @@ describe('Create a composer sequence', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName2))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     checkAnnotation(seqName2, { mm: 44 })
     invoke(seqName2, 'nn', 33)
@@ -116,7 +118,7 @@ describe('Create a composer sequence', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName3))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     checkAnnotation(seqName3, { mmm: 444 })
     invoke(seqName3, 'nnn', 333, {aa:11, bb:22})
@@ -127,7 +129,7 @@ describe('Create a composer sequence', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName4))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     checkAnnotation(seqName4, { mmmm: 4444 })
     invoke(seqName4, 'nnnn', 3333, {aa:11, bb:22, cc:33})
