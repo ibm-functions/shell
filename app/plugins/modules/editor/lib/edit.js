@@ -154,7 +154,6 @@ const persisters = {
                                     return res
                                 })
                                 .catch(err => {
-                                    console.error('!!!!!!!', err)
                                     if (err.statusCode === 'ENOPARSE') {
                                         debug('composition did not parse', err)
                                         const basename = path.basename(filepath),
@@ -169,36 +168,22 @@ const persisters = {
                                                   column = match[3]
                                             debug('got match', problem, line, column)
 
-                                            // see the 'hack it ourselves' just below
-                                            const rando = `shell-${new Date().getTime()}`
-
                                             editor.__currentDecorations = editor.deltaDecorations(editor.__currentDecorations || [], [
 	                                        { range: new monaco.Range(line,1,line,1),
                                                   options: { isWholeLine: true,
-                                                             //glyphMarginClassName: 'editor__parse-error-gutter-marker editor__parse_error_decoration',
-                                                             //glyphMarginHoverMessage: problem
-                                                             linesDecorationsClassName: `editor__parse-error-gutter-marker editor__parse-error-decoration ${rando}`
+                                                             glyphMarginClassName: 'editor__parse-error-gutter-marker editor__parse_error_decoration',
+                                                             glyphMarginHoverMessage: { value: problem },
+                                                             //linesDecorationsClassName: `editor__parse-error-gutter-marker editor__parse-error-decoration`
                                                            }
                                                 },
 	                                        { range: new monaco.Range(line,column,line,column + 1),
                                                   options: {
-                                                      beforeContentClassName: `editor__parse-error-before-marker editor__parse-error-decoration ${rando}`,
+                                                      beforeContentClassName: `editor__parse-error-before-marker editor__parse-error-decoration`
                                                       //inlineClassName: 'editor__parse-error-inline-marker',
-                                                      hoverMessage: problem
+                                                      //hoverMessage: { value: problem }
                                                   }
                                                 },
                                             ])
-
-                                            // glyphMarginHoverMessage seems broken; hack it ourselves for now
-                                            setTimeout(() => {
-                                                const decos = document.querySelectorAll(`.${rando}`)
-                                                if (decos) {
-                                                    for (let idx = 0; idx < decos.length; idx++) {
-                                                        const deco = decos[idx]
-                                                        deco.setAttribute('title', problem)
-                                                    }
-                                                }
-                                            }, 0)
                                         }
                                     }
                                 })
@@ -438,7 +423,7 @@ const openEditor = wsk => {
                         minimap: {
 		            enabled: false
 	                },
-                        //glyphMargin: true,   // needed for error indicators
+                        glyphMargin: true,   // needed for error indicators
                         autoIndent: true,
                         codeLens: false,
                         quickSuggestions: false,
