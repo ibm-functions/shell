@@ -52,13 +52,18 @@ describe('Tab completion', function() {
           })
           .catch(common.oops(this));
 
-    const tabbyWithOptions = (app, partial, expected, full, { click, nTabs, expectOK=true, iter=0 }={}) => {
+    const tabbyWithOptions = (app, partial, expected, full, { click, nTabs, expectOK=true, iter=0, expectedPromptAfterTab }={}) => {
         return app.client.waitForExist(ui.selectors.CURRENT_PROMPT_BLOCK)
             .then(() => app.client.getAttribute(ui.selectors.CURRENT_PROMPT_BLOCK, 'data-input-count'))
             .then(count => parseInt(count))
             .then(count => app.client.setValue(ui.selectors.CURRENT_PROMPT, partial)
                   .then(() => app.client.waitForValue(ui.selectors.PROMPT_N(count), partial))
                   .then(() => app.client.setValue(ui.selectors.CURRENT_PROMPT, `${partial}${keys.TAB}`))
+                  .then(() => {
+                      if (expectedPromptAfterTab) {
+                          return app.client.waitForValue(ui.selectors.PROMPT_N(count), expectedPromptAfterTab)
+                      }
+                  })
                   .then(() => {
                       if (!expected) {
                           // then we expect non-visibility of the tab-completion popup
@@ -123,6 +128,11 @@ describe('Tab completion', function() {
 
     it('should have an active repl', () => cli.waitForRepl(this.app))
 
+    const options = ['commandFile.wsk',
+                     'composer-source/',
+                     'composer-source-expect-errors/',
+                     'composer-wookiechat/']
+
     // tab completion with options, then click on the second (idx=1) entry of the expected cmpletion list
     it('should tab complete local file path with options', () => tabbyWithOptions(this.app,
                                                                                   'lls data/com',
@@ -130,14 +140,16 @@ describe('Tab completion', function() {
                                                                                   'lls data/composer-source/',
                                                                                   { click: 1 }))
 
+    it('should tab complete local file path with options, expect prompt update', () => tabbyWithOptions(this.app,
+                                                                                                        'lls data/comp',
+                                                                                                        options.slice(1), // except the first
+                                                                                                        'lls data/composer-source/',
+                                                                                                        { click: 1,
+                                                                                                          expectedPromptAfterTab: 'lls data/composer-'}))
+
     it('should tab complete the data directory', () => tabby(this.app, 'lls da', 'lls data/'))
     it('should tab complete the data/fsm.js file', () => tabby(this.app, 'lls data/fsm.js', 'lls data/fsm.json'))
     it('should tab complete the ../app directory', () => tabby(this.app, 'lls ../ap', 'lls ../app/'))
-
-    const options = ['commandFile.wsk',
-                     'composer-source/',
-                     'composer-source-expect-errors/',
-                     'composer-wookiechat/']
 
     // same, but this time tab to cycle through the options
     it('should tab complete local file path', () => tabbyWithOptions(this.app,
@@ -174,7 +186,8 @@ describe('Tab completion', function() {
     it('should tab complete action foo2 with options', () => tabbyWithOptions(this.app, 'action get f',
                                                                               ['foofoo/yum', 'foo2', 'foo'],
                                                                               'action get foo2',
-                                                                              { click: 1 })
+                                                                              { click: 1,
+                                                                                expectedPromptAfterTab: 'action get foo' })
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing('foo2'))
        .catch(common.oops(this)))
