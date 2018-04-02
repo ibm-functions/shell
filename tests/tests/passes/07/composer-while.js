@@ -21,7 +21,9 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
+      path = require('path'),
       //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       condition1 = 'cond1',
       condition2 = 'cond2',
       condition3 = 'cond3',
@@ -131,7 +133,7 @@ describe('Create a composer while', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     invoke(seqName1, 'x', 3, { $i: 1 }, true) // true means we expect just $i:1 back
 

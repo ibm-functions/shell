@@ -21,7 +21,9 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
+      path = require('path'),
       //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1'
@@ -67,7 +69,7 @@ describe('Use the app delete command to delete an invokeable composition', funct
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
     invoke(seqName1, 'x', 3)
 
@@ -75,7 +77,7 @@ describe('Use the app delete command to delete an invokeable composition', funct
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1)) // and sidecar should be showing it, too
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
 
     // show up in the list prior to deletion
@@ -83,7 +85,7 @@ describe('Use the app delete command to delete an invokeable composition', funct
 	.then(cli.expectOKWithOnly(seqName1))  // seqName1 had better still be in the list
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))  // and sidecar should be showing it, too
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
 
     it('should delete a composer sequence', () => cli.do(`app delete ${seqName1}`, this.app)

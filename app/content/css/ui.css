@@ -456,7 +456,6 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
 }
 .repl-result-prefix, badge {
     font-weight: 400;
-    font-variant: small-caps;
     transition: all 150ms ease-in-out;
     font-size: 0.75rem;
     border-radius: 0.9375rem;
@@ -732,7 +731,6 @@ sidecar .sidecar-header .badges {
     margin-left: 1rem;
     display: flex;
     flex-wrap: wrap;
-    flex-direction: column;
     align-items: flex-end;
 }
 sidecar .sidecar-header badge {

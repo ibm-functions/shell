@@ -21,7 +21,9 @@ const common = require('../../../lib/common'),
       keys = ui.keys,
       cli = ui.cli,
       sidecar = ui.sidecar,
+      path = require('path'),
       //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1',
@@ -45,7 +47,7 @@ describe('Use the app list command to list the invokeable compositions', functio
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     // list it
@@ -53,7 +55,7 @@ describe('Use the app list command to list the invokeable compositions', functio
 	.then(cli.expectOKWithOnly(seqName1))
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
     
     // make a second app
@@ -61,7 +63,7 @@ describe('Use the app list command to list the invokeable compositions', functio
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName2))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     // list it
@@ -69,14 +71,14 @@ describe('Use the app list command to list the invokeable compositions', functio
 	.then(cli.expectOKWith(seqName1))     // seqName1 had better still be in the list
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName2)) // but the sidecar should be showing seqName2
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     it(`should list ${seqName1} via wsk app list`, () => cli.do(`wsk app list`, this.app)
 	.then(cli.expectOKWith(seqName2))     // seqName2 had better also be in the list
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName2))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     // make a packaged app
@@ -84,7 +86,7 @@ describe('Use the app list command to list the invokeable compositions', functio
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName2, undefined, undefined, 'ppp'))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     // get the first app, so that the sidecar shows it (so we can test switching back to the packaged app)
@@ -92,7 +94,7 @@ describe('Use the app list command to list the invokeable compositions', functio
        .then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('fsm'))
+       .then(sidecar.expectBadge(badges.fsm))
        .catch(common.oops(this)))
 
     it(`should list ppp/${seqName2} via wsk app list`, () => cli.do(`app ls`, this.app)

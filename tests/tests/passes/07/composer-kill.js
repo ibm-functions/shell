@@ -24,7 +24,9 @@ const common = require('../../../lib/common'),
       actionName1 = 'foo1',
       actionName2 = 'foo2',
       seqName1 = 'seq1',
+      path = require('path'),
       //sharedURL = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+      badges = require(path.join(__dirname, '../../../../app/plugins/modules/composer/lib/badges.js')),
       killFailure404 = 'Cannot find live session',
       purgeFailure404 = 'Cannot find session',
       genericFailureMessage = 'The requested session no longer, or has never, existed'
@@ -171,7 +173,7 @@ describe('killing and purging composer invocations', function() {
 	.then(cli.expectOK)
        .then(sidecar.expectOpen)
        .then(sidecar.expectShowing(seqName1))
-       .then(sidecar.expectBadge('sequence'))
+       .then(sidecar.expectBadge(badges.sequence))
        .catch(common.oops(this)))
 
     asyncThenAppInitCleanse(seqName1, 'x', 3, { aa: 11 })
