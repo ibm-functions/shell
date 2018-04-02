@@ -95,7 +95,7 @@ SyntaxError: Unexpected token ,` }]
        .catch(common.oops(this)))
     dryRunBad.forEach( ({input, err}) => {
         it(`should dry-run check with expected error ${input} --dry-run`, () => cli.do(`app create ${input} --dry-run`, this.app)
-           .then(cli.expectError(0, err))
+           .then(cli.expectError('ENOPARSE', err))
            .catch(common.oops(this)))
     })
 

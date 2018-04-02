@@ -101,3 +101,20 @@ body.sidecar-full-screen #sidecar .wskflow-container.visible {
     max-height: none;
     max-width: 50%;
 }
+
+
+/* gutter and inline decorations */
+.editor.parse-error-gutter-marker {
+    border-radius: 0.9375em;
+    background-color: var(--color-support-01);
+    width: 1ex !important;
+    margin-left: 1em;
+    /*background-image: repeating-linear-gradient(-45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 15%);*/
+}
+.editor.parse-error-before-marker:before {
+    content: '^';
+    font-weight: bold;
+    position: absolute;
+    bottom: -1em;
+    color: var(--color-support-01);
+}

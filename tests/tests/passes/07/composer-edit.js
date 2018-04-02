@@ -81,4 +81,17 @@ describe('edit compositions', function() {
        .then(deploy(this.app, 'comp2'))
        .then(sidecar.expectBadge('v0.0.2'))
        .catch(common.oops(this)))
+
+    it(`should fail to open the editor for compose against existing composition`, () => cli.do('compose comp2', this.app)
+       .then(cli.expectError(409))
+       .catch(common.oops(this)))
+
+    it(`should open the editor to a new composition and expect error handling`, () => cli.do('compose comp3', this.app)
+       .then(cli.expectOK)
+       .then(sidecar.expectOpen)
+       .then(sidecar.expectShowing('comp3'))
+       .then(() => this.app.client.keys('composer.sequence(notfound1, notfound2)'))
+       .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('Deploy')))
+       .then(() => this.app.client.waitForExist('.editor.parse-error-decoration'))
+       .catch(common.oops(this)))
 })

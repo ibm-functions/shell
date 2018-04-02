@@ -87,7 +87,7 @@ const persisters = {
     // persisters for regular actions
     actions: {
         getCode: action => action,
-        save: (wsk, action) => {
+        save: (wsk, action, editor) => {
             const owOpts = wsk.owOpts({
                 name: action.name,
                 namespace: action.namespace,
@@ -130,11 +130,11 @@ const persisters = {
                 }
             }
         }),
-        save: (wsk, app) => new Promise((resolve, reject) => {
+        save: (wsk, app, editor) => new Promise((resolve, reject) => {
             const fs = require('fs'),
                   tmp = require('tmp')
 
-            tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, path, fd, cleanup) => {
+            tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, filepath, fd, cleanup) => {
                 if (err) {
                     reject(err)
                 } else {
@@ -143,11 +143,64 @@ const persisters = {
                             reject(err)
                         } else {
                             // -r means try to deploy the actions, too
-                            return repl.qexec(`app update "${app.name}" "${path}" -r`)
+                            return repl.qexec(`app update "${app.name}" "${filepath}" -r`)
                                 .then(app => {
                                     cleanup()
-                                    console.error('#####', app)
                                     resolve(app)
+                                })
+                                .then(res => {
+                                    // successful compilation, so remove any parse error decorations
+                                    editor.clearDecorations()
+                                    return res
+                                })
+                                .catch(err => {
+                                    console.error('!!!!!!!', err)
+                                    if (err.statusCode === 'ENOPARSE') {
+                                        debug('composition did not parse', err)
+                                        const basename = path.basename(filepath),
+                                              pattern = new RegExp('\\n([^\n]+)\\n\\s+at\\s+' + basename.replace(/\./, '\\.') + ':(\\d+):(\\d+)'),
+                                              match = err.message.match(pattern)
+
+                                        debug('pattern', pattern)
+                                        debug('message', err.message)
+                                        if (match) {
+                                            const problem = match[1],
+                                                  line = match[2],
+                                                  column = match[3]
+                                            debug('got match', problem, line, column)
+
+                                            // see the 'hack it ourselves' just below
+                                            const rando = `shell-${new Date().getTime()}`
+
+                                            editor.__currentDecorations = editor.deltaDecorations(editor.__currentDecorations || [], [
+	                                        { range: new monaco.Range(line,1,line,1),
+                                                  options: { isWholeLine: true,
+                                                             //glyphMarginClassName: 'editor__parse-error-gutter-marker editor__parse_error_decoration',
+                                                             //glyphMarginHoverMessage: problem
+                                                             linesDecorationsClassName: `editor__parse-error-gutter-marker editor__parse-error-decoration ${rando}`
+                                                           }
+                                                },
+	                                        { range: new monaco.Range(line,column,line,column + 1),
+                                                  options: {
+                                                      beforeContentClassName: `editor__parse-error-before-marker editor__parse-error-decoration ${rando}`,
+                                                      //inlineClassName: 'editor__parse-error-inline-marker',
+                                                      hoverMessage: problem
+                                                  }
+                                                },
+                                            ])
+
+                                            // glyphMarginHoverMessage seems broken; hack it ourselves for now
+                                            setTimeout(() => {
+                                                const decos = document.querySelectorAll(`.${rando}`)
+                                                if (decos) {
+                                                    for (let idx = 0; idx < decos.length; idx++) {
+                                                        const deco = decos[idx]
+                                                        deco.setAttribute('title', problem)
+                                                    }
+                                                }
+                                            }, 0)
+                                        }
+                                    }
                                 })
                         }
                     })
@@ -177,7 +230,7 @@ const save = ({wsk, getAction, editor, eventBus}) => ({
         // https://github.com/apache/incubator-openwhisk/issues/3237
         delete action.version
 
-        return save(wsk, action)
+        return save(wsk, action, editor)
             .then(action => {
                 action.persister = persister
                 eventBus.emit('/editor/save', action, { event: 'save' })
@@ -385,6 +438,7 @@ const openEditor = wsk => {
                         minimap: {
 		            enabled: false
 	                },
+                        //glyphMargin: true,   // needed for error indicators
                         autoIndent: true,
                         codeLens: false,
                         quickSuggestions: false,
@@ -399,6 +453,11 @@ const openEditor = wsk => {
 	                value: '',
 	                language: 'javascript'
                     })
+
+                    editor.clearDecorations = () => {
+                        debug('clearing decorations')
+                        editor.__currentDecorations = editor.deltaDecorations(editor.__currentDecorations || [], [])
+                    }
 
                     resolve(editor)
                 })
@@ -455,8 +514,11 @@ const openEditor = wsk => {
         modified.className = 'is-modified'
 
         // even handlers for saved and content-changed
-        const editsInProgress = () => sidecar.classList.add('is-modified')  // edits in progress
-        const editsCommitted = action => {                                  // edits committed
+        const editsInProgress = () => {
+            sidecar.classList.add('is-modified')
+            editor.clearDecorations() // for now, don't trty to be clever; remove decorations on any edit
+        }
+        const editsCommitted = action => {
             const lockIcon = sidecar.querySelector('[data-mode="lock"]')
 
             sidecar.classList.remove('is-modified')

@@ -33,7 +33,11 @@ debug('finished loading modules')
   */
 const handleFailure_fsmPromise = err => {
     if (err.fsm) {
-        throw new Error(err.fsm)
+        const error = new Error(err.fsm)
+        for (let key in err) {
+            error[key] = err[key]
+        }
+        throw error
     } else {
         throw err
     }
