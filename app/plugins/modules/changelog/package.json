@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "changelog": "^1.4.1"
+    "changelog": "^1.4.2"
   }
 }
