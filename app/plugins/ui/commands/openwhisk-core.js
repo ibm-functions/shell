@@ -1301,6 +1301,14 @@ module.exports = (commandTree, prequire) => {
         commandTree.listen(`/wsk/${syn}/current`, () => namespace.current(), { docs: 'Print the currently selected namespace' })
     })
 
+    // count APIs
+    for (let entityType in synonyms.entities) {
+        synonyms.entities[entityType].forEach(syn => {
+            commandTree.listen(`/wsk/${syn}/count`, () => ow[entityType].list({ count: true })
+                               .then(res => res[entityType]))
+        })
+    }
+
     debug('init done')
     return self
 }

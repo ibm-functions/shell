@@ -11,6 +11,5 @@
     "email": "nickm@us.ibm.com"
   },
   "license": "Apache-2.0",
-  "dependencies": {
-  }
+  "dependencies": {}
 }

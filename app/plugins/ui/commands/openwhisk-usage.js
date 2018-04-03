@@ -91,7 +91,8 @@ const actionMix = params.concat(annotations).concat(limits).concat([
 
 /** optional skip and limit parameters */
 const skipAndLimit = [{ name: '--limit', alias: '-l', numeric: true, docs: 'show at most N'},
-                      { name: '--skip', alias: '-s', numeric: true, docs: 'start from N'}]
+                      { name: '--skip', alias: '-s', numeric: true, docs: 'start from N'},
+                      { name: '--count', boolean: true, docs: 'return a count, rather than the records'}]
 
 /**
  * Usage strings. TODO externalize
