@@ -283,7 +283,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
             // now that we know the width of the grid, adjust the width of the label
             if (zoomLevel === 0) {
-                gridLabel.style.maxWidth = `${width * 8}vw`
+                gridLabel.style.maxWidth = `${width * 2.75 * 1.1}vw`  // 2.75vw is the width in table.css; 1.1x to give a bit of overflow
             }
 
             // and try to make the gridDom mostly squarish
