@@ -231,7 +231,15 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
                 ui.ok(resultDom.parentNode).className = 'ok-for-list'
             }
 
-        } else if (typeof response === 'string' || (!response.type && response.message && typeof response.message === 'string')) {
+        } else if (response.verb === 'list' && response[response.type] && typeof response[response.type] === 'number') {
+            // maybe a list API returned a count?
+            const span = document.createElement('span')
+            span.innerText = response[response.type]
+            resultDom.appendChild(span)
+            resultDom.parentNode.classList.add('result-vertical')
+            ui.ok(resultDom.parentNode).className = 'ok-for-list'
+
+        } else if (typeof response === 'number' || typeof response === 'string' || (!response.type && response.message && typeof response.message === 'string')) {
             // if either the response is a string, or it's a non-entity (no response.type) and has a message field
             //     then treat the response as a simple string response
             if (echo) {

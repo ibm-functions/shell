@@ -133,9 +133,10 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
         return (value - start - gaps[idx]) / (dur - tgap)
     }
 
-    return fetch(activationIds)
-        .then(activations => entity ? [entity, ...activations] : activations) // add entity to the top of the list
-        .then(activations => {          
+    return Promise.all([fetch(activationIds)
+                        .then(activations => entity ? [entity, ...activations] : activations), // add entity to the top of the list
+                        repl.qexec(`wsk activation count ${mapToOptions(parsedOptions)}`)])
+        .then(([activations, count]) => {
             gaps = new Array(activations.length).fill(0)
             if (!entity) {
                 let residualDur = dur // after subtracing out gaps
@@ -384,6 +385,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
             if (!entity) {
                 const paginator = document.createElement('div'),
                       leftButtons = document.createElement('div'),
+                      rightButtons = document.createElement('div'),
                       description = document.createElement('span'),
                       prev = document.createElement('span'),
                       next = document.createElement('span')
@@ -396,27 +398,38 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 leftButtons.classList.add('list-paginator-left-buttons')
 
                 // show summary buttons
-                const buttons = [ 'summary',
+                paginator.appendChild(rightButtons)
+                rightButtons.classList.add('list-paginator-right-buttons')
+                const buttons = [ { command: 'summary', icon: 'fas fa-chart-bar', balloon: 'Open a statistical summary view' },
                                   // 'timeline', // disabled for now shell issue #794
-                                  'grid' ]
-                buttons.forEach(buttonText => {
-                    const command = buttonText,  // it so happens...
-                          button = document.createElement('span')
-                    leftButtons.appendChild(button)
+                                  { command: 'grid', icon: 'fas fa-th', balloon: 'Open a grid view' } ]
+                buttons.forEach(({ command, icon, balloon, balloonPos='up-left' }) => {
+                    const buttonContainer = document.createElement('span'),
+                          button = document.createElement('i')
+
+                    leftButtons.appendChild(buttonContainer)
+
+                    buttonContainer.className = 'graphical-icon'
+                    buttonContainer.appendChild(button)
+                    buttonContainer.setAttribute('data-balloon', balloon)
+                    buttonContainer.setAttribute('data-balloon-pos', balloonPos)
+
+                    button.className = icon
                     button.classList.add('clickable')
-                    button.setAttribute('data-button-command', command)
-                    button.innerText = buttonText
-                    button.onclick = () => repl.pexec(command)
+
+                    buttonContainer.setAttribute('data-button-command', command)
+                    buttonContainer.onclick = () => repl.pexec(command)
                 })
 
                 // description of current page
                 description.className = 'list-paginator-description'
-                paginator.appendChild(description)
-                description.innerText = `Showing ${skip + 1}\u2013${skip+activationIds.length}`
+                rightButtons.appendChild(description)
+
+                description.innerText = `${skip + 1}\u2013${skip+activationIds.length} of ${count.toLocaleString()} items`
 
                 // forward and back buttons
-                paginator.appendChild(prev)
-                paginator.appendChild(next)
+                rightButtons.appendChild(prev)
+                rightButtons.appendChild(next)
                 prev.innerText = '\uff1c'
                 next.innerText = '\uff1e'
                 prev.className = 'list-paginator-button list-paginator-button-prev'
