@@ -62,13 +62,18 @@ const selectors = {
  * Sizing elements to fit prior to capturing them
  *
  */
+const hideCurrentReplBlock = [{ selector: '#main-repl .repl-block.processing', property: 'display', value: 'none' }]
 const squishers = {
     sidecar: [
         { selector: 'main', property: 'align-items', value: 'flex-start' },
         { selector: '#sidecar', property: 'height', value: 'initial' },
         { selector: 'sidecar .custom-content', property: 'flex', value: 'initial' },
         { selector: 'sidecar .sidecar-content', property: 'flex', value: 'initial' }
-    ]
+    ],
+
+    // screenshot full and repl should remove the last command from the screenshot, so that "screenshot full" doesn't show
+    full: hideCurrentReplBlock,
+    repl: hideCurrentReplBlock
 }
 const _squish = (which, op) => {
     const squisher = squishers[which]
