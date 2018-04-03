@@ -1304,8 +1304,15 @@ module.exports = (commandTree, prequire) => {
     // count APIs
     for (let entityType in synonyms.entities) {
         synonyms.entities[entityType].forEach(syn => {
-            commandTree.listen(`/wsk/${syn}/count`, () => ow[entityType].list({ count: true })
-                               .then(res => res[entityType]))
+            commandTree.listen(`/wsk/${syn}/count`, (_1, _2, _3, _4, _5, _6, argv, options) => {
+                const name = argv[argv.indexOf('count') + 1],
+                      overrides =  { count: true }
+                if (name) {
+                    overrides.name = name
+                }
+                return ow[entityType].list(Object.assign({}, options, overrides))
+                    .then(res => res[entityType])
+            })
         })
     }
 

@@ -45,12 +45,7 @@ body .page > .header {
     padding-right: 3em;
     font-weight: 300;
     font-size: 1rem;
-    border-bottom: 1px solid; /* outline rather than border-bottom, to allow minimized sidecar to stay on top */
     -webkit-font-smoothing: antialiased;  /* chrome, you suck */
-}
-body.sidecar-is-minimized .header {
-    outline: 1px solid; /* outline rather than border-bottom, to allow minimized sidecar to stay on top */
-    border-bottom: none;
 }
 .header .deemphasize {
     font-size: 55%;
@@ -108,10 +103,10 @@ header .header-nav-list {
     padding: 0;
 }
 .header .header-nav-list li {
-    font-weight: 400;
-    font-size: 0.75rem;
+    font-weight: 700;
+    font-size: 0.875rem;
     text-transform: uppercase;
-    margin-left: 1em;
+    margin: 0 1em;
 }
 .header-nav-list li input {
     border: none;
@@ -1364,7 +1359,7 @@ body.subwindow.sidecar-full-screen #sidecar .sidecar-bottom-stripe .sidecar-bott
 .fill-container.flush-right {
     justify-content: flex-end;
 }
-.sidecar-bottom-stripe .graphical-icon {
+.graphical-icon {
     /* font awesome icons in the bottom stripe */
     font-size: 1.25rem;
     width: 1em;
@@ -1503,16 +1498,17 @@ break {
 .list-paginator {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
     font-family: var(--font-sans-serif);
-    font-weight: 100;
-    font-size: 0.875em;
-    margin-top: 0.75ex;
+    color: var(--color-text-02);
+    border: 1px solid var(--color-ui-04);
+    border-top: none;
+    height: 3em;
 }
 .list-paginator .list-paginator-left-buttons {
+    display: flex;
+    align-items: center;
+    padding: .5rem 1rem;
     flex: 1;
-    font-size: 1rem;
-    font-variant: small-caps;
     letter-spacing: 1px;
 }
 .list-paginator .list-paginator-left-buttons > span {
@@ -1526,27 +1522,31 @@ break {
     /* a list paginator left button, except for the first one */
     margin-left: 1em;
 }
+.list-paginator .list-paginator-right-buttons {
+    display: flex;
+    font-weight: 400;
+    font-size: 0.875em;
+}
 .list-paginator .list-paginator-description {
-    margin-right: 1em;
+    display: flex;
+    align-items: center;
+    padding: .5rem 1rem;
 }
 .list-paginator .list-paginator-button {
-    background: var(--color-ui-03);
-    color: var(--color-text-01);
-    border: 1px solid var(--color-ui-05);
-    transition: all 150ms ease-in-out;
-    padding: 0.5ex 1.5ex;
-    opacity: 0.7;
-}
-.list-paginator .list-paginator-button:first-child {
-    /* avoid a double border in the middle */
-    border-right: none
+    border-left: 1px solid var(--color-ui-04);
+    transition: all 250ms;
+    width: 2.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25em;
+    color: var(--color-ui-05);
 }
 .list-paginator .list-paginator-button.list-paginator-button-disabled {
-    opacity: 0.33;
+    color: var(--color-ui-04);
 }
 .list-paginator .list-paginator-button:not(.list-paginator-button-disabled):hover {
-    font-weight: bold;
-    opacity: 1;
+    color: var(--color-brand-01);
     cursor: pointer;
 }
 

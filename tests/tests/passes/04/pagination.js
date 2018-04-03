@@ -69,7 +69,7 @@ const testPagination = (ctx, actionName) => {
         .then(() => app.client.waitUntil(() => {
             return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
                 .then(([paginatorText, rows]) => {
-                    return paginatorText === `Showing 1\u2013${limit}`
+                    return paginatorText.indexOf(`1\u2013${limit} of`) === 0 // starts with "1-limit of" ...
                         && rows.value.length === limit
                 })
         }))
@@ -79,7 +79,7 @@ const testPagination = (ctx, actionName) => {
         .then(() => app.client.waitUntil(() => {
             return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
                 .then(([paginatorText, rows]) => {
-                    return paginatorText === `Showing ${limit + 1}\u2013${limit + limit}`
+                    return paginatorText.indexOf(`${limit + 1}\u2013${limit + limit} of`) === 0 // starts with 'N+1-N+limit+1 of'
                         && rows.value.length === limit
                 })
         }))
@@ -89,7 +89,7 @@ const testPagination = (ctx, actionName) => {
         .then(() => app.client.waitUntil(() => {
             return Promise.all([app.client.getText(description), app.client.elements(tableRowsFiltered)])
                 .then(([paginatorText, rows]) => {
-                    return paginatorText === `Showing 1\u2013${limit}`
+                    return paginatorText.indexOf(`1\u2013${limit} of`) === 0 // starts with "1-limit of" ...
                         && rows.value.length === limit
                 })
         }))
