@@ -22,7 +22,7 @@ const prettyPrintDuration = require('pretty-ms'),
  * Draw the given activation in the given cell (a dom)
  *
  */
-exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response.success, duration=activation.end-activation.start, latBucket=latencyBucket(duration), options) => {
+exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response.success, duration=activation.end-activation.start, latBucket=isFailure ? -1 : latencyBucket(duration), options) => {
     let returnValue = cell
     if (!cell) {
         // then the caller asked us to make the container
@@ -44,11 +44,13 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         cell = inner2
     }
 
+    cell.classList.add(`latency-${latBucket}`)
+
     const container = document.createElement('div')
     cell.appendChild(container)
 
     cell.className = `${cell.className} is-failure-${isFailure}`
-    container.className = `grid-cell-content latency-${latBucket}`
+    container.className = `grid-cell-content`
 
     // any extra info to display in the tooltip?
     let extraTooltip = ''

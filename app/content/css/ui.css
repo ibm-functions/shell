@@ -1369,6 +1369,16 @@ body.subwindow.sidecar-full-screen #sidecar .sidecar-bottom-stripe .sidecar-bott
     /* these two rules are an attempt to push the tooltips just above the bottom stripe */
     height: 2rem;
     align-items: center;
+
+    transition: opacity 150ms ease-in-out;
+}
+.graphical-icon.disabled {
+    opacity: 0.3;
+}
+.graphical-icon.disabled:hover {
+    opacity: 0.3 !important;
+    color: inherit !important;
+    cursor: default !important;
 }
 .graphical-icon[data-balloon]:after, .graphical-icon[data-balloon]:before {
     text-transform: none;

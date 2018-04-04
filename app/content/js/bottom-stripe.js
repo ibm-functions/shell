@@ -164,6 +164,17 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
                 const view = direct(entity)
                 if (view && view.then && !actAsButton) {
                     view.then(custom => ui.showCustom(custom, { leaveBottomStripeAlonex: true }))
+                } else if (actAsButton && view && view.toggle) {
+                    view.toggle.forEach(({mode, disabled}) => {
+                        const button = bottomStripe.querySelector(`.sidecar-bottom-stripe-button[data-mode="${mode}"]`)
+                        if (button) {
+                            if (disabled) {
+                                button.classList.add('disabled')
+                            } else {
+                                button.classList.remove('disabled')
+                            }
+                        }
+                    })
                 }
             } else {
                 repl.pexec(command(entity), { leaveBottomStripeAlonex: true, echo, noHistory })

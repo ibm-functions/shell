@@ -325,25 +325,51 @@
 .activation-viz-timeline .grid-cell-content {
     border-radius: 1px / 2px;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell:hover,.repl-result .entity.activations:hover .activation-viz-plugin .grid .grid-cell {
-    filter: saturate(2.25) brightness(1.25);
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell:not(.grid-no-hover):not(.latency-2):hover,.repl-result .entity.activations:hover .activation-viz-plugin .grid .grid-cell {
+    filter: saturate(2.25) brightness(1.25) !important;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-0 {
+
+/* latency filter */
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="-1"]) .grid-cell-occupied.latency--1,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="0"]) .grid-cell-occupied.latency-0,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="1"]) .grid-cell-occupied.latency-1,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="2"]) .grid-cell-occupied.latency-2,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="3"]) .grid-cell-occupied.latency-3,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="4"]) .grid-cell-occupied.latency-4,
+.activation-viz-plugin:not(.grid-header-key) .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="5"]) .grid-cell-occupied.latency-5 {
+    filter: grayscale(0.6) opacity(0.1);
+    /*filter: grayscale(1);
+    width: 0;
+    height: 0;
+    border: none;*/
+}
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="-1"]) .grid-cell-occupied.latency--1,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="0"]) .grid-cell-occupied.latency-0,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="1"]) .grid-cell-occupied.latency-1,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="2"]) .grid-cell-occupied.latency-2,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="3"]) .grid-cell-occupied.latency-3,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="4"]) .grid-cell-occupied.latency-4,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="5"]) .grid-cell-occupied.latency-5 {
+    filter: grayscale(0.6) opacity(0.6);
+}
+
+/* grid cell colors */
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-0 .grid-cell-content {
     background: #2166ac;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-1 {
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-1 .grid-cell-content {
     background: #67a9cf;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-2 {
-    background: #d1e5f0;
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-2 .grid-cell-content {
+    background: hsla(201, 51%, 78%, 1); /* #d1e5f0 with lightness reduced from 88% to 78% */
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-3 {
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-3 .grid-cell-content {
     background: #fddbc7;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-4 {
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-4 .grid-cell-content {
     background: #ef8a62;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .latency-5 {
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-5 .grid-cell-content {
     background: #b2182b;
 }
 
@@ -387,9 +413,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 25em;
-}
-.activation-viz-plugin .grid-grid:not(.zoom_0) .grid-label {
-    max-width: none !important;
 }
 /* hide failures in duration coloring mode: */
 /*.activation-viz-plugin .grid-grid[color-by="duration"] .grid-cell.is-failure-true {
@@ -440,8 +463,8 @@
     50% {opacity: 1.0;}
     100% {-webkit-transform: scale(1.5, 1.5); opacity: 0.0;}
 }
-.activation-viz-plugin .grid .grid-cell:hover {
-    filter: saturate(4);
+.activation-viz-plugin .grid .grid-cell:not(.grid-no-hover):hover {
+    filter: saturate(4) !important;
     cursor: pointer;
 }
 .activation-viz-plugin .grid .grid-cell-content {
@@ -563,9 +586,13 @@
 }
 .activation-viz-plugin.grid-header-key {
     height: 8em;
-    width: 17em;
+    width: calc(8 * 2.25vw); /* 7 cells in legend, plus 1 for slop */
     font-size: 0.875em;
     padding: 0;
+}
+.activation-viz-plugin.grid-header-key .grid .grid-cell-occupied {
+    /* no border around cells in the legend */
+    border: none;
 }
 .activation-viz-plugin.grid-header-key .grid {
     flex-direction: row;
@@ -586,20 +613,21 @@
     border-spacing: 0;
 }
 .activation-viz-plugin.grid-header-key .zoom_-1 .activation-viz-legend-label {
-    font-size: 0.875em;
-    opacity: 0.6;
-    text-align: left;
+    font-size: 0.675em;
+    font-weight: 300;
+    text-align: center;
 }
 .activation-viz-plugin.grid-header-key .zoom_-1 .kind {
     /* value text for the legend in the sidecar header */
+    color: var(--color-text-02);
     font-size: 0.75em;
-    font-weight: 300;
+    font-weight: 400;
     text-align: center;
 }
 .activation-viz-plugin.grid-header-key .grid-cell {
     /* size of squares in legend */
-    width: 2.5vw;
-    height: 2.5vw;
+    width: 2.25vw;
+    height: 2.25vw;
 }
 
 /* tooltip */
