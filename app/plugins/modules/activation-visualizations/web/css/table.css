@@ -633,6 +633,7 @@
     font-size: 0.75em;
     font-weight: 400;
     text-align: center;
+    padding-top: 0.25ex;
 }
 .activation-viz-plugin.grid-header-key .grid-cell {
     /* size of squares in legend */
