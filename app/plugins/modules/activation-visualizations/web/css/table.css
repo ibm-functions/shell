@@ -343,6 +343,16 @@
     height: 0;
     border: none;*/
 }
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="-1"] .grid-cell-occupied.latency--1,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="0"] .grid-cell-occupied.latency-0,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="1"] .grid-cell-occupied.latency-1,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="2"] .grid-cell-occupied.latency-2,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="3"] .grid-cell-occupied.latency-3,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="4"] .grid-cell-occupied.latency-4,
+.activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"][data-latency-filter="5"] .grid-cell-occupied.latency-5 {
+    filter: saturate(2.25) brightness(1.25) !important;
+}
+
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="-1"]) .grid-cell-occupied.latency--1,
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="0"]) .grid-cell-occupied.latency-0,
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="1"]) .grid-cell-occupied.latency-1,
@@ -350,7 +360,7 @@
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="3"]) .grid-cell-occupied.latency-3,
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="4"]) .grid-cell-occupied.latency-4,
 .activation-viz-plugin.grid-header-key .cell-container.has-latency-filter[color-by="duration"]:not([data-latency-filter="5"]) .grid-cell-occupied.latency-5 {
-    filter: grayscale(0.6) opacity(0.6);
+    filter: grayscale(0.6) opacity(0.3);
 }
 
 /* grid cell colors */
