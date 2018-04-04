@@ -156,11 +156,66 @@ const drawGrid = (options, header) => activations => {
 
     //injectHTML(content, 'grid/bottom-bar.html', 'bottom-bar')
 
+    /** zoom update button click handler */
+    const rezoom = change => () => {
+        const gridGrid = content.querySelector(`.${css.gridGrid}`),
+              currentZoom = parseInt(gridGrid.getAttribute('data-zoom-level')),
+              newZoom = change(currentZoom),
+              zoomMin = -2,
+              zoomMax = 2
+
+        if (newZoom !== currentZoom) {
+            gridGrid.setAttribute('data-zoom-level', newZoom)
+            gridGrid.classList.remove(`zoom_${currentZoom}`)
+            gridGrid.classList.add(`zoom_${newZoom}`)
+
+            // and try to make the gridDom mostly squarish
+            const grids = gridGrid.querySelectorAll('.grid')
+            for (let idx = 0; idx < grids.length; idx++) {
+                const gridDom = grids[idx],
+                      gridLabel = gridDom.querySelector('.grid-label'),
+                      gridRow = gridDom.querySelector('.grid-row'),
+                      width = gridDom.getAttribute('data-width'),
+                      vws = newZoom === 0 ? 2.75 : newZoom === 1 ? 3 : newZoom === 2 ? 4 : 0.75
+
+                gridLabel.style.maxWidth = `${Math.max(8, width * vws * 1.1)}vw`
+                gridRow.style.maxWidth = `${Math.max(8, width * vws)}vw`
+            }
+            
+            if (newZoom === zoomMax) {
+                return { toggle: [{ mode: 'zoom-in', disabled: true },     // can't zoom in any further
+                                  { mode: 'zoom-out', disabled: false }] }
+            } else if (newZoom == zoomMin) {
+                return { toggle: [{ mode: 'zoom-out', disabled: true },    // can't zoom out any further
+                                  { mode: 'zoom-in', disabled: false }] }
+            } else {
+                return { toggle: [{ mode: 'zoom-out', disabled: false },
+                                  { mode: 'zoom-in', disabled: false }] }
+            }
+        }
+    }
+    const zoomIn = { mode: 'zoom-in',
+                     fontawesome: 'fas fa-search-plus',
+                     balloon: 'Use larger grid cells',
+                     flush: 'right',
+                     actAsButton: true,
+                     direct: rezoom(_ => Math.min(2, _ + 1))
+                   },
+          zoomOut = { mode: 'zoom-out',
+                      fontawesome: 'fas fa-search-minus',
+                      balloon: 'Use smaller grid cells',
+                      flush: 'right',
+                      actAsButton: true,
+                      direct: rezoom(_ => Math.max(-2, _ - 1))
+                    }
+
     return {
         type: 'custom',
         content,
         controlHeaders: true,
-        modes: modes('grid', options)
+
+        // add zoom buttons to the mode button model
+        modes: modes('grid', options).concat([zoomIn, zoomOut])
     }
 }
 
@@ -199,6 +254,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
           zoomLevelForDisplay = totalCount > 1000 ? -2 : totalCount <= 100 ? zoomLevel : 0 // don't zoom in too far, if there are many cells to display
 
     gridGrid.className = `${css.gridGrid} cell-container zoom_${zoomLevelForDisplay}`
+    gridGrid.setAttribute('data-zoom-level', zoomLevelForDisplay)
     colorBy('duration', gridGrid)
 
     if (!redraw) {
@@ -214,7 +270,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
         const onclick = drilldownWith(viewName, `action get "${group.path}"`)
         ui.addNameToSidecarHeader(sidecar, group.name, packageName, onclick)
 
-        drawLegend(viewName, rightHeader, group, options)
+        drawLegend(viewName, rightHeader, group, gridGrid, options)
     } else {
         const onclick = options.appName ? drilldownWith(viewName, `app get "${options.appName}"`) : undefined,
               pathComponents = (options.appName||'').split('/'),
@@ -224,7 +280,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
         ui.addNameToSidecarHeader(sidecar, name, packageName, onclick)
 
         if (groups.length > 0) {
-            drawLegend(viewName, rightHeader, summary, options)
+            drawLegend(viewName, rightHeader, summary, gridGrid, options)
         }
     }
 
@@ -281,13 +337,15 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             group.height = L
             cells = grid.reserve(group)
 
+            gridDom.setAttribute('data-width', width)
+
             // now that we know the width of the grid, adjust the width of the label
             if (zoomLevel === 0) {
                 gridLabel.style.maxWidth = `${width * 2.75 * 1.1}vw`  // 2.75vw is the width in table.css; 1.1x to give a bit of overflow
             }
 
             // and try to make the gridDom mostly squarish
-            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2.75 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 0.75)}vw`
+            gridDom.querySelector('.grid-row').style.maxWidth = `${width * (zoomLevelForDisplay === 0 ? 2.75 : zoomLevelForDisplay === 1 ? 3 : zoomLevelForDisplay === 2 ? 4 : 0.75) * 1.1}vw`
 
             let idx = 0
             group.activations.forEach(activation => {

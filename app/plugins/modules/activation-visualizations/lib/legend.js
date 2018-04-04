@@ -31,12 +31,29 @@ const prettyPrintDuration = require('pretty-ms'),
  * @param options user options from the CLI
  *
  */
-exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, options) => {
+exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, gridContainer, options) => {
     const existing = rightHeader.querySelector('.grid-header-key'),
           wrapper = existing || document.createElement('div'),
           existing2 = wrapper.querySelector('.cell-container'),
           wrapper2 = existing2 || document.createElement('div')
 
+    /** user asked to toggle the latency bucket filter */
+    const toggleFilter = idx => () => {
+        // isRemove: user deselected current filter
+        const isRemove = gridContainer.getAttribute('data-latency-filter') == idx,
+              containers = [wrapper2, gridContainer] // legend and main grid
+
+        containers.forEach(container => {
+            if (isRemove) {
+                container.classList.remove('has-latency-filter')
+                container.removeAttribute('data-latency-filter')
+            } else {
+                container.classList.add('has-latency-filter')
+                container.setAttribute('data-latency-filter', idx)
+            }
+        })
+    }
+    
     if (!existing) {
         rightHeader.appendChild(wrapper)
         wrapper.appendChild(wrapper2)
@@ -79,6 +96,8 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
 
             if (onclick) {
                 cell.onclick = onclick
+            } else {
+                cell.classList.add('grid-no-hover')
             }
 
             if (labelAsTooltip) {
@@ -110,26 +129,12 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
     }
 
     //
-    // find the index of the first and last non-zero legend entries
-    // for the performance squares (latency buckets)
-    const firstNonZero = statData.latBuckets.findIndex(_ => _ > 0)
-    let lastNonZero = -1
-    for (let idx = statData.latBuckets.length - 1; idx >= 0; idx--) {
-        if (statData.latBuckets[idx] > 0) {
-            lastNonZero = idx
-            break
-        }
-    }
-
-    //
     // if we have at least one non-zero performance bucket, then
     // render the buckets up to that last non-zero bucket
     //
-    if (lastNonZero >= 0) {
+    {
         latencyBuckets.forEach((latencyRange, idx, A) => {
-            const isFirstNonZero = idx === firstNonZero,
-                  last = idx === A.length - 1,
-                  isLastNonZero = idx === lastNonZero,
+            const last = idx === A.length - 1,
                   lower = idx === 0 ? 0 : A[idx - 1],
                   upper = latencyRange,
                   roughlySame = upper - lower < 1000 && (lower < 1000 && upper < 1000 || lower > 1000 && upper > 1000)
@@ -146,14 +151,16 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
             // number of cells with this coloration
             const count = statData.latBuckets[idx]
 
+            const opts = { zoom: -1,
+                           useThisLabelInstead: (idx === A.length - 1 ? '>' : '') + (upper >= 500 && upper < 1000 ? `${(upper/1000).toLocaleString()}s` : prettyPrintDuration(upper)),
+                         }
+
             if (count > 0) {
-                entry(labelText, count, false, idx, // false means not a failure
-                    { zoom: -1, labelAsTooltip: true,
-                      balloonPos: lastNonZero >= 2 && idx < ~~(nLatencyBuckets / 2) ? 'right' : 'left',
-                      useThisLabelInstead: isFirstNonZero ? `fast` : isLastNonZero ? `slow` : nbsp,
-                      onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --success --latency-bucket ${idx}`))
-                    })
+                // only add an onclick handler if there is something to filter by
+                opts.onclick = toggleFilter(idx)
             }
+
+            entry(labelText, count, false, idx, opts) // false means not a failure
         })
     }
 
@@ -162,8 +169,9 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, o
     //
     entry('these cells represent activation failures',
         nFailures,
-        true, 0, // true means render as failure
+        true, -1, // true means render as failure
           { zoom: -1, labelAsTooltip: true, useThisLabelInstead: 'fail', balloonPos: 'left', balloonLength: 'medium',
-            onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure`))
+            //onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure`))
+            onclick: toggleFilter(-1)
           })
 }
