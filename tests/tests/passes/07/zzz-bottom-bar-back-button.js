@@ -116,7 +116,7 @@ describe('Bottom bar back button functionality', function() {
         const once = iter => cli.do('grid', this.app)
             .then(cli.expectOK)
               .then(sidecar.expectOpen)
-              .then(sidecar.expectShowing('Recent Activity'))
+              .then(sidecar.expectShowing('Recent Activations'))
 
                // find cell1, click, then click back
               .then(() => this.app.client.getAttribute(cell1, 'data-action-name'))
@@ -125,7 +125,7 @@ describe('Bottom bar back button functionality', function() {
                     .then(sidecar.expectShowing(actionName)))
               .then(() => this.app.client.click(ui.selectors.SIDECAR_BACK_BUTTON))
               .then(() => this.app)
-              .then(sidecar.expectShowing('Recent Activity'))
+              .then(sidecar.expectShowing('Recent Activations'))
 
               .catch(err => {
                   console.error(err)
@@ -143,7 +143,7 @@ describe('Bottom bar back button functionality', function() {
         const once = iter => cli.do('grid', this.app)
             .then(cli.expectOK)
               .then(sidecar.expectOpen)
-              .then(sidecar.expectShowing('Recent Activity'))
+              .then(sidecar.expectShowing('Recent Activations'))
 
               // find cell1, click, then click back
               .then(() => this.app.client.getAttribute(cell1, 'data-action-name'))
@@ -152,7 +152,7 @@ describe('Bottom bar back button functionality', function() {
                     .then(sidecar.expectShowing(actionName)))
               .then(() => this.app.client.click(ui.selectors.SIDECAR_BACK_BUTTON))
               .then(() => this.app)
-              .then(sidecar.expectShowing('Recent Activity'))
+              .then(sidecar.expectShowing('Recent Activations'))
 
               // find cell2, click, then click back
               .then(() => this.app.client.getAttribute(cell2, 'data-action-name'))
@@ -161,7 +161,7 @@ describe('Bottom bar back button functionality', function() {
                     .then(sidecar.expectShowing(actionName)))
               .then(() => this.app.client.click(ui.selectors.SIDECAR_BACK_BUTTON))
               .then(() => this.app)
-              .then(sidecar.expectShowing('Recent Activity'))
+              .then(sidecar.expectShowing('Recent Activations'))
 
               .catch(err => {
                   console.error(err)

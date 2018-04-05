@@ -142,7 +142,7 @@ exports.cli = {
     waitForRepl: (app, prefs={}) => app.client.waitForExist(selectors.CURRENT_PROMPT, timeout)
         .then(() => app.client.waitForText(selectors.APIHOST, timeout))
         .then(() => app.client.getText(selectors.APIHOST))
-        .then(apihost => assert.equal(apihost.toLowerCase(), (prefs.API_HOST || constants.API_HOST).toLowerCase()))
+        .then(apihost => assert.equal(apihost.toLowerCase().replace(/^https:\/\//,''), (prefs.API_HOST || constants.API_HOST).toLowerCase().replace(/^https:\/\//,'')))
         .then(() => {
             if (!prefs || !prefs.noAuthOk) {
                 return app.client.waitForText(selectors.NAMESPACE, timeout)
