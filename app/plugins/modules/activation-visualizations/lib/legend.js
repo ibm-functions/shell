@@ -167,11 +167,12 @@ exports.drawLegend = (viewName, rightHeader, {statData, errorRate, nFailures}, g
     //
     // render the legend entry for failures
     //
+    const opts = { zoom: -1, useThisLabelInstead: 'fail' }
+    if (nFailures > 0) {
+        opts.onclick = toggleFilter(-1)
+    }
     entry('these cells represent activation failures',
-        nFailures,
-        true, -1, // true means render as failure
-          { zoom: -1, useThisLabelInstead: 'fail', balloonPos: 'left', balloonLength: 'medium',
-            //onclick: drilldownWith(viewName, () => repl.pexec(`grid ${optionsToString(options)} --failure`))
-            onclick: toggleFilter(-1)
-          })
+          nFailures,
+          true, -1, // true means render as failure
+          opts)
 }
