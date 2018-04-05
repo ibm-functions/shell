@@ -20,8 +20,9 @@
  */
 const usage = {
     strict: 'screenshot',
+    command: 'screenshot',
     title: 'Capture screenshot',
-    header: 'Capture a screenshot to the clipboard, optionally specifying which region of the window to capture.',
+    header: 'Capture a screenshot, optionally specifying which region of the window to capture.',
     example: 'screenshot [which]',
     detailedExample: [
         { command: 'screenshot sidecar', docs: 'capture the sidecar contents' },
