@@ -69,7 +69,8 @@ const squishers = {
         { selector: 'main', property: 'align-items', value: 'flex-start' },
         { selector: '#sidecar', property: 'height', value: 'initial' },
         { selector: 'sidecar .custom-content', property: 'flex', value: 'initial' },
-        { selector: 'sidecar .sidecar-content', property: 'flex', value: 'initial' }
+        { selector: 'sidecar .sidecar-content', property: 'flex', value: 'initial' },
+        { selector: '#wskflowDiv', property: 'height', value: 'auto' }
     ],
 
     // screenshot full and repl should remove the last command from the screenshot, so that "screenshot full" doesn't show
