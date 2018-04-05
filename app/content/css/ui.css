@@ -103,8 +103,8 @@ header .header-nav-list {
     padding: 0;
 }
 .header .header-nav-list li {
-    font-weight: 700;
-    font-size: 0.875rem;
+    font-weight: 400;
+    font-size: 0.75rem;
     text-transform: uppercase;
     margin: 0 1em;
 }
