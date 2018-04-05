@@ -189,11 +189,6 @@ body.still-loading .repl {
 .repl.sidecar-visible .repl-block {
     background: transparent;
 }
-body:not(.subwindow) repl.sidecar-visible {
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-}
 .repl-block {
     margin: 0em 1.8125em;
     padding: 0.5em 0;
@@ -201,10 +196,8 @@ body:not(.subwindow) repl.sidecar-visible {
     flex-direction: column;
 }
 body:not(.subwindow) repl.sidecar-visible .repl-block, body.sidecar-full-screen repl .repl-block {
-    margin-top: 0;
     border-color: transparent;
     box-shadow: none;
-    margin: 0 1.5em;
 }
 .repl, .repl input {
     font-family: var(--font-monospace);
@@ -231,6 +224,12 @@ body:not(.subwindow) repl.sidecar-visible .repl-block, body.sidecar-full-screen 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.repl.sidecar-visible .result-table .repl-result {
+    width: 100%;
+}
+.repl .result-table .repl-result {
+    min-width: 40%;
 }
 .repl-prompt {
     font-weight: bold;
