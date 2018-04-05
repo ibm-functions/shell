@@ -447,6 +447,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                                         noCrop, noPip, showResult, showStart, showTimeline, skip, limit, parsedOptions })
                           }
                       })
+
                 if (skip === 0) {
                     // disable the back button when we're on the first page
                     prev.classList.add('list-paginator-button-disabled')
@@ -454,7 +455,13 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                     // otherwise, onclick go back a page
                     prev.onclick = goto(skip - limit)
                 }
-                next.onclick = goto(skip + limit)
+
+                if (skip + limit >= count) {
+                    // we're already at the end, so disable the next button
+                    next.classList.add('list-paginator-button-disabled')
+                } else {
+                    next.onclick = goto(skip + limit)
+                }
             } // end of paginator
 
             // try $ ls; $ ls; then paginate. this avoids chrome
