@@ -137,6 +137,9 @@ const formatOneListResult = options => (entity, idx, A) => {
             || (() => self.pexec(`wsk ${entity.type} get "/${entity.namespace}/${entity.name}"`))
     }
 
+    const addKind = kind => addCell('entity-kind green-text', kind, 'deemphasize deemphasize-partial')
+    const addVersion = () => entity.version && addCell('entity-version', entity.version, 'deemphasize')
+
     //
     // case-specific cells
     //
@@ -147,18 +150,41 @@ const formatOneListResult = options => (entity, idx, A) => {
         // action-specific cells
         const kind = entity.annotations.find(({key}) => key === 'exec')
         if (kind || entity.prettyKind) {
-            addCell('entity-kind green-text', entity.prettyKind || kind.value, 'deemphasize deemphasize-partial')
+            addKind(entity.prettyKind || kind.value)
         }
-        addCell('entity-version', entity.version, 'deemphasize')
+
+        if (entity.prettyType === 'sequence') {
+            setTimeout(() => {
+                repl.qexec(`wsk action get "/${entity.namespace}/${entity.name}"`)
+                    .then(action => {
+                        if (action.exec && action.exec.components) {
+                            const ns = new RegExp('^/' + namespace.current() + '/')
+                            addCell('entity-sequence-components',
+                                    action.exec.components
+                                    .map(_ => _.replace(ns, ''))
+                                    .join(' \u27f6 ')) // ->
+                            
+                        } else {
+                            addVersion()
+                        }
+                    })
+        }, 0)
+
+        } else {
+            addVersion()
+        }
     } else if (entity.type === 'rules') {
         // rule-specific cells
         setTimeout(() => {
             repl.qexec(`wsk rule get "/${entity.namespace}/${entity.name}"`)
                 .then(rule => {
-                    addCell(`entity-rule-status ${rule.status==='active' ? 'green-text' : 'red-text'}`, rule.status, 'deemphasize')
+                    addCell(`entity-rule-status ${rule.status==='active' ? 'green-text' : 'red-text'}`, rule.status, 'deemphasize deemphasize-partial')
                     addCell('entity-rule-definition', `${rule.trigger.name} \u27fc ${rule.action.name}`)
                 })
         }, 0)
+    } else if (entity.type) {
+        addKind(entity.prettyType || entity.type.replace(/s$/, ''))
+        addVersion()
     }
 
     return dom
