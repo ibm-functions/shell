@@ -18,11 +18,19 @@ const localWskProps = () => {
 exports.entities = ["action", "trigger", "rule", "package"]
 
 exports.cleanAll = auth => {
-    const ow = require('openwhisk')({
-        apihost: process.env.__OW_API_HOST || process.env.API_HOST || process.env.APIHOST || localWskProps().APIHOST || 'openwhisk.ng.bluemix.net',
-        api_key: auth || process.env.__OW_API_KEY || process.env.AUTH || localWskProps().AUTH,
-        ignore_certs: process.env.IGNORE_CERTS || process.env.INSECURE_SSL || localWskProps().INSECURE_SSL || localWskProps().APIHOST.indexOf('localhost') >= 0 || localWskProps().APIHOST.startsWith('192.') || localWskProps().APIHOST.startsWith('172.') || localWskProps().APIHOST.startsWith('https://192.') || localWskProps().APIHOST.startsWith('https://172.')
-    })
+    const apihost = process.env.__OW_API_HOST || process.env.API_HOST || process.env.APIHOST || localWskProps().APIHOST || 'openwhisk.ng.bluemix.net',
+          opts = {
+              apihost,
+              api_key: auth || process.env.__OW_API_KEY || process.env.AUTH || localWskProps().AUTH,
+              ignore_certs: process.env.IGNORE_CERTS || process.env.INSECURE_SSL || localWskProps().INSECURE_SSL
+                  || apihost.indexOf('localhost') >= 0
+                  || apihost.startsWith('192.')
+                  || apihost.startsWith('172.')
+                  || apihost.startsWith('https://192.')
+                  || apihost.startsWith('https://172.')
+          }
+
+    const ow = require('openwhisk')(opts)
 
     /** log a message, then call the given function */
     const logThen = f => msg => {
