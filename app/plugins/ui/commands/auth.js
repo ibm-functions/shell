@@ -318,7 +318,9 @@ module.exports = (commandTree, prequire) => {
                                isLocal = true
                            } else if (host === 'local' || host === 'localhost') {
                                // try a variety of options
-                               const variants = [ 'https://192.168.33.13', 'http://172.17.0.1:10001', 'http://192.168.99.100:10001' ]
+                               const variants = [ 'https://192.168.33.13', 'https://192.168.33.16',        // these are vagrant
+                                                  'http://172.17.0.1:10001', 'http://192.168.99.100:10001' // these are direct-to-controller
+                                                ]
                                const request = require('request')
 
                                host = new Promise((resolve, reject) => {
