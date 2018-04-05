@@ -596,7 +596,7 @@
 }
 .activation-viz-plugin.grid-header-key {
     height: 8em;
-    width: calc(8 * 2.25vw); /* 7 cells in legend, plus 1 for slop */
+    width: calc(1.1 * 8 * 2.25vw); /* 7 cells in legend, plus 1 for slop, 1.1x for some more */
     font-size: 0.875em;
     padding: 0;
 }
