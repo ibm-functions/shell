@@ -8,6 +8,7 @@
 
 /* color variables */
 body {
+    --color-content-divider: #4173AF;
     --color-tag-beta-fill: #dfe3e6;
     --color-tag-beta-text: #394b54;
     --color-tag-ibm-fill: #c0e6ff;
@@ -91,7 +92,7 @@ sidecar {
 }
 
 sidecar .sidecar-header {
-    border-bottom-color: var(--color-ui-04);
+    border-bottom-color: var(--color-content-divider);
     background: var(--color-ui-02);
 }
 

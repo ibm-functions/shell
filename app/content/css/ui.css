@@ -640,10 +640,14 @@ sidecar .custom-content {
 }
 sidecar .sidecar-header {
     display: flex;
-    flex-direction: column;
     border-bottom: 1px solid;
     flex-basis: 9rem;
     min-height: 9rem; /* see shell issue #712 */
+}
+sidecar .sidecar-header .header-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 sidecar .header-right-bits {
     flex-direction: column;
@@ -701,7 +705,7 @@ sidecar .sidecar-header-icon {
     transform-origin: center;
     width: 100%;
     height: 100%;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 400;
     letter-spacing: 1px;
     pointer-events: none; /* with text rotation, this element bumps into neighbors, otherwise obfuscating mouse events */
@@ -751,7 +755,6 @@ sidecar .sidecar-header-name .package-prefix {
     max-width: none;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 0.25rem;
     opacity: 1;
 }
 sidecar.entity-is-activations .sidecar-header-name .activation-id {
@@ -776,7 +779,7 @@ sidecar.entity-is-activations .sidecar-header-name  .sidecar-header-name-content
 sidecar .sidecar-header-secondary-content {
     font-size: 0.875rem;
     opacity: 0.75;
-    margin: 1ex 2em;
+    margin: 1ex 1em 1ex 0;
 }
 sidecar .sidecar-header-secondary-content .kind-content {
     overflow: hidden;
