@@ -49,7 +49,7 @@ describe('List activations, then drill down to summary views', function() {
                                })))
                   .then(() => this.app)
                   .then(sidecar.expectOpen)
-                  .then(sidecar.expectShowing('Recent Activity'))
+                  .then(sidecar.expectShowing('Recent Activations'))
                   .catch(common.oops(this)))
     }
 
