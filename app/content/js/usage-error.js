@@ -131,7 +131,8 @@ const format = (message, options={}) => {
         const { command, docs, title, breadcrumb=title||command, header=docs&&`${docs}.`, example, detailedExample, sampleInputs,
                 commandPrefix, commandPrefixNotNeeded,
                 available, parents=[], related, required, optional, oneof } = usage,
-              outerCommandPrefix = commandPrefix
+              outerCommandPrefix = commandPrefix,
+              outerCommand = command
 
         // the return value will be `result`; we will populate it with
         // those fields now; `body` is the flex-wrap portion of the
@@ -339,7 +340,7 @@ const format = (message, options={}) => {
 
                 // fields of the row model
                 // debug('row', rowData)
-                const { commandPrefix=outerCommandPrefix, command=commandPrefix, name=command, label=name,
+                const { commandPrefix=outerCommandPrefix, command=outerCommand, name=command, label=name,
                         alias, numeric, aliases=[alias], hidden=false, advanced=false,
                         available,
                         example=numeric&&'N', dir:isDir=available||false,
@@ -360,7 +361,7 @@ const format = (message, options={}) => {
                       allowedPart = allowed && smaller(span(undefined))
 
                 // for repl.exec,
-                const commandForExec = alias => `${commandPrefix && !commandPrefixNotNeeded ? commandPrefix + ' ' : ''}${alias}`
+                const commandForExec = (alias, cmd='') => `${commandPrefix && !commandPrefixNotNeeded ? commandPrefix + ' ' : ''}${alias} ${cmd}`
 
                 row.className = 'log-line entity'
                 cmdCell.className = 'log-field'
@@ -412,7 +413,10 @@ const format = (message, options={}) => {
                         if (partial) {
                             return repl.partial(commandForExec(alias)(command) + `${partial === true ? '' : ' ' + partial}`)
                         } else {
-                            return repl.pexec(commandForExec(command))
+                            console.error('CP', commandPrefix)
+                            console.error('CCC', command)
+                            console.error('NNN', name)
+                            return repl.pexec(commandForExec(command, name !== command ? name : undefined))
                         }
                     }
                 }

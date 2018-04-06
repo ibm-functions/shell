@@ -757,7 +757,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             if (usage && usage.strict) { // strict: command wants *us* to enforce conformance
                 // required and optional parameters
                 const { strict:cmd, required=[], oneof=[], optional:_optional=[] } = usage,
-                      optLikeOneOfs = oneof.filter(({name}) => name.charAt(0) === '-'), // some one-ofs might be of the form --foo
+                      optLikeOneOfs = oneof.filter(({command,name=command}) => name.charAt(0) === '-'), // some one-ofs might be of the form --foo
                       positionalConsumers = _optional.filter(({name, alias, consumesPositional}) => consumesPositional && (parsedOptions[unflag(name)] || parsedOptions[unflag(alias)])),
                       optional = builtInOptions.concat(_optional).concat(optLikeOneOfs),
                       positionalOptionals = optional.filter(({positional}) => positional),
