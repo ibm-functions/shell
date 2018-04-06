@@ -18,7 +18,9 @@
 const nRowsInViewport = 4
 
 /** list of related commands */
-const all = ['summary', 'timeline', 'grid']
+const all = ['summary',
+             //'timeline',
+             'grid']
 const allExcept = cmd => all.filter(_ => _ !== cmd)
 
 /** optional arguments */
@@ -40,7 +42,7 @@ const parents = ['visualize']
 
 const header = {
     summary: 'Visualize the statistical distribution of activation latencies',
-    timeline: 'Show activity over time',
+    //timeline: 'Show activity over time',
     grid: 'Show a large number of recent activations in a grid view'
 }
 
@@ -56,7 +58,7 @@ module.exports = {
         commandPrefix: 'visualize',
         commandPrefixNotNeeded: true,
         available: [{ command: 'summary', docs: header.summary },
-                    { command: 'timeline', docs: header.timeline },
+                    //{ command: 'timeline', docs: header.timeline },
                     { command: 'grid', docs: header.grid }],
         related: ['wsk activation', 'composer session']
     },
@@ -75,7 +77,7 @@ module.exports = {
         related: allExcept('summary')
     },
 
-    timeline: {
+    /*timeline: {
         strict: 'timeline',
         command: 'timeline',
         nRowsInViewport,
@@ -85,7 +87,7 @@ module.exports = {
         optional: optional.concat([{ name: '--theme', docs: 'a color theme to use' }]),
         parents,
         related: allExcept('timeline')
-    },
+    },*/
 
     grid: {
         strict: 'grid',

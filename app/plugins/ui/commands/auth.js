@@ -90,10 +90,10 @@ const usage = {
             nRowsInViewport: 5,
             oneof: [
                 { name: 'local', docs: 'Use a local OpenWhisk installation' },
-                { name: 'us-south', docs: 'Use the IBM Cloud Dallas installation' },
-                { name: 'eu-gb', docs: 'Use the IBM Cloud London installation' },
-                { name: 'eu-de', docs: 'Use the IBM Cloud Frankrut installation' },
-                { name: 'hostname', docs: 'Use a given hostname or IP address' }
+                { command: 'us-south', docs: 'Use the IBM Cloud Dallas installation' },
+                { command: 'eu-gb', docs: 'Use the IBM Cloud London installation' },
+                { command: 'eu-de', docs: 'Use the IBM Cloud Frankrut installation' },
+                { command: 'hostname', docs: 'Use a given hostname or IP address' }
             ],
             parents: ['host']
         }
