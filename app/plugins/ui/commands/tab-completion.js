@@ -97,6 +97,7 @@ const updateReplToReflectLongestPrefix = (prompt, matches, temporaryContainer, p
         let idx = 0
 
         const partialComplete = idx => {
+            // debug('partial complete', idx)
             const completion =  completeWith(partial, matches[0].substring(0, idx))
             temporaryContainer.partial = temporaryContainer.partial + completion
             prompt.value = prompt.value + completion
@@ -107,16 +108,21 @@ const updateReplToReflectLongestPrefix = (prompt, matches, temporaryContainer, p
 
             for (let jdx = 1; jdx < matches.length; jdx++) {
                 const other = matches[jdx].charAt(idx)
-                if (char != other) {
+                if (char !== other) {
                     if (idx > 0) {
                         // then we found some common prefix
+                        // debug('partial complete midway')
                         return partialComplete(idx)
+                    } else {
+                        // debug('no partial completion :(')
+                        return
                     }
                 }
             }
         }
 
         if (idx > 0) {
+            // debug('partial complete at end')
             partialComplete(idx)
         }
     }
