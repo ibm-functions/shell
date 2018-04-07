@@ -26,6 +26,7 @@ body {
     --color-brand-01: #3d70b2;
     --color-brand-01-10: hsla(214, 49%, 47%, 0.1); /* 10% opacity */
     --color-brand-02: #5596e6;
+    --color-brand-03: #00b4a0;
     --color-ui-01: #fff;
     --color-ui-02: #f5f7fa;
     --color-ui-03: #f0f3f6;
@@ -254,23 +255,6 @@ body.subwindow sidecar {
 .page [data-balloon]:after {
     font-family: var(--font-sans-serif);
 }
-
-#wskflowSVG .node.leaf rect {
-    stroke: var(--color-text-01) !important;
-}
-#wskflowSVG .node.leaf rect {
-    stroke: var(--color-text-01) !important;
-}
-#wskflowSVG .action[data-deployed="deployed"] rect, #wskflowSVG .function:not([data-status]) rect {
-    fill: hsla(210, 94%, 67%, 1) !important;
-}
-#wskflowSVG .action[data-deployed="deployed"] rect:hover, #wskflowSVG .function:not([data-status]) rect:hover {
-    fill: hsla(210, 94%, 57%, 1) !important;
-}
-#wskflowSVG .action[data-deployed="not-deployed"] rect {
-    fill: var(--color-ui-04) !important;
-}
-
 
 /* sans 300 */
 @font-face {

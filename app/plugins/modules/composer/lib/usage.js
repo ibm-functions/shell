@@ -102,7 +102,9 @@ exports.app_get = command => ({
     header: 'Displays the details of a given composition',
     example: `app ${command} <appName>`,
     required: [{ name: 'appName', docs: 'the name of your composition', entity: 'action' }],
-    optional: [{ name: '--cli', boolean: true, docs: 'display the results textually (headless mode only)' }],
+    optional: [{ name: '--cli', boolean: true, docs: 'display the results textually (headless mode only)' },
+               { name: '--functions', alias: '-f', boolean: true, docs: 'show all functions directly in the view' }
+              ],
     parents: ['composer', { command: 'composer app' }],
     related: ['app create', 'app invoke', 'app list']
 })
@@ -161,6 +163,7 @@ exports.preview = command => ({
     oneof: [{ name: 'src.js', docs: 'generate a preview of a Composer source file', file: true },
             { name: 'src.json', docs: 'ibid, but for a pre-compiled composition', file: true }],
     optional: [{ name: '--fsm', boolean: true, docs: 'validate and show raw FSM' },
+               { name: '--functions', alias: '-f', boolean: true, docs: 'show all functions directly in the view' },
                { name: '--env', alias: '-e', docs: 'Assign a value to an environment variable', narg: 2 }],
     sampleInputs: sampleInputs(command),
     parents: ['composer', { command: 'composer app' }],

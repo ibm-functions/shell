@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 IBM Corporation
+ * Copyright 2017-18 IBM Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
  
 const d3 = require('d3'),
-	//klay = require('./lib/klayjs-d3.js'),
 	$ = require('jquery'),
+        { textualPropertiesOfCode } = require('./util'),
 	maxLabelLength = 10,
 	ELK = require('elkjs'),
 	elk = new ELK();
@@ -61,9 +61,6 @@ const wfColor = {
 	Edges: {
 		normal: "grey",
 		forwarding: "#3498DB"
-	},
-	qtipBackground: {
-		normal: "#2E4053"
 	}
 }
 
@@ -81,7 +78,6 @@ const containerId = 'wskflowDiv';
 
 // need to fix center
 function graph2doms(JSONgraph, ifReuseContainer, activations){
-
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
 
@@ -113,6 +109,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	    .attr("id", "wskflowSVG")
 	    .style('width', '100%')	// svg width and height changes with the size of the container 
 	    .style('height', '100%')
+	    .attr("data-is-session-flow", !!activations)
 	    .style("flex", "1")
 	    .call(zoom);
 
@@ -122,135 +119,68 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	let svg = container
 		.append("g")
 	    .attr("id", "wskflowMainG");
-	    
-	// define an arrow head
-	svg.append("svg:defs")
-	     .append("svg:marker")
-	      .attr("id", "end")
+
+
+    const defs = svg.append("svg:defs")
+
+    // a pattern mask for "not deployed"
+    defs.append("svg:pattern")
+        .attr('id', "pattern-stripe")
+        .attr('width', 1.2)
+        .attr('height', 1.2)
+        .attr('patternUnits', "userSpaceOnUse")
+        .attr('patternTransform', "rotate(45)")
+        .append('svg:rect')
+        .attr('width', 0.6)
+        .attr('height', 2)
+        .attr('transform', "translate(0,0)")
+        .attr('fill', "#aaa") // this will be the opacity of the mask, from #fff (full masking) to #000 (no masking)
+    defs.append('svg:mask')
+        .attr('id', 'mask-stripe')
+        .append('svg:rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('fill', "url(#pattern-stripe)")
+
+        // define an arrow head
+        const arrowHead = (id, color) => {
+            defs.append("svg:marker")
+	      .attr("id", id)
 	      .attr("viewBox", "0 -5 10 10")
 	      .attr("markerUnits", "userSpaceOnUse")
-	      .attr("refX", 13)
+	      .attr("refX", 10)
 	      .attr("refY", 0)
-	      .attr("markerWidth", 3)        // marker settings
-	      .attr("markerHeight", 5)
+	      .attr("markerWidth", 4.2)        // marker settings
+	      .attr("markerHeight", 7)
 	      .attr("orient", "auto")
-	      .style("fill", "#999")
-	      .style("stroke-opacity", 0.6)  // arrowhead color
-	     .append("svg:path")
-	     .attr("d", "M0,-10L15,0L0,10");
-	      //.attr("d", "M0,-5L10,0L0,5");
+	      .style("fill", color)
+ 	      .append("svg:path")
+	    .attr("d", "M0,-5L10,0L0,5");
+        }
 
-	svg.append("svg:defs")
-		.append("svg:marker")
-		.attr("id", "greenEnd")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("markerUnits", "userSpaceOnUse")
-		.attr("refX", 13)
-		.attr("refY", 0)
-		.attr("markerWidth", 3)        // marker settings
-		.attr("markerHeight", 5)
-		.attr("orient", "auto")
-		.style("fill", wfColorAct.active)
-		.style("stroke-opacity", 0.6)  // arrowhead color
-		.append("svg:path")
-		.attr("d", "M0,-10L15,0L0,10");
+        arrowHead("end", "var(--color-text-02)")
+        arrowHead("forwardingEnd", wfColor.Edges.forwarding)
+        arrowHead("greenEnd", wfColorAct.active)
+        arrowHead("trueEnd", wfColor.reOrCon.trueBranch)
+        arrowHead("falseEnd", wfColor.reOrCon.falseBranch)
 
-	svg.append("svg:defs")
-		.append("svg:marker")
-		.attr("id", "forwardingEnd")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("markerUnits", "userSpaceOnUse")
-		.attr("refX", 13)
-		.attr("refY", 0)
-		.attr("markerWidth", 3)        // marker settings
-		.attr("markerHeight", 5)
-		.attr("orient", "auto")
-		.style("fill", wfColor.Edges.forwarding)
-		.style("stroke-opacity", 0.6)  // arrowhead color
-		.append("svg:path")
-		.attr("d", "M0,-10L15,0L0,10");
-
-	svg.append("svg:defs")
-		.append("svg:marker")
-		.attr("id", "trueEnd")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("markerUnits", "userSpaceOnUse")
-		.attr("refX", 13)
-		.attr("refY", 0)
-		.attr("markerWidth", 3)        // marker settings
-		.attr("markerHeight", 5)
-		.attr("orient", "auto")
-		.style("fill", wfColor.reOrCon.trueBranch)
-		.style("stroke-opacity", 0.6)  // arrowhead color
-		.append("svg:path")
-		.attr("d", "M0,-10L15,0L0,10");
-
-	svg.append("svg:defs")
-		.append("svg:marker")
-		.attr("id", "falseEnd")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("markerUnits", "userSpaceOnUse")
-		.attr("refX", 13)
-		.attr("refY", 0)
-		.attr("markerWidth", 3)        // marker settings
-		.attr("markerHeight", 5)
-		.attr("orient", "auto")
-		.style("fill", wfColor.reOrCon.falseBranch)
-		.style("stroke-opacity", 0.6)  // arrowhead color
-		.append("svg:path")
-		.attr("d", "M0,-10L15,0L0,10");
-    
-	svg.append("svg:defs")
-		.append("svg:marker")
-		.attr("id", "greenEnd")
-		.attr("viewBox", "0 -5 10 10")
-		.attr("refX", 13)
-		.attr("refY", 0)
-		.attr("markerWidth", 3)        // marker settings
-		.attr("markerHeight", 5)
-		.attr("orient", "auto")
-		.style("fill", wfColorAct.active)
-		.style("stroke-opacity", 0.6)  // arrowhead color
-		.append("svg:path")
-		.attr("d", "M0,-10L15,0L0,10");
-
-	svg.append("svg:defs")
-	     .append("svg:g")
+	defs.append("svg:g")
 	      .attr("id", "retryIconNormal")	      
 	      .attr("transform", "scale(0.02) rotate(90)")	       
 	      .style("fill", wfColor.reOrCon.normal)
 	     .append("svg:path")
 	      .attr("d", "M852.8,558.8c0,194.5-158.2,352.8-352.8,352.8c-194.5,0-352.8-158.3-352.8-352.8c0-190.8,152.4-346.7,341.8-352.5v117.4l176.4-156.9L489,10v118C256.3,133.8,68.8,324.8,68.8,558.8C68.8,796.6,262.2,990,500,990c237.8,0,431.2-193.4,431.2-431.2H852.8z");
-	
-	$(wskflowContainer).append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
 
+        if (!$("#qtip")[0]) {
+            // add qtip to the document
+	    $(document.body).append("<div id='qtip'><span id='qtipArrow'>&#9668</span><div id='qtipContent'></div></div>");
+        }
 
 	if(activations){
 		$(wskflowContainer).append("<div id='actList' style='position: absolute; display:none; background-color: rgba(0, 0, 0, 0.8); color: white; font-size: 0.75em; padding: 1ex; width:225px; right: 5px; top: 5px;'></div>");		
 	}
-	$(wskflowContainer).find("#qtip").css({
-		"position": "absolute",
-		"align-items": "center",
-		"pointer-events": "none",
-	});
-	$(wskflowContainer).find("#qtipArrow").css({
-		"position": "relative",
-		"left": "3px",
-		"top": "1px",
-		"color": "#2E4053"
-	});
-	$(wskflowContainer).find("#qtipContent").css({
-		"background-color": wfColor.qtipBackground.normal,
-		"color": "white", 
-		"font-size": "0.75em",		
-		"padding": "1ex",
-		"display": "flex",
-		"flex-wrap": "wrap",
-		"margin": "0px",
-		"max-width": "30ex",
-		"word-wrap": "break-word",
-		
-	})
 
 	var root = svg.append("g");
 	let elkData;
@@ -258,9 +188,10 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 		{	
 			layoutOptions:{
 				'elk.algorithm': 'org.eclipse.elk.layered',
-				'org.eclipse.elk.direction': 'DOWN',
-				'org.eclipse.elk.edgeRouting': "ORTHOGONAL",
-				'org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment': 'BALANCED',
+			        'org.eclipse.elk.direction': 'DOWN',
+  			        'org.eclipse.elk.edgeRouting': "ORTHOGONAL",
+      			        'org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment': 'BALANCED',
+                                'elk.layered.spacing.nodeNodeBetweenLayers': 15, // org.eclipse. prefix doesn't work (elk bug???)
 			        'org.eclipse.elk.layered.cycleBreaking.strategy': "DEPTH_FIRST",
 				'org.eclipse.elk.insideSelfLoops.activate': true
 			}				
@@ -318,6 +249,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 		    	// new format doc: http://www.eclipse.org/elk/documentation/tooldevelopers/graphdatastructure/jsonformat.html
 		    	let o = {
 		    		id: link.id,
+		    		labels: link.labels,
 		    		source: link.source,
 		    		sourcePort: link.sourcePort,
 		    		target: link.target,
@@ -368,9 +300,13 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				if (d.children)
 					className += " compound";
 				else
-					className += " leaf clickable";
+					className += " leaf";
 
-				if(d.type != undefined){
+                                if (d.properties && d.properties.compoundNoParents) {
+                                    className += ' no-parents'
+                                }
+
+			        if(d.type != undefined){
 					className += " "+d.type;
 				}
 				else{
@@ -391,7 +327,11 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
   		        .attr("data-task-index", d => d.taskIndex) // add a data-task-index for every task. taskIndex is maintained at the graph model level
 		        .attr("data-name", function(d){
                             // make sure we obey the `/namespace/name` format
-			    return d.label.charAt(0) !== '/' ? `/_/${d.label}` : d.label;
+                            const label = d.type === 'Entry' || d.type === 'Exit'
+                                  ? d.type
+                                  : d.multiLineLabel ? d.fullFunctionCode
+                                  : d.label
+			    return label && (label.charAt(0) !== '/' ? `/_/${label}` : label);
 			})
 			.attr("data-deployed", function(d){
 				if(activations){
@@ -416,20 +356,18 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 		let box;
 
 		box = node.append("rect")
-			.attr("class", "atom")
+		        .attr("class", d => {
+                            return "atom" + (d.type === 'action' ? " clickable" : '')
+                        })
 			.attr("width", 0)
 			.attr("height", 0)
-			.attr("rx", function(d){
-				if(d.children)
-					return 0;
-				else
-					return 2;
+	                .attr("rx", function(d){
+				if(d.type === 'Entry' || d.type === 'Exit')
+					return '50%';
 			})
 			.attr("ry", function(d){
-				if(d.children)
-					return 0;
-				else
-					return 2;
+				if(d.type === 'Entry' || d.type === 'Exit')
+					return '50%';
 			})
 			.style("fill", function(d){
 				if(d.children){
@@ -463,17 +401,16 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 					else{
 						// app
 						if(d.type == "let" || d.type == "literal"){					
-							//return "#4E387E";
-							return wfColor.Value.normal;
+                                                    // from CSS now
 						}
 						else if(d.type == "Exit" || d.type == "Entry"){
-							return wfColor.EE.normal;
+                                                    // from CSS now
 						}
 						else if(d.type === 'retain' || d.type === 'Dummy'){
 							return 'black';
 						}
 						else{
-							return wfColor.EE.normal;
+                                                     // from CSS now
 						}
 
 					}
@@ -498,13 +435,6 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 			.style("stroke-width", function(d){
 				if(d.children) return 1;
 			})
-			.style("stroke-dasharray", function(d){
-				if(d.children) return 3;
-			})		
-			.style("x", function(d){
-				if(d.type === 'retain') return 1;
-				if(d.type === 'Dummy') return 1;
-			})		
 			.style("cursor", function(d){
 				if(activations){
 					if(d.visited && d.type === 'action')
@@ -520,7 +450,8 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				}
 			})
 			.on("mouseover", function(d, i){
-				let qtipText = "";
+   			        let qtipText = "";
+                                let qtipPre = false;
 				
 				if(activations){
 					if(d.children === undefined && d.visited && $("#actList").css("display") != "block"){					
@@ -531,7 +462,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 							$(this).css("fill", wfColorAct.activeHovered);
 						}
 						
-					    if(d.type == "action"){					
+					    if(d.type === "action"){					
 							// first, describe # activations if # > 1
 							if(d.visited.length>1)
 								qtipText += ("<div style='padding-bottom:2px;'>"+act.length+" activations</div>");
@@ -574,11 +505,11 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 						//else if(d.type == "Exit" || d.type == 'Entry'){
 						else if(d.type === 'Exit'){
 							let act = activations[d.visited[0]];
-							let start = new Date(act.start), timeString = (start.getMonth()+1)+"/"+start.getDate()+" ";		
+							let start = new Date(act.start), timeString = (start.getMonth()+1)+"/"+start.getDate()+" ";
 							timeString += start.toLocaleTimeString(undefined, { hour12: false });
-							let result = JSON.stringify(act.response.result)								
-							if(result.length > 40)
-								result = result.substring(0, 40) + "... ";
+						        let result = JSON.stringify(act.response.result, undefined, 4)
+							if(result.length > 200)
+								result = result.substring(0, 200) + "\u2026"; // horizontal ellipsis
 
 							qtipText += `<div style='padding-bottom:2px'>${d.type} <span style='color:${wfColorAct.active}'>${timeString}</span></div>${result}`							
 							
@@ -588,40 +519,48 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				}
 				else{
 					if(d.children){
-						if(d.type == "try"){
+						if(d.type === "try"){
 							$(this).css("stroke", wfColor.Try.hovered);
 							qtipText = "<span style='color: "+wfColor.Try.normal+"'>Try Block</span>"
 						}
-						else if(d.type == "handler"){
+						else if(d.type === "handler"){
 							$(this).css("stroke", wfColor.handler.hovered);
 							qtipText = "<span style='color: "+wfColor.handler.normal+"'>Handler Block</span>"
 						}
-						else if(d.type == "try_catch"){
-							$(this).css("stroke", wfColor.try_catch.hovered);
-							if(d.label.indexOf(":") != -1){						
-								qtipText = "Try-Catch:<span style='color: orange'>"+d.label.substring(d.label.indexOf(":")+1)+"</span>";						
+						else if(d.type === "try_catch"){
+						    $(this).css("stroke", wfColor.try_catch.hovered);
+                                                    const label = d.label || d.tooltip || ''
+						    if(label.indexOf(":") != -1){						
+								qtipText = "Try-Catch:<span style='color: orange'>"+label.substring(label.indexOf(":")+1)+"</span>";						
 								//$(this).siblings("use").attr("xlink:href", "#retryIconOrange").attr("href", "#retryIconOrange");
 							}
-							else if(d.label.indexOf("Repeat") != -1){
-								let num = d.label.split(" ")[1];
+							else if(label.indexOf("Repeat") != -1){
+								let num = label.split(" ")[1];
 								qtipText = "Repeat "+"<span style='color: orange'>"+num+" times</span> then continue";									
 								//$(this).siblings("use").attr("xlink:href", "#retryIconOrange").attr("href", "#retryIconOrange");
 							}
 							else{
-								//qtipText = "<span style='color: #E5E8E8'>"+d.label+"</span>"
-								qtipText = d.label;
+								//qtipText = "<span style='color: #E5E8E8'>"+label+"</span>"
+								qtipText = label;
 							}
 							
 						}
 
 					}
-					else if(d.type == "action" && $('#'+d.id).attr('data-deployed') == 'not-deployed'){
-						qtipText = "This action has not yet been deployed";
+					else if(d.type === "action" && $('#'+d.id).attr('data-deployed') === 'not-deployed'){
+						qtipText = `<span class='qtip-prefix red-text'>Warning |</span> This action is not deployed`;
 					}
-					else if(d.type == "action" || d.type === 'function'){
-						qtipText = `<span style="color:${wfColor.Task.normal}; padding-right:5px; ">${d.type} |</span> ${d.label}`;						
+				    else if(d.type === "action" || d.type === 'function'){
+                                                if (d.type === 'function') {
+                                            	    qtipPre = true; // use white-space: pre for function body
+                                                }
+                                                if (d.multiLineLabel) {
+						    qtipText = `<span class='qtip-prefix ${d.type}'>${d.type}</span>`;
+                                                } else {
+						    qtipText = `<span class='qtip-prefix ${d.type}' style="padding-right:5px; ">${d.type} |</span> ${d.label||d.tooltip||d.prettyCode}`;
+                                                }
 					}
-					else if(d.type == "retain"){
+					else if(d.type === "retain"){
 					    let edgeId;
                                             const isOrigin = d.id.indexOf('__origin') > -1 ? true : false;
                                             const expectedSrc = isOrigin ? d.id : d.id.replace(/__terminus/,'__origin'),
@@ -636,18 +575,21 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 
 						if(edgeId){
 							if(isOrigin)
-								qtipText = "<span style='color: #85C1E9'>Retain: Data forwarding</span>";
+								qtipText = "<span class='qtip-prefix ${d.type}' style='padding-right:5px; color: #85C1E9'>Retain |</span> Data forwarding</span>";
 							else
-								qtipText = "<span style='color: #85C1E9'>Retain: Data merging</span>";
+								qtipText = "<span class='qtip-prefix ${d.type}' style='padding-right:5px; color: #85C1E9'>Retain |</span> Data merging</span>";
 
 							$(".link[id='"+edgeId+"']").css("stroke", wfColor.Edges.forwarding).addClass("hover forwarding-edge");
 						}
 					}
-					else if(d.type == "Entry" || d.type == "Exit"){
-						qtipText = d.type;
+				        else if(d.type === "Entry") {
+						qtipText = 'The composition starts here'
+                                        } else if(d.type === "Exit"){
+						qtipText = 'The composition ends here'
 					}
 					else if(d.type == "let" || d.type == "literal"){					
-						qtipText = d.label;
+						qtipText = `<div class='qtip-prefix let' style="margin-bottom:1ex; padding-right:5px; ">${d.type}</div>${d.label||d.tooltip}`;						
+					        qtipPre = true; // use white-space: pre
 					}
 
 					if(d.properties && d.properties.choice){
@@ -663,14 +605,19 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				}
 										
 
-				if(qtipText.length != 0){
+				if(qtipText && qtipText.length != 0){
 					$("#qtipContent").html(qtipText);
 
-					$("#qtip").addClass("visible");
+				        $("#qtip").addClass("visible");
 
-					let qtipX = $(this).offset().left+$(this)[0].getBoundingClientRect().width - $("#wskflowContainer").offset().left;
-					let qtipY = $(this).offset().top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2 - $("#wskflowContainer").offset().top
-					if($("#wskflowContainer").hasClass("picture-in-picture")){
+                                        if (qtipPre) $("#qtip").addClass("qtip-pre")
+                                        else $("#qtip").removeClass("qtip-pre")
+
+                                        const innerOffset = $(this).offset()
+				        let qtipX = innerOffset.left+$(this)[0].getBoundingClientRect().width
+					let qtipY = innerOffset.top+$(this)[0].getBoundingClientRect().height/2-$("#qtip").height()/2
+
+				        if($("#wskflowContainer").hasClass("picture-in-picture")){
 						// currentScale: 0.25
 						let scaleString = $("#wskflowContainer").css("transform"), scale;
 						try{
@@ -860,27 +807,34 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 			});
 		
 		// add node labels
-		node.append("text")
+		const textElements = node.append("text")
+		      .attr("width", d => d.width)
 			.attr("x", function(d){
 				//if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 				if(d.children)
 					return 4;
-				else
+      			        else if (d.multiLineLabel)
+					return d.x;
+                                else 
 					return d.width/2;
 				
 			})
 			.attr("y", function(d){
-				//if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
+			    //if(d.type == "try_catch" || d.type == "try" || d.type == "handler")
 				if(d.children)
 					return 8;
-				else
-					return d.height/2+2.5;
+   			        else if (d.multiLineLabel)
+				    return (d.height - d.multiLineLabel.length * 6) / 2
+   			        else
+				    return d.height/2 + (d.type === 'Entry' || d.type === 'Exit' ? 1.5 : d.type === "let" ? 3.5 : 2);
 			})
 			.attr("font-size", function(d){
 				if(d.children)
-					return "6px";
+   				        return "6px";
+                                else if (d.type === 'Entry' || d.type === 'Exit')
+   				        return "6px";
 				else
-					return "8px";
+					return "7px";
 			})
 			.style("fill", function(d){
 				/*if(d.children) return "black";
@@ -897,10 +851,11 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				
 			})
 			.style("text-anchor", function(d){
-				if(!d.children)
+				if(!d.children && !d.multiLineLabel)
 					return "middle";
 			})
-			.style("pointer-events", "none")
+		        .style("pointer-events", "none")
+                        .attr("multi-line-label", d => d.multiLineLabel && d.multiLineLabel.join('\n'))
 			.text(function(d){
 				if(d.type == "retain" || d.type == "Dummy"){
 					return "";
@@ -912,7 +867,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 					return "Try";
 				}
 				else if(d.type == "handler"){
-					return "Error Handler";
+					return "Catch";
 				}
 				//else if(d.type == "try_catch" || d.type === 'retry'){
 				else if(d.children){
@@ -922,14 +877,15 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 				/*else if(d.type == "if"){
 					return d.label;					
 				}	*/			
-			    else if(d.type == "let" || d.type == "literal"){
-					if(d.label.length>30)
+			        else if(d.type == "let" || d.type == "literal"){
+                                        return "{}"
+					/*if(d.label.length>30)
 						return d.label.substring(0, 27)+"...";
 					else
-						return d.label;
+						return d.label;*/
 				}
-				else if(d.type == "action" || d.type === 'function'){					
-					return d.label					
+			        else if(d.type == "action" || d.type === 'function'){
+					return d.label
 				}
 				else{
 					let t = d.label;
@@ -942,9 +898,34 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 					else
 						return t;
 
-				}								
+				}
 			});
 
+            for (let idx = 0; idx < textElements[0].length; idx++)  {
+                const textElement = textElements[0][idx],
+                      label = textElement.attributes && textElement.attributes.getNamedItem('multi-line-label'),
+                      width = textElement.attributes && textElement.attributes.getNamedItem('width')
+
+                if (label) {
+                    const { nLines, maxLineLength } = textualPropertiesOfCode(label.value),
+                          tabWidth = 2,
+                          farLeft = (width.value - maxLineLength * 2.5) / 2
+
+                    label.value.split(/\n/).forEach(line => {
+                        const ws = /^\s+/,
+                              wsMatch = line.match(ws),
+                              length = line.length,
+                              initialWhitespace = wsMatch ? wsMatch[0].length : 0
+
+                        d3.select(textElement)
+                            .append('tspan')
+                            .text(line.replace(ws, ''))
+                            .attr('x', farLeft + initialWhitespace * tabWidth)
+                            .attr('dy', '1.25em')
+                    })
+                }
+            }
+            
 		d3.select(".repeat").append("use")
 		.attr("xlink:href", "#retryIconNormal").attr("href", "#retryIconNormal").attr("x", 10).attr("y", -14);
 		
@@ -956,11 +937,12 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 		.append("path")
 		.attr("id", function(d){return d.id;})
 		.attr("d", "M0 0")
-		.attr("marker-end", function(d){
+		    .attr("marker-end", function(d){
 			if(d.visited){
 				return "url(#greenEnd)";
-			}
-			else{
+	                } else if(d.source.indexOf("__origin") >= 0 && d.target.indexOf("__terminus") >= 0){
+                                return "url(#forwardingEnd)";
+			} else{
 				return "url(#end)";
 			}			
 				
@@ -1043,8 +1025,18 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 
 
 
-		// edge labels
+	    // edge labels
 		links.forEach(edge => {			
+		    if(edge.labels) {
+                        edge.labels.forEach(({text, x, y, width, height}) => {
+			    d3.select("#"+edge.source)
+                                .append("text")
+                                .classed("edge-label", true)
+                                .attr("x", 10)
+                                .attr("y", 0)
+                                .text(text)
+                        })
+                    }
 			if(edge.sourcePort && (edge.sourcePort.indexOf("_ptrue") != -1 || edge.sourcePort.indexOf("_pfalse") != -1)){
 				let t, d, x, y, reverse;					
 
@@ -1121,11 +1113,15 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 						}
 						
 					}
-					
 
-					d3.select("#"+edge.source).append("text").attr("x", x).attr("y", y).text(t).
-					style({
-						"font-size":"6px",
+                                    const target = $(`#${edge.target}`),
+                                          targetStatus = target && target.attr('data-status') || 'not-run',
+                                          thisEdgeWasTraversed = targetStatus !== 'not-run'
+
+				    d3.select("#"+edge.source).append("text").classed("edge-label", true).attr("x", x).attr("y", y).text(t)
+                                        .classed('edge-was-traversed', thisEdgeWasTraversed)
+				        .style({
+						"font-size":"5px",
 						"fill": wfColor.reOrCon.normal,
 						"font-weight": "bold"
 					});	
