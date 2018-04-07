@@ -566,9 +566,9 @@ exports.handleError = (err, reject) => {
  *
  * @return { view, controller } where controller is the API exported by graph2doms
  */
-exports.wskflow = (visualize, viewName, { fsm, input, name, packageName}) => {
+exports.wskflow = (visualize, viewName, { fsm, input, name, packageName, viewOptions }) => {
     
-    const { view, controller } = visualize(fsm);
+    const { view, controller } = visualize(fsm, undefined, undefined, undefined, undefined, viewOptions);
 
     const onclick = undefined
     ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
@@ -618,12 +618,38 @@ exports.zoomToFitButtons = controller => {
 }
 
 /**
+ * Turn an options struct into a cli string
+ *
+ * @param options is the command line options struct given by the
+ * user.
+ *
+ */
+const optionsToString = options => {
+    let str = ''
+    for (let key in options) {
+        // underscore comes from minimist
+        if (key !== '_' && options[key] !== undefined && key !== 'name' && key !== 'theme') {
+            const dash = key.length === 1 ? '-' : '--',
+                  prefix = options[key] === false ? 'no-' : '', // e.g. --no-help
+                  value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`
+
+            if (! (dash === '-' && options[key] === false)) {
+                // avoid -no-q, i.e. single dash
+                str = `${str} ${dash}${prefix}${key}${value}`
+            }
+        }
+    }
+
+    return str
+}
+
+/**
  * Entity view modes
  *
  */
-exports.vizAndfsmViewModes = (visualize, commandPrefix, defaultMode='visualization') => [
+exports.vizAndfsmViewModes = (visualize, commandPrefix, defaultMode='visualization', options) => [
     { mode: 'visualization', defaultMode: defaultMode==='visualization', direct: entity => {
-        return repl.qexec(`${commandPrefix} "${entity.input}"`)
+        return repl.qexec(`${commandPrefix} "${entity.input}" ${optionsToString(options)}`)
     } },
     { mode: 'fsm', label: 'JSON', defaultMode: defaultMode==='fsm', direct: entity => {
         entity.type = 'actions'
@@ -661,7 +687,7 @@ exports.hasUnknownOptions = (options, expected) => {
  * like an app
  *
  */
-exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVisualize}) => {
+exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVisualize, options}) => {
     action.prettyType = appBadge
     action.fsm = action.annotations.find(({key}) => key === 'fsm').value
 
@@ -670,11 +696,18 @@ exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVis
     }
 
     if (doVisualize) {
+        // pass through cli options for the wskflow renderer
+        const viewOptions = { }
+        if (options.functions) {
+            // note we must be careful not to pass false; only undefined
+            viewOptions.renderFunctionsInView = options.functions // render all inline functions directly in the view?
+        }
+
         const visualize = require(path.join(__dirname, '../../wskflow/lib/visualize'))
-        const { view, controller } = exports.wskflow(visualize, viewName, action)
+        const { view, controller } = exports.wskflow(visualize, viewName, Object.assign({}, action, { viewOptions }))
 
         action.modes = (action.modes||[]).filter(_ => _.mode !== 'code')
-            .concat(exports.vizAndfsmViewModes(visualize, commandPrefix))
+            .concat(exports.vizAndfsmViewModes(visualize, commandPrefix, undefined, options))
             .concat(exports.zoomToFitButtons(controller))
 
         return view

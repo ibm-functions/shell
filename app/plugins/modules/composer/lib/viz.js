@@ -64,9 +64,16 @@ module.exports = (commandTree, prequire) => {
 
          // create a fake action/entity record
          const formatForUser = defaultMode => ({fsm,code}) => {
-           
-             const {visualize} = prequire('wskflow')             
-             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name })
+
+             // pass through cli options for the wskflow renderer
+             const viewOptions = { }
+             if (options.functions) {
+                 // note we must be careful not to pass false; only undefined
+                 viewOptions.renderFunctionsInView = options.functions // render all inline functions directly in the view?
+             }
+
+             const {visualize} = prequire('wskflow')
+             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name, viewOptions })
              extraModes = extraModes.concat(zoomToFitButtons(controller))
 
              const entity = {
@@ -81,7 +88,7 @@ module.exports = (commandTree, prequire) => {
                  exec: {
                      kind: 'source'
                  },
-                 modes: vizAndfsmViewModes(visualize, viewName, defaultMode).concat(extraModes),
+                 modes: vizAndfsmViewModes(visualize, viewName, defaultMode, options).concat(extraModes),
                  annotations: [
                      { key: 'wskng.combinators',
                        value: [{ role: 'replacement', type: 'composition', badge: type } ]

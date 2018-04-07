@@ -37,7 +37,7 @@ module.exports = (commandTree, prequire) => {
               appName = args[idx + 1]
 
         return repl.qexec(`wsk action get "${appName}"`, undefined, undefined,
-                          Object.assign({}, execOptions, { override: true }))
+                          Object.assign({}, execOptions, { override: true, originalOptions: options }))
     }
 
     const cmd = commandTree.listen(`/wsk/app/get`, doGet('get'), { usage: usage('get'),
@@ -63,7 +63,8 @@ module.exports = (commandTree, prequire) => {
 
                     if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
                         const doVisualize = execOptions.override || !execOptions.nested,
-                              content = decorateAsApp({ action, doVisualize }),
+                              options = execOptions.originalOptions || {},
+                              content = decorateAsApp({ action, doVisualize, options }),
                               input = `/${response.namespace}/${response.name}`
 
                         if (doVisualize) {

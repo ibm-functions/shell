@@ -17,8 +17,7 @@
 const debug = require('debug')('wskflow visualize')
 debug('loading')
 
-const $ = require('jquery'),
-      fsm2graph = require('./fsm2graph')
+const fsm2graph = require('./fsm2graph')
 
 debug('finished loading modules')
 
@@ -26,8 +25,8 @@ debug('finished loading modules')
  * Create the wskflow visualization for the given fsm
  *
  */
-module.exports = (passedFsm, container, w, h, activations) => {
-    debug('fsm', passedFsm);
+module.exports = (passedFsm, container, w, h, activations, options) => {
+    debug('visualize', passedFsm, options);
 
     if(passedFsm == undefined || passedFsm.composition == undefined || !Array.isArray(passedFsm.composition)){
         debug('fsm is not in the right format. return.');
@@ -36,5 +35,5 @@ module.exports = (passedFsm, container, w, h, activations) => {
 
     // create a copy - all annotations make by wskflow will not affect the original object.
     let ir = JSON.parse(JSON.stringify(passedFsm));
-    return fsm2graph(ir, container, activations); 
+    return fsm2graph(ir, container, activations, options); 
 }
