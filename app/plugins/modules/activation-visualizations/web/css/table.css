@@ -325,7 +325,9 @@
 .activation-viz-timeline .grid-cell-content {
     border-radius: 1px / 2px;
 }
-.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell:not(.grid-no-hover):not(.latency-2):hover,.repl-result .entity.activations:hover .activation-viz-plugin .grid .grid-cell {
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell:not(.grid-no-hover).latency-0:hover,
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell:not(.grid-no-hover).latency-5:hover,
+.repl-result .entity.activations:hover .activation-viz-plugin .grid .grid-cell {
     filter: saturate(2.25) brightness(1.25) !important;
 }
 
@@ -372,6 +374,16 @@
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-2 .grid-cell-content {
     background: hsla(201, 51%, 78%, 1); /* #d1e5f0 with lightness reduced from 88% to 78% */
+}
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .grid-cell-content span {
+    /* increase contrast on hover; see shell issue #875 */
+    font-weight: 400;
+}
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-1:hover .grid-cell-content span,
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-2:hover .grid-cell-content span,
+.activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-3:hover .grid-cell-content span {
+    /* increase contrast on hover; see shell issue #875 */
+    color: black;
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-3 .grid-cell-content {
     background: #fddbc7;
@@ -474,7 +486,7 @@
     100% {-webkit-transform: scale(1.5, 1.5); opacity: 0.0;}
 }
 .activation-viz-plugin .grid .grid-cell:not(.grid-no-hover):hover {
-    filter: saturate(4) !important;
+    filter: saturate(4) brightness(0.9) !important;
     cursor: pointer;
 }
 .activation-viz-plugin .grid .grid-cell-content {
@@ -490,6 +502,17 @@
 }
 
 /* innerLabel for cells; see cell.js: const innerLabel */
+.activation-viz-plugin .cell-container.zoom_-1 .grid-cell-content > span,
+.activation-viz-plugin .cell-container.zoom_-2 .grid-cell-content > span {
+    /* the cells are too small for the inner latency label */
+    opacity: 0
+}
+.activation-viz-plugin .cell-container.zoom_1 .grid-cell-content > span {
+    font-size: 0.85vw;
+}
+.activation-viz-plugin .cell-container.zoom_2 .grid-cell-content > span {
+    font-size: 1vw;
+}
 .activation-viz-plugin .grid-cell-content > span {
     font-size: 0.75vw;
     color: white;
