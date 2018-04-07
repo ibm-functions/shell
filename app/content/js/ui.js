@@ -1417,14 +1417,28 @@ const ui = (function() {
                         const code = sidecar.querySelector('.action-content .action-source')
 
                         if (entity.exec.kind === 'blackbox') {
-                            // show the image name
-                            const clicky = document.createElement('a')
-                            clicky.className = 'clickable clickable-blatant'
-                            code.appendChild(document.createTextNode('dockerhub image: '))
-                            code.appendChild(clicky)
-                            clicky.innerText = entity.exec.image
-                            clicky.setAttribute('href', `https://hub.docker.com/r/${entity.exec.image}`)
-                            clicky.setAttribute('target', '_blank')
+                            if (entity.exec.image) {
+                                if (entity.exec.code) {
+                                    // then this is a dockerskeleton
+                                    // that attaches some code; we can
+                                    // show the code
+                                    code.appendChild(document.createTextNode(entity.exec.code))
+                                    hljs.highlightBlock(code)
+
+                                } else {
+                                    // otherwise, just show the image name
+                                    const clicky = document.createElement('a')
+                                    clicky.className = 'clickable clickable-blatant'
+                                    code.appendChild(document.createTextNode('dockerhub image: '))
+                                    code.appendChild(clicky)
+                                    clicky.innerText = entity.exec.image
+                                    clicky.setAttribute('href', `https://hub.docker.com/r/${entity.exec.image}`)
+                                    clicky.setAttribute('target', '_blank')
+                                }
+                            } else {
+                                // ?? not sure what this case is; blackbox without an image name?
+                                code.appendChild(document.createTextNode('blackbox action'))
+                            }
 
                         } else if (entity.exec.code) {
                             //
