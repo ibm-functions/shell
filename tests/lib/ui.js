@@ -198,6 +198,14 @@ exports.sidecar = {
         .then(actualSource => assert.equal(actualSource.replace(/\s+/g, ''), expectedSource.replace(/\s+/g, '')))
         .then(() => app),
 
+    expectResult: expectedResult => app => app.client.getText(selectors.SIDECAR_ACTIVATION_RESULT)
+        .then(exports.expectStruct(expectedResult))
+        .then(() => app),
+
+    expectResultSubset: expectedResult => app => app.client.getText(selectors.SIDECAR_ACTIVATION_RESULT)
+        .then(exports.expectSubset(expectedResult))
+        .then(() => app),
+
     expectBadge: badge => app => app.client.waitUntil(() => app.client.getText(selectors.SIDECAR_BADGES)
                                                       .then(badges => badges.indexOf(badge) >= 0))
         .then(() => app),

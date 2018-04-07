@@ -152,7 +152,7 @@ const synonymsFn = (type,T) => synonyms[T || 'entities'][type].concat([type]) //
 
 const booleans = {
     actions: {
-        create: ['sequence', 'docker', 'copy', 'web']
+        create: ['sequence', 'docker', 'native', 'copy', 'web']
     }
 }
 booleans.actions.update = booleans.actions.create
@@ -568,7 +568,7 @@ specials.actions = {
             // for action create, or update and the user gave a
             // positional param... find the input file
             if (options.docker) {
-                // blackbox action!
+                // blackbox action
                 options.action.exec.kind = 'blackbox'
                 options.action.exec.image = argv[0]
 
@@ -592,6 +592,12 @@ specials.actions = {
                     }]})
 
                     options.action.annotations.push({ key: 'binary', value: true })
+                }
+
+                if (options.native) {
+                    // native code blackbox action
+                    options.action.exec.kind = 'blackbox'
+                    options.action.exec.image = 'openwhisk/dockerskeleton'
                 }
 
                 eventBus.emit('/action/update', { file: filepath, action: { name: options.name, namespace: options.namespace } })
