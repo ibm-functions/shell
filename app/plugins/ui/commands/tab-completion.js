@@ -148,6 +148,7 @@ const listenForUpDown = prompt => {
                 if (next) {
                     current.classList.remove('selected')
                     next.classList.add('selected')
+                    next.scrollIntoViewIfNeeded(false)
                     evt.preventDefault() // prevent REPL processing
                 }
             }
@@ -565,6 +566,7 @@ module.exports = () => {
                         if (next) {
                             current.classList.remove('selected')
                             next.classList.add('selected')
+                            next.scrollIntoViewIfNeeded(false)
                         }
                         return
                     }
