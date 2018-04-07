@@ -389,7 +389,7 @@
 
 /** grid view */
 .activation-viz-plugin .grid-grid:not(.activation-viz-timeline) {
-    padding: 1em 0;
+    margin: 1em 0;  /* has to be margin, not padding; see shell issue #874 */
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
