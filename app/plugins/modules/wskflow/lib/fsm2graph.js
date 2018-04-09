@@ -583,20 +583,38 @@ function fsm2graph(ir, containerElement, acts, options){
                     if (notDeployed.length > 0 && !activations) {
                         const container = document.querySelector('#sidecar .sidecar-header .sidecar-header-secondary-content .custom-header-content')
                         if (container) {
-                            const message = document.createElement('div'),
-                                  warning = document.createElement('strong'),
-                                  text = document.createElement('span'),
-                                  examples = document.createElement('span')
+                            const css = {
+                                message: 'wskflow-undeployed-action-warning',
+                                text: 'wskflow-undeployed-action-warning-text',
+                                examples: 'wskflow-undeployed-action-warning-examples'
+                            }
+                            let message = container.querySelector(`.${css.message}`),
+                                text, examples
 
-                            message.appendChild(warning)
-                            message.appendChild(text)
-                            message.appendChild(examples)
-                            container.appendChild(message)
+                            if (!message) {
+                                const message = document.createElement('div'),
+                                      warning = document.createElement('strong')
+
+                                text = document.createElement('span')
+                                examples = document.createElement('span')
+
+                                message.className = css.message
+                                text.className = css.text
+                                examples.className = css.examples
+
+                                message.appendChild(warning)
+                                message.appendChild(text)
+                                message.appendChild(examples)
+                                container.appendChild(message)
                             
-                            warning.className = 'red-text'
-                            examples.className = 'deemphasize deemphasize-partial left-pad'
+                                warning.className = 'red-text'
+                                examples.className = 'deemphasize deemphasize-partial left-pad'
 
-                            warning.innerText = 'Warning: '
+                                warning.innerText = 'Warning: '
+                            } else {
+                                text = message.querySelector(`.${css.text}`)
+                                examples = message.querySelector(`.${css.examples}`)
+                            }
 
                             const actionStr = notDeployed.length === 1 ? 'action' : 'actions'
                             text.innerText = `This composition depends on ${notDeployed.length} undeployed ${actionStr}`
