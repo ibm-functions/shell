@@ -85,6 +85,10 @@ describe('Headless mode', function() {
        .then(cli.expectOK('ok'))
        .catch(common.oops(this)))
 
+    it('should show top-level help with fsh -v', () => cli.do('-v')
+       .then(cli.expectError(1, 'Shell Docs / Getting Started'))
+       .catch(common.oops(this)))
+
     it('should show top-level help with no arguments', () => cli.do('')
        .then(cli.expectError(1, 'Shell Docs / Getting Started'))
        .catch(common.oops(this)))

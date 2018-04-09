@@ -411,7 +411,7 @@ rowify._default = ({name}) => ({name:pn(name)})
  *
  */
 const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') => {
-    if (verbose) {
+    if (verbose && typeof msg === 'string') {
         // user asked for verbose output
         return prettyJSON(msg, logger)
     }
@@ -618,6 +618,7 @@ const main = (app, mainFunctions) => {
         debug('plugins initialized')
 
         if (insufficientArgs()) {
+            debug('insufficient args, invoking help command')
             return eval('help')
         }
 
