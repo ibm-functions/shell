@@ -472,7 +472,7 @@
     height: 100%;
     background: var(--color-ui-03);
     /*margin: 0 0.2vw;*/
-    background-image: repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,.04) 2px, rgba(0,0,0,0.04) 8px), repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 17px);
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,.01) 2px, rgba(0,0,0,0.01) 8px), repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 17px);
 }
 .activation-viz-plugin.grid-as-timeline .grid-timeline-empty-swath-inner {
     /* empty swaths inner text, e.g. denoting the length of the gap */
