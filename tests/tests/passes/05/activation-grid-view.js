@@ -278,4 +278,12 @@ describe('Activation grid visualization', function() {
     openGridExpectCountOf(2, 1, `grid --batches 2 ${actionName2}`, actionName2) // it was 1,1 last time, and we did one notbomb, so expect 2,1 now
     notbomb(actionName2, packageName)
     openGridExpectCountOf(2, 0, `grid --batches 2 ${packageName}/${actionName2}`, actionName2) // we've done two notbombs against the packaged actionName2, hence 2,0
+
+    it('should open grid as timeline with grid --timeline', () => cli.do('grid --timeline', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
+
+    it('should open grid as timeline with grid -t', () => cli.do('grid -t', this.app)
+       .then(cli.expectOK)
+       .catch(common.oops(this)))
 })

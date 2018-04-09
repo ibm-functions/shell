@@ -17,12 +17,12 @@
 const prettyPrintDuration = require('pretty-ms'),
       { sort, sortActivations, startTimeSorter, nameSorter, countSorter } = require('./sorting'),
       { drilldownWith } = require('./drilldown'),
-      { groupByAction } = require('./grouping'),
+      { groupByAction, groupByTimeBucket } = require('./grouping'),
       { drawLegend } = require('./legend'),
       { renderCell } = require('./cell'),
       { modes } = require('./modes'),
       { grid:usage } = require('../usage'),
-      { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket,
+      { nbsp, optionsToString, isSuccess, titleWhenNothingSelected, latencyBucket, nLatencyBuckets,
         displayTimeRange, prepareHeader, visualize } = require('./util')
 
 const viewName = 'Grid'
@@ -152,7 +152,9 @@ const drawGrid = (options, header) => activations => {
           redraw = !!existingContent
 
     content.className = css.content
-    _drawGrid(options, header, content, groupByAction(activations, options), undefined, undefined, redraw)
+    _drawGrid(options, header, content,
+              groupByAction(activations, options),
+              undefined, undefined, redraw)
 
     //injectHTML(content, 'grid/bottom-bar.html', 'bottom-bar')
 
@@ -178,8 +180,10 @@ const drawGrid = (options, header) => activations => {
                       width = gridDom.getAttribute('data-width'),
                       vws = newZoom === 0 ? 2.75 : newZoom === 1 ? 3 : newZoom === 2 ? 4 : 0.75
 
-                gridLabel.style.maxWidth = `${Math.max(8, width * vws * 1.1)}vw`
                 gridRow.style.maxWidth = `${Math.max(8, width * vws)}vw`
+                if (gridLabel) {
+                    gridLabel.style.maxWidth = `${Math.max(8, width * vws * 1.1)}vw`
+                }
             }
             
             if (newZoom === zoomMax) {
@@ -207,7 +211,23 @@ const drawGrid = (options, header) => activations => {
                       flush: 'right',
                       actAsButton: true,
                       direct: rezoom(_ => Math.max(-2, _ - 1))
-                    }
+                    },
+          asTimeline = { mode: 'as-timeline',
+                         fontawesome: 'fas fa-chart-bar',
+                         balloon: 'Display as timeline',
+                         flush: 'right',
+                         actAsButton: true,
+                         direct: () => repl.pexec(`grid ${optionsToString(options)} -t`)
+                       },
+          asGrid = { mode: 'as-grid',
+                         fontawesome: 'fas fa-th',
+                         balloon: 'Display as grid',
+                         flush: 'right',
+                         actAsButton: true,
+                         direct: () => repl.pexec(`grid ${optionsToString(options, ['timeline', 't'])}`)
+                   },
+
+          switcher = options.timeline ? asGrid : asTimeline // switch between timeline and grid mode
 
     return {
         type: 'custom',
@@ -215,7 +235,7 @@ const drawGrid = (options, header) => activations => {
         controlHeaders: true,
 
         // add zoom buttons to the mode button model
-        modes: modes('grid', options).concat([zoomIn, zoomOut])
+        modes: modes('grid', options).concat([switcher, zoomIn, zoomOut])
     }
 }
 
@@ -241,7 +261,7 @@ const smartZoom = numCells => {
  *
  */
 const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupData, sorter=countSorter, sortDir=+1, redraw) => {
-    const { groups, summary } = groupData
+    const { groups, summary, timeline } = groupData
 
     sort(groups, sorter, sortDir)
     sortActivations(groups, startTimeSorter, +1)
@@ -251,7 +271,7 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
           gridGrid = redraw ? content.querySelector(`.${css.gridGrid}`) : document.createElement('div'),
           totalCount = groupData.totalCount,
           zoomLevel = options.zoom || smartZoom(totalCount),
-          zoomLevelForDisplay = totalCount > 1000 ? -2 : totalCount <= 100 ? zoomLevel : 0 // don't zoom in too far, if there are many cells to display
+          zoomLevelForDisplay = options.timeline ? -1 : totalCount > 1000 ? -2 : totalCount <= 100 ? zoomLevel : 0 // don't zoom in too far, if there are many cells to display
 
     gridGrid.className = `${css.gridGrid} cell-container zoom_${zoomLevelForDisplay}`
     gridGrid.setAttribute('data-zoom-level', zoomLevelForDisplay)
@@ -286,6 +306,11 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
 
     // add time range to the sidecar header
     displayTimeRange(groupData, leftHeader)
+
+    if (options.timeline) {
+        drawAsTimeline(timeline, content, gridGrid, zoomLevelForDisplay, options)
+        return
+    }
 
     groups.forEach((group, groupIdx) => {
         // prepare the grid structure
@@ -372,7 +397,9 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
                         const cell = makeCellDom()
                         cellContainer.appendChild(cell)
                         cell.classList.add('grid-cell-newly-created')
-                        renderCell(viewName, cell, activation, !isSuccess(activation), undefined, undefined,
+                        renderCell(viewName, cell, activation, !isSuccess(activation),
+                                   options.full ? activation._duration : activation.executionTime,
+                                   undefined,
                                    { zoom: zoomLevelForDisplay })
                     }
                 } catch (e) {
@@ -381,7 +408,113 @@ const _drawGrid = (options, {sidecar, leftHeader, rightHeader}, content, groupDa
             })
         }
     })
+} // _drawGrid
+
+/**
+ * Return the minimum timestamp in the given list of activations
+ *
+ */
+const minTimestamp = activations => {
+    return activations.reduce((min, activation) => {
+        if (min === 0) {
+            return activation.start
+        } else {
+            return Math.min(min, activation.start)
+        }
+    }, 0)
 }
+
+/**
+ * Render the grid as a timeline
+ *
+ */
+const drawAsTimeline = (timelineData, content, gridGrid, zoomLevelForDisplay, options) => {
+    const { failure, activations, nBuckets } = timelineData
+
+    content.classList.add('grid-as-timeline')
+
+    const grid = document.createElement('div')
+    grid.className = 'grid'
+    gridGrid.appendChild(grid)
+
+    const makeColumn = () => {
+        const gridRow = document.createElement('div')
+        gridRow.className = 'grid-row'
+        grid.appendChild(gridRow)
+
+        return gridRow
+    }
+
+    // for each column in the timeline... idx here is a column index
+    for (let idx = 0, currentEmptyRunLength = 0, currentRunMinTime; idx < nBuckets; idx++) {
+        if (activations[idx].length === 0) {
+            // empty column
+            if (currentEmptyRunLength++ === 0 && idx > 0) {
+                // start of empty run; remember the timestamp
+                currentRunMinTime = minTimestamp(activations[idx - 1])
+            }
+
+            continue
+
+        } else if (currentEmptyRunLength > 5) {
+            console.error('EMPTY SWATH')
+            const currentRunMaxTime = minTimestamp(activations[idx]),
+                  swath = makeColumn()
+
+            swath.classList.add('grid-timeline-empty-swath')
+
+            if (currentRunMinTime && currentRunMaxTime) {
+                const swathInner = document.createElement('div')
+                swathInner.classList.add('grid-timeline-empty-swath-inner')
+                swathInner.innerText = `${prettyPrintDuration(currentRunMaxTime - currentRunMinTime, { compact: true })} gap`
+
+                swath.appendChild(swathInner)
+            }
+
+            currentEmptyRunLength = 0
+        }
+
+        const gridRow = makeColumn()
+
+        // sort the activations in the column, according to the user's desire
+        if (options.timeline === true || options.timeline === 'latency') {
+            // default sort order
+            activations[idx].sort((a,b) => {
+                const successA = isSuccess(a),
+                      successB = isSuccess(b),
+                      nA = options.full ? a._duration : a.executionTime,
+                      nB = options.full ? b._duration : b.executionTime
+                return !successA && !successB || successA && successB ? nA - nB
+                    : !successA ? 1 : -1
+            })
+        } else if (options.timeline === 'time') {
+            activations[idx].sort((a,b) => a.start - b.start)
+        }
+
+        // now render the cells in the column; jdx here is a row index
+        // within the current column's stack of cells
+        activations[idx].forEach((activation, jdx) => {
+            const success = isSuccess(activation),
+                  latBucket = success && latencyBucket(options.full ? activation._duration : activation.executionTime)
+
+            const cell = makeCellDom(),
+                  isFailure = false,
+                  duration = 0,
+                  nameInTooltip = true,
+                  balloonPos = jdx >= 25 ? idx < 5 ? 'down-left' : 'down'
+                  : idx < 10 ? jdx < 5 ? 'up-left' : 'up' : jdx < 5 ? 'up-right' : 'up'
+
+            renderCell(viewName, cell,
+                       activation,
+                       !success,
+                       options.full ? activation._duration : activation.executionTime,
+                       latBucket,
+                       { zoom: zoomLevelForDisplay, balloonPos, nameInTooltip })
+
+                gridRow.appendChild(cell)
+        })
+    }
+} // drawAsTimeline
 
 /**
  * This is the module
