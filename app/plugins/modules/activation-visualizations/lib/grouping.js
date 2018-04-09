@@ -17,6 +17,21 @@
 const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = require('./util'),
       prettyPrintDuration = require('pretty-ms')
 
+const durationOf = _ => {
+    const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
+          initAnno = _.annotations.find(({key}) => key === 'initTime'),
+          wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
+          init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
+          executionTime = _.end - _.start,
+          duration = executionTime + wait  // note: executionTime already factors in `init`, so we don't add it here
+
+    // oof
+    _.executionTime = executionTime
+    _._duration = duration
+
+    return { duration, executionTime, wait, init }
+}
+
 /**
  * Compute statistical properties of a given group of activations
  *
@@ -24,12 +39,7 @@ const { isSuccess, pathOf, latencyBucket, nLatencyBuckets, isUUIDPattern } = req
 const summarizePerformance = (activations, options) => {
     const latBuckets = Array(nLatencyBuckets).fill(0)
     const summaries = activations.map(_ => {
-        const waitAnno = _.annotations.find(({key}) => key === 'waitTime'),
-              initAnno = _.annotations.find(({key}) => key === 'initTime'),
-              wait = waitAnno ? waitAnno.value : 0,  // this is "Queueing Time" as presented in the UI
-              init = initAnno ? initAnno.value : 0,   // and this is "Container Initialization"
-              executionTime = _.end - _.start,
-              duration = executionTime + wait  // note: executionTime already factors in `init`, so we don't add it here
+        const { duration, executionTime, wait, init } = durationOf(_)
 
         if (isSuccess(_)) {
             const latBucket = latencyBucket(options.full ? duration : executionTime)
@@ -296,7 +306,7 @@ const costOf = activation => {
  * Construct a success versus failure timeline model
  *
  */
-const successFailureTimeline = (activations, { nBuckets = 20 }) => {
+const successFailureTimeline = (activations, { nBuckets=10000, full=false }) => {
     if (activations.length === 0) {
         return []
     }
@@ -307,14 +317,28 @@ const successFailureTimeline = (activations, { nBuckets = 20 }) => {
           interval = ~~((last - first) / nBuckets),
           bucketize = timestamp => Math.min(nBuckets - 1, ~~((timestamp - first) / interval))
 
+    const mkActivations = () => {
+        const buckets = Array(nBuckets)
+        for (let idx = 0; idx < nBuckets; idx++) {
+            buckets[idx] = [] // array of activations
+        }
+        return buckets
+    }
+
     // now we construct the model
     const buckets = activations.reduce((buckets, activation) => {
-        const tally = isSuccess(activation) ? buckets.success : buckets.failure,
+        const success = isSuccess(activation),
+              tally = success ? buckets.success : buckets.failure,
               idx = bucketize(activation.start)
+
         tally[idx]++
         buckets.cost[idx] += costOf(activation)
+        buckets.activations[idx].push(activation)
+
         return buckets
+
     }, { success: Array(nBuckets).fill(0),
+         activations: mkActivations(),
          failure: Array(nBuckets).fill(0),
          cost: Array(nBuckets).fill(0),
          interval, first, last, nBuckets    // pass through the parameters to the view, in case it helps
@@ -375,3 +399,56 @@ const filterByOutlieriness = options => ({activations,statData}) => {
         })
     }
 }
+
+
+/**
+ * Group the given activations by time
+ *
+ */
+exports.groupByTimeBucket = (activations, options) => {
+    // commenting out the bizarre filter. see shell issue #120
+    /*if (!options.all) {
+        activations = activations.filter(activation => {
+            const path = pathOf(activation)
+            return !(path.match && path.match(isUUIDPattern)) && !activation.cause
+        })
+    }*/
+
+    // first, sort the activations by increasing start time, to help
+    // with bucketing
+    activations.sort((a,b) => a.start - b.start)
+
+    // compute bucket properties
+    const nBuckets = options.buckets || 46,
+          first = activations[0],
+          last = activations[activations.length - 1],
+          minTime = first && first.start,
+          maxTime = last && last.start,
+          timeRangeInMillis = maxTime - minTime + 1,
+          bucketWidthInMillis = timeRangeInMillis / nBuckets,
+          totals = { minTime: undefined, maxTime: undefined, totalCount: 0},
+          grouper = addToGroup(options, totals)
+
+    const buckets = activations.reduce((bucketArray, activation) => {
+        const bucketIdx = ~~( (activation.start - minTime) / bucketWidthInMillis)
+        grouper(bucketArray[bucketIdx], activation)
+        return bucketArray
+    }, new Array(nBuckets).fill(0).map(_ => ({}) )) // an array of length nBuckets, of {} -- these will be activation groups, for each timeline bucket
+
+
+    // the buckets.map turns each timeline bucket, which right now is
+    // a map from action path to action, into an array -- for easier
+    // consumption
+    return Object.assign(totals, {
+        bucketWidthInMillis,
+        buckets: buckets.map(bucketMap => {
+            const bucket = toArray(bucketMap, options)
+            return {
+                bucket,
+                summary: summarizeWhole(bucket, options)
+            }
+        }),
+        summary: summarizeWhole2(activations, options)  // a "statData" object, for all activations
+    })
+}
+

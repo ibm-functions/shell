@@ -42,7 +42,7 @@ exports.range = options => {
           startOfWeek = (startOfToday - date.getDay() * oneDay)
 
     let since, upto
-    if (options.today || options.t) {
+    if (options.today) {
         since = startOfToday
         upto = now
 

@@ -70,9 +70,7 @@ module.exports = {
         title: 'Summarize performance',
         header: '${header.summary}.',
         example: 'summary [action|app]',
-        optional: optional.concat([
-            { name: '--auto', docs: 'Start animation immediately' }
-        ]),
+        optional,
         parents,
         related: allExcept('summary')
     },
@@ -98,7 +96,10 @@ module.exports = {
         example: 'grid [action|app]',
         detailedExample: { command: 'grid --outliers max --success',
                            docs: 'show only the worst offending successful activations' },
-        optional, parents,
+        optional: optional.concat([
+            { name: '--timeline', booleanOK: true, alias: '-t', docs: 'Draw as a timeline' }
+        ]),
+        parents,
         related: allExcept('grid')
     }
 }

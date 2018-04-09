@@ -394,11 +394,12 @@ exports.isNotSuccess = activation => activation.statusCode !== 0
  * user.
  *
  */
-exports.optionsToString = options => {
+exports.optionsToString = (options, except) => {
     let str = ''
     for (let key in options) {
         // underscore comes from minimist
-        if (key !== '_' && options[key] !== undefined && key !== 'name' && key !== 'theme') {
+        if (key !== '_' && options[key] !== undefined && key !== 'name' && key !== 'theme'
+            && (!except || !except.find(_ => _ === key))) {
             const dash = key.length === 1 ? '-' : '--',
                   prefix = options[key] === false ? 'no-' : '', // e.g. --no-help
                   value = options[key] === true || options[key] === false ? '' : ` ${options[key]}`

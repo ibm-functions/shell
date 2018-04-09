@@ -422,6 +422,67 @@
     padding: 0.5em 1.5em 0;
     /* want this, but it's not yet supported z-index: attr(data-grid-index number);*/
 }
+
+/* as timeline */
+.activation-viz-plugin.grid-as-timeline {
+    justify-content: flex-end;
+    align-items: flex-start;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid .grid {
+    flex-direction: row;
+    align-items: flex-end;
+    padding: 0;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid .grid .grid-row {
+    flex: initial;
+    flex-wrap: nowrap;
+    flex-direction: column-reverse;
+    width: 2.75vw;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid .grid .grid-row:hover {
+    /* tooltip stacking */
+    z-index: 9;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid .grid .grid-row:hover .grid-cell:not(:hover) {
+    /* tooltip stacking */
+    z-index: -1;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid.zoom_1 .grid .grid-row {
+    width: 3vw;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid.zoom_2 .grid .grid-row {
+    width: 4vw;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid.zoom_-1 .grid .grid-row {
+    width: 1vw;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid.zoom_-2 .grid .grid-row {
+    width: 0.75vw;
+}
+.activation-viz-plugin.grid-as-timeline .grid-grid:not(.activation-viz-timeline) {
+    margin: 0;
+    overflow-x: auto;
+}
+.activation-viz-plugin.grid-as-timeline .grid-timeline-empty-swath {
+    /* empty swaths in the grid-as-timeline */
+    flex-direction: row !important;
+    justify-content: center;
+    align-items: center;
+    width: 4vw !important;
+    height: 100%;
+    background: var(--color-ui-03);
+    /*margin: 0 0.2vw;*/
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,.04) 2px, rgba(0,0,0,0.04) 8px), repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 17px);
+}
+.activation-viz-plugin.grid-as-timeline .grid-timeline-empty-swath-inner {
+    /* empty swaths inner text, e.g. denoting the length of the gap */
+    font-size: 0.8vw;
+    color: var(--color-ui-05);
+    opacity: 1;
+    font-weight: 800;
+}
+
+
 .activation-viz-plugin .grid .grid-row {
     flex: 1;
     display: flex;

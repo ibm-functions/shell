@@ -60,14 +60,16 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         fdom.className = 'grid-oops-overlay'
         container.appendChild(fdom)
 
-    } else if (!options || options.zoom >= 0) {
+    } else /*if (!options || options.zoom >= 0)*/ {
         // for larger zoom levels, and only for successful activations,
         // render the latency inside the cell
         const innerLabel = document.createElement('span')
         innerLabel.innerText = prettyPrintDuration(duration)
         container.appendChild(innerLabel)
 
-    } else {
+    }
+
+    if (options && options.zoom < 0) {
         // for higher zoom levels (zoom < 0), render the latency in the tooltip
         extraTooltip += `${newline}${prettyPrintDuration(duration)}`
     }
@@ -93,8 +95,8 @@ exports.renderCell = (returnTo, cell, activation, isFailure=!activation.response
         cell.isFailure = isFailure
         cell.setAttribute('data-action-name', activation.name)
         cell.setAttribute('data-balloon-break', 'data-balloon-break')
-        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? activation.name + ' action, invoked ' : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}${extraTooltip}`)
-        cell.setAttribute('data-balloon-pos', 'up')
+        cell.setAttribute('data-balloon', `${options && options.nameInTooltip ? 'Action: ' + activation.name + newline : ''}${ui.prettyPrintTime(activation.start, 'short')}${msg}${extraTooltip}`)
+        cell.setAttribute('data-balloon-pos', options.balloonPos || 'up')
     }
 
     return returnValue
