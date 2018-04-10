@@ -400,7 +400,7 @@ const _render = ({entity, activationIds, container, noCrop=false, noPip=false, s
                 // show summary buttons
                 paginator.appendChild(rightButtons)
                 rightButtons.classList.add('list-paginator-right-buttons')
-                const buttons = [ { command: 'summary', icon: 'fas fa-chart-bar', balloon: 'Open a statistical summary view' },
+                const buttons = [ { command: 'summary', icon: 'fas fa-list', balloon: 'Open a statistical summary view' },
                                   // 'timeline', // disabled for now shell issue #794
                                   { command: 'grid', icon: 'fas fa-th', balloon: 'Open a grid view' } ]
                 buttons.forEach(({ command, icon, balloon, balloonPos='up-left' }) => {
