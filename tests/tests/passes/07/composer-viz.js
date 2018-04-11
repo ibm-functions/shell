@@ -145,9 +145,11 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('report-swapi', false)) // not yet deployed
        .then(verifyNodeExists('report-stapi', false)) // not yet deployed
        .then(verifyNodeExists('report-empty', false)) // not yet deployed
-       .then(verifyEdgeExists('report-swapi', 'Exit'))
-       .then(verifyEdgeExists('report-stapi', 'Exit'))
-       .then(verifyEdgeExists('report-empty', 'Exit'))
+       .then(verifyEdgeExists('report-swapi', 'dummy_1'))
+       .then(verifyEdgeExists('report-stapi', 'dummy_0'))
+       .then(verifyEdgeExists('report-empty', 'dummy_0'))
+       .then(verifyEdgeExists('dummy_0', 'dummy_1'))
+       .then(verifyEdgeExists('dummy_1', 'Exit'))
        .catch(common.oops(this)))
 
     /** test: viz, then create with -r, testing for handling of implicit entity and auto-deploy */
@@ -174,8 +176,9 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
        .then(verifyEdgeExists('seq4', 'seq5'))
-       .then(verifyEdgeExists('seq3', 'Exit'))
-       .then(verifyEdgeExists('seq5', 'Exit'))
+       .then(verifyEdgeExists('seq3', 'dummy_0'))
+       .then(verifyEdgeExists('seq5', 'dummy_0'))
+       .then(verifyEdgeExists('dummy_0', 'Exit'))
        .catch(common.oops(this)))
 
     /** test: while with nested sequence, from js file */

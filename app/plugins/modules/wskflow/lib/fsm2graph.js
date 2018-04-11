@@ -29,7 +29,7 @@ function addDummy(sources, targets, obj, options, directionS, directionT){
 
 	let dummyId = "dummy_"+dummyCount, o, port;
 	dummyCount++;
-	obj.children.push(drawNodeNew(dummyId, '', 'Dummy', sources, options));
+	obj.children.push(drawNodeNew(dummyId, dummyId, 'Dummy', sources, options));
 	if(sources && sources.length > 0){
 		o = drawEdgeNew(sources[0], dummyId, obj), port = o.targetPort;
 		obj.edges.push(o);
@@ -134,12 +134,13 @@ function drawNodeNew(id, label, type, properties, options){
 	}
         else if(o.type === 'function'){
 	        o.fullFunctionCode = label;
-                const prettyCode = require('js-beautify')(o.fullFunctionCode)
-    
-                if (options.renderFunctionsInView) {
+                const prettyCode = require('js-beautify')(o.fullFunctionCode),
+                      { nLines, maxLineLength } = textualPropertiesOfCode(prettyCode)
+
+                // uncomment the second clause if you want always to display 1-liner functions inline in the view
+                if (options.renderFunctionsInView /*|| nLines === 1*/) {
                     // ok cool, then render this function body directly in the view
-                    const { nLines, maxLineLength } = textualPropertiesOfCode(prettyCode),
-                          charWidthForCode = defaultCharWidth * 0.63
+                    const charWidthForCode = defaultCharWidth * 0.63
 
 		    o.width = Math.min(maxWidth, maxLineLength * charWidthForCode);
    	            o.height = Math.max(2.25, nLines) * defaultCharHeight; // use at least two lines; makes one-line functions look better
@@ -202,12 +203,12 @@ function drawNodeNew(id, label, type, properties, options){
 			properties.forEach(s => {	// a source id			 
 				if(visited[s]){			// if the source is visited
 					visited[s].forEach(a => {	// find out if any of its activation was success
-						if(activations[a].response.success){	// if so, dummy is visited
-							if(visited[dummyId] == undefined) {
-								visited[dummyId] = [];
+					        if(activations[a].response.success){	// if so, dummy is visited
+							if(visited[o.id] == undefined) {
+								visited[o.id] = [];
 								o.visited = [];
 							}
-							visited[dummyId].push(a);
+							visited[o.id].push(a);
 							o.visited.push(a);
 						}
 					})
@@ -331,11 +332,11 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 		}
 		else if(ir.type === 'if'){
 			let firstTestId = gm.children.length,
-			        lastTestId = ir2graph(ir.test, gm, `${id}-test`, undefined, options),
+			        lastTestId = ir2graph(ir.test, gm,`${id}-test`, undefined, options),
 				firstConsId = gm.children.length,
-				lastConsId = ir2graph(ir.consequent, gm, `${id}-consequent`, undefined, options),
+				lastConsId = ir2graph(ir.consequent, gm,`${id}-consequent`, undefined, options),
 				firstAltId = gm.children.length,
-				lastAltId = ir2graph(ir.alternate, gm, `${id}-alternate`, undefined, options);
+			        lastAltId = ir2graph(ir.alternate, gm,`${id}-alternate`, undefined, options)
 
 			if(prevId)	// connect prevId to the first node in test
 				prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, gm.children[firstTestId].id, gm)));
@@ -354,8 +355,9 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 				gm.edges.push(drawEdgeNew(ltid, gm.children[firstAltId].id, gm, 'false'));
 			else
 				lastAltId = [ltid];
-			
-			return lastAltId.concat(lastConsId);
+
+		    const exitConcentrator = addDummy(lastAltId.concat(lastConsId), undefined, gm, options);
+                    return [exitConcentrator]
 		}
 		else if(ir.type === 'try'){
 			// insert a compound node for try

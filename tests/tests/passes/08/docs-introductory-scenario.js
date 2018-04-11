@@ -401,7 +401,7 @@ describe('Intro demo scenario', function() {
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(`${appName2}.js`))
            .then(sidecar.expectBadge(badges.composerLib))
-           .then(graph.hasNodes({tasks: 3, total: 5, deployed: 0}))
+           .then(graph.hasNodes({tasks: 3, total: 6, deployed: 0}))
 
            // visit fsm tab
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="fsm"]'))
@@ -438,7 +438,7 @@ describe('Intro demo scenario', function() {
            .then(sidecar.expectOpen)
            .then(sidecar.expectShowing(appName2))
            .then(sidecar.expectBadge(badges.composerLib))
-           .then(graph.hasNodes({tasks: 3, total: 5, deployed: 3})) // <---- deployed had better be 3 now
+           .then(graph.hasNodes({tasks: 3, total: 6, deployed: 3})) // <---- deployed had better be 3 now
            .then(() => this.app.client.click('#sidecar .sidecar-bottom-stripe-button[data-mode="fsm"]'))
            .then(() => this.app.client.getText('#sidecar .sidecar-content .action-content code'))
            .then(ui.expectStruct(fsm[appName2]))
