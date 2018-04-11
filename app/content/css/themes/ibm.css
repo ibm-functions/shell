@@ -82,19 +82,19 @@ sidecar.activation-success-false .sidecar-header-icon, span[data-extra-decoratio
     font-family: var(--font-sans-serif);
 }
 
-.repl-result .entity:nth-child(2n+1) td, .repl-result .entity:nth-child(2n+1) .entity-attributes {
+.repl-result .entity:nth-child(2n) td, .repl-result .entity:nth-child(2n) .entity-attributes {
     /* table row striping */
     background:var(--color-ui-02);
 }
 
 sidecar {
-    background:var(--color-ui-03);
+    background:var(--color-ui-02);
     border-left-color: var(--color-ui-04);
 }
 
 sidecar .sidecar-header {
-    border-bottom-color: var(--color-content-divider);
-    background: var(--color-ui-02);
+    border-bottom-color: transparent;
+    background: var(--color-ui-01);
 }
 
 sidecar .sidecar-header badge {
@@ -116,7 +116,7 @@ badge.clickable:hover {
 
 .result-table .repl-result, .result-table.repl-result {
     border-color: var(--color-ui-04);
-    background: var(--color-ui-01);
+    background: transparent;
 }
 
 .entity.actions.app .repl-result-prefix {

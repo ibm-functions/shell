@@ -181,6 +181,7 @@ body.still-loading .repl {
     padding-top: 1rem;
     flex: 4;
     transition: flex 300ms ease-in-out, opacity 300ms ease-in-out;
+    background: var(--color-ui-01);
 }
 .repl-inner {
     overflow-y: auto;
@@ -498,6 +499,7 @@ sidecar {
     min-width: 0;
     transition: all 300ms ease-in-out;
     border-left: 1px solid;
+    box-shadow: 0 0 1ex var(--color-ui-02);
     font-weight: 300;
     display: flex;
     flex-direction: column;
@@ -779,7 +781,7 @@ sidecar.entity-is-activations .sidecar-header-name  .sidecar-header-name-content
 sidecar .sidecar-header-secondary-content {
     font-size: 0.875rem;
     opacity: 0.75;
-    margin: 1ex 1em 1ex 0;
+    margin: 0 1em 1em 0;
 }
 sidecar .sidecar-header-secondary-content .kind-content {
     overflow: hidden;
@@ -1153,8 +1155,7 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 .repl .log-lines .log-line .log-line-bar-field {
     /* add a left-right border to the timeline bars, but only for the repl side, not the sidecar Trace view */
-    border: 1px dotted  rgba(0,0,0,0.075);
-    border-bottom: none;
+    border: 1px solid var(--color-ui-04);
 }
 .log-lines .log-field.entity-name {
     max-width: 20em;
@@ -1690,6 +1691,7 @@ break {
     justify-content: flex-end;
     font-family: var(--font-sans-serif);
     color: var(--color-text-02);
+    background: var(--color-ui-01);
     border: 1px solid var(--color-ui-04);
     border-top: none;
     height: 3em;
