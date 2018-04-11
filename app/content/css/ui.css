@@ -1462,6 +1462,10 @@ body.oops-total-catastrophe #restart-needed-warning {
     z-index: 10;
     position: absolute;
     pointer-events: none;
+
+    /* see shell issue #906 */
+    top: 0;
+    left: 0;
 }
 #qtipArrow {
     position: relative;
