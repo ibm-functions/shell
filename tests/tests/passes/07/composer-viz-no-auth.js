@@ -67,8 +67,9 @@ describe('show the composer visualization with no wskauth', function() {
        .then(verifyEdgeExists('seq1', 'seq2'))
        .then(verifyEdgeExists('seq2', 'seq3'))
        .then(verifyEdgeExists('seq4', 'seq5'))
-       .then(verifyEdgeExists('seq3', 'Exit'))
-       .then(verifyEdgeExists('seq5', 'Exit'))
+       .then(verifyEdgeExists('seq3', 'dummy_0'))
+       .then(verifyEdgeExists('seq5', 'dummy_0'))
+       .then(verifyEdgeExists('dummy_0', 'Exit'))
        .then(() => this.app.client.element('body.no-auth')) // make sure we have this indicator
        .catch(common.oops(this)))
 
