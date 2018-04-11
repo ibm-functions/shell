@@ -488,7 +488,10 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 		}
 	        else if(typeof ir.body === 'object'){
                     // generic handler for any subgraph-via-body node
-                    const body = drawNodeNew(id, ir.type, ir.type, undefined, options)
+                    const label = capitalize(ir.type),
+                          type = ir.type,
+                          body = drawNodeNew(id, label, type, undefined, options)
+
                     body.children = []
                     body.edges = []
 		    gm.children.push(body);
@@ -670,6 +673,10 @@ const isSimpleComposition = ir => {
     return isShort && atMostOneNonFunction
 }
 
+/**
+ * @return the cumulative number of nodes in the given composition that are not of type Function
+ *
+ */
 const numNonFunctions = composition => {
     if (composition.type === 'function') {
         return 0
@@ -687,5 +694,11 @@ const numNonFunctions = composition => {
         return 0
     }
 }
+
+/**
+  * Capitalize a given string
+  *
+  */
+const capitalize = str => str.charAt(0).toUpperCase() + str.substring(1)
 
 module.exports = fsm2graph;
