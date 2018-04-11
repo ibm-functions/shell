@@ -162,6 +162,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 
         arrowHead("end", "var(--color-text-02)")
         arrowHead("forwardingEnd", wfColor.Edges.forwarding)
+        arrowHead("edgeTraversedEnd", "#2166ac")
         arrowHead("greenEnd", wfColorAct.active)
         arrowHead("trueEnd", wfColor.reOrCon.trueBranch)
         arrowHead("falseEnd", wfColor.reOrCon.falseBranch)
@@ -955,9 +956,21 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	                if(d.source.indexOf("__origin") >= 0 && d.target.indexOf("__terminus") >= 0){
 				s += " forwardingLink";
 			}
-			//else if(d.)
+
 			return s;
 		})
+                .attr("data-visited", d => {
+                    // edge was visited?
+		    const sourceStatus = $('#' + d.source).attr('data-status'),
+                          sourceWasVisited = sourceStatus && sourceStatus !== 'not-run',
+                          targetStatus = $('#' + d.target).attr('data-status'),
+                          targetWasVisited = targetStatus && targetStatus !== 'not-run'
+                    if (sourceWasVisited && targetWasVisited) {
+                        return true
+                    } else if (activations) {
+                        return false
+                    }
+                })
 		.attr("source", function(d){return d.sourcePort})
 		.style("stroke", function(d){			
 			if(activations){
