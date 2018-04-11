@@ -46,6 +46,7 @@ const fsm = input('fsm.json'), fsmStruct = JSON.parse(fs.readFileSync(fsm.path).
       retry5Times = composerInput('retry-5-times.js'),
       demo = composerInput('demo.js'),
       demoRetain = composerInput('demo-retain.js'),
+      mask = composerInput('mask.js'),
       addSubscription = composerErrorInput('addSubscription.js')
 
 /**
@@ -226,6 +227,14 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('TripleAndIncrement'))
        .then(verifyEdgeExists('TripleAndIncrement', 'DivideByTwo'))
        .then(verifyOutgoingEdgeExists('DivideByTwo'))
+       .catch(common.oops(this)))
+
+    /** test: from the openwhisk-composer/samples directory */
+    it(`show visualization from javascript source ${mask.path}`, () => cli.do(`app viz ${mask.path}`, this.app)
+       .then(verifyTheBasicStuff(mask.file, 'composerLib'))
+       .then(verifyNodeExists('echo1'))
+       .then(verifyNodeExists('echo2'))
+       .then(verifyEdgeExists('echo1', 'echo2'))
        .catch(common.oops(this)))
 
     it(`fail to show visualization for addSubscription without -e for env var assignment`, () => cli.do(`preview ${addSubscription.path}`, this.app)

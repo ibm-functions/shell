@@ -44,6 +44,11 @@ const strings = {
         detail: 'var=value; task1 -> task2',
         args: ['variable', 'value', 'task1', 'task2']
     },
+    mask: {
+        documentation: 'Execute a given composition masking any enclosing variable bindings',
+        detail: 'mask enclosing variable bindings',
+        args: ['composition']
+    },
     while: {
         documentation: 'While a condition holds, execute a task',
         detail: 'while (cond) task',
