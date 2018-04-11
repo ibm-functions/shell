@@ -486,6 +486,23 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 			let lastBodyNode = ir2graph(ir.body, gm, `${id}-body`, prevId, undefined, options);
 			return ir2graph(ir.finalizer, gm, `${id}-finalizer`, lastBodyNode, undefined, options);
 		}
+	        else if(typeof ir.body === 'object'){
+                    // generic handler for any subgraph-via-body node
+                    const body = drawNodeNew(id, ir.type, ir.type, undefined, options)
+                    body.children = []
+                    body.edges = []
+		    gm.children.push(body);
+
+                    if(prevId)
+		        prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
+
+		    ir2graph(ir.body, body, `${id}-body`, undefined, options)
+
+                    return [id]
+
+		} else {
+                    console.error('wskflow warning! unsupported node type', ir)
+                }
 	}
 }
 
