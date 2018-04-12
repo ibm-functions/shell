@@ -2,6 +2,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+
+    --color-latency-0: #2166ac;
+    --color-latency-1: #67a9cf;
+    --color-latency-2: hsla(201, 51%, 78%, 1); /* #d1e5f0 with lightness reduced from 88% to 78% */
+    --color-latency-3: #fddbc7;
+    --color-latency-4: #ef8a62;
+    --color-latency-5: #b2182b;
 }
 
 #sidecar .sidecar-header .activation-viz-plugin .kind {
@@ -292,7 +299,7 @@
 }
 .activation-viz-plugin .data-table td.cell-stats .stat-bar {
     position: absolute;
-    background: #2166ac;
+    background: var(--color-latency-0);
     height: 1.25em;  /* matches activation list height: .log-lines .log-line .log-line-bar in ui.css */
     transition: all 150ms ease-in-out, outline 300ms ease-in-out;
 }
@@ -372,13 +379,13 @@
 
 /* grid cell colors */
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-0 .grid-cell-content {
-    background: #2166ac;
+    background: var(--color-latency-0);
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-1 .grid-cell-content {
-    background: #67a9cf;
+    background: var(--color-latency-1);
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-2 .grid-cell-content {
-    background: hsla(201, 51%, 78%, 1); /* #d1e5f0 with lightness reduced from 88% to 78% */
+    background: var(--color-latency-2);
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied .grid-cell-content span {
     /* increase contrast on hover; see shell issue #875 */
@@ -391,13 +398,13 @@
     color: black;
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-3 .grid-cell-content {
-    background: #fddbc7;
+    background: var(--color-latency-3);
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-4 .grid-cell-content {
-    background: #ef8a62;
+    background: var(--color-latency-4);
 }
 .activation-viz-plugin .cell-container[color-by="duration"] .grid-cell-occupied.latency-5 .grid-cell-content {
-    background: #b2182b;
+    background: var(--color-latency-5);
 }
 
 .activation-viz-plugin .data-table .oops {
@@ -672,8 +679,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: repeating-linear-gradient(-45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 15%), repeating-linear-gradient(45deg, transparent, transparent 10%, rgba(255,255,255,.5) 10%, rgba(255,255,255,.5) 21%);
-    background-color: #b15928;
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 10%, hsla(353, 76%, 90%, 0.75) 10%, hsla(353, 76%, 90%, 0.75) 15%), repeating-linear-gradient(45deg, transparent, transparent 10%, hsla(353, 76%, 90%, 0.75) 10%, hsla(353, 76%, 90%, 0.75) 21%);
+    background-color: var(--color-latency-5);
 }
 
 .activation-viz-plugin iframe {
