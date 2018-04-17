@@ -650,11 +650,16 @@ sidecar .sidecar-header .header-main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
+
+    /* this is needed, as we rotate the "sidecar-header-icon", which confuses chrome in terms of width occupancy;
+       see sidecar .sidecar-header-icon-wrapper; the 4em parts must match! */
+    width: calc(100% - 4em);
 }
 sidecar .header-right-bits {
+    white-space: nowrap;
     flex-direction: column;
     justify-content: center;
-    margin: 1em 1em 1ex 1em
+    margin: 0 1em;
 }
 .sidecar-header .kind {
     font-variant: small-caps;
@@ -684,7 +689,6 @@ sidecar .sidecar-header-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-bottom: 0.5ex;
 }
 sidecar .sidecar-header-icon {
     font-size: 2em;
@@ -696,8 +700,7 @@ sidecar .sidecar-header-icon {
     text-transform: uppercase;
 }
 sidecar .sidecar-header-icon-wrapper {
-    width: 4em;
-    margin-right: 0.25em;
+    width: 4em; /* see the sidecar .sidecar-header .header-main-content calc(100% - 4em); the 4em parts must match! */
 }
 sidecar .header-left-bits {
     align-items: stretch;
@@ -715,7 +718,7 @@ sidecar .sidecar-header-icon {
 sidecar .sidecar-header-name {
     flex: 1;
     font-weight: 400;
-    font-size: 2.5625rem;
+    font-size: 2.75em;
     display: flex;
     align-items: center;
     margin: 1rem 0 0;
@@ -743,7 +746,6 @@ sidecar .sidecar-header-name-content .entity-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-weight: bold;
 }
 sidecar .sidecar-header-name-content > span {
     display: block;
@@ -762,7 +764,7 @@ sidecar .sidecar-header-name .package-prefix {
 sidecar.entity-is-activations .sidecar-header-name .activation-id {
     font-family: var(--font-monospace);
     font-size: 75%;
-    opacity: 0.6;
+    color: var(--color-text-02);
     font-size: 1rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -780,8 +782,8 @@ sidecar.entity-is-activations .sidecar-header-name  .sidecar-header-name-content
 }
 sidecar .sidecar-header-secondary-content {
     font-size: 0.875rem;
-    opacity: 0.75;
-    margin: 0 1em 1em 0;
+    color: var(--color-text-02);
+    margin: 0 1em 0.75em 0;
 }
 sidecar .sidecar-header-secondary-content .kind-content {
     overflow: hidden;
@@ -958,6 +960,16 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 .deemphasize.deemphasize-partial {
     opacity: 1;
+}
+.sans-serif {
+    font-family: var(--font-sans-serif);
+}
+.not-too-wide {
+    display: block; /* spans don't respond */
+    max-width: 35em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .normal-size {
     color: var(--color-text-01);
