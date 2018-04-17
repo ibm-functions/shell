@@ -62,11 +62,11 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
             } else {
                 // otherwise, respond with the output of the command;
                 if (output) {
-                    // add a line-wrapping wrapper
-                    const wrapper = document.createElement('div')
-                    wrapper.classList.add('whitespace')
-                    wrapper.innerText = cmd === 'ls' ? output.toString().replace(/,/g,' ') : output.toString()
-                    resolve(wrapper)
+                    if (execOptions && execOptions.json) {
+                        resolve(JSON.parse(output))
+                    } else {
+                        resolve(output)
+                    }
 
                 } else {
                     resolve(true)
@@ -87,6 +87,7 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
 
     // accumulate doms from the output of the subcommand
     const parentNode = document.createElement('div')
+    let rawOut = ''
     let rawErr = ''
 
     proc.stdout.on('data', data => {
@@ -97,6 +98,7 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
             parentNode.appendChild(span)
             span.setAttribute('class', 'whitespace')
             span.appendChild(document.createTextNode(data))
+            rawOut += data.toString()
         }
     })
 
@@ -118,8 +120,22 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
         console.log('shell command done')
         if (exitCode === 0) {
             // great, the process exited normally. resolve!
-            //resolve(execOptions.stdout ? stdoutLines : parentNode)
-            resolve(parentNode)
+            if (execOptions && execOptions.json) {
+                // caller expects JSON back
+                try {
+                    resolve(JSON.parse(rawOut))
+                } catch (err) {
+                    reject({ message: 'unexpected non-JSON', value: rawOut })
+                }
+
+            } else if (execOptions && execOptions.raw) {
+                // caller just wants the raw textual output
+                resolve(rawOut)
+
+            } else {
+                // else, we pass back a formatted form of the output
+                resolve(parentNode)
+            }
         } else {
             // oops, non-zero exit code. reject!
             if (execOptions && execOptions.nested) {
