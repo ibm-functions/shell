@@ -38,7 +38,7 @@ const viewName = 'preview',               // for back button and sidecar header 
  *
  */
 module.exports = (commandTree, prequire) => {
-    const render = (input, options) => new Promise((resolve, reject) => {
+    const render = (input, options, execOptions) => new Promise((resolve, reject) => {
          debug('options', options)         
          let fsmPromise, type, extraModes=[]
 
@@ -64,16 +64,21 @@ module.exports = (commandTree, prequire) => {
 
          // create a fake action/entity record
          const formatForUser = defaultMode => ({fsm,code}) => {
-
              // pass through cli options for the wskflow renderer
              const viewOptions = { }
+
              if (options.functions) {
                  // note we must be careful not to pass false; only undefined
                  viewOptions.renderFunctionsInView = options.functions // render all inline functions directly in the view?
              }
 
+             if (execOptions.container) {
+                 // if we're rendering this inside of a given viewport, then don't modify the sidecar header
+                 viewOptions.noHeader = true
+             }
+
              const {visualize} = prequire('wskflow')
-             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name, viewOptions })
+             const { view, controller } = wskflow(visualize, viewName, { fsm, input, name, viewOptions, container: execOptions.container })
              extraModes = extraModes.concat(zoomToFitButtons(controller))
 
              const entity = {
@@ -177,7 +182,7 @@ module.exports = (commandTree, prequire) => {
                 options.alreadyWatching = execOptions.alreadyWatching;
              }             
             
-             render(input, options).then(resolve, reject)
+             render(input, options, execOptions).then(resolve, reject)
                           
              // and set up a file watcher to re-render upon change of the file
              if (!execOptions || !execOptions.alreadyWatching) {

@@ -562,17 +562,21 @@ exports.handleError = (err, reject) => {
 }
 
 /**
- * Render the wskflow visualization for the given fsm
+ * Render the wskflow visualization for the given fsm.
+ *
+ * `container` is optional; wskflow will render in the default way in
+ * the sidecar if we don't pass a container in
  *
  * @return { view, controller } where controller is the API exported by graph2doms
  */
-exports.wskflow = (visualize, viewName, { fsm, input, name, packageName, viewOptions }) => {
-    
-    const { view, controller } = visualize(fsm, undefined, undefined, undefined, undefined, viewOptions);
+exports.wskflow = (visualize, viewName, { fsm, input, name, packageName, viewOptions, container }) => {
+    const { view, controller } = visualize(fsm, container, undefined, undefined, undefined, viewOptions);
 
-    const onclick = undefined
-    ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
-                              'This is a preview of your app, it is not yet deployed')
+    if (!viewOptions || !viewOptions.noHeader) {
+        const onclick = undefined
+        ui.addNameToSidecarHeader(undefined, name, packageName, onclick, viewName,
+                                  'This is a preview of your app, it is not yet deployed')
+    }
     
     return { view, controller }
 }

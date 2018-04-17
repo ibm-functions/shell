@@ -962,8 +962,8 @@ const ui = (function() {
             sidecar.entity = entity
             sidecar.entity.type = sidecar.entity.viewName
 
-            self.addNameToSidecarHeader(sidecar, entity.name, entity.packageName, undefined,
-                                        entity.prettyType || entity.type, undefined, entity)
+            self.addNameToSidecarHeader(sidecar, entity.prettyName || entity.name, entity.packageName, undefined,
+                                        entity.prettyType || entity.type, entity.subtext, entity)
 
             // render badges
             if (!entity.activationId) {

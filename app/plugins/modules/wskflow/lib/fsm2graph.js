@@ -604,7 +604,7 @@ function fsm2graph(ir, containerElement, acts, options){
                     // warn user about not-deployed actions (but only if !activations, i.e. not for session flow)
                     if (notDeployed.length > 0 && !activations) {
                         const container = document.querySelector('#sidecar .sidecar-header .sidecar-header-secondary-content .custom-header-content')
-                        if (container) {
+                        if (container && !options.noHeader) {
                             const css = {
                                 message: 'wskflow-undeployed-action-warning',
                                 text: 'wskflow-undeployed-action-warning-text',
