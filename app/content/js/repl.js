@@ -92,7 +92,8 @@ const formatOneListResult = options => (entity, idx, A) => {
         cell.className = className
         inner.className = innerClassName
         if (value) {
-            inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+            Promise.resolve(value)
+                .then(value => inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString())))
         } else {
             console.error('Invalid cell model, no value field')
         }
@@ -101,7 +102,10 @@ const formatOneListResult = options => (entity, idx, A) => {
 
         if (onclick) {
             cell.classList.add('clickable')
-            cell.onclick = onclick
+            cell.onclick = evt => {
+                evt.stopPropagation() // don't trickle up to the row click handler
+                onclick(evt)
+            }
         }
 
         if (watch) {

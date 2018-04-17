@@ -964,6 +964,10 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 .sans-serif {
     font-family: var(--font-sans-serif);
 }
+.min-width-10em {
+    min-width: 10em !important;
+    display: block;
+}
 .not-too-wide {
     display: block; /* spans don't respond */
     max-width: 35em;
