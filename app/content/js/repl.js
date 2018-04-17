@@ -86,20 +86,71 @@ const formatOneListResult = options => (entity, idx, A) => {
     prefix.appendChild(prettyType)*/
 
     /** add a cell to the current row of the list view we] are generating. "entityName" is the current row */
-    const addCell = (className, value, innerClassName='', parent=entityName) => {
+    const addCell = (className, value, innerClassName='', parent=entityName, onclick, watch) => {
         const cell = document.createElement('span'),
               inner = document.createElement('span')
         cell.className = className
         inner.className = innerClassName
-        inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+        if (value) {
+            inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+        } else {
+            console.error('Invalid cell model, no value field')
+        }
         cell.appendChild(inner)
         parent.appendChild(cell)
+
+        if (onclick) {
+            cell.classList.add('clickable')
+            cell.onclick = onclick
+        }
+
+        if (watch) {
+            const spinner = document.createElement('i')
+            spinner.className = 'fas fa-spinner fa-pulse small-left-pad deemphasize'
+            cell.appendChild(spinner)
+
+            const interval = setInterval(() => {
+                try {
+                    Promise.resolve(watch())
+                        .then(({ value, done=false, css }) => {
+
+                            // update the styling
+                            if (css) {
+                                inner.className = css
+                            }
+
+                            // update the text
+                            if (value) {
+                                inner.innerText = ''
+                                inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+                            }
+
+                            // are we done polling for updates?
+                            if (!value || done) {
+                                clearInterval(interval)
+
+                                const toRemove = cell.querySelector('.fa-spinner')
+                                cell.removeChild(toRemove)
+                            }
+                        })
+
+                } catch (err) {
+                    console.error('Error watching value', err)
+                    clearInterval(interval)
+
+                    const toRemove = cell.querySelector('.fa-spinner')
+                    cell.removeChild(toRemove)
+                }
+
+            }, 2000)
+        }
+
         return cell
     }
 
     // add any attributes that should appear *before* the name column
     if (entity.beforeAttributes) {
-        entity.beforeAttributes.forEach(({value, css='', outerCSS=''}) => addCell(outerCSS, value, css))
+        entity.beforeAttributes.forEach(({value, css='', outerCSS='', onclick}) => addCell(outerCSS, value, css, undefined, onclick))
     }
 
     // now add the clickable name
@@ -117,7 +168,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     entityName.appendChild(entityNameGroup)
 
     // name of the entity
-    let name = entity.name
+    let name = entity.prettyName || entity.name
 
     // click handler for the list result
     if (typeof name === 'string') {
@@ -144,7 +195,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     // case-specific cells
     //
     if (entity.attributes) {
-        entity.attributes.forEach(({value, css='', outerCSS=''}) => addCell(outerCSS, value, css))
+        entity.attributes.forEach(({value, css='', outerCSS='', watch, onclick}) => addCell(outerCSS, value, css, undefined, onclick, watch))
 
     } else if (entity.type === 'actions') {
         // action-specific cells
@@ -281,6 +332,8 @@ const printResults = (block, nextBlock, resultDom, echo=true, execOptions, parse
             if (echo) {
                 ui.showCustom(response, execOptions)
                 ui.ok(resultDom.parentNode)
+            } else if (execOptions && execOptions.replSilence) {
+                ui.showCustom(response, execOptions)
             }
 
         } else if (response.type === 'activations') {
@@ -345,7 +398,7 @@ self.init = (prefs={}) => {
     }
 
     // focus the current prompt no matter where the user clicks
-    document.body.onclick = evt => {
+    document.querySelector('#main-repl').onclick = evt => {
         if (!window.getSelection().toString()) {
             // if there is no selected text, then focus
             // this works, because the HTML (? or chrome?) section model behavior is to clear the selection upon click
@@ -607,7 +660,7 @@ self.exec = (commandUntrimmed, execOptions) => {
     debug('exec', commandUntrimmed)
 
     const echo = !execOptions || execOptions.echo !== false
-    const nested = execOptions && execOptions.noHistory
+    const nested = execOptions && execOptions.noHistory && !execOptions.replSilence
     if (nested) execOptions.nested = nested
 
     const block = execOptions && execOptions.block || ui.getCurrentBlock(),

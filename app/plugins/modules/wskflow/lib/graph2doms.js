@@ -81,7 +81,7 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 	let zoom = d3.behavior.zoom()
 	    .on("zoom", redraw);
 
-	let containerElement = $(`<div id="${containerId}" style="display: flex; flex: 1; width: 100%; height: 100%;"></div>`),
+	let containerElement = ifReuseContainer || $(`<div id="${containerId}" style="display: flex; flex: 1; width: 100%; height: 100%;"></div>`),
 		wskflowContainer = $('<div id="wskflowContainer"></div>'),
 		enterClickMode = false;	
 

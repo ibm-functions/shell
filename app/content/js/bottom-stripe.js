@@ -32,7 +32,7 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
     const {mode, label, flush, selected, selectionController, visibleWhen,
            fontawesome, labelBelow,   // show label below the fontawesome?
            balloon, balloonLength, data, command=()=>mode, direct,
-           defaultMode, actAsButton, radioButton=false, echo=false, noHistory=true} = opts
+           defaultMode, actAsButton, radioButton=false, echo=false, noHistory=true, replSilence=true} = opts
 
     if (visibleWhen && visibleWhen !== show) {
         // only visible when a specific mode is active!
@@ -177,7 +177,7 @@ const addModeButton = (bottomStripe, opts, entity, show) => {
                     })
                 }
             } else {
-                repl.pexec(command(entity), { leaveBottomStripeAlonex: true, echo, noHistory })
+                repl.pexec(command(entity), { leaveBottomStripeAlonex: true, echo, noHistory, replSilence })
             }
         }
     }
