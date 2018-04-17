@@ -30,7 +30,7 @@ $ fsh shell
 
 `fsh` is a shorthand for "function shell". You will see a new window popped up. Welcome to Shell! 
 
-_Tip_: You can ping Shell's icon to the desktop for quick access. For example, in MacOS, you can right click on the blue Shell icon and select `Options > Keep in Dock`. Next time you can click on that icon to start Shell from the dock. 
+_Tip_: You can pin Shell's icon to the desktop for quick access. For example, in MacOS, you can right click on the blue Shell icon and select `Options > Keep in Dock`. Next time you can click on that icon to start Shell from the dock. 
 
 ## Interface Overview
 
