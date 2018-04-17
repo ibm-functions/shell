@@ -22,6 +22,7 @@ body {
     --color-support-01: #e71d32;
     --color-support-02: #5aa700;
     --color-support-03: #efc100;
+    --color-support-03-darker: hsl(48, 100%, 38%);  /* dialed down from 47% lightness */
     --color-support-04: #5aaafa;
     --color-brand-01: #3d70b2;
     --color-brand-01-10: hsla(214, 49%, 47%, 0.1); /* 10% opacity */
@@ -67,6 +68,9 @@ body a:hover:not(.plain-anchor) {
 .repl-block.valid-response .oops, sidecar.rule-enabled-false .sidecar-header-icon, .repl-block.error .oops, .clickable.oops, .oops .oops-text-on-oops, .red-text {
     color: var(--color-support-01);
 }
+.yellow-text {
+    color: var(--color-support-03-darker);
+}
 
 sidecar.activation-success-false .sidecar-header-icon, span[data-extra-decoration="application error"] {
     color: rgba(227, 26, 28, 0.8);
@@ -93,7 +97,7 @@ sidecar {
 }
 
 sidecar .sidecar-header {
-    border-bottom-color: transparent;
+    border-bottom-color: var(--color-content-divider);
     background: var(--color-ui-01);
 }
 
@@ -155,7 +159,6 @@ badge.clickable:hover {
 }
 
 sidecar .header-right-bits {
-    color: hsla(201, 22%, 10%, 1);
 }
 
 sidecar .sidecar-header-icon {
