@@ -952,6 +952,11 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 
 /* generic */
+.normal-text {
+    font-weight: 400;
+    opacity: 1;
+    font-size: 1em;
+}
 .deemphasize {
     font-weight: 300;
     font-size: 0.75em;
