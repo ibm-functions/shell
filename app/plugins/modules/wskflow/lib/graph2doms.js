@@ -350,6 +350,26 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 					}
 				}
 				
+			})
+			.attr('data-status', d => {
+				if(activations){
+					if(d.visited){
+						let failed = true;	// assumption: all fail is fail. if one succes, we count it as success
+						d.visited.forEach(i => {
+							if(activations[i].response.success)
+								failed = false;
+						})
+						if(failed){
+							$(this).attr("failed", true)
+							return 'failed'
+						}
+						else
+							return 'success'
+					}
+					else
+						return 'not-run'
+				}
+				
 			});
 
 
@@ -369,54 +389,11 @@ function graph2doms(JSONgraph, ifReuseContainer, activations){
 			.attr("ry", function(d){
 				if(d.type === 'Entry' || d.type === 'Exit')
 					return '50%';
-			})
+			})			
 			.style("fill", function(d){
 				if(d.children){
 					return "transparent"
 				}
-				else{
-					if(activations){
-						// session
-						if(d.visited){
-							let failed = true;	// assumption: all fail is fail. if one succes, we count it as success
-							d.visited.forEach(i => {
-								if(activations[i].response.success)
-									failed = false;
-							});
-							if(failed){
-								$(this).attr("failed", true);
-								$(`#${d.id}`).attr('data-status', 'failed');
-								return wfColorAct.failed;
-							}
-							else{
-								$(`#${d.id}`).attr('data-status', 'success');
-								return wfColorAct.active;
-							}
-						}					
-						else{
-							$(`#${d.id}`).attr('data-status', 'not-run');
-							return wfColorAct.inactive;
-						}
-
-					}
-					else{
-						// app
-						if(d.type == "let" || d.type == "literal"){					
-                                                    // from CSS now
-						}
-						else if(d.type == "Exit" || d.type == "Entry"){
-                                                    // from CSS now
-						}
-						else if(d.type === 'retain' || d.type === 'Dummy'){
-							return 'black';
-						}
-						else{
-                                                     // from CSS now
-						}
-
-					}
-				}
-				
 			})
 			.style("stroke", function(d){					
 				if(d.children){

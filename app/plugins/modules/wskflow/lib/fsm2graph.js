@@ -50,7 +50,10 @@ function addDummy(sources, targets, obj, options, directionS, directionT){
 
 }
 
+let id2log = id => id.replace(/\-components/g, '').replace(/__origin/g, '').replace(/__terminus/g, '')
+
 function drawNodeNew(id, label, type, properties, options){
+	//console.log(id)
 	let o = {
 		id: id,
 		label: label,
@@ -73,12 +76,26 @@ function drawNodeNew(id, label, type, properties, options){
 			}
 			o.visited = visited[id];
 		}
-		else if(visited[id]){
-			if(type === 'action'){
-				visited[id].forEach((v, i) => {visited[id][i]++}); // for actions, increase all index by one to point to the next activation in the array.
+		else{
+			let iid = id2log(id)			
+			if(visited[iid]){
+				if(type === 'action'){
+					visited[iid].forEach((v, i) => {visited[iid][i]++}); // for actions, increase all index by one to point to the next activation in the array.
+				}
+
+				if(type === 'retain'){
+					if((visited[iid].length >= 1 && id.endsWith('__origin')) || (visited[iid].length === 2 && id.endsWith('__terminus'))){
+						o.visited = visited[iid];
+					}
+				}
+				else{
+					o.visited = visited[iid];
+				}
+				
 			}
-			o.visited = visited[id];
+			//console.log("iid:", id, iid, visited[iid], o.visited)
 		}
+		
 	}
 
 	if(visited && (visited[id] || id === 'Entry'))
@@ -175,7 +192,8 @@ function drawNodeNew(id, label, type, properties, options){
 			ports: [],
 			properties: {},
 			children: [],
-			edges: []
+			edges: [],
+			visited: visited ? visited[id2log(`${id}-body`)] : undefined
 		}, {
 			id: `${id}-handler`,
 			label: 'error handler',
@@ -183,8 +201,10 @@ function drawNodeNew(id, label, type, properties, options){
 			ports: [],
 			properties: {},
 			children: [],
-			edges: []
+			edges: [],
+			visited: visited ? visited[id2log(`${id}-handler`)] : undefined
 		}];
+
 		o.edges = [drawEdgeNew(`${id}-body`, `${id}-handler`, o, undefined, 'RIGHT')];				
 	}
 	else if(o.type === 'Entry' || o.type === 'Exit'){
@@ -200,7 +220,8 @@ function drawNodeNew(id, label, type, properties, options){
 		o.height = 4;
 		// Dummy node's `properties` is `sources`, used to determine if the dummy is visited 
 		if(visited && Array.isArray(properties)){
-			properties.forEach(s => {	// a source id			 
+			properties.forEach(s => {	// a source id			
+				s = id2log(s); 
 				if(visited[s]){			// if the source is visited
 					visited[s].forEach(a => {	// find out if any of its activation was success
 					        if(activations[a].response.success){	// if so, dummy is visited
@@ -291,16 +312,21 @@ function drawEdgeNew(sourceId, targetId, layer, type, direction, sourcePort, tar
 		sourcePort: sourcePort,
 		target: targetId,
 		targetPort: targetPort,
-		visited: (visited && visited[sourceId] && visited[targetId]) 
+		//visited: (visited && visited[sourceId] && visited[targetId]) 
 	};
 }
 
 function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
-	if(Array.isArray(ir)){
+	if(ir.type === 'sequence' || Array.isArray(ir)){
 		// for an array of things, prevId is the previous element
 		// console.log(ir, gm, id, prevId);
-		let count = 0, prev;
-		ir.forEach(obj => {
+		let count = 0, prev, array;
+		if(ir.type === 'sequence')
+			array = ir.components
+		else
+			array = ir
+
+		array.forEach(obj => {
 			if(obj.options && obj.options.helper){
 				// do nothing
 			}			
@@ -314,6 +340,7 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 		return prev;	
 	}
 	else{
+		//id = `${id}-${ir.type}`
 		if(ir.type === 'action'){
 			let name = ir.name;
 			if(ir.displayLabel)
@@ -324,7 +351,7 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 			return [id];		
 		}
 		else if(ir.type === 'function'){
-			gm.children.push(drawNodeNew(id, ir.exec.code, ir.type, undefined, options))
+			gm.children.push(drawNodeNew(id, ir.function.exec.code, ir.type, undefined, options))
 			
 			if(prevId)
 				prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
@@ -372,15 +399,15 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
                               tryPart = tryCatchPart.children[0],
                               catchPart = tryCatchPart.children[1]
 
-		        ir2graph(ir.body, tryPart, tryPart.id, undefined, options);
-			ir2graph(ir.handler, catchPart, catchPart.id, undefined, options);
+		        ir2graph(ir.body, tryPart, tryPart.id+'-components', undefined, options);
+			ir2graph(ir.handler, catchPart, catchPart.id+'-components', undefined, options);
 
 			return [gm.children[gm.children.length-1].id];
 		}
-		else if(ir.type === 'while' || ir.type === 'dowhile'){	
+		else if(ir.type === 'while' || ir.type === 'dowhile' || ir.type === 'while_nosave' || ir.type === 'dowhile_nosave'){	
 			let firstTestId, firstBodyId, lastTestId, lastBodyId;
 
-			if(ir.type === 'while'){
+			if(ir.type === 'while' || ir.type === 'while_nosave'){
 				firstTestId = gm.children.length;
 				lastTestId = ir2graph(ir.test, gm, `${id}-test`, undefined, options);
 				if(prevId)	// connect prevId to the first node in test
@@ -427,7 +454,7 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 			if(prevId){
 				prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, `${id}__origin`, gm)));
 			}
-			let lastNodes = ir2graph(ir.body, gm, `${id}-body`, [`${id}__origin`], options);
+			let lastNodes = ir2graph(ir.components, gm, id, [`${id}__origin`], options);
 			gm.children.push(drawNodeNew(`${id}__terminus`, '', ir.type, undefined, options));
 			if(lastNodes){
 				lastNodes.forEach(pid => gm.edges.push(drawEdgeNew(pid, `${id}__terminus`, gm)));
@@ -440,41 +467,26 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 
 			return [`${id}__terminus`];
 		}
-		else if(ir.type === 'let'){
-			if(ir.body && ir.body.length>0 && ir.body[0].options && ir.body[0].options.helper === 'retry_1'){
-				// retry, insert a compound node				
-				gm.children.push(drawNodeNew(id, ir.declarations.count, 'retry', undefined, options));
-				if(prevId){
-					prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
-				}
-				// body is in ir.body[1].body[0].finalizer[0].body[0].body
-				ir2graph(ir.body[1].body[0].finalizer[0].body[0].body, gm.children[gm.children.length-1], `${id}-body-1-body-0-finalizer-0-body-0-body`, undefined, options);
-				
-				return [gm.children[gm.children.length-1].id];
-
+		else if(ir.type === 'retry' || ir.type === 'repeat'){
+			gm.children.push(drawNodeNew(id, ir.count, ir.type, undefined, options));
+			if(prevId){
+				prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
 			}
-			else if(ir.body && ir.body.length>0 && ir.body[0].test && ir.body[0].test.length>0 && ir.body[0].test[0].options && ir.body[0].test[0].options.helper === 'repeat_1'){
-				// repeat, insert a compound node				
-				gm.children.push(drawNodeNew(id, ir.declarations.count, 'repeat', undefined, options));
-				if(prevId){
-					prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
-				}
-				// body is in ir.body[0].body
-				ir2graph(ir.body[0].body, gm.children[gm.children.length-1], `${id}-body-0-body`, undefined, options);
-				
-				return [gm.children[gm.children.length-1].id];
-			}
-			else{
-				// regular let
-			        let s = JSON.stringify(ir.declarations, undefined, 4);
-                                gm.children.push(drawNodeNew(id, s, ir.type, undefined, options))
-				if(prevId)
-					prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
-
-				return ir2graph(ir.body, gm, `${id}-body`, [id], options);
-			}
+			// body is in ir.components
+			ir2graph(ir.components, gm.children[gm.children.length-1], `${id}-components`, undefined, options);
+			
+			return [gm.children[gm.children.length-1].id];
 		}
-		else if(ir.type === 'literal'){			
+		else if(ir.type === 'let'){
+			// regular let
+		        let s = JSON.stringify(ir.declarations, undefined, 4);
+                            gm.children.push(drawNodeNew(id, s, ir.type, undefined, options))
+			if(prevId)
+				prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
+
+			return ir2graph(ir.components, gm, `${id}-components`, [id], options);
+		}
+		else if(ir.type === 'literal' || ir.type === 'value'){			
   		        const s = JSON.stringify(ir.value, undefined, 4);
 			gm.children.push(drawNodeNew(id, s, ir.type, undefined, options))
 			if(prevId)
@@ -486,7 +498,7 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
 			let lastBodyNode = ir2graph(ir.body, gm, `${id}-body`, prevId, undefined, options);
 			return ir2graph(ir.finalizer, gm, `${id}-finalizer`, lastBodyNode, undefined, options);
 		}
-	        else if(typeof ir.body === 'object'){
+	        else if(typeof ir.components === 'object'){
                     // generic handler for any subgraph-via-body node
                     const label = capitalize(ir.type),
                           type = ir.type,
@@ -499,13 +511,13 @@ function ir2graph(ir, gm, id, prevId, options={}){	// ir and graph model
                     if(prevId)
 		        prevId.forEach(pid => gm.edges.push(drawEdgeNew(pid, id, gm)));
 
-		    ir2graph(ir.body, body, `${id}-body`, undefined, options)
+		    ir2graph(ir.components, body, `${id}-components`, undefined, options)
 
                     return [id]
 
 		} else {
                     console.error('wskflow warning! unsupported node type', ir)
-                }
+        }
 	}
 }
 
@@ -533,7 +545,7 @@ function fsm2graph(ir, containerElement, acts, options){
 		activations.forEach((a, index) => {
 			if(a.logs){	// states recorded in logs
 				a.logs.forEach(log => {
-					if(log.indexOf('stdout: Entering state ') !== -1){
+					if(log.indexOf('stdout: Entering composition') !== -1){
 						// a conductor path log 
 						let path = log.substring(log.lastIndexOf(' ')+1);
 						// replace all [,],.in path to - to use as a id, as css selector cannot have those characters
@@ -564,7 +576,7 @@ function fsm2graph(ir, containerElement, acts, options){
               viewOptions = Object.assign( { renderFunctionsInView }, options)
 
         graphData.children.push(drawNodeNew('Entry', 'start', 'Entry'));	// insert Entry node
-        let lastNodes = ir2graph(ir.composition, graphData, 'fsm', ['Entry'],   // build the graph model, link the start of the graph to Entry
+        let lastNodes = ir2graph(ir, graphData, 'composition', ['Entry'],   // build the graph model, link the start of the graph to Entry
                                  viewOptions);                                  // <-- options to the rendering
 	if(lastNodes == undefined)
 		lastNodes = ['Entry'];
@@ -665,8 +677,8 @@ function fsm2graph(ir, containerElement, acts, options){
  *
  */
 const isSimpleComposition = ir => {
-    const isShort = ir.composition.length <= 2,
-          numNonFuncs = numNonFunctions(ir.composition),
+    const isShort = ir.components ? ir.components.length <= 2 : true,
+          numNonFuncs = numNonFunctions(ir),
           atMostOneNonFunction = numNonFuncs <= 3
 
     debug('isSimpleComposition', isShort, numNonFuncs)
@@ -678,6 +690,7 @@ const isSimpleComposition = ir => {
  *
  */
 const numNonFunctions = composition => {
+	if(composition === undefined) return 0
     if (composition.type === 'function') {
         return 0
     } else if (composition.type) {

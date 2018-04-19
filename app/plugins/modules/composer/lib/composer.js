@@ -450,7 +450,7 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
                        ])
         .then(([currentAction]) => {
             // now we merge together the parameters and annotations
-            const fsmAction = fsm.encode(fqnAppName).actions[0].action
+            const fsmAction = openwhiskComposer.encode(openwhiskComposer.composition(fqnAppName, fsm), "0.4.0").actions[0].action
             fsmAction.parameters = currentAction.parameters.concat(parameters).concat(fsmAction.parameters || []),
             fsmAction.annotations = mergeAnnotations(currentAction.annotations, annotations.concat(fsmAction.annotations||[]), type, fsm)
             return fsmAction
@@ -725,25 +725,28 @@ exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVis
  * Extract the Action Tasks from a given FSM
  *
  */
-exports.extractActionsFromFSM = ({composition=[]}={}) => {
+exports.extractActionsFromFSM = (composition) => {
     const actions = []
 
     /** recursively add actions from the given root sequence */
-    const iter = root => root.forEach(node => {
-        if (node.type === 'action') {
-            actions.push(node.name)
-        } else {
-            for (let key in node) {
-                if (util.isArray(node[key])) {
-                    iter(node[key])
-                }
-            }
+    const iter = root => {
+        if(root.type === 'action'){
+            actions.push(root.name);
         }
-    })
+        else{
+            Object.keys(root).forEach(key => {        
+                if(Array.isArray(root[key])){
+                    root[key].forEach(obj => iter(obj));                    
+                }
+                else if(typeof root[key] === 'object' && root[key] !== null){
+                    iter(root[key])
+                }
+            })
+        }        
+    }
 
-    // start from the root
+    // start from the root    
     iter(composition)
-
     return actions
 }
 

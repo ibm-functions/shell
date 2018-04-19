@@ -58,92 +58,99 @@ const src = app => fs.readFileSync(path.join(__dirname, '../../../../app/demos/'
 // hardcode for now... we need to generate this every time
 const fsm = {
     hello: {
-        "composition": [{
+        "type": "sequence",
+        "components": [{
             "type": "function",
-            "exec": {
+            "function":{
+              "exec": {
                 "kind": "nodejs:default",
                 "code": "args => ({msg: `hello ${args.name}!`})"
-            }
+              }
+            }            
         }]
     },
     if: {
-        "composition": [{
-            "type": "if",
-            "test": [{
+        "type": "if",
+        "test": {
                 "type": "action",
                 "name": "/_/authenticate"
-            }],
-            "consequent": [{
+            },
+            "consequent": {
                 "type": "action",
                 "name": "/_/welcome"
-            }],
-            "alternate": [{
+            },
+            "alternate": {
                 "type": "action",
                 "name": "/_/login"
-            }]
-        }]
+            }
     },
     try: {
-        "composition": [{
-            "type": "try",
-            "body": [{
+        "type": "try",
+            "body": {
                 "type": "action",
                 "name": "/_/validate"
-            }],
-            "handler": [{
+            },
+            "handler": {
                 "type": "function",
-                "exec": {
+                "function":{"exec": {
                     "kind": "nodejs:default",
                     "code": "args => ({ ok: false })"
-                }
-            }]
-        }]
+                }}
+            }
     },
     retain: {
-        "composition": [{
+        
             "type": "try",
-            "body": [{
-                "type": "retain",
-                "body": [{
-                    "type": "action",
-                    "name": "/_/validate"
-                }]
-            }, {
-                "type": "function",
-                "exec": {
-                    "kind": "nodejs:default",
-                    "code": "args => ({ text: new Buffer(args.params.str, 'base64').toString() })"
+            "body": {
+              "type": "sequence",
+              "components":[
+                {
+                    "type": "retain",
+                    "components": [{
+                        "type": "action",
+                        "name": "/_/validate"
+                    }]
+                }, {
+                    "type": "function",
+                    "function":{"exec": {
+                        "kind": "nodejs:default",
+                        "code": "args => ({ text: new Buffer(args.params.str, 'base64').toString() })"
+                    }}
                 }
-            }],
-            "handler": [{
+              ]
+            },
+            "handler": {
                 "type": "function",
-                "exec": {
+                "function":{"exec": {
                     "kind": "nodejs:default",
                     "code": "args => ({ ok: false })"
-                }
-            }]
-        }]
+                }}
+            }
+        
     },
     let: { 
-        "composition": [{
+        "type": "sequence",
+        "components":[
+        {
             "type": "let",
             "declarations": {
                 "secret": 42
             },
-            "body": [{
+            "components": [{
                 "type": "function",
-                "exec": {
+                "function":{"exec": {
                     "kind": "nodejs:default",
                     "code": "_ => ({ ok: secret === 42 })"
-                }
+                }}
             }]
         }, {
             "type": "function",
-            "exec": {
+            "function":{"exec": {
                 "kind": "nodejs:default",
                 "code": "_ => ({ ok: (typeof secret === 'undefined') })"
-            }
-        }]
+            }}
+        }
+        ]        
     }
 }
 
