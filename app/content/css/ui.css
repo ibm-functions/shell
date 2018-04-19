@@ -1599,17 +1599,28 @@ break {
     stroke-dasharray: 1;
     opacity: 0.8;
 }
-#wskflowSVG .node.leaf[data-status="success"] rect, #wskflowSVG .node.leaf.function[data-status="success"] rect {
+
+#wskflowSVG .node.leaf.function rect {
+    /* function nodes are yellow in app graph*/
+    fill: var(--color-support-03) !important;    
+    stroke: var(--color-ui-05) !important;
+}
+
+#wskflowSVG .node.leaf.function rect, #wskflowSVG .node.leaf.Dummy rect, #wskflowSVG .node.leaf.retain rect {
+    /* these are represented as smaller boxes, so use a lighter stroke */
+    stroke-width: 1.25;
+}
+
+#wskflowSVG .node.leaf[data-status="success"] rect {
     /* visited nodes with success outcome */
     fill: #2166ac !important;
     stroke: var(--color-text-01) !important;
 }
-#wskflowSVG .node.leaf[data-status="failed"] rect, #wskflowSVG .node.leaf.function[data-status="failed"] rect {
+#wskflowSVG .node.leaf[data-status="failed"] rect {
     /* visited nodes with failure outcome */
     fill: var(--color-support-01) !important;
 }
-#wskflowSVG .node.leaf[data-status="success"] text:not(.edge-label), #wskflowSVG .node.leaf.function[data-status="success"] text:not(.edge-label),
-#wskflowSVG .node.leaf[data-status="failed"] text:not(.edge-label), #wskflowSVG .node.leaf.function[data-status="failed"] text:not(.edge-label) {
+#wskflowSVG .node.leaf[data-status="success"] text:not(.edge-label), #wskflowSVG .node.leaf[data-status="failed"] text:not(.edge-label) {
     /* visited node text for session flow */
     fill: var(--color-ui-01) !important;
 }
@@ -1637,14 +1648,8 @@ break {
     mask: url(#mask-stripe);
     /*fill: var(--color-support-03);*/
 }
-#wskflowSVG .node.leaf.function rect {
-    /* these are represented as smaller boxes, so use a lighter stroke */
-    stroke-width: 1.25;
-}
-#wskflowSVG .node.leaf.function rect {
-    fill: var(--color-support-03) !important;
-    stroke: var(--color-ui-05) !important;
-}
+
+
 #qtip .qtip-prefix {
     font-weight: bold;
 }

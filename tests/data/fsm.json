@@ -1,5 +1,6 @@
 {
-    "composition": [{
+    "type": "sequence",
+    "components": [{
         "type": "action",
         "name": "foo1"
     }, {

@@ -26,14 +26,13 @@ debug('finished loading modules')
  *
  */
 module.exports = (passedFsm, container, w, h, activations, options) => {
-    debug('visualize', passedFsm, options);
-
-    if(passedFsm == undefined || passedFsm.composition == undefined || !Array.isArray(passedFsm.composition)){
+    debug('visualize', passedFsm, options)
+    /*if(passedFsm == undefined || passedFsm.constructor == undefined || passedFsm.constructor.name != "Composition"){
         debug('fsm is not in the right format. return.');
         return true;
-    }
+    }*/
 
     // create a copy - all annotations make by wskflow will not affect the original object.
-    let ir = JSON.parse(JSON.stringify(passedFsm));
+    let ir = JSON.parse(JSON.stringify(passedFsm)); 
     return fsm2graph(ir, container, activations, options); 
 }

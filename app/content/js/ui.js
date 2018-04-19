@@ -1397,7 +1397,7 @@ const ui = (function() {
                                                                     displayLabel: name                                                                    
                                                                 }
                                                            })))
-                        .then(actions => ({ composition: actions }))
+                        .then(actions => ({ type: "sequence", components: actions }))
                         .then(fsm => ui.wskflow(fsm))
                         
                 }
