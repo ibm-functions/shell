@@ -344,7 +344,7 @@ const format = (message, options={}) => {
                         alias, numeric, aliases=[alias], hidden=false, advanced=false,
                         available,
                         example=numeric&&'N', dir:isDir=available||false,
-                        title, header, docs=title||header, partial=false, allowed, defaultValue } = rowData
+                        title, header, docs=header||title, partial=false, allowed, defaultValue } = rowData
 
                 // row is either hidden or only shown for advanced users
                 if (hidden) return

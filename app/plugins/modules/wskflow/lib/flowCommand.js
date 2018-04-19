@@ -21,7 +21,7 @@ const PromisePool = require('es6-promise-pool'),
       usage = require('../usage'),
       path = require('path'),
       visualize = require('./visualize'),
-      { zoomToFitButtons } = require(path.join(__dirname, '../../composer/lib/composer'))
+      { zoomToFitButtons, fsmAnnotation } = require(path.join(__dirname, '../../composer/lib/composer'))
 
 const viewName = 'session flow'
 
@@ -94,13 +94,19 @@ module.exports = (commandTree, prequire) => {
                 let fsm;
                 if (action.wskflowErr) {
                     // 1) if an app was deleted, the last promise item returns an error
-                    const error = new Error(`${viewName} unavailable, as the composition was deleted`);
+                    const error = new Error(`Sorry, this view is not available, as the composition was deleted`);
                     error.code = 404
                     throw error
 
                 } else {
                     // extract the FSM
-                    fsm = action.annotations.find(({key}) => key === 'fsm').value
+                    const fsmAnno = fsmAnnotation(action)
+                    if (!fsmAnno) {
+                        const error = new Error(`Sorry, this view is not available, as the composition was improperly created`);
+                        error.code = 404
+                        throw error
+                    }
+                    fsm = fsmAnno && fsmAnno.value
                 }
 
                 const {view, controller} = visualize(fsm, undefined, undefined, undefined, activations)

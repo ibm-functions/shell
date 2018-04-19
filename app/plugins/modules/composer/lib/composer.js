@@ -343,11 +343,10 @@ exports.isValidFSM = maybe => {
  *
  */
 exports.getFSM = entity => {
-    const fsmPair = entity.parameters && entity.parameters.find( ({key}) => key === '$invoke')  // parameter binding?
-          || entity.annotations && entity.annotations.find( ({key}) => key === 'fsm')        // or annotation?
+    const fsmAnnotation = exports.fsmAnnotation(entity)
 
-    if (fsmPair) {
-        return openwhiskComposer.deserialize(fsmPair.value)
+    if (fsmAnnotation) {
+        return openwhiskComposer.deserialize(fsmAnnotation.value)
     }
 }
 
@@ -398,29 +397,44 @@ exports.moveAside = (wsk, name) => repl.qexec(`mv "${name}" "${name}-orig"`)
     }).then(() => ({ ok: name }))*/
 
 /**
- * Merge previous and current and internal annotations
+ * Merge previous and current and internal annotations. Take all of
+ * the new (A2) annotations and add in any old (A1) annotations that
+ * are not replaced by new ones.
  *
  */
 const mergeAnnotations = (A1=[], A2=[], type, fsm) => {
-    const annotations = A1.concat(A2),
-          fsmAnnotation = annotations.find(({key}) => key === 'fsm'),
-          badgesAnnotation = annotations.find(({key}) => key === 'wskng.combinators'),
-          badge = {"type":"composition","role":"replacement","badge":type}
+    // map from annotation key to "is new"
+    const inA2 = A2.reduce((M, {key}) => {
+        M[key] = true
+        return M
+    }, {})
 
-    if (!fsmAnnotation) {
-        annotations.push({ key: 'fsm', value: fsm })
-    } else {
-        fsmAnnotation.value = fsm
-    }
+    // any old annotations are are not replaced by new ones
+    const filteredA1 = A1.filter(({key}) => !inA2[key])
 
-    if (!badgesAnnotation) {
-        annotations.push({ key: 'wskng.combinators', value: [badge] })
-    } else {
-        const existing = badgesAnnotation.value.find(({type}) => type === 'composition')
-        if (existing) {
-            existing.badge = type
+    // the union of old and new
+    const annotations = A2.concat(filteredA1)
+
+    if (type && fsm) {
+        const fsmAnnotation = annotations.find(({key}) => key === 'fsm') || annotations.find(({key}) => key === 'conductor'),
+              badgesAnnotation = annotations.find(({key}) => key === 'wskng.combinators'),
+              badge = {"type":"composition","role":"replacement","badge":type}
+
+        if (!fsmAnnotation) {
+            annotations.push({ key: 'fsm', value: fsm })
         } else {
-            badgesAnnotation.push(badge)
+            fsmAnnotation.value = fsm
+        }
+
+        if (!badgesAnnotation) {
+            annotations.push({ key: 'wskng.combinators', value: [badge] })
+        } else {
+            const existing = badgesAnnotation.value.find(({type}) => type === 'composition')
+            if (existing) {
+                existing.badge = type
+            } else {
+                badgesAnnotation.push(badge)
+            }
         }
     }
 
@@ -452,7 +466,9 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
             // now we merge together the parameters and annotations
             const fsmAction = fsm.encode(fqnAppName).actions[0].action
             fsmAction.parameters = currentAction.parameters.concat(parameters).concat(fsmAction.parameters || []),
-            fsmAction.annotations = mergeAnnotations(currentAction.annotations, annotations.concat(fsmAction.annotations||[]), type, fsm)
+            fsmAction.annotations = mergeAnnotations(currentAction.annotations,
+                                                     mergeAnnotations(annotations||[], fsmAction.annotations||[]),
+                                                     type, fsm)
             return fsmAction
         })
         .then(fsmAction => wsk.owOpts({ // add common flags to the requewst
@@ -482,11 +498,27 @@ exports.update = ({name, entity, fsm, type, wsk, commandTree, execOptions}) => {
  *
  */
 exports.isAnApp = action => {
-    const allManagement = action.annotations && action.annotations.find(({key}) => key === 'wskng.combinators'),
-          anyAppManagement = allManagement && util.isArray(allManagement.value) && allManagement.value.find(({type}) => type === 'composition')
-
-    return anyAppManagement
+    const anno = action && action.annotations && action.annotations.find(({key}) => key === 'conductor')
+    return anno && anno.value
 }
+
+/**
+ * Return the annotation that stores the IR/fsm
+ *
+ */
+exports.fsmAnnotation = action => {
+    const anno = action.annotations.find(({key}) => key === 'fsm')
+          || action.annotations.find(({key}) => key === 'conductor')
+
+    // avoid conductor:true as indicating the presence of an FSM
+    return anno && anno.value !== true ? anno : undefined
+}
+
+/**
+ * Does the given action have an IR/fsm associated with it?
+ *
+ */
+exports.hasFSM = action => !!exports.fsmAnnotation(action)
 
 /**
  * Helper method for kill and purge operations, which share enough code...
@@ -693,7 +725,7 @@ exports.hasUnknownOptions = (options, expected) => {
  */
 exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVisualize, options}) => {
     action.prettyType = appBadge
-    action.fsm = action.annotations.find(({key}) => key === 'fsm').value
+    action.fsm = exports.fsmAnnotation(action).value
 
     if (action.exec) {
         action.exec.prettyKind = 'app'
@@ -714,7 +746,7 @@ exports.decorateAsApp = ({action, viewName='app', commandPrefix='app get', doVis
             .concat(exports.vizAndfsmViewModes(visualize, commandPrefix, undefined, options))
             .concat(exports.zoomToFitButtons(controller))
 
-        return view
+        return view || action
 
     } else {
         return action

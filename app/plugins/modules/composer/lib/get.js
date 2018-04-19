@@ -18,7 +18,7 @@ const debug = require('debug')('app get')
 debug('loading')
 
 const { app_get:usage } = require('./usage'),
-      { isAnApp, decorateAsApp } = require('./composer')
+      { hasFSM, decorateAsApp } = require('./composer')
 
 const viewName = 'app'
 
@@ -61,7 +61,7 @@ module.exports = (commandTree, prequire) => {
                     const action = response.message || response,
                           execOptions = arguments[5]
 
-                    if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
+                    if (hasFSM(action)) {
                         const doVisualize = execOptions.override || !execOptions.nested,
                               options = execOptions.originalOptions || {},
                               content = decorateAsApp({ action, doVisualize, options }),

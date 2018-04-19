@@ -64,7 +64,7 @@ module.exports = (commandTree, prequire) => {
 
                 return rawListImpl.apply(undefined, arguments)
                     .then(response => response.map(action => {
-                        if (action && action.annotations && action.annotations.find(({key}) => key === 'fsm')) {
+                        if (isAnApp(action)) {
                             decorateAsApp({action})
                             action.prettyKind = 'composition'
                         }

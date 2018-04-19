@@ -707,6 +707,7 @@ const ui = (function() {
         container.innerText = beautify(raw, { wrap_line_length: 80 })
         setTimeout(() => hljs.highlightBlock(container), 0)
     }
+    ui.prettyJSON = prettyJSON
     
     /**
      * Beautify any kinds we know how to
