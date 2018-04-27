@@ -17,7 +17,7 @@
 const debug = require('debug')('app preview')
 debug('loading')
 
-const { isValidFSM, wskflow, zoomToFitButtons, vizAndfsmViewModes, codeViewMode, handleError } = require('./composer'),
+const { isValidFSM, wskflow, zoomToFitButtons, vizAndfsmViewModes, codeViewMode, handleError, optionsToString } = require('./composer'),
       badges = require('./badges'),
       { readFSMFromDisk, compileToFSM } = require('./create-from-source'),
       messages = require('./messages'),
@@ -111,14 +111,19 @@ module.exports = (commandTree, prequire) => {
                  entity.type = 'actions'
              }
              
-             if(options.alreadyWatching && entity.type === 'custom'){  
+             if(execOptions.alreadyWatching){
                 // in filewatch mode (alreadyWatching), command echo is set to false
-                // calling ui.showCustom as the main repl does not do anything for custom type entity when echo is false 
-                ui.showCustom(entity);
-             }
+                // calling ui.showCustom as the main repl does not do anything for custom type entity when echo is false                 
+                if(entity.type === 'custom'){  
+                    ui.showCustom(entity);
+                }
+                else{                
+                    ui.showEntity(entity, { show: 'fsm' })
+                } 
+             }            
              else{
-                resolve(entity);
-             }             
+                resolve(entity)
+             }
              
          }
          fsmPromise.then(formatForUser(defaultMode))
@@ -127,14 +132,13 @@ module.exports = (commandTree, prequire) => {
                      // start rendering an empty JSON
                      formatForUser(defaultMode)({})
 
-                 } else if (options.alreadyWatching) {
+                 } else if (execOptions.alreadyWatching) {
                      // we already have the sidecar open to this file,
                      // so we can report the error in the sidecar
 
                      // createFromSource returns error as either an object that's {fsm:errMsg, code:originalCode}, or just the errMsg string
                      // here we check the error format and send the correct input to formatForUser/handleError
                      // in sidecar, error message shows in the fsm (JSON) tab. code tab shows the user's js code (if existed). 
-                     
                      if(err.fsm)
                       formatForUser('fsm')(err);
                      else
@@ -176,18 +180,14 @@ module.exports = (commandTree, prequire) => {
                  delete options.e
 
                  debug('environment', environment)
-             }
-
-             if(execOptions.alreadyWatching){
-                options.alreadyWatching = execOptions.alreadyWatching;
-             }             
+             }          
             
              render(input, options, execOptions).then(resolve, reject)
                           
              // and set up a file watcher to re-render upon change of the file
              if (!execOptions || !execOptions.alreadyWatching) {
                  chokidar.watch(expandHomeDir(input)).on('change', path => {
-                     repl.pexec(`preview ${path}`, { echo: false, alreadyWatching: true })                     
+                     repl.pexec(`preview ${path} ${optionsToString(options)}`, { echo: false, alreadyWatching: true, noHistory: true })                     
                  })
              }
          })
