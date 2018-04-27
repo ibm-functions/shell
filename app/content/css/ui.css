@@ -735,9 +735,14 @@ sidecar .sidecar-header .badges {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
+    margin: 1rem 0 0 1rem;
 }
 sidecar .sidecar-header badge {
     /* badges next to the entity name */
+    transition: all 150ms ease-in-out;
+}
+sidecar .sidecar-header badge.clickable:hover {
+    filter: brightness(1.1);
 }
 sidecar .sidecar-header-name-content {
     overflow: hidden;
@@ -952,10 +957,33 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 
 /* generic */
+.flex-layout {
+    display: flex;
+    align-items: center;
+}
 .normal-text {
     font-weight: 400;
     opacity: 1;
     font-size: 1em;
+}
+.even-smaller-text {
+    font-size: 0.75em;
+}
+.smaller-text {
+    font-size: 0.875em;
+}
+.sub-text {
+    color: var(--color-text-02);
+}
+.lighter-text {
+    font-weight: 300;
+}
+.even-lighter-text {
+    color: var(--color-text-02);
+    font-weight: 300;
+}
+.nowrap {
+    white-space: nowrap;
 }
 .deemphasize {
     font-weight: 300;
@@ -968,6 +996,10 @@ sidecar.no-limits-data .activation-estimated-cost-container {
 }
 .sans-serif {
     font-family: var(--font-sans-serif);
+}
+.min-width-8em {
+    min-width: 8em !important;
+    display: block;
 }
 .min-width-10em {
     min-width: 10em !important;
@@ -984,6 +1016,9 @@ sidecar.no-limits-data .activation-estimated-cost-container {
     color: var(--color-text-01);
     font-size: inherit;
     font-weight: inherit;
+}
+.tiny-top-pad {
+    margin-top: 0.125em;
 }
 .small-top-pad {
     margin-top: 1ex;

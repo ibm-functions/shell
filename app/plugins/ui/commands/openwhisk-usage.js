@@ -101,6 +101,7 @@ const skipAndLimit = [{ name: '--limit', alias: '-l', numeric: true, docs: 'show
  */
 module.exports = {
     skipAndLimit,
+    params,
 
     // this is the ascii art for OpenWhisk, with backslashes escaped
     wsk: { //header: `        ____      ___                   _    _ _     _     _\r\n       /\\   \\    / _ \\ _ __   ___ _ __ | |  | | |__ (_)___| | __\r\n  /\\  /__\\   \\  | | | | '_ \\ / _ \\ '_ \\| |  | | '_ \\| / __| |/ /\r\n /  \\____ \\  /  | |_| | |_) |  __/ | | | |/\\| | | | | \\__ \\   <\r\n \\   \\  /  \\/    \\___/| .__/ \\___|_| |_|__/\\__|_| |_|_|___/_|\\_\\\r\n  \\___\\/ tm           |_|`,
