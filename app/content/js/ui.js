@@ -1125,17 +1125,28 @@ const ui = (function() {
      * Sidecar badges
      *
      */
-    const addBadge = badgeText => {
+    const addBadge = (badgeText, { css, onclick }={}) => {
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header'),
               badges = header.querySelector('.badges')
 
         const badge = document.createElement('badge')
+
         if (typeof badgeText === 'string') {
             badge.innerText = badgeText
         } else {
             badge.appendChild(badgeText)
         }
+
+        if (css) {
+            badge.classList.add(css)
+        }
+
+        if (onclick) {
+            badge.classList.add('clickable')
+            badge.onclick = onclick
+        }
+
         badges.appendChild(badge)
         return badge
     }

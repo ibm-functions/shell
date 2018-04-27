@@ -86,11 +86,18 @@ const formatOneListResult = options => (entity, idx, A) => {
     prefix.appendChild(prettyType)*/
 
     /** add a cell to the current row of the list view we] are generating. "entityName" is the current row */
-    const addCell = (className, value, innerClassName='', parent=entityName, onclick, watch) => {
+    const addCell = (className, value, innerClassName='', parent=entityName, onclick, watch, key) => {
         const cell = document.createElement('span'),
               inner = document.createElement('span')
+
         cell.className = className
         inner.className = innerClassName
+        inner.classList.add('cell-inner')
+
+        if (key) {
+            inner.setAttribute('data-key', key)
+        }
+
         if (value) {
             Promise.resolve(value)
                 .then(value => inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString())))
@@ -116,7 +123,14 @@ const formatOneListResult = options => (entity, idx, A) => {
             const interval = setInterval(() => {
                 try {
                     Promise.resolve(watch())
-                        .then(({ value, done=false, css }) => {
+                        .then(({ value, done=false, css, others=[] }) => {
+                            // are we done polling for updates?
+                            if (!value || done) {
+                                clearInterval(interval)
+
+                                const toRemove = cell.querySelector('.fa-spinner')
+                                cell.removeChild(toRemove)
+                            }
 
                             // update the styling
                             if (css) {
@@ -129,13 +143,14 @@ const formatOneListResult = options => (entity, idx, A) => {
                                 inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
                             }
 
-                            // are we done polling for updates?
-                            if (!value || done) {
-                                clearInterval(interval)
-
-                                const toRemove = cell.querySelector('.fa-spinner')
-                                cell.removeChild(toRemove)
-                            }
+                            // any other cells to update?
+                            others.forEach(({key, value}) => {
+                                const otherInner = parent.querySelector(`.cell-inner[data-key="${key}"]`)
+                                if (otherInner) {
+                                    otherInner.innerText = ''
+                                    otherInner.appendChild(value.nodeName ? value : document.createTextNode(value.toString()))
+                                }
+                            })
                         })
 
                 } catch (err) {
@@ -154,7 +169,7 @@ const formatOneListResult = options => (entity, idx, A) => {
 
     // add any attributes that should appear *before* the name column
     if (entity.beforeAttributes) {
-        entity.beforeAttributes.forEach(({value, css='', outerCSS='', onclick}) => addCell(outerCSS, value, css, undefined, onclick))
+        entity.beforeAttributes.forEach(({key, value, css='', outerCSS='', onclick}) => addCell(outerCSS, value, css, undefined, onclick, undefined, key))
     }
 
     // now add the clickable name
@@ -199,7 +214,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     // case-specific cells
     //
     if (entity.attributes) {
-        entity.attributes.forEach(({value, css='', outerCSS='', watch, onclick}) => addCell(outerCSS, value, css, undefined, onclick, watch))
+        entity.attributes.forEach(({key, value, css='', outerCSS='', watch, onclick}) => addCell(outerCSS, value, css, undefined, onclick, watch, key))
 
     } else if (entity.type === 'actions') {
         // action-specific cells
@@ -1144,6 +1159,18 @@ self.doCancel = () => {
 
     ui.unlisten(ui.getPrompt(block))
     ui.installBlock(block.parentNode, block, nextBlock)()
+}
+
+/**
+ * Add quotes if the argument needs it; compare to encodeURIComponent
+ *
+ */
+self.encodeComponent = (component, quote='"') => {
+    if (component.match(patterns.whitespace)) {
+        return `${quote}${component}${quote}`
+    } else {
+        return component
+    }
 }
 
 module.exports = self
