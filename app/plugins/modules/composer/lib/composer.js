@@ -678,7 +678,7 @@ const optionsToString = options => {
 
     return str
 }
-
+exports.optionsToString = optionsToString
 /**
  * Entity view modes
  *

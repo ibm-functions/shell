@@ -118,6 +118,28 @@ describe('app preview should actively watching an external file', function() {
       .then(verifyNodeExists('c'))
       .catch(common.oops(this)))
 
+    // should be able to switch JSON tab and switch back
+    it('should switch to the JSON tab', () => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('fsm'))
+      .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('visualization')))
+      .then(() => verifyNodeExists('a')(this.app))
+      .then(verifyNodeExists('c'))
+      .catch(common.oops(this)))
+    // update file again, and verify that preview updates too 
+    it('should update the temp file to composer.sequence("a", "b")', () => {
+      return new Promise((resolve, reject) => {
+        fs.writeFile(tempFileName, `composer.sequence("a", "b")`, (err) => {
+          if(err)
+            reject(err);
+          else
+            resolve(true);
+        });
+      });
+    });
+    it('should update preview', () => this.app.client.waitForVisible(ui.selectors.SIDECAR_CUSTOM_CONTENT)
+      .then(() => verifyNodeExists('a')(this.app))
+      .then(verifyNodeExists('b'))
+      .catch(common.oops(this)))
+
     it('should delete the temp file', () => {
       return new Promise((resolve, reject) => {
         fs.unlink(tempFileName, (err) => {
