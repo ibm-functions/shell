@@ -318,7 +318,8 @@ describe('app create and sessions', function() {
     fs.readdirSync(srcDir).forEach((file,idx) => {
         const name = `${seqName2}-${idx}`
 
-        if (file.endsWith('.js')) {
+        // echo.js is used by require-relative.js, it isn't a composition on its own
+        if (file.endsWith('.js') && file !== 'echo.js') {
             it(`should create a composer sequence from source ${file}`, () => cli.do(`app create ${name} ${path.join(srcDir, file)}`, this.app)
 	        .then(cli.expectOK)
                .then(sidecar.expectOpen)

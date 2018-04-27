@@ -113,9 +113,10 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                             require: m => {
                                 if (m === '@ibm-functions/composer') {
                                     return openwhiskComposer
+                                } else if (m.charAt(0) !== '.') {
+                                    return require(m)
                                 } else {
-                                    return require(path.resolve(dir, m))
-                                    
+                                    return require(path.resolve(m))
                                 }
                             }
                         }
@@ -134,7 +135,20 @@ exports.compileToFSM = (src, opts={}) => new Promise((resolve, reject) => {
                         }
                         const sandboxWithComposer = Object.assign(sandbox, { composer: openwhiskComposer })
 
-                        let res = vm.runInNewContext(code, sandboxWithComposer)
+                        // we need to be in the directory of the
+                        // source, in case it does relative requires
+                        // or reads from that relative location
+                        const curdir = process.cwd()
+                        process.chdir(ui.findFile(dir))
+
+                        let res
+                        try {
+                            res = vm.runInNewContext(code, sandboxWithComposer)
+                        } finally {
+                            // make sure we change back to where we started
+                            process.chdir(curdir)
+                        }
+
                         debug('res', typeof res, res)
 
                         if (typeof res === 'function') {

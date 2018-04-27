@@ -47,6 +47,9 @@ const fsm = input('fsm.json'), fsmStruct = JSON.parse(fs.readFileSync(fsm.path).
       demo = composerInput('demo.js'),
       demoRetain = composerInput('demo-retain.js'),
       mask = composerInput('mask.js'),
+      requireAbsolute = composerInput('require-absolute.js'),
+      requireRelative = composerInput('require-relative.js'),
+      fsRead = composerInput('fs-read.js'),
       addSubscription = composerErrorInput('addSubscription.js')
 
 /**
@@ -235,6 +238,27 @@ describe('show the composer visualization without creating openwhisk assets', fu
        .then(verifyNodeExists('echo1'))
        .then(verifyNodeExists('echo2'))
        .then(verifyEdgeExists('echo1', 'echo2'))
+       .catch(common.oops(this)))
+
+    /** test: from the openwhisk-composer/samples directory */
+    it(`show visualization from javascript source ${requireAbsolute.path}`, () => cli.do(`app viz ${requireAbsolute.path}`, this.app)
+       .then(verifyTheBasicStuff(requireAbsolute.file, 'composerLib'))
+       .then(verifyNodeExists('echo1'))
+       .then(verifyNodeExists('echo2'))
+       .then(verifyEdgeExists('echo1', 'echo2'))
+       .catch(common.oops(this)))
+
+    /** test: from the openwhisk-composer/samples directory */
+    it(`show visualization from javascript source ${requireRelative.path}`, () => cli.do(`app viz ${requireRelative.path}`, this.app)
+       .then(verifyTheBasicStuff(requireRelative.file, 'composerLib'))
+       .then(verifyNodeExists('echo1'))
+       .then(verifyNodeExists('echo2'))
+       .then(verifyEdgeExists('echo1', 'echo2'))
+       .catch(common.oops(this)))
+
+    /** test: from the openwhisk-composer/samples directory */
+    it(`show visualization from javascript source ${fsRead.path}`, () => cli.do(`app viz ${fsRead.path}`, this.app)
+       .then(verifyTheBasicStuff(fsRead.file, 'composerLib'))
        .catch(common.oops(this)))
 
     it(`fail to show visualization for addSubscription without -e for env var assignment`, () => cli.do(`preview ${addSubscription.path}`, this.app)
