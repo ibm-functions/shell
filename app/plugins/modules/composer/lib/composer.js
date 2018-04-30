@@ -464,7 +464,10 @@ exports.create = ({name, fsm, type, annotations=[], parameters=[], wsk, commandT
                        ])
         .then(([currentAction]) => {
             // now we merge together the parameters and annotations
-            const fsmAction = openwhiskComposer.encode(openwhiskComposer.composition(fqnAppName, fsm), "0.4.0").actions[0].action
+            let encodeElement = openwhiskComposer.encode(openwhiskComposer.composition(fqnAppName, fsm), "0.4.0")
+            // multiple actions might be returned, as people can now use composer combinators to deploy new actions
+            // currently, the main composition action is always the last action in the array
+            const fsmAction = encodeElement.actions[encodeElement.actions.length ? encodeElement.actions.length - 1 : 0].action
             fsmAction.parameters = currentAction.parameters.concat(parameters).concat(fsmAction.parameters || []),
             fsmAction.annotations = mergeAnnotations(currentAction.annotations,
                                                      mergeAnnotations(annotations||[], fsmAction.annotations||[]),
