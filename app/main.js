@@ -215,7 +215,7 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
 	    const { clipboard, nativeImage, webContents } = electron
 	    webContents.fromId(contentsId).capturePage(rect, image => {
 		try {
-		    const buf = image.toPng()
+		    const buf = image.toPNG()
 		    clipboard.writeImage(nativeImage.createFromBuffer(buf))
 		    event.sender.send('capture-page-to-clipboard-done', buf)
 		} catch (err) {

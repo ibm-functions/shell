@@ -123,7 +123,12 @@ const formatOneListResult = options => (entity, idx, A) => {
             const interval = setInterval(() => {
                 try {
                     Promise.resolve(watch())
-                        .then(({ value, done=false, css, others=[] }) => {
+                        .then(({ value, done=false, css, others=[], unchanged=false }) => {
+                            if (unchanged) {
+                                // nothing to do, yet
+                                return
+                            }
+
                             // are we done polling for updates?
                             if (!value || done) {
                                 clearInterval(interval)
@@ -427,6 +432,11 @@ self.init = (prefs={}) => {
         }
     }
 
+    // we don't want the prompt to lose focus when the user drags when
+    // window around (which is initiated by clicking on the header)
+    document.querySelector('.page > header').onclick = evt => {
+        ui.getCurrentPrompt().focus()
+    }
     
     /** listen for paste events, focus on the current prompt first */
     document.body.onpaste = evt => {
