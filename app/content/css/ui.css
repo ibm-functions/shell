@@ -208,7 +208,6 @@ body:not(.subwindow) repl.sidecar-visible .repl-block, body.sidecar-full-screen 
 }
 .result-table .repl-result, .result-table.repl-result {
     display: table;
-    border-collapse: collapse;
     border-spacing: 0;
     border: 1px solid;
     margin-top: 0.75em;
@@ -348,6 +347,9 @@ body/*:not(.sidecar-full-screen)*/ repl.sidecar-visible .repl-context, body/*:no
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.entity:first-child .entity-attributes > span {
+    border-top: none;
 }
 .entity-attributes > span {
     display: table-cell;
