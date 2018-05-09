@@ -841,7 +841,8 @@ self.exec = (commandUntrimmed, execOptions) => {
                       nRequiredArgs = required.length + (oneof.length > 0 ? 1 : 0) - nPositionalsConsumed,
                       optLikeActuals = optLikeOneOfs.filter(({name, alias=''}) => parsedOptions.hasOwnProperty(unflag(name)) || parsedOptions.hasOwnProperty(unflag(alias))),
                       nOptLikeActuals = optLikeActuals.length,
-                      nActualArgs = args.length - args.indexOf(cmd) - 1 + nOptLikeActuals
+                      cmdArgsStart = args.indexOf(cmd),
+                      nActualArgs = args.length - cmdArgsStart - 1 + nOptLikeActuals
 
                 // did the user pass an unsupported optional parameter?
                 for (let optionalArg in parsedOptions) {
@@ -936,8 +937,8 @@ self.exec = (commandUntrimmed, execOptions) => {
 
                         } else {
                             // ooh, then splice in the implicit parameter
-                            args.splice(implicitIdx, 0, `/${selection.namespace}/${selection.name}`)
-                            debug('spliced in implicit argument', implicitIdx, args[implicitIdx])
+                            args.splice(implicitIdx, cmdArgsStart + 1, selection.namespace ? `/${selection.namespace}/${selection.name}` : selection.name)
+                            debug('spliced in implicit argument', cmdArgsStart, implicitIdx, args)
                         }
                     }
                 }
