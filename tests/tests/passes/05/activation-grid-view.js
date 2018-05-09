@@ -286,4 +286,13 @@ describe('Activation grid visualization', function() {
     it('should open grid as timeline with grid -t', () => cli.do('grid -t', this.app)
        .then(cli.expectOK)
        .catch(common.oops(this)))
+
+    it('should open grid as timeline with grid -t, then switch to summary', () => cli.do('grid -t', this.app)
+       .then(cli.expectOK)
+       .then(() => this.app.client.click(ui.selectors.SIDECAR_MODE_BUTTON('summary')))
+       .then(() => this.app.client.waitUntil(() => {
+           return this.app.client.getText('.sidecar-header-icon')
+               .then(txt => txt.toLowerCase() === 'summary')
+       }))
+       .catch(common.oops(this)))
 })
