@@ -636,7 +636,7 @@ const main = (app, mainFunctions) => {
         //
         // execute a single command from the CLI
         //
-        const cmd = argv.join(' ').trim()
+        const cmd = argv.map(_ => _.match(/\s+/) ? `"${_}"` : _).join(' ').trim()
         if (cmd && cmd.length > 0) {
             debug('about to execute command')
             return Promise.resolve().then(() => eval(cmd)).catch(maybeRetry)
