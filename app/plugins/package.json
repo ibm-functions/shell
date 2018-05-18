@@ -4,12 +4,15 @@
   "description": "OpenWhisk Shell plugins",
   "main": "index.js",
   "scripts": {
-    "postinstall": "for i in modules/*; do if [ -f $i/package.json ]; then (cd $i && npm install); fi; done",
+    "postinstall": "for i in modules/*; do if [ -f $i/package.json ]; then (cd $i && npm install); fi; done; if [ -d node_modules/@shell ]; then for i in node_modules/@shell/*; do mod=`basename $i`; rm -rf modules/$mod; mv $i modules/$mod; echo '*' > modules/$mod/.gitignore; done; fi",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@shell/composer": "git://github.com/ibm-functions/shell-composer-plugin",
+    "@shell/local": "git://github.com/ibm-functions/shell-local-plugin",
+    "@shell/wskflow": "git://github.com/ibm-functions/shell-wskflow-plugin",
     "archiver": "^2.1.1",
     "debug": "^3.1.0",
     "htmlparser2": "^3.9.2",
