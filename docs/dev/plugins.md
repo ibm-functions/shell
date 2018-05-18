@@ -10,7 +10,7 @@ includes a suite of plugins, located in the `app/plugins/` directory.
 
 If, in the process of development, you add, remove, or otherwise
 change the way a command will map to plugins, you **must** re-execute
-`(cd app/bin && node compile.js)`, and then reload the renderer process.
+`(cd dist && node compile.js)`, and then reload the renderer process.
 
 ## Code Layout
 
