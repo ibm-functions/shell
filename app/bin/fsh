@@ -24,4 +24,4 @@ ROOTDIR="$DIR/.."
 # determine which argv to ignore
 export DEVMODE=true
 
-exec "$ROOTDIR/node_modules/.bin/electron" "$ROOTDIR" --fsh-headless $@
+exec "$ROOTDIR/node_modules/.bin/electron" "$ROOTDIR" --fsh-headless "$@"

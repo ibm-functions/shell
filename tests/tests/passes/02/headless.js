@@ -133,4 +133,13 @@ describe('Headless mode', function() {
     it('should create an action with an env var parameter', () => cli.do('action create envfun ./data/echo.js -p fun $FUN', { FUN: 3 })
        .then(cli.expectOK('ok: updated action envfun\n', { exact: true }))
        .catch(common.oops(this)))
+
+    it('should create an action with params-with-spaces', () => cli.do('action create spacey ./data/echo.js -p fun "space cadet"')
+       .then(cli.expectOK('ok: updated action spacey\n', { exact: true }))
+       .catch(common.oops(this)))
+
+    it('should invoke spacey', () => cli.do('action invoke spacey')
+       .then(cli.expectOK('fun: "space cadet"'))
+       .catch(common.oops(this)))
+
 })
