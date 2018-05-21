@@ -466,6 +466,7 @@ const addPrettyType = (entityType, verb, entityName) => entity => {
 }
 
 const extensionToKind = {
+    'jar': 'java:default',
     'js': 'nodejs:default',
     'py': 'python:default',
     'swift': 'swift:default'
@@ -531,7 +532,6 @@ specials.actions = {
             }
         }
 
-
         if (options.sequence) {
             options.action.exec = {
                 kind: 'sequence',
@@ -575,7 +575,9 @@ specials.actions = {
             } else {
                 // otherwise, find the file named by argv[0]
                 const filepath = ui.findFile(expandHomeDir(argv[0])),
-                      isBinary = argv[0].endsWith('.zip'),
+                      isZip = argv[0].endsWith('.zip'),
+                      isJar = argv[0].endsWith('.jar'),
+                      isBinary = isZip || isJar,
                       encoding = isBinary ? 'base64' : 'utf8'
 
                 options.action.exec.code = fs.readFileSync(filepath).toString(encoding)
@@ -588,7 +590,7 @@ specials.actions = {
                     options.action.annotations.push({ key: 'wskng.combinators', value: [{
                         type: 'action.kind',
                         role: 'replacement',
-                        badge: 'zip'
+                        badge: isZip ? 'zip' : 'jar'
                     }]})
 
                     options.action.annotations.push({ key: 'binary', value: true })
@@ -617,6 +619,11 @@ specials.actions = {
         } else {
             // then we must remove options.exec; the backend fails if an empty struct is passed
             delete options.action.exec
+        }
+
+        if (options.main && options.action.exec) {
+            // main method of java actions
+            options.action.exec.main = options.main
         }
     }),
     list: (options, argv) => {

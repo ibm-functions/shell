@@ -1457,7 +1457,7 @@ const ui = (function() {
                             // show the action's code
                             //
                         
-                            if (!entity.exec.binary || !(entity.annotations && entity.annotations.find(({key}) => key === 'binary'))) {
+                            if (!entity.exec.binary && !(entity.annotations && entity.annotations.find(({key}) => key === 'binary'))) {
                                 //
                                 // render the textual source code
                                 //
@@ -1471,6 +1471,7 @@ const ui = (function() {
                                 setTimeout(() => { code.innerText = beautify(entity.exec.kind, entity.exec.code); hljs.highlightBlock(code) }, 100) // HACK HACK to work around highlightjs bug v0.9.12
                             } else {
                                 // TODO what do we do with binary actions?
+                                code.innerText = 'This is a binary action'
                             }
                         }
                     }
