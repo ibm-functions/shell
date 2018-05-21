@@ -87,6 +87,7 @@ const actionMix = params.concat(annotations).concat(limits).concat([
     { name: '--docker', boolean: true, docs: 'use a dockerhub image for the action' },
     { name: '--native', boolean: true, docs: 'use a shell script or Linux binary for the action' },
     { name: '--web', boolean: true, docs: 'web export the action' },
+    { name: '--main', docs: 'specify the main method for Java actions' },
     { name: '--content-type', hidden: true }
 ])
 
