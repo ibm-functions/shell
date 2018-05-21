@@ -23,7 +23,9 @@
     "email": "nickm@us.ibm.com"
   },
   "license": "Apache-2.0",
-  "bugs": "https://github.com/ibm-functions/shell",
+  "bugs": {
+    "url": "https://github.com/ibm-functions/shell/issues/new"
+  },
   "devDependencies": {
     "electron": "~2.0.1",
     "nyc": "^11.3.0"

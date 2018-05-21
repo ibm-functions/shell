@@ -17,6 +17,9 @@ body {
     cursor: initial;
     font-weight: 300;
 }
+.title:hover {
+    cursor: pointer;
+}
 .title, .description, .versions, .copyright {
     -webkit-app-region: no-drag;
     user-select: initial; /* allow users to select version */
