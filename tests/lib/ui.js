@@ -460,3 +460,5 @@ const waitForActivationOrSession = entityType => (app, activationId, { name='' }
 }
 exports.waitForActivation = waitForActivationOrSession('activation')
 exports.waitForSession = waitForActivationOrSession('session')
+
+exports.apiHost = constants.API_HOST

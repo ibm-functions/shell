@@ -86,7 +86,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     prefix.appendChild(prettyType)*/
 
     /** add a cell to the current row of the list view we] are generating. "entityName" is the current row */
-    const addCell = (className, value, innerClassName='', parent=entityName, onclick, watch, key) => {
+    const addCell = (className, value, innerClassName='', parent=entityName, onclick, watch, key, fontawesome) => {
         const cell = document.createElement('span'),
               inner = document.createElement('span')
 
@@ -98,7 +98,13 @@ const formatOneListResult = options => (entity, idx, A) => {
             inner.setAttribute('data-key', key)
         }
 
-        if (value) {
+        if (fontawesome) {
+            const icon = document.createElement('i')
+            inner.appendChild(icon)
+            icon.className = fontawesome
+            inner.setAttribute('data-value', value) // in case tests need the actual value, not the icon
+
+        } else if (value) {
             Promise.resolve(value)
                 .then(value => inner.appendChild(value.nodeName ? value : document.createTextNode(value.toString())))
         } else {
@@ -174,7 +180,7 @@ const formatOneListResult = options => (entity, idx, A) => {
 
     // add any attributes that should appear *before* the name column
     if (entity.beforeAttributes) {
-        entity.beforeAttributes.forEach(({key, value, css='', outerCSS='', onclick}) => addCell(outerCSS, value, css, undefined, onclick, undefined, key))
+        entity.beforeAttributes.forEach(({key, value, css='', outerCSS='', onclick, fontawesome}) => addCell(outerCSS, value, css, undefined, onclick, undefined, key, fontawesome))
     }
 
     // now add the clickable name
@@ -219,7 +225,7 @@ const formatOneListResult = options => (entity, idx, A) => {
     // case-specific cells
     //
     if (entity.attributes) {
-        entity.attributes.forEach(({key, value, css='', outerCSS='', watch, onclick}) => addCell(outerCSS, value, css, undefined, onclick, watch, key))
+        entity.attributes.forEach(({key, value, css='', outerCSS='', watch, onclick, fontawesome}) => addCell(outerCSS, value, css, undefined, onclick, watch, key, fontawesome))
 
     } else if (entity.type === 'actions') {
         // action-specific cells

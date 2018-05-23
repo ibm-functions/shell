@@ -240,6 +240,64 @@ module.exports = {
              related: all.except('wsk rule')
            },
 
+    api: { title: 'API Gateway operations',
+           header: 'These commands will help you to work with routes and the API Gateway.',
+           example: 'wsk api <command>',
+           commandPrefix: 'wsk api',
+           nRowsInViewport: 4, // list all four, since we have a short list
+           available: [{ command: 'list', strict: 'list',
+                         docs: 'list all APIs',
+                         example: 'wsk api list',
+                         optional: skipAndLimit,
+                         parents: context('api')
+                       },
+                       { command: 'get', strict: 'get',
+                         docs: 'get API details',
+                         example: 'wsk api get <api>',
+                         oneof: [
+                             { name: 'api', docs: 'the name of an API' },
+                             { name: 'path', docs: 'the full base/path route an API' }
+                         ],
+                         optional: [
+                             { name: 'verb', positional: true, docs: 'the verb to show' },
+                             { name: '--format', docs: 'specify the API output TYPE, either json or yaml',
+                               allowed: ['json', 'yaml'], defaultValue: 'json'},
+                             { name: '--full', alias: '-f', docs: 'display full API configuration details' }
+                         ],
+                         parents: context('api')
+                       },
+                       { command: 'delete', strict: 'delete',
+                         docs: 'delete an API',
+                         example: 'wsk api delete <api>',
+                         required: [
+                             { name: 'api', docs: 'the name of an API' }
+                         ],
+                         optional: [
+                             { name: 'path', positional: true, docs: 'the path of the API' },
+                             { name: 'verb', positional: true, docs: 'the verb of the API' }
+                         ],
+                         parents: context('api')
+                       },
+                       { command: 'create', strict: 'create',
+                         docs: 'create a new API',
+                         example: 'wsk api create <[base] path verb action>',
+                         required: [
+                             { name: 'path', docs: 'path for the API' },
+                             { name: 'verb', docs: 'the HTTP method' },
+                             { name: 'action', docs: 'the OpenWhisk action to invoke' }
+                         ],
+                         optional: [
+                             { name: 'base', positional: true, docs: 'base path for the API' },
+                             { name: '--apiname', alias: '-n', docs: 'friendly name of the API' },
+                             { name: '--config-file', alias: '-c', docs: 'file containing API configuration in swagger JSON format' },
+                             { name: '--response-type', docs: 'set the web action response type',
+                               allowed: ['http', 'json', 'text', 'svg'], defaultValue: 'json' },
+                         ],
+                         parents: context('api')
+                       }
+                      ]
+         },
+
     triggers: { title: 'Trigger operations',
                 header: 'These commands will help you to work with triggers.',
                 example: 'wsk trigger <command>',
