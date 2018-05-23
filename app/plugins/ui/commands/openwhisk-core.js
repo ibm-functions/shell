@@ -86,6 +86,8 @@ let localStorageKey = 'wsk.apihost',
     localStorageKeyIgnoreCerts = 'wsk.apihost.ignoreCerts',
     apiHost = process.env.__OW_API_HOST || wskprops.APIHOST || localStorage.getItem(localStorageKey) || 'https://openwhisk.ng.bluemix.net',
     auth = process.env.__OW_API_KEY || wskprops.AUTH,
+    apigw_token = process.env.__OW_APIGW_TOKEN || wskprops.APIGW_ACCESS_TOKEN || 'localhostNeedsSomething', // localhost needs some non-empty string
+    apigw_space_guid = process.env.__OW_APIGW_SPACE_GUID || wskprops.APIGW_SPACE_GUID,
     ow
 
 let userRequestedIgnoreCerts = localStorage.getItem(localStorageKeyIgnoreCerts) !== undefined
@@ -94,16 +96,20 @@ let ignoreCerts = apiHost => userRequestedIgnoreCerts || apiHost.indexOf('localh
 /** these are the module's exported functions */
 let self = {}
 
-debug('initOW')
 const initOW = () => {
-    ow = self.ow = openwhisk({
+    const owConfig = {
         apihost: apiHost,
         api_key: auth,
+        apigw_token, apigw_space_guid,
         ignore_certs: ignoreCerts(apiHost)
-    })
+    }
+    debug('initOW', owConfig)
+    ow = self.ow = openwhisk(owConfig)
+    ow.api = ow.routes
+    delete ow.routes
+    debug('initOW done')
 }
 if (apiHost && auth) initOW()
-debug('initOW done')
 
 /** is a given entity type CRUDable? i.e. does it have get and update operations, and parameters and annotations properties? */
 const isCRUDable = {
@@ -514,6 +520,162 @@ const standardViewModes = (defaultMode, fn) => {
     }
 }
 
+/** flatten an array of arrays */
+const flatten = arrays => [].concat.apply([], arrays)
+
+/** api gateway actions */
+specials.api = {
+    get: (options, argv) => {
+        if (!options) return
+        const maybeVerb = argv[1]
+        const split = options.name.split('/')
+        let path = options.name
+        if (split.length > 0) {
+            options.name = `/${split[1]}`
+            path = `/${split[2]}`
+        }
+        return {
+            postprocess: res => {
+                // we need to present the user with an entity of some
+                // sort; the "api create" api does not return a usual
+                // entity, as does the rest of the openwhisk API; so
+                // we have to manufacture something reasonable here
+                debug('raw output of api get', res)
+                const { apidoc } = res.apis[0].value
+                const { basePath } = apidoc
+                const apipath = apidoc.paths[path]
+                const verb = maybeVerb || Object.keys(apipath)[0]
+                const { action:name, namespace } = apipath[verb]['x-openwhisk']
+                debug('api details', namespace, name, verb)
+
+                // our "something reasonable" is the action impl, but
+                // decorated with the name of the API and the verb
+                return repl.qexec(`wsk action get "/${namespace}/${name}"`)
+                    .then(action => Object.assign(action, {
+                        name, namespace,
+                        packageName: `${verb} ${basePath}${path}`
+                    }))
+            }
+        }
+    },
+    create: (options, argv) => {
+        if (argv && argv.length === 3) {
+            options.basepath = options.name
+            options.relpath = argv[0]
+            options.operation = argv[1]
+            options.action = argv[2]
+        } else if (argv && argv.length === 2) {
+            options.relpath = options.name
+            options.operation = argv[0]
+            options.action = argv[1]
+        } else if (options && options['config-file']) {
+            //fs.readFileSync(options['config-file'])
+            throw new Error('config-file support not yet implemented')
+        }
+
+        return {
+            preprocess: _ => {
+                // we need to confirm that the action is web-exported
+
+                // this is the desired action impl for the api
+                const name = argv[argv.length - 1]
+                debug('fetching action', name)
+
+                return ow.actions.get(owOpts({ name }))
+                    .then(action => {
+                        const isWebExported = action.annotations.find(({key}) => key === 'web-export')
+                        if (!isWebExported) {
+                            const error = new Error(`Action '${name}' is not a web action. Issue 'wsk action update "${name}" --web true' to convert the action to a web action.`)
+                            error.code = 412 // precondition failed
+                            throw error
+                        }
+                    })
+                    .then(() => _)           // on success, return whatever preprocess was given as input
+                    .catch(err => {
+                        if (err.statusCode === 404) {
+                            const error = new Error(`Unable to get action '${name}': The requested resource does not exist.`)
+                            error.code = 404 // not found
+                            throw error
+                        } else {
+                            throw err
+                        }
+                    })
+            },
+            postprocess: ({apidoc}) => {
+                const { basePath } = apidoc
+                const path = Object.keys(apidoc.paths)[0]
+                const api = apidoc.paths[path]
+                const verb = Object.keys(api)[0]
+                const { action:name, namespace} = api[verb]['x-openwhisk']
+
+                // manufacture an entity-like object
+                return repl.qexec(`wsk action get "/${namespace}/${name}"`)
+                    .then(action => Object.assign(action, {
+                        name, namespace,
+                        packageName: `${verb} ${basePath}${path}`
+                    }))
+            }
+        }
+    },
+    list: () => {
+        return {
+            // turn the result into an entity tuple model
+            postprocess: res => {
+                debug('raw output of api list', res)
+
+                // main list for each api
+                return flatten((res.apis || []).map(({value}) => {
+                    // one sublist for each path
+                    const basePath = value.apidoc.basePath
+                    const baseUrl = value.gwApiUrl
+
+                    return flatten(Object.keys(value.apidoc.paths).map(path => {
+                        const api = value.apidoc.paths[path]
+
+                        // one sub-sublist for each verb of the api
+                        return Object.keys(api).map(verb => {
+                            const { action, namespace } = api[verb]['x-openwhisk']
+                            const name = `${basePath}${path}`
+                            const url = `${baseUrl}${path}`
+                            const actionFqn = `/${namespace}/${action}`
+
+                            // here is the entity for that api/path/verb:
+                            return {
+                                name, namespace,
+                                onclick: () => {
+                                    return repl.pexec(`wsk api get ${repl.encodeComponent(name)} ${verb}`)
+                                },
+                                attributes: [
+                                    { key: 'verb', value: verb },
+                                    { key: 'action', value: action, onclick: () => repl.pexec(`wsk action get ${repl.encodeComponent(actionFqn)}`) },
+                                    { key: 'url', value: url, fontawesome: 'fas fa-external-link-square-alt',
+                                      css: 'clickable clickable-blatant', onclick: () => window.open(url, '_blank') },
+                                    { key: 'copy', fontawesome: 'fas fa-clipboard', css: 'clickable clickable-blatant',
+                                      onclick: evt => {
+                                          const target = evt.currentTarget
+                                          require('electron').clipboard.writeText(url)
+
+                                          const svg = target.querySelector('svg')
+                                          svg.classList.remove('fa-clipboard')
+                                          svg.classList.add('fa-clipboard-check')
+
+                                          setTimeout(() => {
+                                              const svg = target.querySelector('svg')
+                                              svg.classList.remove('fa-clipboard-check')
+                                              svg.classList.add('fa-clipboard')
+                                          }, 1500)
+                                      }
+                                    }
+                                ]
+                            }
+                        })
+                    }))
+                }))
+            }
+        }
+    }
+}
+
 const actionSpecificModes = [{ mode: 'code', defaultMode: true }, { mode: 'limits' }]
 specials.actions = {
     get: standardViewModes(actionSpecificModes),
@@ -845,6 +1007,10 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         }
     }
 
+    // pre and post-process the output of openwhisk; default is do nothing
+    let postprocess = x=>x
+    let preprocess = x=>x
+
     if (specials[entity] && specials[entity][verb]) {
         const res = specials[entity][verb](options, argv.slice(restIndex), verb)
         if (res && res.verb) {
@@ -856,6 +1022,16 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         }
         if (res && res.options) {
             options = res.options
+        }
+
+        if (res && res.preprocess) {
+            // postprocess the output of openwhisk
+            preprocess = res.preprocess
+        }
+
+        if (res && res.postprocess) {
+            // postprocess the output of openwhisk
+            postprocess = res.postprocess
         }
     }
     // process the entity-naming "nominal" argument
@@ -932,7 +1108,9 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         })
 
         return preflight(verb, options)
+            .then(preprocess)
             .then(options => ow[entity][verb](options))
+            .then(postprocess)
             .then(response => {
                 // amend the history entry with a selected subset of the response
                 if (execOptions && execOptions.history) {
