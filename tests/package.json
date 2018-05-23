@@ -27,7 +27,7 @@
     "expand-home-dir": "0.0.3",
     "is-url": "^1.2.4",
     "mocha": "^3.4.2",
-    "openwhisk": "git://github.com/starpit/openwhisk-client-js.git#add_client_timeout2",
+    "openwhisk": "git://github.com/starpit/openwhisk-client-js.git#add_client_timeout3",
     "promise-retry": "^1.1.1",
     "properties-parser": "^0.3.1",
     "request": "^2.85.0",
