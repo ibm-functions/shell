@@ -36,7 +36,7 @@ if [ -n "$LAYER" ]; then
         export TEST_ORG=""
         export TEST_SPACE="ns${LAYER}"
 
-        echo "Key from layer $TEST_SPACE"
+        echo "Key from layer $TEST_SPACE $AUTH"
 
         if [ -f "$DIR/${LAYER}b" ]; then
             # some layers need a second auth and namespace
