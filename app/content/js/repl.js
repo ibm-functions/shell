@@ -1043,7 +1043,7 @@ self.exec = (commandUntrimmed, execOptions) => {
                     }
                 })
                 .catch(err => {
-                    console.error('error in command execution', err)
+                    // console.error('error in command execution', err)
 
                     if (ui.headless) {
                         throw err
