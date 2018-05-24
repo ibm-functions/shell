@@ -354,8 +354,8 @@ const format = (message, options={}) => {
                       cmdCell = row.insertCell(-1),
                       docsCell = row.insertCell(-1),
                       cmdPart = span(label),
-                      dirPart = isDir && span('/'),
-                      examplePart = example && span(example, 'left-pad'), // for -p key value, "key value"
+                      dirPart = isDir && label && span('/'),
+                      examplePart = example && span(example, label || dirPart ? 'left-pad' : ''), // for -p key value, "key value"
                       aliasesPart = aliases && span(undefined, 'deemphasize small-left-pad'),
                       docsPart = span(docs),
                       allowedPart = allowed && smaller(span(undefined))
