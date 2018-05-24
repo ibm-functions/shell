@@ -586,13 +586,17 @@ const commandNotFound = (argv, partialMatches) => {
         context: exports.currentContext()
     })
 
-    const error = partialMatches ? formatPartialMatches(partialMatches) : new Error(commandNotFoundMessage)
+    // filter out any partial matches without usage info
+    const availablePartials = (partialMatches || []).filter(({options}) => options.usage),
+          anyPartials = availablePartials.length > 0
+
+    const error = anyPartials ? formatPartialMatches(availablePartials) : new Error(commandNotFoundMessage)
     error.code = 404
 
     // to allow for programmatic use of the partial matches, e.g. for tab completion
-    if (partialMatches) {
-        error.partialMatches = partialMatches.map(_ => ({ command: _.route.split('/').slice(1).join(' '),
-                                                          usage: _.options && _.options.usage }))
+    if (anyPartials) {
+        error.partialMatches = availablePartials.map(_ => ({ command: _.route.split('/').slice(1).join(' '),
+                                                             usage: _.options && _.options.usage }))
     }
 
     throw error
@@ -608,12 +612,12 @@ const commandNotFound = (argv, partialMatches) => {
  * command completions to what they typed.
  *
  */
-const formatPartialMatches = matches => {
+const formatPartialMatches = partialMatches => {
     return new (require('./usage-error'))({
         message: commandNotFoundMessage,
         usage: {
             header: commandNotFoundMessageWithPartialMatches,
-            available: matches.map(({options}) => options.usage).filter(x=>x)
+            available: partialMatches.map(({options}) => options.usage)
         }
     }, { noBreadcrumb: true, noHide: true })
 }
