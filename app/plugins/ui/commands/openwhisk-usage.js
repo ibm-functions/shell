@@ -114,6 +114,7 @@ module.exports = {
         nRowsInViewport: 6, // list all six, since we have a short list
         available: [{ command: 'action', docs: 'work with actions', dir: true, commandPrefix: 'wsk' },
                     { command: 'activation', docs: 'work with activations', dir: true, aliases: ['$'], commandPrefix: 'wsk' },
+                    { command: 'api', docs: 'work with APIs', dir: true, commandPrefix: 'wsk' },
                     { command: 'package', docs: 'work with packages', dir: true, commandPrefix: 'wsk' },
                     { command: 'rule', docs: 'work with rules', dir: true, commandPrefix: 'wsk' },
                     { command: 'trigger', docs: 'work with triggers', dir: true, commandPrefix: 'wsk' },
