@@ -60,9 +60,19 @@ describe('Create api gateway', function() {
        .then(res => cli.expectOKWithOnly('/hello/world')(res)
              .then(() => res.count)
              .then(N => this.app.client.getAttribute(`${ui.selectors.LIST_RESULTS_N(N)} [data-key="url"]`, "data-value")))
+
+       // for localhost openwhisk, we have to make sure that the href is of the form http://${apihost}/...
        .then(href => href.replace(/(http:\/\/)?172\.17\.0\.1/, ui.apiHost.replace(/http(s)?:\/\//, '')))
+       .then(href => {
+           if (!href.startsWith('http')) {
+               return `http://${href}`
+           } else {
+               return href
+           }
+       })
        .then(href => { console.error('api href', href); return href; })
-       .then(href => rp({ url: `http://${href}?foo=bar`, rejectUnauthorized: false }))
+
+       .then(href => rp({ url: `${href}?foo=bar`, rejectUnauthorized: false }))
        .then(ui.expectSubset({foo: 'bar'}))
        .catch(common.oops(this)))
 })
