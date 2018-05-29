@@ -14,6 +14,7 @@ addons:
       - dbus-x11
       - xvfb
       - make
+      - jq
       - g++
       - libnss3
       - libasound2
@@ -28,11 +29,11 @@ env:
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
     - UV_THREADPOOL_SIZE=128
     - NO_NOTIFICATIONS=true
-    - NO_DEBUGGER_BREAKPOINTS=true
     - WINDOW_WIDTH=1400
     - WINDOW_HEIGHT=1050
     - KEY_FROM_LAYER=true
     - DISPLAY=:99
+    - TEST_FROM_BUILD="$TRAVIS_BUILD_DIR"/build/IBM\ Cloud\ Shell-linux-x64/IBM\ Cloud\ Shell
 
 install:
     - echo "API_HOST=foo" > ~/.wskprops                                                   # dist/compile.sh needs something here
@@ -42,10 +43,7 @@ install:
     - wait
     - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &
     - sleep 5
-    - head -50 app/content/js/ui.js
-#    - rm .dockerignore
-#    - cp tools/travis/Dockerfile .
-#    - docker build -t shell-test .                                                       # initialize test docker image
+    - (cd dist && ./build.sh linux)
 
 #script: (cd tests && npm run test)
 #script: (cd tests && ./bin/runLocal.sh 01 08 07 02 03 04 05)

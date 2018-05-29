@@ -43,7 +43,7 @@ exports.before = (ctx, {fuzz, noApp=false}={}) => {
 
         if (!noApp) {
             const opts = {
-	        path: electron,
+	        path: process.env.TEST_FROM_BUILD || electron,
 	        env,
                 chromeDriverArgs: [ '--no-sandbox' ],
                 waitTimeout: process.env.TIMEOUT || 60000,
