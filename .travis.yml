@@ -14,6 +14,8 @@ addons:
       - dbus-x11
       - xvfb
       - make
+      - jq                                # required by dist/build.sh
+#      - wine                              # ibid, for windows builds
       - g++
       - libnss3
       - libasound2
@@ -24,36 +26,42 @@ addons:
 
 env:
   global:
+    - DISPLAY=:99
     - API_HOST=172.17.0.1
     - REDIS_URL=redis://172.17.0.1:6379   # we'll pick up openwhisk's redis
-    - UV_THREADPOOL_SIZE=128
-    - NO_NOTIFICATIONS=true
-    - NO_DEBUGGER_BREAKPOINTS=true
-    - WINDOW_WIDTH=1400
-    - WINDOW_HEIGHT=1050
-    - KEY_FROM_LAYER=true
-    - DISPLAY=:99
+    - UV_THREADPOOL_SIZE=128              # might be superfluous; was trying to work around ESOCKETTIMEOUT on linux
+    - NO_NOTIFICATIONS=true               # try not to use Notifications in the browser
+    - WINDOW_WIDTH=1400                   # ! important ! so that clicks don't fail due to elements being off-viewport
+    - WINDOW_HEIGHT=1050                  # ! ibid !
+    - KEY_FROM_LAYER=true                 # use one api key per test layer
+    - TEST_FROM_BUILD="${TRAVIS_BUILD_DIR}/dist/build/IBM Cloud Shell-linux-x64/IBM Cloud Shell" # test against a specific dist build
 
 install:
-    - echo "API_HOST=foo" > ~/.wskprops                                                   # dist/compile.sh needs something here
-    - echo "AUTH=bar" >>  ~/.wskprops                                                     # ibid
+    - echo "APIHOST=foo" > ~/.wskprops                                                    # dist/compile.sh needs something here
+    - echo "AUTH=bar" >>  ~/.wskprops                                                     # ibid (see the call to initOW in openwhisk-core.js)
     - (cd app && npm install && cd ../tests && npm install && npm run _instrument) &      # app and tests npm install
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &   # initialize openwhisk and test docker
-    - wait
-    - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &
-    - sleep 5
-    - head -50 app/content/js/ui.js
-#    - rm .dockerignore
-#    - cp tools/travis/Dockerfile .
-#    - docker build -t shell-test .                                                       # initialize test docker image
+    - wait                                                                                # wait for the above &'d background processes
+    - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &                   # start virtual framebuffer process
+    - sleep 5                                                                             # wait a bit for it to come up
+    - echo "AUTH=bar" >>  ~/.wskprops                                                     # tools/travis/build.sh overrides this
+    - (cd dist && ./build.sh linux)                                                       # create a dist build to test against
+    # ^^^ for the dist build, notice that we build for all platforms, even
+    # though travis only needs linux; this is done purposefully, so as
+    # to test the dist build mechanism for all platforms
+    - echo "composer plugin version `cat app/plugins/modules/composer/package.json | jq --raw-output .version`" # log to travis just in case
+    - cat app/plugins/.pre-scanned  | jq .commandToPlugin                                                       # ibid
+    - cat app/plugins/.pre-scanned  | jq .overrides                                                             # ibid
+    - echo "install steps completed with success"
 
+# if for some reason we want to avoid the use of travis jobs:
 #script: (cd tests && npm run test)
 #script: (cd tests && ./bin/runLocal.sh 01 08 07 02 03 04 05)
 
 jobs:
   include:
-    - script: (cd tests && ./bin/runLocal.sh 01 08 02 05)
-      env: EXECUTING=01:08:02:05
+    - script: (cd tests && ./bin/runLocal.sh 01 08 02 05)        # test a couple of layers here, as they're all small
+      env: EXECUTING=01:08:02:05                                 # this env var will help us distinguish jobs in the travis console
     - script: (cd tests && ./bin/runLocal.sh 07)
       env: EXECUTING=07
     - script: (cd tests && ./bin/runLocal.sh 03)

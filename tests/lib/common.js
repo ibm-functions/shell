@@ -43,13 +43,21 @@ exports.before = (ctx, {fuzz, noApp=false}={}) => {
 
         if (!noApp) {
             const opts = {
-	        path: electron,
 	        env,
                 chromeDriverArgs: [ '--no-sandbox' ],
                 waitTimeout: process.env.TIMEOUT || 60000,
-	        args: [ appMain ]
             }
-            if (process.env.CHROMEDRIVER_PORT) {
+
+	    if (process.env.TEST_FROM_BUILD) {
+		console.log(`Using build-based assets: ${process.env.TEST_FROM_BUILD}`)
+		opts.path = process.env.TEST_FROM_BUILD
+	    } else {
+		console.log('Using filesystem-based assets')
+	        opts.path = electron      // this means spectron will use electron located in node_modules
+		opts.args = [ appMain ]   // in this mode, we need to specify the main.js to use
+	    }
+
+	    if (process.env.CHROMEDRIVER_PORT) {
                 opts.port = process.env.CHROMEDRIVER_PORT
             }
             if (process.env.WSKNG_NODE_DEBUG) {

@@ -109,7 +109,7 @@ const diff = ({commandToPlugin:before}, {commandToPlugin:after}, reverseDiff = f
  *
  */
 const uglify = modules => modules.flat.map(module => new Promise((resolve, reject) => {
-    if (!process.env.UGLIFY) resolve()
+    if (!process.env.UGLIFY) return resolve()
     debug('uglify %s', module.path)
 
     const src = path.join(__dirname, '..', '..', '..', module.path),
@@ -223,12 +223,17 @@ module.exports = (rootDir, externalOnly, cleanup = false, reverseDiff = false) =
     if (cleanup) {
         // copy the TMP originals back in place
         debug('cleanup')
-        Promise.all(require('../../../../content/js/plugins.js').scanForPlugins(TMP)
-            .map(pluginJsFile => {
-                const pluginRoot = path.join(__dirname, '..', '..', '..', '..'),
-                    originalLocation = path.join(pluginRoot, pluginJsFile)
-                return fs.copy(pluginJsFile, originalLocation)
-            })).then(()=>resolve()).catch(err=>reject(err))
+        return fs.exists('../../../../content/js/plugins.js')
+            .then(exists => {
+                if (exists) {
+                    return Promise.all(require('../../../../content/js/plugins.js').scanForPlugins(TMP)
+                                       .map(pluginJsFile => {
+                                           const pluginRoot = path.join(__dirname, '..', '..', '..', '..'),
+                                                 originalLocation = path.join(pluginRoot, pluginJsFile)
+                                           return fs.copy(pluginJsFile, originalLocation)
+                                       })).then(()=>resolve()).catch(err=>reject(err))
+                }
+            })
 
     } else {
         const pluginRoot = path.join(rootDir, 'plugins')       // pluginRoot points to the root of the modules subdir
