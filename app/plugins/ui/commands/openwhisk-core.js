@@ -110,6 +110,7 @@ const initOW = () => {
     debug('initOW done')
 }
 if (apiHost && auth) initOW()
+else console.error('skipping initOW', apiHost, auth)
 
 /** is a given entity type CRUDable? i.e. does it have get and update operations, and parameters and annotations properties? */
 const isCRUDable = {

@@ -213,7 +213,10 @@ const loadPlugin = (route, pluginPath) => {
         // the /wsk/action/invoke command)
         for (let k in cmdToPlugin) {
             if (commandToPlugin[k]) {
+                debug('override', k, cmdToPlugin[k], commandToPlugin[k])
                 overrides[k] = cmdToPlugin[k]
+            } else {
+                debug('not override', k, cmdToPlugin[k])
             }
             commandToPlugin[k] = cmdToPlugin[k]
         }

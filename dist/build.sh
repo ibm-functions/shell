@@ -16,6 +16,16 @@ ICON_LINUX=`cat ../app/build/config.json | jq --raw-output .filesystemIcons.linu
 VERSION=`git rev-parse master`
 BUILDDIR=build
 
+# if we're running a test against a dist build, then we need to tell
+# electron-packager to keep around devDependencies
+if [ -n "${TEST_FROM_BUILD}" ]; then
+    NO_PRUNE=--no-prune
+    NO_INSTALLER=true
+else
+    # by default, we want to uglify the javascript
+    UGLIFY=true
+fi
+
 function init {
     # make the build directory
     if [ ! -d $BUILDDIR ]; then
@@ -30,7 +40,7 @@ function init {
     fi
 
     # assemble plugins
-    UGLIFY=true ./compile.js
+    ./compile.js
 
     # minify the css
     cp ../app/content/css/ui.css /tmp
@@ -47,7 +57,7 @@ function cleanup {
 
     cp /tmp/ui.css ../app/content/css/ui.css
 
-    UGLIFY=true ./compile.js cleanup
+    ./compile.js cleanup
 }
 
 function win32 {
@@ -127,6 +137,7 @@ function linux {
         ./node_modules/.bin/electron-packager \
 	    ../app \
 	    "${PRODUCT_NAME}" \
+            ${NO_PRUNE} \
 	    --asar=true \
             --build-version=$VERSION \
 	    --out=$BUILDDIR \
@@ -146,8 +157,4 @@ function linux {
 
 
 # line up the work
-init
-win32
-mac
-linux
-cleanup
+init && win32 && mac && linux && cleanup

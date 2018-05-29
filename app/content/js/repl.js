@@ -1081,7 +1081,8 @@ self.exec = (commandUntrimmed, execOptions) => {
             throw e
         }
 
-        console.error('catastrophic error in repl', e)
+        console.error('catastrophic error in repl')
+        console.error(e)
 
         const blockForError = block || ui.getCurrentProcessingBlock()
 
