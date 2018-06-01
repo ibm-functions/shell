@@ -134,7 +134,7 @@ const persisters = {
             const fs = require('fs'),
                   tmp = require('tmp')
 
-            tmp.file({ prefix: 'shell-', postfix: '.js' }, (err, filepath, fd, cleanup) => {
+            tmp.file({ prefix: 'shell-', postfix: extension(app.exec.kind) }, (err, filepath, fd, cleanup) => {
                 if (err) {
                     reject(err)
                 } else {
@@ -143,7 +143,7 @@ const persisters = {
                             reject(err)
                         } else {
                             // -r means try to deploy the actions, too
-                            return repl.qexec(`app update "${app.name}" "${filepath}" -r`)
+                            return repl.qexec(`app update "${app.name}" "${filepath}" -r --kind ${app.exec.kind}`)
                                 .then(app => {
                                     cleanup()
                                     resolve(app)
@@ -285,11 +285,27 @@ const tidy = ({wsk, getAction, editor, eventBus}) => ({
  */
 const language = kind => {
     const base = kind.substring(0, kind.indexOf(':')) || kind
+    debug('language', kind, base)
 
     return base === 'nodejs'
         || base === 'app'
         || base === 'composition'
         || base === 'sequence' ? 'javascript' : base
+}
+
+/**
+  * What is the filename extension for the given kind?
+  *
+  */
+const extension = kind => {
+    const lang = language(kind)
+    debug('extension', kind, lang)
+
+    switch(lang) {
+    case 'javascript': return '.js'
+    case 'python': return '.py'
+    default: return `.${lang}`        // e.g. .swift, .php, .go
+    }
 }
 
 /**
@@ -555,6 +571,7 @@ const respondToRepl = (wsk, extraModes=[]) => ({ getAction, editor, content, eve
     content,
     controlHeaders: ['.header-right-bits'],
     displayOptions: [`entity-is-${getAction().type}`, 'edit-mode'],
+    badges: [ language(getAction().exec.kind) ],
     modes: extraModes
         .map(_ => _({wsk, getAction, editor, eventBus}))
         .concat([ save({wsk, getAction, editor, eventBus}),
@@ -610,10 +627,6 @@ const edit = (wsk, prequire) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args,
           name = args[args.indexOf('edit') + 1]
           || (sidecar.entity && `/${sidecar.entity.namespace}/${sidecar.entity.name}`)
 
-    if (!name || options.help) {
-        throw new errors.usage(usage.edit)
-    }
-
     //
     // fetch the action and open the editor in parallel
     // then update the editor to show the action
@@ -644,19 +657,19 @@ const addVariantSuffix = kind => {
  * Command handler to create a new action or app
  *
  */
-const newAction = ({wsk, prequire, op='new', type='actions', _kind=defaults.kind, placeholder, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
-    debug('newAction', op)
-
+const newAction = ({wsk, prequire, op='new', type='actions', _kind=defaults.kind, placeholder, placeholderFn, persister=persisters.actions}) => (_0, _1, fullArgv, { ui, errors }, _2, _3, args, options) => {
     const name = args[args.indexOf(op) + 1],
-          kind = addVariantSuffix(options.kind || _kind)
+          prettyKind = addVariantSuffix(options.kind || _kind),
+          kind = addVariantSuffix(options.kind || defaults.kind)
 
-    if (options.help || !name) {
-        throw new errors.usage(usage[op])
-    }
+    debug('newAction', op, name, kind, prettyKind)
+
+    // create the initial, placeholder, source code to place in the editor
+    const makePlaceholderCode = placeholderFn || (() => placeholder || placeholders[language(kind)])
 
     // our placeholder action
     const action = { name, type,
-                     exec: { kind, code: placeholder || placeholders[language(kind)] },
+                     exec: { kind, prettyKind, code: makePlaceholderCode({kind}) },
                      isNew: true,
                      persister
                    }
@@ -741,7 +754,7 @@ const addWskflow = prequire => opts => {
 const compositionOptions = baseOptions => {
     return Object.assign({type: 'apps',
                           _kind: 'app',
-                          placeholder: placeholders.composition,      // the placeholder impl
+                          placeholderFn: ({kind='nodejs:default'}) => placeholders.composition[language(kind)],  // the placeholder impl
                           persister: persisters.apps,                 // the persister impl
                          }, baseOptions)
 }

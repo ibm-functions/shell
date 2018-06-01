@@ -835,7 +835,7 @@ sidecar pre {
     /* no margin for action source code */
     margin: 0;
 }
-sidecar:not(.entity-is-actions) .action-content {
+sidecar:not(.entity-is-actions):not(.entity-is-apps) .action-content {
     display: none;
 }
 sidecar:not(.entity-is-activations) .activation-content {

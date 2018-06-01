@@ -198,7 +198,7 @@ const isManagedWebAsset = action => isWebAsset(action) && isManagedAsset(action)
 */
 const makeZipActionFromZipFile = (wsk, name, location, options, commandTree, preflight, execOptions) => new Promise((resolve, reject) => {
     try {
-        debug('makeZipActionFromZipFile', name, location)
+        debug('makeZipActionFromZipFile', name, location, options)
 
         fs.exists(location, exists => {
             if (!exists) {
@@ -208,17 +208,20 @@ const makeZipActionFromZipFile = (wsk, name, location, options, commandTree, pre
                     if (err) {
                         reject(err)
                     } else {
-                        const owOpts = wsk.owOpts({ name: name,
+                        const action = {
+                            exec: {
+                                kind: options.kind || 'nodejs:default',
+                                code: data.toString('base64'),
+                            },
+                            annotations: (options.action && options.action.annotations || []),
+                            parameters: options.action && options.action.parameters || [],
+                            limits: options.action && options.action.limits || {}
+                        }
+                        debug('body', action)
+                        
+                        const owOpts = wsk.owOpts({ name,
                                                     // options.action may be defined, if the command has e.g. -a or -p
-                                                    action: {
-                                                        exec: {
-                                                            kind: options.kind || 'nodejs:default',
-                                                            code: data.toString('base64'),
-                                                        },
-                                                        annotations: (options.action && options.action.annotations || []),
-                                                        parameters: options.action && options.action.parameters || [],
-                                                        limits: options.action && options.action.limits || {}
-                                                    }
+                                                    action
                                                   })
 
                         // location on local filesystem
