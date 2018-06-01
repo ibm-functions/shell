@@ -14,30 +14,9 @@
  * limitations under the License.
  */
 
-exports.javascript = `function main(params) {
-   return params
-}`
+const { provider } = require('./composer-javascript')
 
-exports.python = `def main(params):
-   return { "python": "fun" }`
-
-exports.swift = `func main(params: [String:Any]) -> [String:Any] {
-   return params
-}`
-
-exports.php = `<?php
-function main(array $args) : array
-{
-    $name = $args["name"] ?? "stranger";
-    $greeting = "Hello $name!";
-    echo $greeting;
-    return ["greeting" => $greeting];
-}`
-
-exports.composition = {
-    javascript: `// try typing "composer." to begin your composition
-`,
-
-    python: `# try typing "composer." to begin your composition
-`
+module.exports = {
+    language: 'python',
+    provider
 }

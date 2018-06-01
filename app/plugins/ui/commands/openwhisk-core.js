@@ -1008,6 +1008,28 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         }
     }
 
+    // programmatic passing of parameters?
+    const paramVars = ['params', 'parameters']
+    paramVars.forEach(paramVar => {
+        if (execOptions && execOptions[paramVar]) {
+            debug('found execOptions parameters', execOptions[paramVar])
+            let details = options[toOpenWhiskKind(entity)]
+            if (!details) {
+                details = {}
+                options[toOpenWhiskKind(entity)] = details
+            }
+            if (!details[paramVar]) {
+                details[paramVar] = []
+            }
+
+            const params = details[paramVar]
+            for (let key in execOptions[paramVar]) {
+                const value = execOptions[paramVar][key]
+                params.push({ key, value })
+            }
+        }
+    })
+
     // pre and post-process the output of openwhisk; default is do nothing
     let postprocess = x=>x
     let preprocess = x=>x
@@ -1087,26 +1109,6 @@ const executor = (_entity, _verb, verbSynonym, commandTree, preflight) => (block
         //if (isLinux && (!execOptions || !execOptions.noRetry) && options.retry !== false) options.timeout = 5000 // linux bug
 
 	owOpts(options, execOptions)
-
-        // programmatic passing of parameters?
-        const paramVars = ['params', 'parameters']
-        paramVars.forEach(paramVar => {
-            if (execOptions && execOptions[paramVar]) {
-                let details = options[toOpenWhiskKind(entity)]
-                if (!details) {
-                    details = {}
-                    options[toOpenWhiskKind(entity)] = details
-                }
-                if (!details[paramVar]) {
-                    const params = details[paramVar] = []
-
-                    for (let key in execOptions[paramVar]) {
-                        const value = execOptions[paramVar][key]
-                        params.push({ key, value })
-                    }
-                }
-            }
-        })
 
         return preflight(verb, options)
             .then(preprocess)

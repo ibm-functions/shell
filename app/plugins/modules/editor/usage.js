@@ -18,6 +18,15 @@
 const all = ['compose', 'new', 'edit']
 const allExcept = cmd => all.filter(_ => _ !== cmd)
 
+/** optional arguments for new and compose commands */
+const optional = allowed => [
+    { name: '--kind', alias: '-k', docs: 'The OpenWhisk kind of the new action',
+      allowed,
+      allowedIsPrefixMatch: true,
+      defaultValue: 'nodejs'
+    }
+]
+
 /**
  * Usage model for the editor plugin
  *
@@ -52,6 +61,7 @@ module.exports = {
         header: 'For quick prototyping of compositions, this command opens an editor in the sidecar.',
         example: 'compose <appName>',
         required: [{ name: '<appName>', docs: 'The name of your new composition' }],
+        optional: optional(['nodejs', 'python']),
         parents: [{command: 'editor'}],
         related: allExcept('compose')
     },
@@ -63,11 +73,7 @@ module.exports = {
         header: 'For quick prototyping of actions, this command opens an editor in the sidecar.',
         example: 'new <actionName>',
         required: [{ name: '<actionName>', docs: 'The name of your new action' }],
-        optional: [{ name: '--kind', alias: '-k', docs: 'The OpenWhisk kind of the new action',
-                     allowed: ['nodejs', 'python', 'php', 'swift'],
-                     allowedIsPrefixMatch: true,
-                     defaultValue: 'nodejs'
-                   }],
+        optional: optional(['nodejs', 'python', 'php', 'swift']),
         parents: [{command: 'editor'}],
         related: allExcept('new')
     }

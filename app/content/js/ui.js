@@ -993,6 +993,10 @@ const ui = (function() {
         const container = sidecar.querySelector('.custom-content')
         removeAllDomChildren(container)
         container.appendChild(custom.content)
+
+        if (custom && custom.badges) {
+            custom.badges.forEach(addBadge)
+        }
     }
 
     /**
@@ -1126,6 +1130,8 @@ const ui = (function() {
      *
      */
     const addBadge = (badgeText, { css, onclick }={}) => {
+        debug('addBadge', badgeText)
+
         const sidecar = document.querySelector('#sidecar'),
               header = sidecar.querySelector('.sidecar-header'),
               badges = header.querySelector('.badges')
@@ -1269,6 +1275,7 @@ const ui = (function() {
                                   indexEntryJavascript = zip.getEntry('index.js'),
 		                  indexEntry = indexEntryJavascript
                                   || zip.getEntry('index.py')
+                                  || zip.getEntry('__main__.py')
                                   || zip.getEntry('index.php')
                                   || zip.getEntry('index.swift')
 

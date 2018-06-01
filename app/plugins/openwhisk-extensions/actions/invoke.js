@@ -26,6 +26,8 @@
  *
  */
 
+const debug = require('debug')('openwhisk invoke extension')
+
 const path = require('path'),
       { actions } = require(path.join(__dirname, '../../ui/commands/openwhisk-usage'))
 
@@ -61,6 +63,8 @@ const fetchFromError = error => {
  *
  */
 const respond = options => response => {
+    debug('responding to caller', response)
+
     if (options.quiet) {
         return true
     } else {

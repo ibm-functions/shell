@@ -22,6 +22,8 @@
  *
  */
 
+const debug = require('debug')('await')
+
 const POLL_INTERVAL = process.env.POLL_INTERVAL || 1000,
       minimist = require('yargs-parser')
 
@@ -57,6 +59,8 @@ module.exports = (commandTree, require) => {
           history = require('/ui/commands/history')
 
     const doAwait = (_1, _2, fullArgv, modules) => new Promise((resolve, reject) => {
+        debug('begin await')
+
         const argvWithOptions = fullArgv.slice(fullArgv.indexOf('await') + 1),
               options = minimist(argvWithOptions, { alias: { 'r': 'remote' } }),
               argv = options._ // this is a minimist thing
@@ -76,7 +80,7 @@ module.exports = (commandTree, require) => {
                   .catch(err => {
                       if (err && err.error && err.error.error === 'The requested resource does not exist.') {
                           // the activation isn't even recorded, yet!
-                          console.log(`await::need to poll fetch ${activationId}`)
+                          debug('fetch needs to poll', activationId)
                           setTimeout(() => fetchPoll(), POLL_INTERVAL)
                       } else {
                           reject(err)
@@ -93,10 +97,11 @@ module.exports = (commandTree, require) => {
             const iter = () => {
                   if (activation.end || activation.response.status) {
                       // then the activation has finished!
+                      debug('await complete')
                       resolve(activation)
                   } else {
                       // otherwise, the activation is recorded, but not yet complete, so retry after some time
-                      console.log(`await::need to poll for completion ${activation.activationId}`)
+                      debug('poll still waiting for completion', activation.activationId)
                       setTimeout(() => fetch(activation.activationId).then(poll), POLL_INTERVAL)
                   }
             }
@@ -123,7 +128,7 @@ module.exports = (commandTree, require) => {
                                 if (iter > 100) {
                                     reject('No recent activations to await')
                                 } else {
-                                    console.log('await::need to poll history', lastActivationCommand)
+                                    debug('need to poll history', lastActivationCommand)
                                     setTimeout(() => findPoll(iter + 1), 1000)
                                 }
                             }

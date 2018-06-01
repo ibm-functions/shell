@@ -590,6 +590,7 @@ const commandNotFound = (argv, partialMatches) => {
     const availablePartials = (partialMatches || []).filter(({options}) => options.usage),
           anyPartials = availablePartials.length > 0
 
+    console.error(commandNotFoundMessage, argv)
     const error = anyPartials ? formatPartialMatches(availablePartials) : new Error(commandNotFoundMessage)
     error.code = 404
 

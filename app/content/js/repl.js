@@ -1061,6 +1061,7 @@ self.exec = (commandUntrimmed, execOptions) => {
                             return err
                         } else if (!nested && !rethrowIt) {
                             debug('reporting command execution error to user via repl')
+                            console.error(err)
                             ui.oops(block, nextBlock)(err)
                         } else {
                             debug('rethrowing command execution error')
