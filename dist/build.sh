@@ -151,6 +151,7 @@ function linux {
 
         if [ -z "$NO_INSTALLER" ]; then
             (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-linux-x64" "${PRODUCT_NAME}-linux-x64" -x \*~)
+            ./node_modules/.bin/electron-installer-debian --src "${BUILDDIR}/${PRODUCT_NAME}-linux-x64" --dest ${BUILDDIR}/installers/ --arch amd64 --config dpkg-config.json
         fi
     fi
 }
