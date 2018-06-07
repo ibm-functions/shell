@@ -4,11 +4,13 @@
   "description": "Files for creating a Shell distributable binary",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "if [ `uname` == Darwin ]; then brew install fakeroot dpkg; fi"
   },
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "electron-installer-debian": "^0.8.1",
     "electron-installer-dmg": "^0.2.1",
     "electron-packager": "^8.7.2",
     "minifier": "^0.8.1"
