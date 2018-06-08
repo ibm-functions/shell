@@ -147,11 +147,15 @@ function linux {
 	    --overwrite
 
         # CLI script
-        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-linux-x64"
+        cp ./bin/fsh "$BUILDDIR/${PRODUCT_NAME}-linux-x64"
 
         if [ -z "$NO_INSTALLER" ]; then
             (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-linux-x64" "${PRODUCT_NAME}-linux-x64" -x \*~)
-            ./node_modules/.bin/electron-installer-debian --src "${BUILDDIR}/${PRODUCT_NAME}-linux-x64" --dest ${BUILDDIR}/installers/ --arch amd64 --config dpkg-config.json
+            rm -f "${BUILDDIR}/installers/*.deb"
+            DEBUG=electron-installer-debian ./node_modules/.bin/electron-installer-debian --src "${BUILDDIR}/${PRODUCT_NAME}-linux-x64" --dest ${BUILDDIR}/installers/ --arch amd64 --config dpkg-config.json
+            for deb in "${BUILDDIR}/installers/*.deb"; do
+                mv -f $deb "${BUILDDIR}/${PRODUCT_NAME}-linux-x64.deb"
+            done
         fi
     fi
 }
