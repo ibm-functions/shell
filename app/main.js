@@ -17,6 +17,9 @@
 const debug = require('debug')('main')
 debug('starting')
 
+// handle squirrel install and update events
+if (require('electron-squirrel-startup')) return
+
 const electron = require('electron'),
       { app } = electron
 
