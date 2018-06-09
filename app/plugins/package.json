@@ -21,9 +21,9 @@
     "parse-duration": "^0.1.1",
     "promise-retry": "^1.1.1",
     "properties-parser": "^0.3.1",
-    "request": "^2.85.0",
+    "request": "^2.87.0",
     "request-promise": "^4.2.1",
-    "shelljs": "^0.8.1",
+    "shelljs": "^0.8.2",
     "tmp": "0.0.33"
   }
 }
