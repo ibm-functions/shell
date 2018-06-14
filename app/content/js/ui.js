@@ -1821,6 +1821,8 @@ const ui = (function() {
      * leading @ character?
      *
      */
+    const specialPaths = [] // any special paths added via self.addPath
+    const defaultSpecial = { filepath: require('path').join(__dirname, '..') } // default special is the app/ top-level
     self.findFile = (filepath, safe) => {
         if (!filepath) {
             if (!safe) {
@@ -1831,9 +1833,28 @@ const ui = (function() {
             }
         } else if (filepath.charAt(0) === '@') {
             // ui.js is in the /app/build directory
-            return require('path').join(__dirname, '..', filepath.substring(1))
+            const desiredPrefix = require('path').dirname(filepath)
+            const special = specialPaths.find(({prefix}) => desiredPrefix.indexOf(prefix) === 0) || defaultSpecial
+            return require('path').join(special.filepath, filepath)
         } else {
             return require('expand-home-dir')(filepath)
+        }
+    }
+
+    /**
+     * Augment the module load path
+     *
+     */
+    self.addPath = filepath => {
+        const path = require('path')
+
+        // use app-module-path to augment the node module require path
+        require('app-module-path').addPath(path.resolve(filepath))
+
+        // remember this for self.findFile
+        const prefix = path.basename(filepath)
+        if (prefix.charAt(0) === '@') {
+            specialPaths.push({ prefix , filepath: path.dirname(filepath) })
         }
     }
 

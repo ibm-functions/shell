@@ -53,7 +53,7 @@ const common = require('../../../lib/common'),
       ]
 
 /** fetch source code for the app */
-const src = app => fs.readFileSync(path.join(__dirname, '../../../../app/demos/', `${app}.js`)).toString()
+const src = app => fs.readFileSync(path.join(__dirname, '../../../../app/plugins/modules/composer/@demos/', `${app}.js`)).toString()
 
 // hardcode for now... we need to generate this every time
 const fsm = {
