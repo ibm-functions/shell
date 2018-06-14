@@ -17,8 +17,14 @@
 const debug = require('debug')('composer-preload')
 debug('loading')
 
+const path = require('path')
 
-module.exports = (commandTree, prequire) => {
+/**
+ * Listen for drag and drop, and try to show a preview of the
+ * composition on drop.
+ *
+ */
+const listenForDrops = () => {
     if (typeof document !== 'undefined') {
         document.addEventListener('drop', event => {
             const { dataTransfer } = event,
@@ -33,5 +39,15 @@ module.exports = (commandTree, prequire) => {
                                 })
             }
         })
+    }
+}
+
+module.exports = (commandTree, prequire) => {
+    // listen for drag and drop
+    listenForDrops()
+
+    // give visibility to our @demos directory on the module path
+    if (typeof document !== 'undefined') {
+        ui.addPath(path.join(__dirname, '../composer/@demos'))
     }
 }
