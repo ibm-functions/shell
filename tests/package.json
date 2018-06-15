@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "_instrument": "mv ../app/demos .. && nyc instrument ../app ../app && mv ../demos ../app/demos",
+    "_instrument": "mv ../app/plugins/modules/composer/\\@demos .. && nyc instrument ../app ../app && mv ../\\@demos ../app/plugins/modules/composer/\\@demos",
     "instrument": "git diff-index HEAD | grep 'app/' && echo 'uncommitted changes, aborting' || npm run _instrument",
     "deinstrument": "git checkout ../app && (cd ../app/plugins/modules/composer && rm -rf node_modules && npm install)",
     "test": "cd test && ./bin/runLocal.sh"
