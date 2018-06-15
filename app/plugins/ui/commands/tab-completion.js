@@ -31,6 +31,34 @@ const completeWith = (partial, match, addSpace=false) => {
 }
 
 /**
+ * Is the given filepath a directory?
+ *
+ */
+const isDirectory = filepath => new Promise((resolve, reject) => {
+    fs.lstat(filepath, (err, stats) => {
+        if (err) {
+            reject(err)
+        } else {
+            if (stats.isSymbolicLink()) {
+                debug('following symlink')
+                // TODO: consider turning these into the better async calls?
+                return fs.realpath(filepath, (err, realpath) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        return isDirectory(realpath)
+                            .then(resolve)
+                            .catch(reject)
+                    }
+                })
+            }
+
+            resolve(stats.isDirectory())
+        }
+    })
+})
+
+/**
  * We've found a match. Add this match to the given partial match,
  * located in the given dirname'd directory, and update the given
  * prompt, which is an <input>.
@@ -48,9 +76,10 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
 
     if (dirname) {
         // see if we need to add a trailing slash
-        fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
-            if (!err) {
-                if (stats.isDirectory()) {
+        const filepath = expandHomeDir(path.join(dirname, match))
+        isDirectory(filepath)
+            .then(isDir => {
+                if (isDir) {
                     // add a trailing slash if the dirname/match is a directory
                     debug('complete as directory')
                     prompt.value = prompt.value + completion + '/'
@@ -59,10 +88,9 @@ const complete = (match, prompt, { temporaryContainer, partial=temporaryContaine
                     debug('complete as scalar')
                     prompt.value = prompt.value + completion
                 }
-            } else {
+            }).catch(err => {
                 console.error(err)
-            }
-        })
+            })
 
     } else {
         // otherwise, just add the completion to the prompt
@@ -398,14 +426,18 @@ const suggestLocalFile = (last, block, prompt, temporaryContainer, lastIdx) => {
                         const { option, optionInner } = addSuggestion(temporaryContainer, dirname, prompt)(match, idx)
 
                         // see if the match is a directory, so that we add a trailing slash
-                        fs.lstat(expandHomeDir(path.join(dirname, match)), (err, stats) => {
-                            if (!err && stats.isDirectory()) {
-                                optionInner.innerText = match + '/'
-                            } else {
-                                optionInner.innerText = match
-                            }
-                            option.setAttribute('data-value', optionInner.innerText)
-                        })
+                        const filepath = path.join(dirname, match)
+                        isDirectory(filepath)
+                            .then(isDir => {
+                                if (isDir) {
+                                    optionInner.innerText = match + '/'
+                                } else {
+                                    optionInner.innerText = match
+                                }
+                                option.setAttribute('data-value', optionInner.innerText)
+                            }).catch(err => {
+                                console.error(err)
+                            })
                     })
                 }
             }

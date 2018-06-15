@@ -53,6 +53,9 @@ install:
     - cat app/plugins/.pre-scanned  | jq .commandToPlugin                                                       # ibid
     - cat app/plugins/.pre-scanned  | jq .overrides                                                             # ibid
     - echo "install steps completed with success"
+   # corral the tests that plugins might offer
+    - echo "Test corral"
+    - (cd tests && ./bin/corral.sh)
 
 # if for some reason we want to avoid the use of travis jobs:
 #script: (cd tests && npm run test)
