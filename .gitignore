@@ -12,3 +12,5 @@ app/plugins/.pre-scanned
 dump.rdb
 openwhisk
 .idea
+.DS_Store
+app.inst

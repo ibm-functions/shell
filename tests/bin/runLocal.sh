@@ -16,6 +16,9 @@
 
 #!/usr/bin/env bash
 
+SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+export TEST_ROOT="$SCRIPTDIR/.."
+
 # the | tee should fail if runTest fails
 set -o pipefail
 

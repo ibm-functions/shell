@@ -4,28 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "_instrument": "mv ../app/plugins/modules/composer/\\@demos .. && nyc instrument ../app ../app && mv ../\\@demos ../app/plugins/modules/composer/\\@demos",
+    "_instrument": "if [ -d ../app.orig ]; then rm -rf ../app.orig; fi; cp -r ../app ../app.orig && nyc instrument ../app ../app && rm -rf ../app/plugins/modules/composer/\\@demos && cp -r ../app.orig/plugins/modules/composer/\\@demos ../app/plugins/modules/composer/\\@demos && rm -rf ../app/plugins/modules/composer/tests && cp -r ../app.orig/plugins/modules/composer/tests ../app/plugins/modules/composer/tests",
     "instrument": "git diff-index HEAD | grep 'app/' && echo 'uncommitted changes, aborting' || npm run _instrument",
-    "deinstrument": "git checkout ../app && (cd ../app/plugins/modules/composer && rm -rf node_modules && npm install)",
-    "test": "cd test && ./bin/runLocal.sh"
+    "deinstrument": "if [ -d ../app.orig ]; then rm -rf ../app.inst && mv ../app ../app.inst && mv ../app.orig ../app; fi",
+    "test": "cd test && ./bin/corral.sh && ./bin/runLocal.sh && ./bin/corral.sh clean"
   },
   "author": "",
   "license": "Apache-2.0",
   "nyc": {
     "exclude": [
-      "tests/lib/*.js",
-      "data/*.js",
-      "tests/**/*.js",
+      "**/tests/lib/**",
+      "**/tests/data/**",
+      "**/tests/**/*.js",
       "coverage/**",
       "**/node_modules/**"
     ],
     "include": [
-      "app/plugins/modules/node_modules/@ibm-functions/**/*.js"
+      "app/plugins/node_modules/@ibm-functions/**/*.js"
     ]
   },
   "devDependencies": {
     "expand-home-dir": "0.0.3",
-    "is-url": "^1.2.4",
     "mocha": "^5.2.0",
     "openwhisk": "git://github.com/starpit/openwhisk-client-js.git#add_client_timeout3",
     "promise-retry": "^1.1.1",
