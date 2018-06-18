@@ -1833,7 +1833,8 @@ const ui = (function() {
             }
         } else if (filepath.charAt(0) === '@') {
             // ui.js is in the /app/build directory
-            const desiredPrefix = require('path').dirname(filepath)
+            // the === '.' part handles the case where the call was e.g. ui.findFile('@demos'), i.e. the special dir itself
+            const desiredPrefix = require('path').dirname(filepath) === '.' ? filepath : require('path').dirname(filepath)
             const special = specialPaths.find(({prefix}) => desiredPrefix.indexOf(prefix) === 0) || defaultSpecial
             return require('path').join(special.filepath, filepath)
         } else {
