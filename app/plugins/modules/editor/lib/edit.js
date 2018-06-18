@@ -156,11 +156,17 @@ const persisters = {
                                 .catch(err => {
                                     if (err.statusCode === 'ENOPARSE') {
                                         debug('composition did not parse', err)
+                                        // try two patterns to spot stack trace information;
+                                        // we need to pull out the line number from the stack trace,
+                                        // so that we can identify the problem, with a gutter marker ("decoration"),
+                                        // in the editor pane
                                         const basename = path.basename(filepath),
-                                              pattern = new RegExp('\\n([^\n]+)\\n\\s+at\\s+' + basename.replace(/\./, '\\.') + ':(\\d+):(\\d+)'),
-                                              match = err.message.match(pattern)
+                                              pattern1 = new RegExp('\\n([^\n]+)\\n\\s+at\\s+' + basename.replace(/\./, '\\.') + ':(\\d+):(\\d+)'),
 
-                                        debug('pattern', pattern)
+                                              pattern2 = new RegExp('([^\n]+)\\n\\s+at\\s+[^\\(]*\\s+\\([^\n\r]*' + basename.replace(/\./, '\\.') +  ':(\\d+):(\\d+)'),
+                                              match = err.message.match(pattern1) || err.message.match(pattern2)
+
+                                        debug('pattern', pattern1, pattern2)
                                         debug('message', err.message)
                                         if (match) {
                                             const problem = match[1],
