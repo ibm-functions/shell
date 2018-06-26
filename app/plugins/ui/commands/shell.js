@@ -65,7 +65,7 @@ const doShell = (argv, options, execOptions) => new Promise((resolve, reject) =>
                     if (execOptions && execOptions.json) {
                         resolve(JSON.parse(output))
                     } else {
-                        resolve(output)
+                        resolve(output.toString())
                     }
 
                 } else {
