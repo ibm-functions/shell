@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "./bin/seticon.sh && cd plugins && npm install && cd .. && npm run build && npm run compile",
+    "postinstall": "cd plugins && npm install && cd .. && npm run build && npm run compile && ./bin/seticon.sh",
     "build": "node ./bin/build.js",
     "compile": "cd ../dist && npm install && ./compile.js",
     "test": "cd ../tests && npm run test"
@@ -27,7 +27,7 @@
     "url": "https://github.com/ibm-functions/shell/issues/new"
   },
   "devDependencies": {
-    "electron": "~2.0.2",
+    "electron": "~2.0.4",
     "nyc": "^13.0.0"
   },
   "dependencies": {

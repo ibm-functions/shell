@@ -44,7 +44,7 @@ const help = (usage, docs) => (_1, _2, _3, { ui, errors }) => {
             }
         }
 
-        debug('generated top-level usage model', topLevelUsage)
+        debug('generated top-level usage model')
         throw new errors.usage(topLevelUsage)
 
     } else {

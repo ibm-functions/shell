@@ -613,7 +613,7 @@ const main = (app, mainFunctions) => {
     }
 
     /** main work starts here */
-    debug('main::bootstrap')
+    debug('bootstrap')
     plugins.init({app}).then(() => {
         debug('plugins initialized')
 

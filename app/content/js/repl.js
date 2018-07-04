@@ -840,7 +840,7 @@ self.exec = (commandUntrimmed, execOptions) => {
             //
             const _usage = evaluator.options && evaluator.options.usage,
                   usage = _usage && _usage.fn ? _usage.fn(_usage.command) : _usage
-            debug('usage', usage, evaluator)
+            debug('usage')
 
             if (usage && usage.strict) { // strict: command wants *us* to enforce conformance
                 // required and optional parameters
