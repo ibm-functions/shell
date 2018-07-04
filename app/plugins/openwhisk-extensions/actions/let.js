@@ -40,7 +40,7 @@ const minimist = require('yargs-parser'),
       url = require('url'),
       tmp = require('tmp'),
       { ANON_KEY, ANON_KEY_FQN, ANON_CODE, isAnonymousLet } = require('./let-core')(),
-      base_rp = require('request-promise'),
+      needle = require('needle'),
       withRetry = require('promise-retry'),
       expandHomeDir = require('expand-home-dir'),
       beautify = require('js-beautify').js_beautify,
@@ -52,9 +52,19 @@ debug('finished loading modules')
  * Mimic the request-promise functionality, but with retry
  *
  */
-const rp = opts => {
+const rp = url => {
     return withRetry((retry, iter) => {
-        return base_rp(Object.assign({ timeout: 10000 }, typeof opts === 'string' ? { url: opts } : opts))
+        const method = 'get'
+        const timeout = 10000
+
+        return needle(method,
+                      url,
+                      {
+                          open_timeout: timeout,
+                          read_timeout: timeout,
+                          follow_max: 5
+                      })
+            .then(_ => _.body)
             .catch(err => {
                 const isNormalError = err && (err.statusCode === 400 || err.statusCode === 404 || err.statusCode === 409)
                 if (!isNormalError && (iter < 10)) {
@@ -67,7 +77,6 @@ const rp = opts => {
             })
     })
 }
-
 
 /**
  * Take the output of url.parse, and determine whether it refers to a remote resource
@@ -86,7 +95,8 @@ const fetchRemote = (location, mimeType) => new Promise((resolve, reject) => {
     const parsedUrl = url.parse(locationWithoutQuotes)
     if (isRemote(parsedUrl)) {
         // then fetch it
-        debug('fetching remote')
+        debug('fetching remote', locationWithoutQuotes)
+
         return rp(locationWithoutQuotes).then(data => {
             debug(`fetchRemote done`)
             const extension = mimeType || parsedUrl.pathname.substring(parsedUrl.pathname.lastIndexOf('.'))

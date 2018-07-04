@@ -17,45 +17,107 @@
 const debug = require('debug')('main')
 debug('starting')
 
-// handle squirrel install and update events
-if (require('electron-squirrel-startup')) return
-
-const electron = require('electron'),
-      { app } = electron
-
-debug('modules loaded')
-
 /**
- * Should our BrowerWindows have a window frame?
+ *
  *
  */
-const useWindowFrame = true
+let electron, app
+function initGraphics() {
+    debug('initGraphics')
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+    // handle squirrel install and update events
+    if (require('electron-squirrel-startup')) return
 
-// linux oddities
-//   context mismatch in svga_sampler_view_destroy
-if (process.platform === 'linux') {
-    app.disableHardwareAcceleration()
-}
+    if (!electron) {
+        debug('loading electron')
+        electron = require('electron'),
+        { app } = electron
 
-/**
- * Were we spawned in headless mode?
- *
- */
-const isRunningHeadless = process.argv.find(arg => arg === '--fsh-headless')
-try {
-    if (isRunningHeadless && app.dock) app.dock.hide()
-} catch (e) {
-}
-debug('isRunningHeadless %s', isRunningHeadless)
+        if (!app) {
+            // then we're still in pure headless mode; we'll need to fork ourselves to spawn electron
+            const path = require('path')
+            const { spawn } = require('child_process')
+            const appHome = path.resolve('.')
 
-function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwindowPrefs) {
-    debug('createWindow')
+            debug('spawning electron', appHome)
 
-    if (noHeadless !== true && isRunningHeadless) {
+            const child = spawn(electron, [appHome])
+            child.unref()
+
+            debug('spawning electron done, this process will soon exit')
+            process.exit(0)
+
+        } else {
+            debug('loading electron done', electron)
+        }
+    }
+
+    // linux oddities
+    //   "context mismatch in svga_sampler_view_destroy"
+    if (process.platform === 'linux') {
+        app.disableHardwareAcceleration()
+    }
+
+    // This method will be called when Electron has finished
+    // initialization and is ready to create browser windows.
+    // Some APIs can only be used after this event occurs.
+    app.on('ready', createWindow)
+
+    if (process.env.RUNNING_SHELL_TEST) {
+        app.on('before-quit', function() {
+            const config = { tempDirectory: require('path').join(__dirname, '../tests/.nyc_output') },
+                  nyc = new (require('nyc'))(config)      // create the nyc instance
+            nyc.createTempDirectory()                     // in case we are the first to the line
+            nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
+
+            mainWindow.webContents.send('/coverage/dump', config)
+        })
+    }
+
+    // Quit when all windows are closed.
+    app.on('window-all-closed', function () {
+        // On OS X it is common for applications and their menu bar
+        // to stay active until the user quits explicitly with Cmd + Q
+        if (process.platform !== 'darwin' || isRunningHeadless) { // if we're running headless, then quit on window closed, no matter which platform we're on
+            app.quit()
+        }
+    })
+
+    app.on('activate', function () {
+        // On OS X it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (mainWindow === null) {
+            createWindow()
+        }
+    })
+} /* initGraphics */
+
+function initHeadless() {
+    if (/*noHeadless !== true &&*/ isRunningHeadless) {
+        debug('initHeadless')
+
+        app = {
+            quit: () => process.exit(0),
+            getPath: which => {
+                if (which === 'userData') {
+                    const { join } = require('path')
+                    const { name } = require('./package.json')
+
+                    switch (process.platform) {
+                    case 'darwin':
+                        return join(process.env.HOME, 'Library', 'Application Support', name)
+                    case 'linux':
+                        const home = process.env.XDG_CONFIG_HOME || require('expand-home-dir')('~/.config')
+                        return join(home, name)
+                    case 'windows':
+                        return join(process.env.APPDATA, name)
+                    }
+                } else {
+                    throw new Error(`Unsupported getPath request ${which}`)
+                }
+            }
+        }
+
         //
         // HEADLESS MODE
         //
@@ -83,6 +145,39 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
             executeThisArgvPlease = undefined
         }
     }
+} /* initHeadless */
+
+/**
+ * Should our BrowerWindows have a window frame?
+ *
+ */
+const useWindowFrame = true
+
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
+
+
+/**
+ * Were we spawned in headless mode?
+ *
+ */
+const fshShell = process.argv.find(arg => arg === 'shell')
+const isRunningHeadless = process.argv.find(arg => arg === '--fsh-headless') && !fshShell
+if (!isRunningHeadless) {
+    initGraphics()
+} else {
+    initHeadless()
+}
+
+//try {
+//    if (isRunningHeadless && app.dock) app.dock.hide()
+//} catch (e) {
+//}
+debug('isRunningHeadless %s', isRunningHeadless)
+
+function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwindowPrefs) {
+    debug('createWindow')
 
     if (subwindowPrefs && subwindowPrefs.bringYourOwnWindow) {
         return subwindowPrefs.bringYourOwnWindow()
@@ -186,6 +281,7 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
       slashes: true
   }))
 
+    debug('install menus')
     require('./menu').install(app, electron.Menu, createWindow)
 
   // Open the DevTools.
@@ -213,6 +309,7 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
     // as they are on macOS. oh well! this is why the screenshot
     // plugin has to pollute main.js
     //
+    debug('ipc registration')
     ipcMain.on('capture-page-to-clipboard', (event, contentsId, rect) => {
 	try {
 	    const { clipboard, nativeImage, webContents } = electron
@@ -250,39 +347,8 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
         switch (message.operation) {
         }
     })
+
+    debug('createWindow done')
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
-
-if (process.env.RUNNING_SHELL_TEST) {
-    app.on('before-quit', function() {
-        const config = { tempDirectory: require('path').join(__dirname, '../tests/.nyc_output') },
-              nyc = new (require('nyc'))(config)      // create the nyc instance
-        nyc.createTempDirectory()                     // in case we are the first to the line
-        nyc.writeCoverageFile()                       // write out the coverage data for the renderer code
-
-        mainWindow.webContents.send('/coverage/dump', config)
-    })
-}
-
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin' || isRunningHeadless) { // if we're running headless, then quit on window closed, no matter which platform we're on
-    app.quit()
-  }
-})
-
-app.on('activate', function () {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
 
 debug('all done here, the rest is async')

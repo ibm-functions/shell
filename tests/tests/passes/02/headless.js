@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('test.headless')
+
 const common = require('../../../lib/common'),
       openwhisk = require('../../../lib/openwhisk'),
       assert = require('assert')
@@ -23,12 +25,18 @@ const path = require('path'),
       fsh = path.join(__dirname, '../../../../app/bin/fsh')
 
 const cli = {
-    do: (cmd, env={}) => new Promise((resolve, reject) => {
+    do: (cmd, env={}, { errOk }={}) => new Promise((resolve, reject) => {
         const command = `${fsh} ${cmd} --no-color`
+        debug('executing command', command)
 
         exec(command, { env: Object.assign({}, process.env, env) }, (err, stdout, stderr) => {
             if (err) {
-                resolve({ code: err.code, output: stdout.trim().concat(stderr) })
+                const output = stdout.trim().concat(stderr)
+                if (err.code !== errOk) {
+                    console.error('Error in command execution', err.code, output)
+                }
+                resolve({ code: err.code, output })
+
             } else {
                 resolve({ code: 0, output: stdout, stderr })
             }
@@ -85,27 +93,27 @@ describe('Headless mode', function() {
        .then(cli.expectOK('ok'))
        .catch(common.oops(this)))
 
-    it('should show top-level help with fsh -v', () => cli.do('-v')
+    it('should show top-level help with fsh -v', () => cli.do('-v', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / Getting Started'))
        .catch(common.oops(this)))
 
-    it('should show top-level help with no arguments', () => cli.do('')
+    it('should show top-level help with no arguments', () => cli.do('', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / Getting Started'))
        .catch(common.oops(this)))
 
-    it('should show top-level help with help', () => cli.do('help')
+    it('should show top-level help with help', () => cli.do('help', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / Getting Started'))
        .catch(common.oops(this)))
 
-    it('should show wsk help with wsk', () => cli.do('wsk')
+    it('should show wsk help with wsk', () => cli.do('wsk', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / OpenWhisk'))
        .catch(common.oops(this)))
 
-    it('should show wsk help with wsk help', () => cli.do('wsk help')
+    it('should show wsk help with wsk help', () => cli.do('wsk help', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / OpenWhisk'))
        .catch(common.oops(this)))
 
-    it('should show help for app ls -h', () => cli.do('app ls -h')
+    it('should show help for app ls -h', () => cli.do('app ls -h', {}, { errOk: 1 })
        .then(cli.expectError(1, 'Shell Docs / Composer / CRUD Operations / List compositions'))
        .catch(common.oops(this)))
 

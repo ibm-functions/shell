@@ -58,7 +58,7 @@ describe('Basic Functionality', function() {
        .then(() => this.app.client.getText(selectors.APIHOST))
        .then(apihost => {
 	   // console.log('got apihost', apihost)
-	   assert.equal(apihost.toLowerCase(), API_HOST.toLowerCase())
+	   assert.equal(apihost.toLowerCase().replace(/^http[s]?:\/\//, ''), API_HOST.toLowerCase().replace(/^http[s]?:\/\//, ''))
        })
        .catch(common.oops(this)))
 

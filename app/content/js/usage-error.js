@@ -109,7 +109,7 @@ const breadcrumbFromCommand = command => usageFromCommand(command)
  *
  */
 const format = (message, options={}) => {
-    debug('format', message)
+    debug('format', typeof message === 'string' ? message : message.title)
 
     if (typeof message === 'string') {
         return message

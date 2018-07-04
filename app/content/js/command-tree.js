@@ -461,7 +461,7 @@ const withEvents = (evaluator, leaf) => {
  */
 const _read = (model, argv, contextRetry, originalArgv) => {
     let leaf = treeMatch(model, argv, true) // true means read-only, don't modify the context model please
-    debug('read', argv, contextRetry, leaf)
+    debug('read', argv)
 
     let evaluator = leaf && leaf.$
     if (!evaluator) {
