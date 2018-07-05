@@ -8,7 +8,7 @@
     "start": "electron .",
     "postinstall": "cd plugins && npm install && cd .. && npm run build && npm run compile && ./bin/seticon.sh",
     "build": "node ./bin/build.js",
-    "compile": "cd ../dist && npm install && ./compile.js",
+    "compile": "cd ../dist && ./compile.js",
     "test": "cd ../tests && npm run test"
   },
   "repository": "https://github.com/ibm-functions/shell",
