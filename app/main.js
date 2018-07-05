@@ -22,8 +22,8 @@ debug('starting')
  *
  */
 let electron, app
-function initGraphics() {
-    debug('initGraphics')
+function initGraphics(command=[], subwindowPlease, subwindowPrefs) {
+    debug('initGraphics', command, subwindowPlease, subwindowPrefs)
 
     // handle squirrel install and update events
     if (require('electron-squirrel-startup')) return
@@ -37,18 +37,41 @@ function initGraphics() {
             // then we're still in pure headless mode; we'll need to fork ourselves to spawn electron
             const path = require('path')
             const { spawn } = require('child_process')
-            const appHome = path.resolve('.')
+            const appHome = path.resolve(__dirname)
 
-            debug('spawning electron', appHome)
+            const args = [appHome, ...command]
+            debug('spawning electron', appHome, args)
 
-            const child = spawn(electron, [appHome])
-            child.unref()
+            // pass through any window options, originating from the command's usage model, on to the subprocess
+            const windowOptions = {}
+            if (subwindowPlease) {
+                debug('passing through subwindowPlease', subwindowPlease)
+                windowOptions.subwindowPlease = subwindowPlease
+            }
+            if (subwindowPrefs && Object.keys(subwindowPrefs).length > 0) {
+                debug('passing through subwindowPrefs', subwindowPrefs)
+                windowOptions.subwindowPrefs = JSON.stringify(subwindowPrefs)
+            }
+
+            // note how we ignore the subprocess's stdio if debug mode
+            // is not enabled this allows you (as a developer) to
+            // debug issues with spawning the subprocess by passing
+            // DEBUG=* or DEBUG=main
+            const child = spawn(electron, args, { stdio: debug.enabled ? 'inherit' : 'ignore',
+                                                  env: Object.assign({}, process.env, windowOptions)})
+
+            if (!debug.enabled) {
+                // as with the "ignore stdio" comment immediately
+                // above: unless we're in DEBUG mode, let's disown
+                // ("unref" in nodejs terms) the subprocess
+                child.unref()
+            }
 
             debug('spawning electron done, this process will soon exit')
             process.exit(0)
 
         } else {
-            debug('loading electron done', electron)
+            debug('loading electron done')
         }
     }
 
@@ -61,7 +84,9 @@ function initGraphics() {
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
     // Some APIs can only be used after this event occurs.
-    app.on('ready', createWindow)
+    app.on('ready', () => {
+        createWindow(true, command.length > 0 && command, subwindowPlease, subwindowPrefs)
+    })
 
     if (process.env.RUNNING_SHELL_TEST) {
         app.on('before-quit', function() {
@@ -127,9 +152,6 @@ function initHeadless() {
                 createWindow: (executeThisArgvPlease, subwindowPlease, subwindowPrefs) => {
                     // craft a createWindow that has a first argument of true, which will indicate `noHeadless`
                     // because this will be called for cases where we want a headless -> GUI transition
-                    if (app.dock) {
-                        app.dock.show()
-                    }
                     return createWindow(true, executeThisArgvPlease, subwindowPlease, subwindowPrefs)
                 }
             })
@@ -165,8 +187,14 @@ let mainWindow
 const fshShell = process.argv.find(arg => arg === 'shell')
 const isRunningHeadless = process.argv.find(arg => arg === '--fsh-headless') && !fshShell
 if (!isRunningHeadless) {
-    initGraphics()
+    // then spawn the electron graphics
+    const dashDash = process.argv.indexOf('--')
+    const rest = dashDash === -1 ? [] : process.argv.slice(dashDash + 1)
+    debug('using args', rest)
+    initGraphics(rest, process.env.subwindowPlease, process.env.subwindowPrefs && JSON.parse(process.env.subwindowPrefs))
+
 } else {
+    // otherwise, don't spawn the graphics; stay in headless mode
     initHeadless()
 }
 
@@ -199,6 +227,11 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
             console.error('Cannot parse WINDOW_HEIGHT ' + process.env.WINDOW_HEIGHT)
             height = 960
         }
+    }
+
+    if (!electron) {
+        debug('we need to spawn electron', subwindowPlease, subwindowPrefs)
+        initGraphics(['--'].concat(executeThisArgvPlease), subwindowPlease, subwindowPrefs)
     }
 
     const { BrowserWindow } = electron
@@ -270,6 +303,7 @@ function createWindow(noHeadless, executeThisArgvPlease, subwindowPlease, subwin
     if (noHeadless === true && executeThisArgvPlease) mainWindow.executeThisArgvPlease = executeThisArgvPlease
     /*if (subwindowPlease === true)*/ {
         //app.dock.hide() // no ideal, as the dock icon still shows for a small amount of time https://github.com/electron/electron/issues/422
+        debug('subwindowPrefs', subwindowPrefs)
         mainWindow.subwindow = subwindowPrefs
     }
 

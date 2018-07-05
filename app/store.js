@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const debug = require('debug')('store')
+const debug = require('debug')('headless.localStorage')
 debug('starting')
 
 const fs = require('fs'),
@@ -73,6 +73,7 @@ module.exports = app => {
          *
          */
         setItem: (key, val) => {
+            debug('setItem', key, val)
             data[key] = val
             flush()
             return val

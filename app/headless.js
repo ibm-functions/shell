@@ -72,7 +72,10 @@ function mimicDom(app, { createWindow }, localStorage) {
 
     try {
         global.localStorage = Store(app)
+        debug('successfully initialized persistent localStorage')
     } catch (err) {
+        debug('error initializing persistent localStorage', err)
+
         const localStorage = {}
         global.localStorage = {
             setItem: (k, v) => localStorage[k] = v,
@@ -184,6 +187,12 @@ function mimicDom(app, { createWindow }, localStorage) {
                 repl.setNoAuth()
                 return Promise.resolve()
             }
+        },
+        setApiHost: () => {
+            // no-op; this would update any UI elements for electron mode
+        },
+        setNoNamespace: () => {
+            // no-op; this would update any UI elements for electron mode
         },
         get: () => Promise.resolve(undefined),
         list: () => Promise.resolve(ns ? [ns] : []),
