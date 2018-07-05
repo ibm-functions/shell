@@ -16,6 +16,9 @@
 # limitations under the License.
 #
 
+# product name
+export PRODUCT_NAME="${PRODUCT_NAME-`cat ../app/build/config.json | jq --raw-output .productName`}"
+
 export BUILDDIR=build
 
 function init {
@@ -62,7 +65,7 @@ function cleanup {
 }
 
 function build {
-    DEST=headless.zip
+    DEST="${PRODUCT_NAME}-headless.zip"
     
     rm -f "$BUILDDIR/$DEST"
     (cd .. && mv app cloudshell && \
