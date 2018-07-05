@@ -26,7 +26,14 @@ function initGraphics(command=[], subwindowPlease, subwindowPrefs) {
     debug('initGraphics', command, subwindowPlease, subwindowPrefs)
 
     // handle squirrel install and update events
-    if (require('electron-squirrel-startup')) return
+    try {                                                                                                     
+        if (require('electron-squirrel-startup')) return                                                      
+    } catch (err) {                                                                                           
+        debug('electron components not installed')                                                            
+        require('colors')
+        console.log('Graphical components are not yet installed. You may do so via ' + 'npm run install-ui'.red.bold)
+        process.exit(1)                                                                                       
+    }
 
     if (!electron) {
         debug('loading electron')

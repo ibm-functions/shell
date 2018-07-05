@@ -70,8 +70,8 @@ function build {
     rm -f "$BUILDDIR/$DEST"
     (cd .. && mv app cloudshell && \
          zip -x "cloudshell/node_modules/electron*/*" \
-             -x "cloudshell/plugins/modules/wskflow/*" \
-             -x "cloudshell/plugins/modules/editor/*" \
+             -x "cloudshell/plugins/modules/editor/node_modules*" \
+             -x "cloudshell/plugins/node_modules/fsevents/*" \
              -x "cloudshell/plugins/node_modules/elkjs/*" \
              -x "cloudshell/plugins/node_modules/d3/*" \
              -x "cloudshell/plugins/node_modules/jquery/*" \
