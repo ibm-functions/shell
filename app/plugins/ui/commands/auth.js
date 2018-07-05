@@ -141,7 +141,7 @@ const readFromLocalWskProps = (wsk, auth, subject) => wsk.apiHost.get().then(api
                 // an in-memory form of the data we currently have
                 resolve({
                     APIHOST: apiHost,
-                    AUTH: auth
+                    AUTH: auth || ''
                 })
             } else {
                 reject(err)
@@ -150,7 +150,7 @@ const readFromLocalWskProps = (wsk, auth, subject) => wsk.apiHost.get().then(api
             // we successfuly read the .wskprops file into an
             // in-memory struct; now update that struct
             wskprops.APIHOST = apiHost // in case this has also changed, via `host set`
-            wskprops.AUTH = auth
+            wskprops.AUTH = auth || wskprops.AUTH
             if (subject) wskprops.SUBJECT = subject
             resolve(wskprops)
         }
@@ -319,6 +319,7 @@ module.exports = (commandTree, prequire) => {
                            } else if (host === 'local' || host === 'localhost') {
                                // try a variety of options
                                const variants = [ 'https://192.168.33.13', 'https://192.168.33.16',        // these are vagrant
+                                                  'https://172.17.0.1',
                                                   'http://172.17.0.1:10001', 'http://192.168.99.100:10001' // these are direct-to-controller
                                                 ]
                                const request = require('request')
@@ -356,6 +357,7 @@ module.exports = (commandTree, prequire) => {
 
                            return Promise.resolve(host).then(host => wsk.apiHost.set(host, { ignoreCerts })
                                .then(namespace.setApiHost)
+                               .then(() =>  updateLocalWskProps(wsk))
                                .then(notifyOfHostChange(host))
                                .then(() => namespace.list().then(auths => {
                                    debug('got auths', auths)
