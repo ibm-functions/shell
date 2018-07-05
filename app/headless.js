@@ -126,8 +126,6 @@ function mimicDom(app, { createWindow }, localStorage) {
     global.ui = {
         headless: true,
         userDataDir: () => {
-            const remote = require('electron')
-            const { app } = remote
             return app.getPath('userData')
         },
         createWindow: function() {
