@@ -56,4 +56,12 @@ describe('host tests', function() {
     // see shell issue #192
     it('should auto-cancel when using prefilled content', () => cli.do(`host set <your_api_host>`, this.app)
        .then(cli.expectError(0, 'Operation cancelled')))
+
+    const { apihostIsLocal } = openwhisk
+    const apihost = apihostIsLocal ? 'local' : openwhisk.apihost
+    it(`should restore host to original setting: ${apihost}`, () => cli.do(`host set ${apihost}`, this.app)
+       .then(cli.expectOK)
+       .then(() => cli.do('host get', this.app))
+       .then(cli.expectOKWithCustom({ expect: openwhisk.apihost }))
+       .catch(common.oops(this)))
 })

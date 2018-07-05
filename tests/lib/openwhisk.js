@@ -17,17 +17,22 @@ const localWskProps = () => {
  */
 exports.entities = ["action", "trigger", "rule", "package"]
 
+const apihost = process.env.__OW_API_HOST || process.env.API_HOST || process.env.APIHOST || localWskProps().APIHOST || 'openwhisk.ng.bluemix.net'
+const apihostIsLocal = apihost.indexOf('localhost') >= 0
+      || apihost.startsWith('192.')
+      || apihost.startsWith('172.')
+      || apihost.startsWith('https://192.')
+      || apihost.startsWith('https://172.')
+
+exports.apihost = apihost
+exports.apihostIsLocal = apihostIsLocal
+
 exports.cleanAll = auth => {
-    const apihost = process.env.__OW_API_HOST || process.env.API_HOST || process.env.APIHOST || localWskProps().APIHOST || 'openwhisk.ng.bluemix.net',
-          opts = {
+    const opts = {
               apihost,
               api_key: auth || process.env.__OW_API_KEY || process.env.AUTH || localWskProps().AUTH,
               ignore_certs: process.env.IGNORE_CERTS || process.env.INSECURE_SSL || localWskProps().INSECURE_SSL
-                  || apihost.indexOf('localhost') >= 0
-                  || apihost.startsWith('192.')
-                  || apihost.startsWith('172.')
-                  || apihost.startsWith('https://192.')
-                  || apihost.startsWith('https://172.')
+                  || apihostIsLocal
           }
 
     const ow = require('openwhisk')(opts)
