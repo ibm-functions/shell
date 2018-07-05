@@ -8,7 +8,8 @@
     "start": "electron .",
     "postinstall": "cd plugins && npm install && cd .. && npm run build && npm run compile && ./bin/seticon.sh",
     "build": "node ./bin/build.js",
-    "compile": "cd ../dist && ./compile.js",
+    "install-ui": "npm install electron electron-squirrel-startup && (cd plugins && npm install)",
+    "compile": "if [ -d ../dist ]; then cd ../dist && ./compile.js; fi",
     "test": "cd ../tests && npm run test"
   },
   "repository": "https://github.com/ibm-functions/shell",
