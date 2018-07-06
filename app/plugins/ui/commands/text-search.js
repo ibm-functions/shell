@@ -21,6 +21,18 @@ const path = require('path')
  *
  */
 module.exports = () => {
+    try {
+        registerListener();
+    } catch (err) {
+        console.error('Not running in electron environment')
+    }
+}
+
+/**
+ * Listen for control/command+F
+ *
+ */
+function registerListener() {
     const app = require('electron');
 
     if (typeof document === 'undefined') return // return if no document

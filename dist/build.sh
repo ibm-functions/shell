@@ -21,6 +21,11 @@
 #
 PLATFORM=${1-all}
 
+cp ../app/package.json ../app/package.json.bak
+node -e 'deps=require("../package.json").dependencies; pj=require("../app/package.json"); Object.assign(pj.dependencies, deps); require("fs").writeFileSync("../app/package.json", JSON.stringify(pj, undefined, 4))'
+(cd ../app && npm install)
+cp ../app/package.json.bak ../app/package.json
+
 # product name
 export PRODUCT_NAME="${PRODUCT_NAME-`cat ../app/build/config.json | jq --raw-output .productName`}"
 
@@ -93,8 +98,7 @@ function win32 {
 	    --win32metadata.ProductName="${PRODUCT_NAME}"
 
         # CLI scripts
-        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-win32-x64/fsh"
-        cp ../app/bin/fsh.bat "$BUILDDIR/${PRODUCT_NAME}-win32-x64"
+        cp ../fsh.js "$BUILDDIR/${PRODUCT_NAME}-win32-x64/fsh"
 
         #
         # deal with win32 packaging
@@ -131,7 +135,7 @@ function mac {
         cp $ICON_MAC "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app/Contents/Resources/electron.icns"
 
         # CLI script
-        cp ../app/bin/fsh "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app/Contents/MacOS/"
+        cp ../fsh.js "$BUILDDIR/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app/Contents/MacOS/fsh"
 
         # create the installers
         if [ -n "$ZIP_INSTALLER" ]; then
@@ -167,7 +171,7 @@ function linux {
 	    --overwrite
 
         # CLI script
-        cp ./bin/fsh "$BUILDDIR/${PRODUCT_NAME}-linux-x64"
+        cp ../fsh.js "$BUILDDIR/${PRODUCT_NAME}-linux-x64/fsh"
 
         if [ -z "$NO_INSTALLER" ]; then
             (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-linux-x64" "${PRODUCT_NAME}-linux-x64" -x \*~)

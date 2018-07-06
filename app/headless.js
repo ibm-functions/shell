@@ -94,7 +94,7 @@ function mimicDom(app, { createWindow }, localStorage) {
             classList: {
                 add: _ => obj._classList.push(_),
                 remove: _ => {
-                    const idx = obj._classList.findIndex(_)
+                    const idx = obj._classList.findIndex(x => x === _)
                     if (idx >= 0) {
                         obj._classList.splice(idx, 1)
                     }

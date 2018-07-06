@@ -3,6 +3,7 @@
 dist/build
 dist/plugins
 *.log
+*.bak
 node_modules
 wskng.iml
 app/.version
