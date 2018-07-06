@@ -64,8 +64,12 @@ function initGraphics(command=[], subwindowPlease, subwindowPrefs) {
             // is not enabled this allows you (as a developer) to
             // debug issues with spawning the subprocess by passing
             // DEBUG=* or DEBUG=main
+            const env = Object.assign({},
+                                      process.env,
+                                      windowOptions)
+            delete env.FSH_HEADLESS
             const child = spawn(electron, args, { stdio: debug.enabled ? 'inherit' : 'ignore',
-                                                  env: Object.assign({}, process.env, windowOptions)})
+                                                  env })
 
             if (!debug.enabled) {
                 // as with the "ignore stdio" comment immediately
@@ -192,7 +196,7 @@ let mainWindow
  *
  */
 const fshShell = process.argv.find(arg => arg === 'shell')
-const isRunningHeadless = process.argv.find(arg => arg === '--fsh-headless') && !fshShell
+const isRunningHeadless = process.env.FSH_HEADLESS && !fshShell
 if (!isRunningHeadless) {
     // then spawn the electron graphics
     const dashDash = process.argv.indexOf('--')
@@ -202,6 +206,7 @@ if (!isRunningHeadless) {
 
 } else {
     // otherwise, don't spawn the graphics; stay in headless mode
+    process.argv.splice(0, 1)
     initHeadless()
 }
 

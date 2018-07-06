@@ -39,7 +39,7 @@ env:
 install:
     - echo "APIHOST=foo" > ~/.wskprops                                                    # dist/compile.sh needs something here
     - echo "AUTH=bar" >>  ~/.wskprops                                                     # ibid (see the call to initOW in openwhisk-core.js)
-    - (cd app && npm install && cd ../tests && npm install && npm run _instrument) &      # app and tests npm install
+    - (npm install && npm run install-ui && cd tests && npm install && npm run _instrument) &      # app and tests npm install
     - (./tools/travis/setup.sh; ./tools/travis/build.sh; ./tools/travis/init_auth.sh) &   # initialize openwhisk and test docker
     - wait                                                                                # wait for the above &'d background processes
     - Xvfb $DISPLAY -screen 0 ${WINDOW_WIDTH}x${WINDOW_HEIGHT}x24 -ac &                   # start virtual framebuffer process

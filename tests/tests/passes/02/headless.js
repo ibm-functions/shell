@@ -22,7 +22,7 @@ const common = require('../../../lib/common'),
 
 const path = require('path'),
       { exec } = require('child_process'),
-      fsh = path.join(__dirname, '../../../../app/bin/fsh')
+      fsh = path.join(__dirname, '../../../../fsh.js')
 
 const cli = {
     do: (cmd, env={}, { errOk }={}) => new Promise((resolve, reject) => {
