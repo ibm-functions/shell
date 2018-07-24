@@ -21,11 +21,6 @@
 #
 PLATFORM=${1-all}
 
-cp ../app/package.json ../app/package.json.bak
-node -e 'deps=require("../package.json").dependencies; pj=require("../app/package.json"); Object.assign(pj.dependencies, deps); require("fs").writeFileSync("../app/package.json", JSON.stringify(pj, undefined, 4))'
-(cd ../app && npm install)
-cp ../app/package.json.bak ../app/package.json
-
 # product name
 export PRODUCT_NAME="${PRODUCT_NAME-`cat ../app/build/config.json | jq --raw-output .productName`}"
 
@@ -48,6 +43,11 @@ else
 fi
 
 function init {
+    # smash in root deps
+    cp ../app/package.json ../app/package.json.bak
+    node -e 'deps=require("../package.json").dependencies; pj=require("../app/package.json"); Object.assign(pj.dependencies, deps); require("fs").writeFileSync("../app/package.json", JSON.stringify(pj, undefined, 4))'
+    (cd ../app && npm install)
+
     # make the build directory
     if [ ! -d $BUILDDIR ]; then
 	mkdir $BUILDDIR
@@ -73,7 +73,9 @@ function init {
 }
 
 function cleanup {
-#    rm ../app/plugins/.pre-scanned
+    # undo the smashing in of root deps
+    cp ../app/package.json.bak ../app/package.json
+
     rm ../app/.version
 
     cp /tmp/ui.css ../app/content/css/ui.css

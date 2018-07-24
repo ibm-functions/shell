@@ -22,6 +22,10 @@ export PRODUCT_NAME="${PRODUCT_NAME-`cat ../app/build/config.json | jq --raw-out
 export BUILDDIR=build
 
 function init {
+    cp ../app/package.json ../app/package.json.bak
+        node -e 'deps=require("../package.json").dependencies; pj=require("../app/package.json"); Object.assign(pj.dependencies, deps); require("fs").writeFileSync("../app/package.json", JSON.stringify(pj, undefined, 4))'
+    (cd ../app && npm install)
+
     # make the build directory
     if [ ! -d $BUILDDIR ]; then
 	mkdir $BUILDDIR
@@ -54,7 +58,9 @@ function init {
 }
 
 function cleanup {
-#    rm ../app/plugins/.pre-scanned
+    # undo the smashing in of root deps
+    cp ../app/package.json.bak ../app/package.json
+
     rm ../app/.version
 
     cp /tmp/ui.css ../app/content/css/ui.css
@@ -78,7 +84,9 @@ function build {
              -x "**/node_modules/**/*.md" \
              -x "**/node_modules/**/*.DOCS" \
              -x "**/node_modules/**/LICENSE" \
-             -x "**/node_modules/docs/**/*.html" \
+             -x "**/node_modules/**/docs/**/*.html" \
+             -x "**/node_modules/**/docs/**/*.png" \
+             -x "**/node_modules/**/docs/**/*.js" \
              -x "**/node_modules/**/test/*" \
              -r "dist/$BUILDDIR/$DEST" cloudshell && \
         mv cloudshell app)
