@@ -81,6 +81,8 @@ function build {
              -x "cloudshell/plugins/node_modules/elkjs/*" \
              -x "cloudshell/plugins/node_modules/d3/*" \
              -x "cloudshell/plugins/node_modules/jquery/*" \
+             -x "cloudshell/plugins/modules/composer/tests/*" \
+             -x "**/package-lock.json" \
              -x "**/node_modules/**/*.md" \
              -x "**/node_modules/**/*.DOCS" \
              -x "**/node_modules/**/LICENSE" \
