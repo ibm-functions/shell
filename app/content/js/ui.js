@@ -1791,16 +1791,24 @@ const ui = (function() {
      * Inject a script
      *
      */
-    self.injectScript = url => {
+    self.injectScript = url => new Promise((resolve, reject) => {
         const type = 'script'
         const id = `injected-${type}-${url}`
+
         if (!document.getElementById(id)) {
             var link = document.createElement('script')
             link.id = id
             link.src = url
+
+            link.async = true
+            link.addEventListener('load', () => {
+                debug('injected script', url, id, link)
+                resolve()
+            })
+
             document.getElementsByTagName('head')[0].appendChild(link);
         }
-    }
+    })
 
     /**
      * Inject HTML stored in the given local file
