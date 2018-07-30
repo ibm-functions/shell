@@ -145,14 +145,6 @@ function mimicDom(app, { createWindow }, localStorage) {
         getCurrentPrompt: () => ui.getPrompt(ui.getCurrentBlock()),
         currentSelection: () => undefined,
         clearSelection: () => true,
-        findFile: filepath => {
-            if (filepath.charAt(0) === '@') {
-                // ui.js is in the root /app directory already
-                return require('path').join(__dirname, filepath.substring(1))
-            } else {
-                return filepath
-            }
-        },
         listen: () => {},
         unlisten: () => {},
         installBlock: () => () => true,
@@ -171,6 +163,9 @@ function mimicDom(app, { createWindow }, localStorage) {
                 || 'Internal Error'
         }
     }
+    // smash in the find file methods so that others can reference them as `ui.xxx`
+    Object.assign(global.ui, require('./content/js/find-file'))
+    
     let ns
     global.namespace = {
         init: () => {
