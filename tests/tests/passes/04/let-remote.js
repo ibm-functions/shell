@@ -30,7 +30,7 @@ const fs = require('fs'),
           local: 'data/hello.html'
       },
       REMOTE2 = {
-          url: 'http://ibm.biz/openwhisk-shell-demo-html',
+          url: 'https://ibm.box.com/shared/static/zsye0mwai0kce2p6wssltpsi5bfj9dy0.html',
           local: 'data/openwhisk-shell-demo-html'
       },
       actionName = 'foo',
