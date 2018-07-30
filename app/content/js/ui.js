@@ -1796,6 +1796,7 @@ const ui = (function() {
         const id = `injected-${type}-${url}`
 
         if (!document.getElementById(id)) {
+            // we haven't yet injected the script
             var link = document.createElement('script')
             link.id = id
             link.src = url
@@ -1803,10 +1804,15 @@ const ui = (function() {
             link.async = true
             link.addEventListener('load', () => {
                 debug('injected script', url, id, link)
+                // done!
                 resolve()
             })
 
             document.getElementsByTagName('head')[0].appendChild(link);
+
+        } else {
+            // otherwise, we've already injected the script
+            resolve()
         }
     })
 

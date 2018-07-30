@@ -49,13 +49,17 @@ describe('local plugin', function() {
        .then(sidecar.expectShowing('foo'))
        .catch(common.oops(this)))
 
-    it('should invoke that action locally', () => cli.do('local invoke foo -p name smurf', this.app)
-       .then(cli.expectOK)
-       .then(sidecar.expectOpen)
-       .then(sidecar.expectShowing('foo', 'local activation'))
-       .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
-       .then(ui.expectStruct({name:"smurf"}))
-       .catch(common.oops(this)))
+    // perform more than one invoke; see #1063, which had a test gap
+    // due to the lack of repeated local invoke
+    for (let idx = 0; idx < 3; idx++) {
+        it('should invoke that action locally', () => cli.do('local invoke foo -p name smurf', this.app)
+           .then(cli.expectOK)
+           .then(sidecar.expectOpen)
+           .then(sidecar.expectShowing('foo', 'local activation'))
+           .then(() => this.app.client.getText(ui.selectors.SIDECAR_ACTIVATION_RESULT))
+           .then(ui.expectStruct({name:"smurf"}))
+           .catch(common.oops(this)))
+    }
 
     it('should switch to logs mode and observe our log entry', () => cli.do('logs', this.app)
         .then(cli.expectJustOK)
