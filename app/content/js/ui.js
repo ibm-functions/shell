@@ -1816,6 +1816,9 @@ const ui = (function() {
         }
     })
 
+    // smash in the find file methods so that others can reference them as `ui.xxx`
+    Object.assign(self, require('../content/js/find-file'))
+
     /**
      * Inject HTML stored in the given local file
      *
@@ -1829,49 +1832,6 @@ const ui = (function() {
             }
         })
     })
-
-    /**
-     * Maybe the given filepath is asar-relative, as indicated by a
-     * leading @ character?
-     *
-     */
-    const specialPaths = [] // any special paths added via self.addPath
-    const defaultSpecial = { filepath: require('path').join(__dirname, '..') } // default special is the app/ top-level
-    self.findFile = (filepath, safe) => {
-        if (!filepath) {
-            if (!safe) {
-                throw new Error('Please specify a file')
-            } else {
-                // caller asked us to play nice
-                return ''
-            }
-        } else if (filepath.charAt(0) === '@') {
-            // ui.js is in the /app/build directory
-            // the === '.' part handles the case where the call was e.g. ui.findFile('@demos'), i.e. the special dir itself
-            const desiredPrefix = require('path').dirname(filepath) === '.' ? filepath : require('path').dirname(filepath)
-            const special = specialPaths.find(({prefix}) => desiredPrefix.indexOf(prefix) === 0) || defaultSpecial
-            return require('path').join(special.filepath, filepath)
-        } else {
-            return require('expand-home-dir')(filepath)
-        }
-    }
-
-    /**
-     * Augment the module load path
-     *
-     */
-    self.addPath = filepath => {
-        const path = require('path')
-
-        // use app-module-path to augment the node module require path
-        require('app-module-path').addPath(path.resolve(filepath))
-
-        // remember this for self.findFile
-        const prefix = path.basename(filepath)
-        if (prefix.charAt(0) === '@') {
-            specialPaths.push({ prefix , filepath: path.dirname(filepath) })
-        }
-    }
 
     /**
      * Get the userdata directory
