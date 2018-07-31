@@ -39,7 +39,8 @@ const events = require('events'),
       colors = require('colors'),
       verbose = process.argv.find(_ => _ === '-v'),
       rawOutput = process.argv.find(_ => _ === '--raw-output'), // don't try to pretty-print the JSON; c.f. jq's --raw-output
-      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v' && arg !== '--raw-output' && arg !== '--no-color'),
+      colorAlways = process.argv.find(_ => _ === '--color=always'),
+      argv = process.argv.slice(argStart).filter(arg => arg !== '--fsh-headless' && arg !== '-v' && arg !== '--raw-output' && arg !== '--no-color' && arg !== '--color=always'),
       grequire = module => require(`./content/js/${module}`),
       Store = require('./store'),
       log = console.log,
@@ -370,13 +371,17 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidth
 /**
  * Pretty print an object as JSON. If the user asked for --raw-output,
  * only use the more primitive JSON.stringify. Otherwise, use the
- * `jsome` npm to do some fancier rendering. Once jsome issue #12 is
- * resolved, we can consider relying on its raw-output support. The
- * main issue here is that jsome does not quote the keys.
- * @see https://github.com/Javascipt/Jsome/issues/12
+ * `jsome` npm to do some fancier rendering. Note how we avoid the use
+ * of jsome if the output is a pipe (see
+ * https://github.com/ibm-functions/shell/issues/1075)
  *
  */
-const prettyJSON = (msg, logger=log) => rawOutput ? logger(JSON.stringify(msg, undefined, 4)) : require('jsome')(msg)
+const jsome = require('jsome')
+const stdoutIsFIFO = require('fs').fstatSync(1).isFIFO() // 1 is the file descriptor for stdout
+const noJsome = stdoutIsFIFO && !colorAlways
+debug('stdoutIsFIFO', stdoutIsFIFO, noJsome)
+jsome.params.lintable = true // see https://github.com/ibm-functions/shell/issues/1073
+const prettyJSON = (msg, logger=log) => rawOutput || noJsome ? logger(JSON.stringify(msg, undefined, 4)) : jsome(msg)
 
 /**
   * Render a name with an optional package name
