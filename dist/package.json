@@ -16,5 +16,7 @@
     "electron-wix-msi": "^1.3.0",
     "minifier": "^0.8.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "electron-installer-zip": "^0.1.2"
+  }
 }
