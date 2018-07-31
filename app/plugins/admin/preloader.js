@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('preloader')
+
 const path = require('path'),
       { preload } = require(path.join(__dirname, '../preload.json'))
 
@@ -23,11 +25,18 @@ const path = require('path'),
  *
  */
 module.exports = (_, prequire) => {
-    eventBus.on('/window/init', () => {
-        //
-        // on init, use prequire to load each plugin that desires to
-        // be preloaded
-        //
+    if (ui.headless) {
+        debug('preloading in headless mode')
         preload.forEach(prequire)
-    })
+
+    } else {
+        eventBus.on('/window/init', () => {
+            //
+            // on init, use prequire to load each plugin that desires to
+            // be preloaded
+            //
+            debug('preloading in ui mode')
+            preload.forEach(prequire)
+        })
+    }
 }

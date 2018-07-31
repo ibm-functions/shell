@@ -25,7 +25,7 @@ const path = require('path')
  *
  */
 const listenForDrops = () => {
-    if (typeof document !== 'undefined') {
+    if (!ui.headless && typeof document !== 'undefined') {
         document.addEventListener('drop', event => {
             const { dataTransfer } = event,
                   { files, items, types } = dataTransfer
@@ -47,7 +47,7 @@ module.exports = (commandTree, prequire) => {
     listenForDrops()
 
     // give visibility to our @demos directory on the module path
-    if (typeof document !== 'undefined') {
+    if (ui.addPath) {
         ui.addPath(path.join(__dirname, '../composer/@demos'))
     }
 }
