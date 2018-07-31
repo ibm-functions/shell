@@ -38,8 +38,12 @@ exports.findFile = (filepath, safe) => {
         // the === '.' part handles the case where the call was e.g. ui.findFile('@demos'), i.e. the special dir itself
         const desiredPrefix = require('path').dirname(filepath) === '.' ? filepath : require('path').dirname(filepath)
         const special = specialPaths.find(({prefix}) => desiredPrefix.indexOf(prefix) === 0) || defaultSpecial
+
+        debug('resolving @ file', filepath, desiredPrefix, special)
         return require('path').join(special.filepath, filepath)
+
     } else {
+        debug('resolving normal file')
         return require('expand-home-dir')(filepath)
     }
 }
@@ -53,6 +57,8 @@ exports.addPath = filepath => {
 
     // use app-module-path to augment the node module require path
     require('app-module-path').addPath(path.resolve(filepath))
+
+    debug('addPath', filepath)
 
     // remember this for self.findFile
     const prefix = path.basename(filepath)

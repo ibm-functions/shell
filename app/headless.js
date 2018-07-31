@@ -145,6 +145,7 @@ function mimicDom(app, { createWindow }, localStorage) {
         getCurrentPrompt: () => ui.getPrompt(ui.getCurrentBlock()),
         currentSelection: () => undefined,
         clearSelection: () => true,
+        injectCSS: () => {},
         listen: () => {},
         unlisten: () => {},
         installBlock: () => () => true,
@@ -215,6 +216,7 @@ function mimicDom(app, { createWindow }, localStorage) {
             }
             return element
         },
+        addEventListener: () => true,
         createTextNode: text => { const element = dom0(); element.innerText = text; return element },
         querySelector: () => dom0()
     }
@@ -635,6 +637,8 @@ const main = (app, mainFunctions) => {
             }
         }
 
+        plugins.require('/admin/preloader')
+    
         //
         // execute a single command from the CLI
         //
