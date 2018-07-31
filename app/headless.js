@@ -536,7 +536,8 @@ const success = quit => out => {
     }
 }
 const failure = quit => err => {
-    debug('failure', err)
+    const code = err.code || err.statusCode
+    debug('failure', code, err)
 
     let completion = Promise.resolve()
 
@@ -545,8 +546,17 @@ const failure = quit => err => {
         // print the error
         const msg = ui.oopsMessage(err)
 
-        if (typeof msg === 'string') {
-            error(msg.red)
+        if (process.env.TEST_CODE_ONLY && err.statusCode) {
+            // client asked us to emit only the error code
+            error(err.statusCode)
+        } else if (typeof msg === 'string') {
+            if (process.env.TEST_INCLUDE_CODE && err.statusCode) {
+                // client asked for the code and the message
+                error(err.statusCode.toString().blue + ' ' + msg.red)
+            } else {
+                // client did not ask for the error code
+                error(msg.red)
+            }
         } else {
             completion = print(msg, error, process.stderr, 'red', 'error') || Promise.resolve()
         }
