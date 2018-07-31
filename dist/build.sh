@@ -141,7 +141,7 @@ function mac {
 
         # create the installers
         if [ -n "$ZIP_INSTALLER" ]; then
-            (cd $BUILDDIR && zip -q -r "${PRODUCT_NAME}-darwin-x64" "${PRODUCT_NAME}-darwin-x64" -x \*~)
+            node ./builders/zip.js
 
         elif [ -z "$NO_INSTALLER" ]; then
             ./node_modules/.bin/electron-installer-dmg \
@@ -151,6 +151,8 @@ function mac {
 	        --icon=$ICON_MAC \
 	        --icon-size=128 \
 	        --overwrite
+
+            node ./builders/zip.js
         fi
     fi
 }
