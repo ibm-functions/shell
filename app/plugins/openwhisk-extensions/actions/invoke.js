@@ -38,7 +38,7 @@ const path = require('path'),
 const docs = syn => ({
     usage: actions.available.find(({command}) => command === 'invoke')
 })
-                       
+
 
 /**
  * Fetch the full activation record from a partial one. Blocking
@@ -117,7 +117,7 @@ const doAsync = rawInvoke => function() { // we'll use "arguments" to pass throu
     arguments[2][idx] = 'invoke'
     arguments[4] = arguments[4].slice(0).replace(/^async/, 'invoke') // clone it, via slice, to avoid contaminating command history
 
-    return rawInvoke.apply(undefined, arguments)
+    return rawInvoke.apply(undefined, arguments).then(_ => Object.assign(_, { verb: 'async' })) 
 }
 
 /**
