@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const debug = require('debug')('macos zip builder')
 const zip = require('electron-installer-zip');
 
 const BUILDDIR = process.env.BUILDDIR
