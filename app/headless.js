@@ -167,7 +167,7 @@ function mimicDom(app, { createWindow }, localStorage) {
     }
     // smash in the find file methods so that others can reference them as `ui.xxx`
     Object.assign(global.ui, require('./content/js/find-file'))
-    
+
     let ns
     global.namespace = {
         init: () => {
@@ -357,7 +357,7 @@ const prettyDom = (dom, logger=log, stream=process.stdout, _color, { columnWidth
                 }
 
                 // and then a few more to separate the columns
-                stream.write('  ') 
+                stream.write('  ')
             }
         })
     }
@@ -484,15 +484,19 @@ const print = (msg, logger=log, stream=process.stdout, color='reset', ok='ok') =
                     }
                     logger(`${ok}:`.green + ` updated ${msg.type.replace(/s$/,'')} ${msg.name}`)
 
-                } else if (msg.verb === 'invoke' && msg.activationId /*&& msg.response*/) {
-                    logger(`${ok}:`.green + ` invoked ${msg.name} with id ${msg.activationId}`)
+                } else if (msg.verb === 'async' && msg.activationId /*&& msg.response*/) {
+                    // The returned msgs of action and app are different
+                    msg.type === 'activations' ? logger(`${ok}:`.green + ` invoked ${msg.entity.name} with id ${msg.activationId}`)
+                        : logger(`${ok}:`.green + ` invoked ${msg.name} with id ${msg.activationId}`)
+
 
                 } else if (msg.verb === 'delete') {
                     logger(`${ok}:`.green + ` deleted ${msg.type.replace(/s$/,'')} ${msg.name}`)
 
                 } else if (msg.verb === 'get' && msg.activationId /*&& msg.response*/) {
                     // msg is an openwhisk entity representing an invocation
-                    logger(`${ok}:`.green + ` got activation ${msg.activationId}`)
+                    // commenting out this line diverges us from bx wsk output, but we're ok with that:
+                    //logger(`${ok}:`.green + ` got activation ${msg.activationId}`)
                     delete msg.prettyType
                     delete msg.verb
                     delete msg.publish
@@ -653,7 +657,7 @@ const main = (app, mainFunctions) => {
         }
 
         plugins.require('/admin/preloader')
-    
+
         //
         // execute a single command from the CLI
         //

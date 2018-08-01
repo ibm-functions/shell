@@ -150,6 +150,10 @@ describe('Headless mode', function() {
        .then(cli.expectOK('fun: "space cadet"'))
        .catch(common.oops(this)))
 
+    it('should async spacey', () => cli.do('action async spacey')
+       .then(cli.expectOK('ok: invoked spacey with id'))
+       .catch(common.oops(this)))
+
     it('should set host to us-south', () => cli.do('host set us-south')
        .then(cli.expectOK())
        .then(() => cli.do('host get'))
