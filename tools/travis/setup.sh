@@ -2,9 +2,7 @@
 
 SCRIPTDIR=$(cd $(dirname "$0") && pwd)
 HOMEDIR="$SCRIPTDIR/../../../"
-
-# install node and npm
-#sudo apt-get -y install nodejs npm
+WHISKDIR="$ROOTDIR/openwhisk"
 
 cd $HOMEDIR
 

@@ -59,7 +59,7 @@ install:
 
 # if for some reason we want to avoid the use of travis jobs:
 #script: (cd tests && npm run test)
-#script: (cd tests && ./bin/runLocal.sh 01 08 07 02 03 04 05)
+#script: (cd tests && ./bin/runLocal.sh 01 08 07 02 03 04a 04b 05)
 
 jobs:
   include:
@@ -69,5 +69,7 @@ jobs:
       env: EXECUTING=07
     - script: (cd tests && ./bin/runLocal.sh 03)
       env: EXECUTING=03
-    - script: (cd tests && ./bin/runLocal.sh 04)
-      env: EXECUTING=04
+    - script: (cd tests && ./bin/runLocal.sh 04a)
+      env: EXECUTING=04a
+    - script: (cd tests && ./bin/runLocal.sh 04b)
+      env: EXECUTING=04b
