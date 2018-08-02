@@ -27,7 +27,7 @@
     "url": "https://github.com/ibm-functions/shell/issues/new"
   },
   "devDependencies": {
-    "electron": "~2.0.4",
+    "electron": "~2.0.6",
     "nyc": "^13.0.0"
   },
   "dependencies": {
