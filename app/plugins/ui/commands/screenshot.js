@@ -224,7 +224,7 @@ module.exports = (commandTree, prequire) => {
                 saveButton.className = 'sidecar-bottom-stripe-button sidecar-bottom-stripe-save'
                 saveButton.onclick = () => {
                     remote.require('fs').writeFile(location,
-                                                   img.toPng(), () => {
+                                                   img.toPNG(), () => {
                                                        console.log(`screenshot saved to ${location}`)
                                                    })
                 }
