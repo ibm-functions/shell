@@ -26,15 +26,17 @@ $ANSIBLE_CMD prereq.yml
 #(cd $ROOTDIR/tests/docker && ./build.sh) & # initialize test docker base image, in parallel (!!! must be after prereq, as it restarts docker)
 $ANSIBLE_CMD couchdb.yml
 $ANSIBLE_CMD initdb.yml
+
+$ANSIBLE_CMD wipe.yml
+$ANSIBLE_CMD openwhisk.yml -e '{"openwhisk_cli":{"installation_mode":"remote","remote":{"name":"OpenWhisk_CLI","dest_name":"OpenWhisk_CLI","location":"https://github.com/apache/incubator-openwhisk-cli/releases/download/latest"}}}'
 $ANSIBLE_CMD apigateway.yml  # not needed directly, but it comes with redis if we need it
+$ANSIBLE_CMD properties.yml # required for to run before routemgmt.yml
+$ANSIBLE_CMD routemgmt.yml
+$ANSIBLE_CMD postdeploy.yml
 
 cd $WHISKDIR
 ./gradlew  -PdockerImagePrefix=openwhisk
 cd $WHISKDIR/ansible
-
-$ANSIBLE_CMD wipe.yml
-$ANSIBLE_CMD openwhisk.yml  -e '{"openwhisk_cli":{"installation_mode":"remote","remote":{"name":"OpenWhisk_CLI","dest_name":"OpenWhisk_CLI","location":"https://github.com/apache/incubator-openwhisk-cli/releases/download/latest"}}}'
-$ANSIBLE_CMD postdeploy.yml
 
 cd $WHISKDIR
 cat whisk.properties
