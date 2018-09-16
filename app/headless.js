@@ -225,30 +225,23 @@ function mimicDom(app, { createWindow }, localStorage) {
     global.plugins = grequire('plugins')
     global.repl = grequire('repl')
 
-    global.repl.prompt = (msg, block, nextBlock, options, completion) => new Promise((resolve, reject) => {
-        const { prompt } = require('inquirer')
-        const schema = []
-        schema.push({
-            name: msg,
-            message: msg,
-            type: options.type
-        })
+  global.repl.prompt = (msg, block, nextBlock, options, completion) => new Promise((resolve, reject) => {
+    const prompt = require('readline').createInterface({ input: process.stdin, output: process.stdout })
+    try {
+      prompt.question(`${msg} ${options.placeholder} `, answer => {
         try {
-            prompt(schema)
-                .then(answers => {
-                    try {
-                        log('ok'.green)
-                        return completion(Object.assign({}, options, { field: answers[msg] }))
-                            .then(resolve)
-                            .catch(reject);
-                    } catch (err) {
-                        failure(quit)(err); reject(err)
-                    }
-                })
+          log('ok'.green)
+          return completion(Object.assign({}, options, { field: answer }))
+            .then(resolve)
+            .catch(reject)
         } catch (err) {
-            failure(quit)(err); reject(err)
+          failure(quit)(err); reject(err)
         }
-    })
+      })
+    } catch (err) {
+      failure(quit)(err); reject(err)
+    }
+  })
 
     // quit immediately after discovering we don't have a wskprops
     global.repl.setNoAuth = () => {
