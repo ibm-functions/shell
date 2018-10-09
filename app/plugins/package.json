@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@shell/composer": "git://github.com/ibm-functions/shell-composer-plugin",
+    "@shell/composer": "git://github.com/myan9/shell-composer-plugin.git#update_composer",
     "@shell/local": "git://github.com/ibm-functions/shell-local-plugin",
     "@shell/wskflow": "git://github.com/ibm-functions/shell-wskflow-plugin",
     "archiver": "^3.0.0",
