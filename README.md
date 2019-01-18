@@ -1,6 +1,6 @@
 # DEPRECATED
 
-This project has been superceded by the [https://github.com/IBM/kui](the Kui project). As a result, this repository is no longer maintained.
+This project has been superceded by the [the Kui project](https://github.com/IBM/kui). As a result, this repository is no longer maintained.
 
 # IBM Cloud Functions Shell
 
